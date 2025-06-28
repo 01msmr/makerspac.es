@@ -1,0 +1,71 @@
+body {
+  margin: 0;
+}
+
+#map {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+}
+
+
+
+.title {
+  font-family: 'Lato', sans-serif;
+  z-index: 1000;
+  position: absolute;
+  left: 2.5em;
+  top: 1em;
+  color: blue;
+  background-color: rgba(111, 233, 166, 1);
+  padding: .25em .75em .25em .50em;
+  border-radius: .6em;
+  border: .30em dashed rgba(256, 256, 256, .77);
+  box-shadow: .2em -.1em .6em .35em rgba(0, 0, 0, 0.55);
+  font-weight: bold;
+  font-size: 1.7em;
+}
+
+/* .frame {
+  color: blue;
+  font-weight: bold;
+} */
+
+.tld {
+  font-size: smaller;
+}
+
+.smaller {
+  font-size: smaller;
+}
+
+
+
+
+
+.leaflet-popup-content-wrapper , .leaflet-popup-tip 
+{
+  background-color: rgba(188, 255, 222, .83);
+}
+
+.tld, .leaflet-popup-content-wrapper h2
+ {
+  padding: 0 .15em 0 1.5em;
+    margin-left: .1em;
+    border-radius: .25em;
+    background-color: blue;
+    color: white;
+}
+
+a h2 {
+  color: white !important;
+  text-decoration: none;
+}
+
+a:hover h2 {
+  color: silver !important;
+}
+
+
+
+
