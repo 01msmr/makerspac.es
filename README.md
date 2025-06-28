@@ -1,6 +1,6 @@
 Map of Makerspaces
 
- currently contains only data from Germany, Austria and Switzerland. 
+ currently contains only data from Germany (, Austria and Switzerland). 
 
 Curated and Listed by Ulrich Maasmeier. 
 
