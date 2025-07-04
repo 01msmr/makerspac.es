@@ -120,9 +120,9 @@ fetch('data/countries.geojson')
   // known Makerspaces (Name; (Picture;) Adress: Street, No.; PLZ, Town; Country)
 
 
-  DE
-  DE
-  DE
+  // DE
+  // DE
+  // DE
 
 
   // 01069  SLUB Makerspace
@@ -306,9 +306,9 @@ fetch('data/countries.geojson')
 
 
 
-  AT
-  AT
-  AT
+  // AT
+  // AT
+  // AT
 
 
   // 9020  MAKERSPACE Carinthia
