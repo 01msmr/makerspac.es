@@ -262,7 +262,7 @@ fetch('data/countries.geojson')
 
   // 77652  Makerspace Hochschule Offenburg
   var marker = L.marker([48.4576465, 7.9423574]).addTo(map);
-  marker.bindPopup("<h3>NAME1</h3><a href=\"https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso\" target=\"_blank\"><h2>Makerspace Hochschule Offenburg</h2></a>Badstraße 24<br><b>77652 Offenburg</b><br>Germany<br><hr><a href=\"https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso\" target=\"_blank\"><b>emi.hs-offenburg.de</b></a>");
+  marker.bindPopup("<h3></h3><a href=\"https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso\" target=\"_blank\"><h2>Makerspace Hochschule Offenburg</h2></a>Badstraße 24<br><b>77652 Offenburg</b><br>Germany<br><hr><a href=\"https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso\" target=\"_blank\"><b>emi.hs-offenburg.de</b></a>");
 
 
   // 80636  Munich Maker Lab
