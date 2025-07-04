@@ -207,7 +207,7 @@ fetch('data/countries.geojson')
 
   // 48565  MakerSpace FH Münster
   var marker = L.marker([52.1431977, 7.3234219]).addTo(map);
-  marker.bindPopup("<h3>NAME1</h3><a href=\"https://www.fh-muenster.de/de/makerspace\" target=\"_blank\"><h2>MakerSpace FH Münster</h2></a>Stegerwaldstraße 39<br>Gebäude H, Raum H011a<br><b>48565 Steinfurt</b><br>Germany<br><hr><a href=\"https://www.fh-muenster.de/de/makerspace\" target=\"_blank\"><b>fh-muenster.de/de/makerspace</b></a>");
+  marker.bindPopup("<h3>STUDENT</h3><a href=\"https://www.fh-muenster.de/de/makerspace\" target=\"_blank\"><h2>MakerSpace FH Münster</h2></a>Stegerwaldstraße 39<br>Gebäude H, Raum H011a<br><b>48565 Steinfurt</b><br>Germany<br><hr><a href=\"https://www.fh-muenster.de/de/makerspace\" target=\"_blank\"><b>fh-muenster.de/de/makerspace</b></a>");
 
 
   // 50679  MakerSpace - TH Köln
@@ -257,7 +257,7 @@ fetch('data/countries.geojson')
 
   // 70569  Universität Stuttgart - Makerspace Universum
   var marker = L.marker([48.7462287, 9.1037325]).addTo(map);
-  marker.bindPopup("<h3>STUDENT</h3><a href=\"https://www.eu\" target=\"_blank\"><h2>NAME2</h2></a>Pfaffenwaldring 45<br><b> Stuttgart</b><br>Germany<br><hr><a href=\"https://www.eu\" target=\"_blank\"><b>WWW</b></a>");
+  marker.bindPopup("<h3>STUDENT</h3><a href=\"https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace/\" target=\"_blank\"><h2>Universität Stuttgart - Makerspace Universum</h2></a>Pfaffenwaldring 45<br><b> Stuttgart</b><br>Germany<br><hr><a href=\"https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace/\" target=\"_blank\"><b>tik.uni-stuttgart.de/forschung-und-lehre/makerspace</b></a>");
 
 
   // 77652  Makerspace Hochschule Offenburg
@@ -297,7 +297,7 @@ fetch('data/countries.geojson')
 
   // 96450  CREAPOLIS Makerspace
   var marker = L.marker([50.2538682, 10.9595537]).addTo(map);
-  marker.bindPopup("<h3>NAME1</h3><a href=\"https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace/\" target=\"_blank\"><h2>CREAPOLIS Makerspace</h2></a>Schlachthofstr. 1<br><b>96450 Coburg</b><br>Germany<br><hr><a href=\"https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace/\" target=\"_blank\"><b>hs-coburg.de</b></a>");
+  marker.bindPopup("<h3></h3><a href=\"https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace\" target=\"_blank\"><h2>CREAPOLIS Makerspace</h2></a>Schlachthofstr. 1<br><b>96450 Coburg</b><br>Germany<br><hr><a href=\"https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace\" target=\"_blank\"><b>hs-coburg.de</b></a>");
 
 
 
