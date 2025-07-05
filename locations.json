@@ -1,48 +1,656 @@
-  // 88677  Toolbox Bodensee  
-  var marker = L.marker([
-    47.7122995,
-    9.3995537
-  ]).addTo(map);
-  marker.bindPopup("<a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><h2>Toolbox Bodensee.</h2></a>Bergheimer Straße 6<br><b>88677 Markdorf</b><br>Germany<br><hr><a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><b>toolbox-bodensee.de</b></a>");
+
 
 
 [
   {
-    "id": 1 {
-      "name": "Toolbox Bodensee",
-      "loc": {
-        "latlong": [47.7122995, 9.3995537],
-        "plz": 88677,
-        "city": "Markdorf",
-        "street": "Zellescher Weg 17",
-        "country": "DE"  // list of country codes: [DE, AT, CH]
-      },
-      "style": "commercial",  // list of styles: [YOUTH, STUDENT, COMMERCIAL]
-      "link": {
-        "url": "https://www.toolbox-bodensee.de",
-        "text": "toolbox-bodensee.de.de"
-      }
+    "name": "Toolbox Bodensee",
+    "loc": {
+      "lat": 47.7126816,
+      "long": 9.3995537,
+      "plz": 88677,
+      "city": "Markdorf",
+      "street": "Bergheimer Straße 6",
+      "country": "DE" 
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.toolbox-bodensee.de",
+      "text": "toolbox-bodensee.de.de"
     }
   },
 
 
   {
-    "id": 2 {
-      "name": "SLUB Makerspace",
-      "loc": {
-        "latlong": [50.5, 10],
-        "plz": 1069,
-        "city": "Dresden",
-        "street": "Zellescher Weg 17",
-        "country": "Germany"
-      },
-      "style": "commercial",
-      "link": {
-        "url": "https://www.slub-dresden.de",
-        "text": "slub-dresden.de"
-      }
+    "name": "SLUB Makerspace",
+    "loc": {
+      "lat": 51.0296177,
+      "long": 13.7387907,
+      "plz": 1069,
+      "city": "Dresden",
+      "street": "Zellescher Weg 17",
+      "country": "Germany"
+    },
+    "style": "COMMERCIAL",
+    "link": {
+      "url": "https://www.slub-dresden.de",
+      "text": "slub-dresden.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Leipzig",
+    "loc": {
+      "lat": 51.3664380,
+      "long": 12.3651633,
+      "plz": 4155,
+      "city": "Leipzig",
+      "street": "Lindenthaler Straße 61-65",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-leipzig.de",
+      "text": "makerspace-leipzig.de"
+    }
+  },
+
+
+  {
+    "name": "TüftelLab Berlin",
+    "loc": {
+      "lat": 52.5034893,
+      "long": 13.4322983,
+      "plz": 10969,
+      "city": "Berlin",
+      "street": "Prinzenstraße 85c",
+      "country": "Germany"
+    },
+    "style": "YOUTH",
+    "link": {
+      "url": "https://tueftellab.de/makerspace/berlin",
+      "text": "tueftellab.de"
+    }
+  },
+
+
+  {
+    "name": "Happylab Berlin",
+    "loc": {
+      "lat": 52.4793453,
+      "long": 13.4323412,
+      "plz": 12053,
+      "city": "Berlin",
+      "street": "Rollbergstraße 28a",
+      "country": "Germany"
+    },
+    "style": "COMMERCIAL",
+    "link": {
+      "url": "https://www.happylab.de/de_ber",
+      "text": "happylab.de/de_ber"
+    }
+  },
+
+
+  {
+    "name": "TüftelLab Hamburg",
+    "loc": {
+      "lat": 53.5552490,
+      "long": 9.9875944,
+      "plz": 20354,
+      "city": "Hamburg",
+      "street": "Gänsemarkt 33",
+      "country": "Germany"
+    },
+    "style": "YOUTH",
+    "link": {
+      "url": "https://tueftellab.de/makerspace/hamburg-105viertel",
+      "text": "tueftellab.de"
+    }
+  },
+
+
+  {
+    "name": "Fabulous St. Pauli",
+    "loc": {
+      "lat": 53.5421506,
+      "long": 10.010595,
+      "plz": 20457,
+      "city": "Hamburg",
+      "street": "Stockmeyerstr. 43, Halle 4K",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.fablab-hamburg.org",
+      "text": "www.fablab-hamburg.org"
+    }
+  },
+
+
+  {
+    "name": "Makerhafen",
+    "loc": {
+      "lat": 53.5628589,
+      "long": 9.9257698,
+      "plz": 22761,
+      "city": "Hamburg",
+      "street": "Stahltwiete 21",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerhafen.de",
+      "text": "makerhafen.de"
+    }
+  },
+
+
+  {
+    "name": "Attraktor",
+    "loc": {
+      "lat": 53.5498981,
+      "long": 9.9464159,
+      "plz": 22767,
+      "city": "Hamburg",
+      "street": "Eschelsweg 4",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://makerspace-hamburg.de/attraktor",
+      "text": "makerspace-hamburg.de/attraktor"
+    }
+  },
+
+
+  {
+    "name": "Hafven Maker Space",
+    "loc": {
+      "lat": 52.3880068,
+      "long": 9.7262848,
+      "plz": 30167,
+      "city": "Hannover",
+      "street": "Kopernikusstraße 14",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://hafven.de/maker-space",
+      "text": "hafven.de/maker-space"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Gütersloh",
+    "loc": {
+      "lat": 51.9022879,
+      "long": 8.3773189,
+      "plz": 33330,
+      "city": "Gütersloh",
+      "street": "Bogenstraße 1-8",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://makerspace-gt.de",
+      "text": "makerspace-gt.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Gießen",
+    "loc": {
+      "lat": 50.5899306,
+      "long": 8.6777523,
+      "plz": 35390,
+      "city": "Gießen",
+      "street": "Walltorstraße 57",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-giessen.de",
+      "text": "makerspace-giessen.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Braunschweig",
+    "loc": {
+      "lat": 52.2822038,
+      "long": 10.5156945,
+      "plz": 38114,
+      "city": "Braunschweig",
+      "street": "Hamburger Str. 49",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-bs.de",
+      "text": "makerspace-bs.de"
+    }
+  },
+
+
+  {
+    "name": "TüftelLab Rhein-Kreis Neuss",
+    "loc": {
+      "lat": 51.2013193,
+      "long": 6.6868142,
+      "plz": 41460,
+      "city": "Neuss",
+      "street": "Krefelder Str. 55",
+      "country": "Germany"
+    },
+    "style": "YOUTH",
+    "link": {
+      "url": "https://tueftellab.de/makerspace/rhein-kreis-neuss",
+      "text": "tueftellab.de"
+    }
+  },
+
+
+  {
+    "name": "RUB-Makerspace",
+    "loc": {
+      "lat": 51.4654434,
+      "long": 7.2597076,
+      "plz": 44803,
+      "city": "Bochum",
+      "street": "Suttner-Nobel-Allee 4",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://makerspace.ruhr-uni-bochum.de",
+      "text": "makerspace.ruhr-uni-bochum.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Bocholt",
+    "loc": {
+      "lat": 51.8385327,
+      "long": 6.6037374,
+      "plz": 46399,
+      "city": "Bocholt",
+      "street": "Westend 31",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-bocholt.de",
+      "text": "makerspace-bocholt.de"
+    }
+  },
+
+
+  {
+    "name": "MakerSpace FH Münster",
+    "loc": {
+      "lat": 52.1431977,
+      "long": 7.3234219,
+      "plz": 48565,
+      "city": "Steinfurt",
+      "street": "Stegerwaldstraße 39",
+      "country": "Germany"
+    },
+    "style": "STUDENT",
+    "link": {
+      "url": "https://www.fh-muenster.de/de/makerspace",
+      "text": "muenster.de/de/makerspace"
+    }
+  },
+
+
+  {
+    "name": "MakerSpace - TH Köln",
+    "loc": {
+      "lat": 50.9349146,
+      "long": 6.9881421,
+      "plz": 50679,
+      "city": "Köln",
+      "street": "Betzdorfer Straße 2",
+      "country": "Germany"
+    },
+    "style": "STUDENT",
+    "link": {
+      "url": "https://www.th-koeln.de/forschung/makerspace-und-mini-inkubatoren_77114.php",
+      "text": "https://www.th-koeln.de"
+    }
+  },
+
+
+  {
+    "name": "MakerSpace Bonn",
+    "loc": {
+      "lat": 50.6981704,
+      "long": 7.1450146,
+      "plz": 53175,
+      "city": "Bonn",
+      "street": "Kennedyallee 18",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspacebonn.de",
+      "text": "makerspacebonn.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Wittlich",
+    "loc": {
+      "lat": 49.9865645,
+      "long": 6.8880852,
+      "plz": 54516,
+      "city": "Wittlich",
+      "street": "Neustraße 6",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "http://www.makerspace.wittlich.de",
+      "text": "makerspace.wittlich.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Mayen-Koblenz",
+    "loc": {
+      "lat": 50.4214156,
+      "long": 7.5751553,
+      "plz": 56170,
+      "city": "Bendorf",
+      "street": "Untere Vallendarer Straße 26",
+      "country": "Germany"
+    },
+    "style": "STYLE_STYLE",
+    "link": {
+      "url": "https://www.makerspace-myk.de",
+      "text": "makerspace-myk.de"
+    }
+  },
+
+
+
+  {
+    "name": "MakerSpace - Kulturforum Hanau",
+    "loc": {
+      "lat": 50.1352742,
+      "long": 8.9175025,
+      "plz": 63450,
+      "city": "Hanau",
+      "street": "Am Markt 14-18",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.kulturforum-hanau.de/angebote/49944/index.html",
+      "text": "kulturforum-hanau.de"
+    }
+  },
+
+  
+  {
+    "name": "Makerspace Darmstadt",
+    "loc": {
+      "lat": 49.8802245,
+      "long": 8.6325583,
+      "plz": 64293,
+      "city": "Darmstadt",
+      "street": "Mainzer Straße 74",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-darmstadt.de",
+      "text": "makerspace-darmstadt.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Wiesbaden",
+    "loc": {
+      "lat": 50.0555848,
+      "long": 8.3085765,
+      "plz": 65205,
+      "city": "Wiesbaden",
+      "street": "Wandersmannstrasse 60",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.makerspace-wi.de",
+      "text": "makerspace-wi.de"
+    }
+  },
+
+
+  {
+    "name": "MAKERSPACE Rhein-Neckar",
+    "loc": {
+      "lat": 49.7520597,
+      "long": 8.4526774,
+      "plz": 67065,
+      "city": "Ludwigshafen am Rhein",
+      "street": "Am Bubenpfad 2",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://makerspace-rheinneckar.de",
+      "text": "makerspace-rheinneckar.de"
+    }
+  },
+
+
+  {
+    "name": "Hochschule der Medien - Makerspace",
+    "loc": {
+      "lat": 48.7462142,
+      "long": 9.1037595,
+      "plz": 70569,
+      "city": "Stuttgart",
+      "street": "Nobelstraße 10",
+      "country": "Germany"
+    },
+    "style": "STUDENT",
+    "link": {
+      "url": "https://www.hdm-stuttgart.de/makerspace",
+      "text": "hdm-stuttgart.de/makerspace"
+    }
+  },
+
+
+  {
+    "name": "Universität Stuttgart - Universum",
+    "loc": {
+      "lat": 48.7462287,
+      "long": 9.1037325,
+      "plz": 70569,
+      "city": "Stuttgart",
+      "street": "Pfaffenwaldring 45",
+      "country": "Germany"
+    },
+    "style": "STUDENT",
+    "link": {
+      "url": "https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace",
+      "text": "tik.uni-stuttgart.de"
+    }
+  },
+
+
+  {
+    "name": "Makerspace Hochschule Offenburg",
+    "loc": {
+      "lat": 48.4576465,
+      "long": 7.9423574,
+      "plz": 77652,
+      "city": "Offenburg",
+      "street": "Badstraße 24",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso",
+      "text": "emi.hs-offenburg.de"
+    }
+  },
+
+
+  {
+    "name": "Munich Maker Lab",
+    "loc": {
+      "lat": 48.1589395,
+      "long": 11.5500795,
+      "plz": 80636,
+      "city": "München",
+      "street": "Dachauer Str. 112h",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.munichmakerlab.de",
+      "text": "munichmakerlab.de"
+    }
+  },
+
+
+  {
+    "name": "MakerSpace München",
+    "loc": {
+      "lat": 48.1608454,
+      "long": 11.5524567,
+      "plz": 80797,
+      "city": "München",
+      "street": "Freddie-Mercury-Straße 5",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.maker-space.de",
+      "text": "maker-space.de"
+    }
+  },
+
+
+  {
+    "name": "TüftelLab München",
+    "loc": {
+      "lat": 48.1570606,
+      "long": 11.5514604,
+      "plz": 80797,
+      "city": "München",
+      "street": "Freddie-Mercury-Straße 5",
+      "country": "Germany"
+    },
+    "style": "YOUTH",
+    "link": {
+      "url": "https://tueftellab.de/makerspace/muenchen",
+      "text": "tueftellab.de"
+    }
+  },
+
+
+  {
+    "name": "brigk Makerspace",
+    "loc": {
+      "lat": 48.7651278,
+      "long": 11.4343439,
+      "plz": 85049,
+      "city": "Ingolstadt",
+      "street": "Schloßlände 26",
+      "country": "Germany"
+    },
+    "style": "COMMERCIAL",
+    "link": {
+      "url": "https://www.brigk.digital/brigk-makerspace",
+      "text": "brigk.digital/brigk-makerspace"
+    }
+  },
+
+
+  {
+    "name": "MakerSpace Garching",
+    "loc": {
+      "lat": 48.2683205,
+      "long": 11.6660252,
+      "plz": 85748,
+      "city": "Garching bei München",
+      "street": "Lichtenbergstraße 6",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.maker-space.de",
+      "text": "maker-space.de"
+    }
+  },
+
+
+  {
+    "name": "CREAPOLIS Makerspace",
+    "loc": {
+      "lat": 50.2538682,
+      "long": 10.9595537,
+      "plz": 96450,
+      "city": "Coburg",
+      "street": "Schlachthofstr. 1",
+      "country": "Germany"
+    },
+    "style": "",
+    "link": {
+      "url": "https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace",
+      "text": "hs-coburg.de"
+    }
+  },
+
+
+  {
+    "name": "MAKERSPACE Carinthia",
+    "loc": {
+      "lat": 46.6180671,
+      "long": 14.3171542,
+      "plz": 9020,
+      "city": "Klagenfurt am Wörthersee",
+      "street": "Lastenstraße 26",
+      "country": "Austria"
+    },
+    "style": "COMMERCIAL",
+    "link": {
+      "url": "https://www.makerspace-carinthia.com",
+      "text": "makerspace-carinthia.com"
+    }
+  },
+
+
+  {
+    "name": "NAME_NAME",
+    "loc": {
+      "lat": 22,
+      "long": 55,
+      "plz": 111111,
+      "city": "CITY_CITY",
+      "street": "STREET_STREET",
+      "country": "COUNTRY_COUNTRY"
+    },
+    "style": "STYLE_STYLE",
+    "link": {
+      "url": "URL_URL_URL",
+      "text": "URL_TXT"
     }
   }
+
 ]
+
 
 

@@ -31,13 +31,13 @@ body {
   font-weight: bold;
 } */
 
-.tld {
+/* .tld {
   font-size: smaller;
 }
 
 .smaller {
   font-size: smaller;
-}
+} */
 
 
 
@@ -51,16 +51,23 @@ body {
 .tld, .leaflet-popup-content-wrapper h2
  {
   padding: 0 .15em 0 1.5em;
-    margin-left: .1em;
+    margin: 0 .1em 0 .1em;
     border-radius: .25em;
     background-color: blue;
     color: white;
 }
 
 a h2 {
+  display: inline;
   color: white !important;
   text-decoration: none;
 }
+
+/* a < h3 {
+  display: inline-block;
+  width: auto !important;
+  text-align: left;
+} */
 
 a:hover h2 {
   color: silver !important;
