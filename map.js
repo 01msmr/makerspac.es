@@ -92,7 +92,12 @@ fetch('data/countries.geojson')
 
 
 
+  let response = await fetch("locations.json");
+  if (response.ok) {
+    let json; try { json = await response.json(); } catch (error) { json = null; }
+  }
 
+    json[1].id
 
 
 
@@ -103,26 +108,21 @@ fetch('data/countries.geojson')
 
   // PLZ  NAME
   var marker = L.marker([50.5, 10]).addTo(map);
-  marker.bindPopup("<h3>NAME1</h3><a href=\"https://www.eu\" target=\"_blank\"><h2>NAME2</h2></a>STRASSE<br><b>PLZ ORT</b><br>Germany<br><hr><a href=\"https://www.eu\" target=\"_blank\"><b>WWW</b></a>");
-
-
-
-
-
-
-
-
-
+  marker.bindPopup("<h3>style</h3><a href=\"link.url\" target=\"_blank\"><h2>name</h2></a>loc.street<br><b>loc.plz loc.city</b><br>loc.country<br><hr><a href=\"link.url\" target=\"_blank\"><b>link.txt</b></a>");
   
   
   
-  
-  // known Makerspaces (Name; (Picture;) Adress: Street, No.; PLZ, Town; Country)
+  // known Makerspaces (name; style; [Picture;] adr.plz adr.city, adr.country, link.url. link.txt)
 
 
   // DE
   // DE
   // DE
+
+
+  // 01069  SLUB Makerspace
+  var marker = L.marker([51.0296177, 13.7387907]).addTo(map);
+  marker.bindPopup("<h3></h3><a href=\"https://www.slub-dresden.de\" target=\"_blank\"><h2>SLUB Makerspace</h2></a>Zellescher Weg 17<br><b>01069 Dresden</b><br>Germany<br><hr><a href=\"https://www.slub-dresden.de\" target=\"_blank\"><b>slub-dresden.de</b></a>");
 
 
   // 01069  SLUB Makerspace
@@ -290,9 +290,9 @@ fetch('data/countries.geojson')
   marker.bindPopup("<h3></h3><a href=\"https://www.maker-space.de\" target=\"_blank\"><h2>MakerSpace Garching</h2></a>Lichtenbergstraße 6<br><b>85748 Garching bei München</b><br>Germany<br><hr><a href=\"https://www.maker-space.de\" target=\"_blank\"><b>maker-space.de</b></a>");
 
 
-  // 88677  Toolbox Bodensee  
-  var marker = L.marker([47.7122995, 9.3995537]).addTo(map);
-  marker.bindPopup("<a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><h2>Toolbox Bodensee.</h2></a>Bergheimer Straße 6<br><b>88677 Markdorf</b><br>Germany<br><hr><a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><b>toolbox-bodensee.de</b></a>");
+  // 88677  Toolbox Bodensee   with JSON JSON JSON
+  var marker = L.marker(json.1.latlong).addTo(map);
+  marker.bindPopup("<a href=\"json.1.link.url\" target=\"_blank\"><h2>json.1.name</h2></a>json.1.loc.street<br><b>json.1.loc.plz json.1.loc.city</b><br>json.1.loc.country<br><hr><a href=\"json.1.link.url\" target=\"_blank\"><b>json.1.link.text</b></a>");
 
 
   // 96450  CREAPOLIS Makerspace

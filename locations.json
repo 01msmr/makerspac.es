@@ -1,0 +1,48 @@
+  // 88677  Toolbox Bodensee  
+  var marker = L.marker([
+    47.7122995,
+    9.3995537
+  ]).addTo(map);
+  marker.bindPopup("<a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><h2>Toolbox Bodensee.</h2></a>Bergheimer Straße 6<br><b>88677 Markdorf</b><br>Germany<br><hr><a href=\"https://www.toolbox-bodensee.de\" target=\"_blank\"><b>toolbox-bodensee.de</b></a>");
+
+
+[
+  {
+    "id": 1 {
+      "name": "Toolbox Bodensee",
+      "loc": {
+        "latlong": [47.7122995, 9.3995537],
+        "plz": 88677,
+        "city": "Markdorf",
+        "street": "Zellescher Weg 17",
+        "country": "DE"  // list of country codes: [DE, AT, CH]
+      },
+      "style": "commercial",  // list of styles: [YOUTH, STUDENT, COMMERCIAL]
+      "link": {
+        "url": "https://www.toolbox-bodensee.de",
+        "text": "toolbox-bodensee.de.de"
+      }
+    }
+  },
+
+
+  {
+    "id": 2 {
+      "name": "SLUB Makerspace",
+      "loc": {
+        "latlong": [50.5, 10],
+        "plz": 1069,
+        "city": "Dresden",
+        "street": "Zellescher Weg 17",
+        "country": "Germany"
+      },
+      "style": "commercial",
+      "link": {
+        "url": "https://www.slub-dresden.de",
+        "text": "slub-dresden.de"
+      }
+    }
+  }
+]
+
+
