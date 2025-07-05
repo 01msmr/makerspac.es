@@ -21,7 +21,7 @@ async function initmap() {
 
 
   // js fetch data from locations.json
-  
+
   let response = await fetch("./locations.json");
   if (response.ok) {
     var json;
@@ -38,7 +38,8 @@ async function initmap() {
 
     // fetch one space
     var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);
-    marker.bindPopup('<h3>' + space.style + '</h3><a href="' + space.link.url + '" target="_blank"><h2>' + space.name + '</h2><br><br></a>' + space.loc.street + '<br><b>' + space.loc.plz + ' ' + space.loc.city + '</b><br>' + space.loc.country + '<br><hr><a href="' + space.link.url + '" target="_blank"><b>' + space.link.text + '</b></a>');
+
+    marker.bindPopup(`<h3>${space.style}</h3><a href="${space.link.url}" target="_blank"><h2>${space.name}</h2><br><br></a>${space.loc.street}<br><b>${space.loc.plz} ${space.loc.city}</b><br>${space.loc.country}<br><hr><a href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
   }
 
 
