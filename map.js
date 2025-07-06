@@ -6,7 +6,7 @@ var plotlayers = [];
 // Main Map Tile Layer from OpenStreetMap
 async function initmap() {
   map = new L.Map('map');
-  var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}{r}.png';
+  var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}@2x.png';
   var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
   var osm = new L.TileLayer(osmUrl, { minZoom: 2, maxZoom: 19, attribution: osmAttrib });
   map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
