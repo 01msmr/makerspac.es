@@ -48,30 +48,74 @@ body {
   background-color: rgba(188, 255, 222, .83);
 }
 
-.tld, .leaflet-popup-content-wrapper h2
- {
+.leaflet-popup-content-wrapper {
+  overflow: hidden;
+}
+
+.spac {
   padding: 0 .15em 0 1.5em;
-    margin: 0 .1em 0 .1em;
-    border-radius: .25em;
-    background-color: blue;
-    color: white;
+  margin: 0 .1em 0 .1em;
+  border-radius: .25em;
+  background-color: blue;
+  color: white;
+}
+
+a#url {
+  display: inline-block;
+  width: 200%;
+  color: black;
+  background: transparent;
+  margin-top: 0.5em;
+  padding-left: 25%;
+  position: relative;
+  right: 125%;
+  cursor: alias;
+  text-align: right;
+}
+
+a#url:hover {
+  color: white;
+  background: black;
+  text-decoration: none;
+  text-align: left;
+  left: -25%;
 }
 
 a h2 {
+  padding: 0.2em 0.3em 0.2em 2em;
   display: inline;
   color: white !important;
+  text-decoration: none !important;
+  border-radius: .25em;
+  background: rgb(0, 0, 255);
+}
+
+a:hover h2 {
+  color: rgb(200, 200, 255) !important;
+}
+
+a#titleurl {
+  padding: .2em .1em .2em 0;
   text-decoration: none;
 }
 
-/* a < h3 {
-  display: inline-block;
-  width: auto !important;
-  text-align: left;
-} */
-
-a:hover h2 {
-  color: silver !important;
+hr {
+  border: 0px solid white;
 }
+
+#style {
+  font-size: small;
+  text-transform: uppercase;
+  font-style: italic;
+  /* color: gray; */
+  font-weight: 400;
+}
+
+#style:hover {
+  color: black;
+  font-weight: 800;
+}
+
 
 
 

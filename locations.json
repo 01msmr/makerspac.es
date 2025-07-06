@@ -15,7 +15,7 @@
     "style": "",
     "link": {
       "url": "https://www.toolbox-bodensee.de",
-      "text": "toolbox-bodensee.de.de"
+      "text": "toolbox-bodensee.de"
     }
   },
 
@@ -30,7 +30,7 @@
       "street": "Zellescher Weg 17",
       "country": "Germany"
     },
-    "style": "COMMERCIAL",
+    "style": "commercial",
     "link": {
       "url": "https://www.slub-dresden.de",
       "text": "slub-dresden.de"
@@ -66,7 +66,7 @@
       "street": "Prinzenstraße 85c",
       "country": "Germany"
     },
-    "style": "YOUTH",
+    "style": "youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/berlin",
       "text": "tueftellab.de"
@@ -84,7 +84,7 @@
       "street": "Rollbergstraße 28a",
       "country": "Germany"
     },
-    "style": "COMMERCIAL",
+    "style": "commercial",
     "link": {
       "url": "https://www.happylab.de/de_ber",
       "text": "happylab.de/de_ber"
@@ -174,7 +174,7 @@
       "street": "Gänsemarkt 33",
       "country": "Germany"
     },
-    "style": "YOUTH",
+    "style": "youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/hamburg-105viertel",
       "text": "tueftellab.de"
@@ -213,13 +213,13 @@
     "style": "",
     "link": {
       "url": "https://www.fablab-hamburg.org",
-      "text": "www.fablab-hamburg.org"
+      "text": "fablab-hamburg.org"
     }
   },
 
 
   {
-    "name": "Techn. Universität Hamburg - WorkING Lab",
+    "name": "TU Hamburg - WorkING Lab",
     "loc": {
       "lat": 53.4594515,
       "long": 9.9692056,
@@ -273,6 +273,24 @@
 
 
   {
+    "name": "StartUpYard Wismar",
+    "loc": {
+      "lat": 53.8892887,
+      "long": 11.4471012,
+      "plz": 23966,
+      "city": "Wismar",
+      "street": "Philipp-Müller-Straße 14",
+      "country": "Germany"
+    },
+    "style": "student",
+    "link": {
+      "url": "https://www.hs-wismar.de/vernetzung/institutionen-hochschulunternehmen/rsi/idee-und-gruendung/startupyard/",
+      "text": "hs-wismar.de"
+    }
+  },
+
+
+  {
     "name": "FabLab Bremen",
     "loc": {
       "lat": 53.0811707,
@@ -282,7 +300,7 @@
       "street": "An der Weide 50a",
       "country": "Germany"
     },
-    "style": "STUDENT, YOUTH",
+    "style": "student, youth",
     "link": {
       "url": "https://fablab-bremen.org",
       "text": "fablab-bremen.org"
@@ -507,7 +525,7 @@
 
 
   {
-    "name": "TüftelLab Rhein-Kreis Neuss",
+    "name": "TüftelLab Neuss",
     "loc": {
       "lat": 51.2013193,
       "long": 6.6868142,
@@ -516,7 +534,7 @@
       "street": "Krefelder Str. 55",
       "country": "Germany"
     },
-    "style": "YOUTH",
+    "style": "youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/rhein-kreis-neuss",
       "text": "tueftellab.de"
@@ -570,7 +588,7 @@
       "street": "Stegerwaldstraße 39",
       "country": "Germany"
     },
-    "style": "STUDENT",
+    "style": "student",
     "link": {
       "url": "https://www.fh-muenster.de/de/makerspace",
       "text": "muenster.de/de/makerspace"
@@ -588,7 +606,7 @@
       "street": "Betzdorfer Straße 2",
       "country": "Germany"
     },
-    "style": "STUDENT",
+    "style": "student",
     "link": {
       "url": "https://www.th-koeln.de/forschung/makerspace-und-mini-inkubatoren_77114.php",
       "text": "https://www.th-koeln.de"
@@ -706,7 +724,7 @@
 
 
   {
-    "name": "Ideenw3rk - Stadtbibl. Ludwigshafen",
+    "name": "Ideenw3rk Ludwigshafen",
     "loc": {
       "lat": 49.4808814,
       "long": 8.4486120,
@@ -805,7 +823,7 @@
       "street": "Bergstraße 70",
       "country": "Germany"
     },
-    "style": "YOUTH",
+    "style": "youth",
     "link": {
       "url": "https://www.frsweinheim.de/index.php/schule/makerspace",
       "text": "frsweinheim.de"
@@ -823,7 +841,7 @@
       "street": "Nobelstraße 10",
       "country": "Germany"
     },
-    "style": "STUDENT",
+    "style": "student",
     "link": {
       "url": "https://www.hdm-stuttgart.de/makerspace",
       "text": "hdm-stuttgart.de/makerspace"
@@ -841,7 +859,7 @@
       "street": "Pfaffenwaldring 45",
       "country": "Germany"
     },
-    "style": "STUDENT",
+    "style": "student",
     "link": {
       "url": "https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace",
       "text": "tik.uni-stuttgart.de"
@@ -904,7 +922,7 @@
 
 
   {
-    "name": "BÄMlab - Offene Werkstatt im ZKM",
+    "name": "BÄMlab im ZKM",
     "loc": {
       "lat": 49.0013440,
       "long": 8.3839439,
@@ -1003,7 +1021,7 @@
       "street": "Freddie-Mercury-Straße 5",
       "country": "Germany"
     },
-    "style": "YOUTH",
+    "style": "youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/muenchen",
       "text": "tueftellab.de"
@@ -1021,7 +1039,7 @@
       "street": "Schloßlände 26",
       "country": "Germany"
     },
-    "style": "COMMERCIAL",
+    "style": "commercial",
     "link": {
       "url": "https://www.brigk.digital/brigk-makerspace",
       "text": "brigk.digital/brigk-makerspace"
@@ -1075,7 +1093,7 @@
       "street": "Lastenstraße 26",
       "country": "Austria"
     },
-    "style": "COMMERCIAL",
+    "style": "commercial",
     "link": {
       "url": "https://www.makerspace-carinthia.com",
       "text": "makerspace-carinthia.com"

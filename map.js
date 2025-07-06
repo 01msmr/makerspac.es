@@ -6,7 +6,7 @@ var plotlayers = [];
 // Main Map Tile Layer from OpenStreetMap
 async function initmap() {
   map = new L.Map('map');
-  var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}{r}.png';
   var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
   var osm = new L.TileLayer(osmUrl, { minZoom: 2, maxZoom: 19, attribution: osmAttrib });
   map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
@@ -39,7 +39,7 @@ async function initmap() {
     // fetch one space
     var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);
 
-    marker.bindPopup(`<h3>${space.style}</h3><a href="${space.link.url}" target="_blank"><h2>${space.name}</h2><br><br></a>${space.loc.street}<br><b>${space.loc.plz} ${space.loc.city}</b><br>${space.loc.country}<br><hr><a href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
+    marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h2>${space.name}</h2><br><br></a>${space.loc.street}<br><b>${space.loc.plz} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
   }
 
 
