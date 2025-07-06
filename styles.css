@@ -53,11 +53,19 @@ body {
 }
 
 .spac {
-  padding: 0 .15em 0 1.5em;
+  /* padding: 0 .15em 0 1.5em; */
+  padding-left: 1.5em;
   margin: 0 .1em 0 .1em;
   border-radius: .25em;
   background-color: blue;
   color: white;
+  border: .1em solid transparent;
+}
+
+.spac:hover {
+  background-color: white;
+  color: blue;
+  border: .1em solid blue;
 }
 
 a#url {
@@ -75,7 +83,7 @@ a#url {
 
 a#url:hover {
   color: white;
-  background: blue;
+  background: black;
   text-decoration: none;
   text-align: left;
   left: -25%;
@@ -88,10 +96,14 @@ a h2 {
   text-decoration: none !important;
   border-radius: .25em;
   background: blue;
+  border: .12em solid transparent;
 }
 
 a:hover h2 {
-  color: rgb(200, 200, 255) !important;
+  /* color: rgb(200, 200, 255) !important; */
+  color: blue !important;
+  background: white;
+  border-color: blue;
 }
 
 a#titleurl {
@@ -120,3 +132,12 @@ hr {
 
 
 
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+
+  /* Styles for high-DPI displays */
+  .leaflet-tile {
+    background-size: 200%;
+    /* Adjust background size for high-DPI */
+  }
+}
