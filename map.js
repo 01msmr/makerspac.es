@@ -39,7 +39,7 @@ async function initmap() {
     // fetch one space
     var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);
 
-    marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h2>${space.name}</h3><br><br></a>${space.loc.street}<br><b>${space.loc.plz} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
+    marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h3>${space.name}</h3><br><br></a>${space.loc.street}<br><b>${space.loc.plz} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
   }
 
 
