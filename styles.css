@@ -89,7 +89,7 @@ a#url:hover {
   left: -25%;
 }
 
-a h2 {
+a h3 {
   padding: 0.2em 0.3em 0.2em 2em;
   display: inline;
   color: white !important;
@@ -97,9 +97,10 @@ a h2 {
   border-radius: .25em;
   background: blue;
   border: .12em solid transparent;
+  cursor: none;
 }
 
-a:hover h2 {
+a:hover h3 {
   /* color: rgb(200, 200, 255) !important; */
   color: blue !important;
   background: white;
