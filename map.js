@@ -75,7 +75,7 @@ function highlightFeature(e) {
   layer.setStyle({
     weight: 6,
     color: 'blue',
-    fillColor: 'blue',
+    fffillColor: 'blue',
     dashArray: '',
     fillOpacity: 0.08
   });
@@ -89,9 +89,12 @@ function resetHighlight(e) {
 }
   
 // Zoom into the clicked country
-function zoomToFeature(e) {
-  map.fitBounds(e.target.getBounds(), { padding: [10, 10] });
-}
+//
+  //  DEACTIVATED  DEACTIVATED  DEACTIVATED  DEACTIVATED  DEACTIVATED  DEACTIVATED  DEACTIVATED  DEACTIVATED  
+//
+// function zoomToFeature(e) {
+//   map.fitBounds(e.target.getBounds(), { padding: [10, 10] });
+// }
 
 
 // Define events for each feature (country)
