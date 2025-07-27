@@ -1,4 +1,32 @@
 [
+
+  {
+    "name": "TEMPLATE__NAME_NAME",
+    "loc": {
+      "lat": 333,
+      "long": 55555,
+      "plz": 111111,
+      "city": "CITY_CITY",
+      "street": {
+        "name": "STREET_STREET",
+        "number": 0,
+        "ext": ""
+      },
+      "country": "COUNTRY_COUNTRY"
+    },
+    "style": "STYLE_STYLE",
+    "link": {
+      "url": "U_R_L__U_R_L__U_R_L",
+      "text": "U_R_L__TXT"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "edit.latest": 20250726
+    }
+  },
+
+
   {
     "name": "Toolbox Bodensee",
     "loc": {
@@ -11,7 +39,7 @@
         "number": 6,
         "ext": ""
       },
-      "country": "DE" 
+      "country": "Germany" 
     },
     "style": "for all",
     "link": {
@@ -1585,6 +1613,168 @@
 
 
   {
+    "name": "Werkraum47",
+    "loc": {
+      "lat": 51.0236519,
+      "long": 7.6559215,
+      "plz": 51702,
+      "city": "Bergneustadt",
+      "street": {
+        "name": "Goethestraße",
+        "number": 13,
+        "ext": "a"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://werkraum47.de",
+      "text": "werkraum47.de"
+    },
+    "dates": {
+      "space.init": 20200601,
+      "blog.latest": 20250424,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Computer-Club an der RWTH Aachen",
+    "loc": {
+      "lat": 50.7732395,
+      "long": 6.0851814,
+      "plz": 52062,
+      "city": "Aachen",
+      "street": {
+        "name": "Elisabethstraße",
+        "number": 16,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.ccac.rwth-aachen.de",
+      "text": "ccac.rwth-aachen.de"
+    },
+    "dates": {
+      "space.init": 19800130,
+      "blog.latest": 20250508,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Chaos Computer Club Aachen",
+    "loc": {
+      "lat": 50.7717189,
+      "long": 6.0914743,
+      "plz": 52062,
+      "city": "Aachen",
+      "street": {
+        "name": "Schützenstraße",
+        "number": 11,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://aachen.ccc.de",
+      "text": "aachen.ccc.de"
+    },
+    "dates": {
+      "space.init": 20020101,
+      "blog.latest": 20250508,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Digitales Aachen e.V.",
+    "loc": {
+      "lat": 50.7752964,
+      "long": 6.0795787,
+      "plz": 52064,
+      "city": "Aachen",
+      "street": {
+        "name": "Trichtergasse",
+        "number": 14,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://digitac.cc",
+      "text": "digitac.cc"
+    },
+    "dates": {
+      "space.init": 20020101,
+      "blog.latest": 20250508,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Freie Maker e.V.",
+    "loc": {
+      "lat": 50.7907176,
+      "long": 6.1060403,
+      "plz": 52070,
+      "city": "Aachen",
+      "street": {
+        "name": "Lukasstraße",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://freiemaker.github.io",
+      "text": "freiemaker.github.io"
+    },
+    "dates": {
+      "space.init": 201606025,
+      "blog.latest": 20241130,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "FabLab Aachen",
+    "loc": {
+      "lat": 50.7789110,
+      "long": 6.0593010,
+      "plz": 52074,
+      "city": "Aachen",
+      "street": {
+        "name": "Ahornstraße",
+        "number": 55,
+        "ext": ", top floor"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hci.rwth-aachen.de/fablab",
+      "text": "hci.rwth-aachen.de/fablab"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "RoboScope - Schülerlabor an der RWTH",
     "loc": {
       "lat": 50.7818162,
@@ -1656,6 +1846,33 @@
     "link": {
       "url": "https://www.makerspacebonn.de",
       "text": "makerspacebonn.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Machwerk e.V.",
+    "loc": {
+      "lat": 222,
+      "long": 55,
+      "plz": 53773,
+      "city": "Hennef (Sieg)",
+      "street": {
+        "name": "Am Schiefenberg",
+        "number": 40,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.machwerk-hennef.de",
+      "text": "machwerk-hennef.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -1845,6 +2062,33 @@
     "link": {
       "url": "https://ha.si",
       "text": "ha.si"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "InfoTastic Academy",
+    "loc": {
+      "lat": 51.1251226,
+      "long": 7.9005333,
+      "plz": 57439,
+      "city": "Attendorn",
+      "street": {
+        "name": "Kölner Straße",
+        "number": 14,
+        "ext": "a"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://infotastic.academy",
+      "text": "infotastic.academy"
     },
     "dates": {
       "space.init": 20010000,
@@ -2423,7 +2667,7 @@
 
 
   {
-    "name": "AEROSPACE LAB",
+    "name": "Aerospace Lab",
     "loc": {
       "lat": 48.5947405,
       "long": 8.8563196,
@@ -4527,57 +4771,93 @@
     }
   },
 
-{
-  "name": "NAME_NAME",
-  "loc": {
-    "lat": 22,
-    "long": 55,
-    "plz": 111111,
-    "city": "CITY_CITY",
-    "street": {
-        "name": "STREET_STREET",
-        "number": 0,
+
+  {
+    "name": "NOI Makerspace",
+    "loc": {
+      "lat": 46.4786013,
+      "long": 11.3325925,
+      "plz": 39100,
+      "city": "Bolzano-Bozen",
+      "street": {
+          "name": "Via Volta",
+          "number": 13,
+          "ext": "a"
+        },
+        "country": "Italy"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://makerspace.noi.bz.it",
+      "text": "makerspace.noi.bz.it"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+
+
+
+
+
+
+
+  {
+    "name": "Chaos Computer Club Lëtzebuerg",
+    "loc": {
+      "lat": 49.6207694,
+      "long": 6.1224033,
+      "plz": 1750,
+      "city": "Luxembourg",
+      "street": {
+        "name": "Avenue Victor Hugo",
+        "number": 60,
         "ext": ""
       },
-      "country": "COUNTRY_COUNTRY"
+      "country": "Luxemburg"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://c3l.lu",
+      "text": "c3l.lu"
+    },
+    "dates": {
+      "init": 20080523,
+      "blog.latest": 20250630,
+      "edit.latest": 20250726
+    }
   },
-  "style": "STYLE_STYLE",
-  "link": {
-    "url": "URL_URL_URL",
-    "text": "URL_TXT"
-  },
-  "dates": {
-    "init": 20010000,
-    "blog.latest": 20010000,
-    "edit.latest": 20250726
-  }
-},
 
 
-
-{
-  "name": "Ruum42",
-  "loc": {
-    "lat": 46.4786013,
-    "long": 11.3325925,
-    "plz": 39100,
-    "city": "Bolzano-Bozen",
-    "street": {
-        "name": "Via Volta",
-        "number": 13,
-        "ext": "a"
+  {
+    "name": "Level2",
+    "loc": {
+      "lat": 49.5915948,
+      "long": 6.1405476,
+      "plz": 2611,
+      "city": "Luxembourg",
+      "street": {
+        "name": "route de Thionville",
+        "number": 87,
+        "ext": ""
       },
-      "country": "Italy"
-  },
-  "style": "commercial",
-  "link": {
-    "url": "https://makerspace.noi.bz.it",
-    "text": "makerspace.noi.bz.it"
+      "country": "Luxemburg"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://level2.lu",
+      "text": "level2.lu"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "edit.latest": 20250726
+    }
   }
-}
 
 
 ]
-
-
-

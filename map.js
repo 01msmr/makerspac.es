@@ -32,14 +32,37 @@ async function initmap() {
   }
 
 
-  // IF Germany: fill plz with leading zeros
+  // fill plz with leading zeros (length depending on country)  /// GPT
 
   function zfill(plz, country) {
-    if (country === "Germany") {
-      return plz.toString().padStart(5, "0");
+    const expectedLengths = {
+      Germany: 5,
+      Austria: 4,
+      Switzerland: 4,
+      Poland: 5,
+      USA: 5,
+      Italy: 5,
+      Spain: 5,
+      France: 5,
+      Luxemburg: 4,
+      Netherlands: 4 
+      // → weitere Länder bei Bedarf ergänzen // letzte Zeile ohne Komma (!)
+    };
+
+    let plzStr = plz.toString();
+
+    // Logging, wenn das Land nicht in der Liste ist
+    if (!expectedLengths.hasOwnProperty(country)) {
+      console.warn(`⚠️ Keine erwartete PLZ-Länge für "${country}" definiert. Verwende Originalwert: ${plzStr}`);
+      return plzStr;
     }
-    return plz.toString();
+
+    let expectedLength = expectedLengths[country] || plzStr.length;
+
+    return plzStr.padStart(expectedLength, "0");
   }
+
+
 
 
   // iterate over all json data
@@ -47,7 +70,7 @@ async function initmap() {
   for (let space of json) {
 
     // fetch one space
-    var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);
+    var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);  /// GPT: zfill()
 
     marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h3>${space.name}</h3><br><br></a>${space.loc.street.name} ${space.loc.street.number}<span id="streetext">${space.loc.street.ext}</span><br><b>${zfill(space.loc.plz, space.loc.country)} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
   }
