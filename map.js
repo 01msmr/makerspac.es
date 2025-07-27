@@ -32,15 +32,13 @@ async function initmap() {
   }
 
 
+  // IF Germany: fill plz with leading zeros
+
   function zfill(plz, country) {
-    const lengths = {
-      Germany: 5,
-      Austria: 4,
-      Switzerland: 4
-    };
-    let plzStr = plz.toString();
-    let expectedLength = lengths[country] || plzStr.length;
-    return plzStr.padStart(expectedLength, "0");
+    if (country === "Germany") {
+      return plz.toString().padStart(5, "0");
+    }
+    return plz.toString();
   }
 
 
@@ -51,8 +49,9 @@ async function initmap() {
     // fetch one space
     var marker = L.marker([space.loc.lat, space.loc.long]).addTo(map);
 
-    marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h3>${space.name}</h3><br><br></a>${space.loc.street.name} ${space.loc.street.number}<span id="streetext">${space.loc.street.ext}</span><br><b>${zfill(space.loc.plz)} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
+    marker.bindPopup(`<h3 id="style">${space.style}</h3><a id="titleurl" href="${space.link.url}" target="_blank"><h3>${space.name}</h3><br><br></a>${space.loc.street.name} ${space.loc.street.number}<span id="streetext">${space.loc.street.ext}</span><br><b>${zfill(space.loc.plz, space.loc.country)} ${space.loc.city}</b><br>${space.loc.country}<br><a id="url" href="${space.link.url}" target="_blank"><b>${space.link.text}</b></a>`);
   }
+  
 
 
   
