@@ -32,8 +32,15 @@ async function initmap() {
   }
 
 
-  function zfill(plz) {
-    return plz.toString().padStart(5, "0");
+  function zfill(plz, country) {
+    const lengths = {
+      Germany: 5,
+      Austria: 4,
+      Switzerland: 4
+    };
+    let plzStr = plz.toString();
+    let expectedLength = lengths[country] || plzStr.length;
+    return plzStr.padStart(expectedLength, "0");
   }
 
 
