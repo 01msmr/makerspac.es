@@ -1,6 +1,3 @@
-
-
-
 [
   {
     "name": "Toolbox Bodensee",
@@ -9,13 +6,22 @@
       "long": 9.3995537,
       "plz": 88677,
       "city": "Markdorf",
-      "street": "Bergheimer Straße 6",
+      "street": {
+        "name": "Bergheimer Straße",
+        "number": 6,
+        "ext": ""
+      },
       "country": "DE" 
     },
     "style": "for all",
     "link": {
       "url": "https://www.toolbox-bodensee.de",
       "text": "toolbox-bodensee.de"
+    },
+    "dates": {
+      "space.init": 20140301,
+      "blog.latest": 20250505,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -27,13 +33,22 @@
       "long": 13.7387907,
       "plz": 1069,
       "city": "Dresden",
-      "street": "Zellescher Weg 17",
+      "street": {
+        "name": "Zellescher Weg",
+        "number": "17",
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.slub-dresden.de",
       "text": "slub-dresden.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -45,13 +60,22 @@
       "long": 13.7236009,
       "plz": 1069,
       "city": "Dresden",
-      "street": "Helmholtzstraße 18",
+      "street": {
+        "name": "Helmholtzstraße",
+        "number": 18,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.turmlabor.de",
       "text": "turmlabor.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -63,13 +87,22 @@
       "long": 13.7285471,
       "plz": 1127,
       "city": "Dresden",
-      "street": "Riesaer Straße 32",
+      "street": {
+        "name": "Riesaer Straße",
+        "number": 32,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://c3d2.de",
       "text": "c3d2.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -81,13 +114,22 @@
       "long": 13.7160188,
       "plz": 1159,
       "city": "Dresden",
-      "street": "Jagdweg 1-3",
+      "street": {
+        "name": "Jagdweg",
+        "number": 1,
+        "ext": "-3"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://konglomerat.org",
       "text": "konglomerat.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -99,13 +141,22 @@
       "long": 14.6667034,
       "plz": 2708,
       "city": "Löbau",
-      "street": "Bahnhofstraße 2",
+      "street": {
+        "name": "Bahnhofstraße",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace.loebaulebt.de",
       "text": "makerspace.loebaulebt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -117,13 +168,22 @@
       "long": 14.8042781,
       "plz": 2763,
       "city": "Zittau",
-      "street": "Innere Weberstraße 16",
+      "street": {
+        "name": "Innere Weberstraße",
+        "number": 16,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.werkraum.space",
       "text": "werkraum.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -135,13 +195,21 @@
       "long": 12.3651633,
       "plz": 4155,
       "city": "Leipzig",
-      "street": "Lindenthaler Straße 61-65",
-      "country": "Germany"
+      "street": {
+        "name": "Lindenthaler Straße",
+        "number": 61,
+        "ext": "-65"
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-leipzig.de",
       "text": "makerspace-leipzig.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -153,13 +221,21 @@
       "long": 12.2887017,
       "plz": 4209,
       "city": "Leipzig",
-      "street": "Offenburger Str. 17",
-      "country": "Germany"
+      "street": {
+        "name": "Offenburger Straße",
+        "number": 17,
+        "ext": ""
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://offene-werkstaetten.org/werkstatt/makerspace-gruenau",
       "text": "offene-werkstaetten.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -171,13 +247,21 @@
       "long": 12.3961990,
       "plz": 4315,
       "city": "Leipzig",
-      "street": "Eisenbahnstraße 9",
-      "country": "Germany"
+      "street": {
+        "name": "Eisenbahnstraße",
+        "number": 9,
+        "ext": ""
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://dezentrale.space",
       "text": "dezentrale.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -189,13 +273,21 @@
       "long": 12.4071764,
       "plz": 4315,
       "city": "Leipzig",
-      "street": "Hildegardstraße 51",
-      "country": "Germany"
+      "street": {
+        "name": "Hildegardstraße",
+        "number": 51,
+        "ext": ""
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "http://hybridartlab.de",
       "text": "hybridartlab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -207,13 +299,21 @@
       "long": 11.5826600,
       "plz": 7743,
       "city": "Jena",
-      "street": "Krautgasse 26",
-      "country": "Germany"
+      "street": {
+        "name": "Krautgasse",
+        "number": 26,
+        "ext": ""
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://krautspace.de",
       "text": "krautspace.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -225,13 +325,21 @@
       "long": 11.5685813,
       "plz": 7745,
       "city": "Jena",
-      "street": "Albert-Einstein-Straße 6",
-      "country": "Germany"
+      "street": {
+        "name": "Albert-Einstein-Straße",
+        "number": 6,
+        "ext": ""
+      },"country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://lichtwerkstatt-jena.de/",
       "text": "lichtwerkstatt-jena.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -243,13 +351,21 @@
       "long": 13.4322983,
       "plz": 10969,
       "city": "Berlin",
-      "street": "Prinzenstraße 85c",
-      "country": "Germany"
+      "street": {
+        "name": "Prinzenstraße",
+        "number": 85,
+        "ext": "c"
+      },"country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/berlin",
       "text": "tueftellab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -261,13 +377,21 @@
       "long": 13.4323412,
       "plz": 12053,
       "city": "Berlin",
-      "street": "Rollbergstraße 28a",
-      "country": "Germany"
+      "street": {
+        "name": "Rollbergstraße",
+        "number": 28,
+        "ext": "a"
+      },"country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.happylab.de/de_ber",
       "text": "happylab.de/de_ber"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -279,13 +403,22 @@
       "long": 13.0743426,
       "plz": 17111,
       "city": "Beggerow",
-      "street": "Gatschow 22",
+      "street": {
+        "name": "Gatschow",
+        "number": 22,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.landkombinat.org/konzept-werkstaetten",
       "text": "landkombinat.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -297,13 +430,22 @@
       "long": 13.2633732,
       "plz": 17033,
       "city": "Neubrandenburg",
-      "street": "1. Ringstraße 5",
+      "street": {
+        "name": "1. Ringstraße",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://entitaet.org",
       "text": "entitaet.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -315,13 +457,22 @@
       "long": 13.4426848,
       "plz": 17493,
       "city": "Greifswald",
-      "street": "Friedrich-von-Hagenow-Straße 5",
+      "street": {
+        "name": "Friedrich-von-Hagenow-Straße",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://greifswald.space",
       "text": "greifswald.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -333,13 +484,22 @@
       "long": 12.1245820,
       "plz": 18057,
       "city": "Rostock",
-      "street": "Friedhofsweg 44a",
+      "street": {
+        "name": "Friedhofsweg",
+        "number": 44,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://hack-hro.de",
       "text": "hack-hro.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -351,13 +511,22 @@
       "long": 13.6182393,
       "plz": 18546,
       "city": "Sassnitz",
-      "street": "Straße Der Jugend 7",
+      "street": {
+        "name": "Straße Der Jugend",
+        "number": 7,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://project-bay.de/lietzow-bay/maker-space-gemeinschafts-werkstatt-auf-ruegen",
       "text": "project-bay.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -369,13 +538,22 @@
       "long": 9.9875944,
       "plz": 20354,
       "city": "Hamburg",
-      "street": "Gänsemarkt 33",
+      "street": {
+        "name": "Gänsemarkt",
+        "number": 33,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/hamburg-105viertel",
       "text": "tueftellab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -387,13 +565,22 @@
       "long": 10.0199596,
       "plz": 20539,
       "city": "Hamburg",
-      "street": "Packersweide 7",
+      "street": {
+        "name": "Packersweide",
+        "number": 7,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://hofalab.de/de/home-de/",
       "text": "hofalab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -405,13 +592,22 @@
       "long": 10.010595,
       "plz": 20457,
       "city": "Hamburg",
-      "street": "Stockmeyerstr. 43, Halle 4K",
-      "country": "Germany"
+     "street": {
+      "name": "Stockmeyerstraße",
+      "number": 43,
+      "ext": ", Halle 4K"
+    },
+    "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-hamburg.org",
       "text": "fablab-hamburg.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -423,13 +619,22 @@
       "long": 9.9692056,
       "plz": 21073,
       "city": "Hamburg",
-      "street": "Eißendorfer Straße 40",
+      "street": {
+        "name": "Eißendorfer Straße",
+        "number": 40,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www2.tuhh.de/zll/workinglab",
       "text": "tuhh.de/zll/workinglab"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -441,13 +646,22 @@
       "long": 10.0154837,
       "plz": 21109,
       "city": "Hamburg",
-      "street": "Stübenhofer Weg 20a",
+      "street": {
+        "name": "Stübenhofer Weg ",
+        "number": 20,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://stuebi-makerspace.de",
       "text": "stuebi-makerspace.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -459,13 +673,22 @@
       "long": 9.9257698,
       "plz": 22761,
       "city": "Hamburg",
-      "street": "Stahltwiete 21",
+      "street": {
+        "name": "Stahltwiete",
+        "number": 21,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerhafen.de",
       "text": "makerhafen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -477,13 +700,22 @@
       "long": 9.9464159,
       "plz": 22767,
       "city": "Hamburg",
-      "street": "Eschelsweg 4",
+      "street": {
+        "name": "Eschelsweg",
+        "number": 4,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace-hamburg.de/attraktor",
       "text": "makerspace-hamburg.de/attraktor"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -495,13 +727,22 @@
       "long": 11.4471012,
       "plz": 23966,
       "city": "Wismar",
-      "street": "Philipp-Müller-Straße 14",
+      "street": {
+        "name": "Philipp-Müller-Straße",
+        "number": 14,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.hs-wismar.de/vernetzung/institutionen-hochschulunternehmen/rsi/idee-und-gruendung/startupyard/",
       "text": "hs-wismar.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -513,13 +754,22 @@
       "long": 8.8161746,
       "plz": 28195,
       "city": "Bremen",
-      "street": "An der Weide 50a",
+      "street": {
+        "name": "An der Weide",
+        "number": 50,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "only for students & youth",
     "link": {
       "url": "https://fablab-bremen.org",
       "text": "fablab-bremen.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -531,13 +781,22 @@
       "long": 8.8058690,
       "plz": 28195,
       "city": "Bremen",
-      "street": "Bornstraße 14-15",
+      "street": {
+        "name": "Bornstraße",
+        "number": 14,
+        "ext": "-15"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.hackerspace-bremen.de",
       "text": "hackerspace-bremen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -549,13 +808,22 @@
       "long": 9.7262848,
       "plz": 30167,
       "city": "Hannover",
-      "street": "Kopernikusstraße 14",
+      "street": {
+        "name": "Kopernikusstraße",
+        "number": 14,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://hafven.de/maker-space",
       "text": "hafven.de/maker-space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -567,13 +835,22 @@
       "long": 8.9106055,
       "plz": 32423,
       "city": "Minden",
-      "street": "Simeonscarré 2",
+      "street": {
+        "name": "Simeonscarré",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-minden.de",
       "text": "makerspace-minden.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -585,13 +862,22 @@
       "long": 8.7475661,
       "plz": 33098,
       "city": "Paderborn",
-      "street": "Westernmauer 12-16",
+      "street": {
+        "name": "Westernmauer",
+        "number": 12,
+        "ext": "-16"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://c3pb.de",
       "text": "c3pb.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -603,13 +889,22 @@
       "long": 8.7799918,
       "plz": 33100,
       "city": "Paderborn",
-      "street": "Ausblick 1",
+      "street": {
+        "name": "Ausblick",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.tecup.de/maker-space",
       "text": "tecup.de/maker-space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -621,13 +916,22 @@
       "long": 8.3773189,
       "plz": 33330,
       "city": "Gütersloh",
-      "street": "Bogenstraße 1-8",
+      "street": {
+        "name": "Bogenstraße",
+        "number": 1,
+        "ext": "-8"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace-gt.de",
       "text": "makerspace-gt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -639,13 +943,22 @@
       "long": 8.5692467,
       "plz": 33609,
       "city": "Bielefeld",
-      "street": "Blomestraße 27",
+      "street": {
+        "name": "Blomestraße",
+        "number": 27,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://hackerspace-bielefeld.de",
       "text": "hackerspace-bielefeld.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -657,13 +970,22 @@
       "long": 9.4950466,
       "plz": 34117,
       "city": "Kassel",
-      "street": "Schillerstraße 25",
+      "street": {
+        "name": "Schillerstraße",
+        "number": 25,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://flipdot.org",
       "text": "flipdot.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -675,13 +997,22 @@
       "long": 8.6777523,
       "plz": 35390,
       "city": "Gießen",
-      "street": "Walltorstraße 57",
+      "street": {
+        "name": "Walltorstraße",
+        "number": 57,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-giessen.de",
       "text": "makerspace-giessen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -693,13 +1024,22 @@
       "long": 9.6807826,
       "plz": 36037,
       "city": "Fulda",
-      "street": "Lindenstraße 14",
+      "street": {
+        "name": "Lindenstraße",
+        "number": 14,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://maglab.space/de",
       "text": "maglab.space/de/"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -711,13 +1051,22 @@
       "long": 9.6969593,
       "plz": 36037,
       "city": "Fulda",
-      "street": "Domänenweg 2",
+      "street": {
+        "name": "Domänenweg",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://olaf.one",
       "text": "olaf.one"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -729,13 +1078,22 @@
       "long": 10.5156945,
       "plz": 38114,
       "city": "Braunschweig",
-      "street": "Hamburger Str. 49",
+      "street": {
+        "name": "Hamburger Str.",
+        "number": 49,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-bs.de",
       "text": "makerspace-bs.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -747,13 +1105,22 @@
       "long": 6.7996446,
       "plz": 40227,
       "city": "Düsseldorf",
-      "street": "Sonnenstraße 58",
+      "street": {
+        "name": "Sonnenstraße",
+        "number": 58,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://chaosdorf.de",
       "text": "chaosdorf.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -765,13 +1132,22 @@
       "long": 6.8003976,
       "plz": 40233,
       "city": "Düsseldorf",
-      "street": "Birkenstraße 23",
+      "street": {
+        "name": "Birkenstraße",
+        "number": 23,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://garage-lab.de",
       "text": "garage-lab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -783,13 +1159,22 @@
       "long": 6.8003522,
       "plz": 40233,
       "city": "Düsseldorf",
-      "street": "Birkenstraße 23",
+      "street": {
+        "name": "Birkenstraße",
+        "number": 23,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.maschinendorf.de",
       "text": "maschinendorf.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -801,13 +1186,22 @@
       "long": 6.6868142,
       "plz": 41460,
       "city": "Neuss",
-      "street": "Krefelder Str. 55",
+      "street": {
+        "name": "Krefelder Str.",
+        "number": 55,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/rhein-kreis-neuss",
       "text": "tueftellab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -819,13 +1213,22 @@
       "long": 6.6926407,
       "plz": 41464,
       "city": "Neuss",
-      "street": "Körnerstraße 72",
+      "street": {
+        "name": "Körnerstraße",
+        "number": 72,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fnordeingang.de",
       "text": "fnordeingang.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -837,13 +1240,22 @@
       "long": 7.1457854,
       "plz": 42105,
       "city": "Wuppertal",
-      "street": "Mirker Strasse 48a",
+      "street": {
+        "name": "Mirker Strasse",
+        "number": 48,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.devtal.de",
       "text": "devtal.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -855,13 +1267,22 @@
       "long": 7.2323595,
       "plz": 42279,
       "city": "Wuppertal",
-      "street": "Mählersbeck 1",
+      "street": {
+        "name": "Mählersbeck",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.devlab.nrw",
       "text": "devlab.nrw"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -873,13 +1294,22 @@
       "long": 7.2597076,
       "plz": 44803,
       "city": "Bochum",
-      "street": "Suttner-Nobel-Allee 4",
+      "street": {
+        "name": "Suttner-Nobel-Allee",
+        "number": 4,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace.ruhr-uni-bochum.de",
       "text": "makerspace.ruhr-uni-bochum.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -891,13 +1321,22 @@
       "long": 7.0250623,
       "plz": 45136,
       "city": "Essen",
-      "street": "Sibyllastr. 9 (Hinterhof)",
+      "street": {
+        "name": "Sibyllastr.",
+        "number": 9,
+        "ext": " (Hinterhof)"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://chaospott.de",
       "text": "chaospott.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -909,13 +1348,22 @@
       "long": 6.9324461,
       "plz": 46236,
       "city": "Bottrop",
-      "street": "Am Vietshof 2-4",
+      "street": {
+        "name": "Am Vietshof",
+        "number": 2,
+        "ext": "-4"
+      },
       "country": "Germany"
     },
     "style": "only for students // commercial",
     "link": {
       "url": "https://hrw-fablab.de",
       "text": "hrw-fablab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -927,13 +1375,22 @@
       "long": 6.6037374,
       "plz": 46399,
       "city": "Bocholt",
-      "street": "Westend 31",
+      "street": {
+        "name": "Westend",
+        "number": 31,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-bocholt.de",
       "text": "makerspace-bocholt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -945,13 +1402,22 @@
       "long": 6.7600835,
       "plz": 46539,
       "city": "Dinslaken",
-      "street": "Ziegelstrasse 122",
+      "street": {
+        "name": "Ziegelstrasse",
+        "number": 122,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://bastelbude.grade.de",
       "text": "bastelbude.grade.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -963,13 +1429,22 @@
       "long": 6.5456018,
       "plz": 47475,
       "city": "Kamp-Lintfort",
-      "street": "Friedrich-Heinrich-Allee 25",
+      "street": {
+        "name": "Friedrich-Heinrich-Allee",
+        "number": 25,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab.hochschule-rhein-waal.de",
       "text": "fablab.hochschule-rhein-waal.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -981,13 +1456,22 @@
       "long": 6.5697306,
       "plz": 47805,
       "city": "Krefeld",
-      "street": "Ondereyckstraße 2",
+      "street": {
+        "name": "Ondereyckstraße",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.hs-niederrhein.de/makerspace",
       "text": "hs-niederrhein.de/makerspace"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -999,13 +1483,22 @@
       "long": 7.6404866,
       "plz": 48155,
       "city": "Münster",
-      "street": "Hafenweg 16",
+      "street": {
+        "name": "Hafenweg",
+        "number": 16,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.digitalhub.ms/fablab",
       "text": "digitalhub.ms/fablab"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1017,13 +1510,22 @@
       "long": 7.3234219,
       "plz": 48565,
       "city": "Steinfurt",
-      "street": "Stegerwaldstraße 39",
+      "street": {
+        "name": "Stegerwaldstraße",
+        "number": 39,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.fh-muenster.de/de/makerspace",
       "text": "muenster.de/de/makerspace"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1035,13 +1537,22 @@
       "long": 6.9881421,
       "plz": 50679,
       "city": "Köln",
-      "street": "Betzdorfer Straße 2",
+      "street": {
+        "name": "Betzdorfer Straße",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.th-koeln.de/forschung/makerspace-und-mini-inkubatoren_77114.php",
       "text": "https://www.th-koeln.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1053,13 +1564,22 @@
       "long": 6.9129535,
       "plz": 50825,
       "city": "Köln",
-      "street": "Heliosstraße 6a",
+      "street": {
+        "name": "Heliosstraße",
+        "number": 6,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://koeln.ccc.de",
       "text": "koeln.ccc.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1071,13 +1591,22 @@
       "long": 6.0468808,
       "plz": 52074,
       "city": "Aachen",
-      "street": "Campus-Boulevard 30",
+      "street": {
+        "name": "Campus-Boulevard",
+        "number": 30,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://www.roboscope.rwth-aachen.de",
       "text": "roboscope.rwth-aachen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1089,13 +1618,22 @@
       "long": 6.0628171,
       "plz": 52074,
       "city": "Aachen",
-      "street": "Kopernikusstraße 16",
+      "street": {
+        "name": "Kopernikusstraße",
+        "number": 16,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.roboterclub.rwth-aachen.de",
       "text": "roboterclub.rwth-aachen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1107,13 +1645,49 @@
       "long": 7.1450146,
       "plz": 53175,
       "city": "Bonn",
-      "street": "Kennedyallee 18",
+      "street": {
+        "name": "Kennedyallee",
+        "number": 18,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspacebonn.de",
       "text": "makerspacebonn.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Maschinendeck",
+    "loc": {
+      "lat": 49.7499043,
+      "long": 6.6165592,
+      "plz": 54294,
+      "city": "Trier",
+      "street": {
+        "name": "Eurener Straße",
+        "number": 48,
+        "ext": "z"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "http://maschinendeck.org",
+      "text": "maschinendeck.org"
+    },
+    "dates": {
+      "space.init": 20140701,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1125,31 +1699,103 @@
       "long": 6.8880852,
       "plz": 54516,
       "city": "Wittlich",
-      "street": "Neustraße 6",
+      "street": {
+        "name": "Neustraße",
+        "number": 6,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "http://www.makerspace.wittlich.de",
       "text": "makerspace.wittlich.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
 
   {
-    "name": "Space Mayen-Koblenz",
+    "name": "Offene Werkstatt Mainz",
     "loc": {
-      "lat": 50.4214156,
-      "long": 7.5751553,
+      "lat": 50.0056681,
+      "long": 8.2578132,
+      "plz": 55118,
+      "city": "Mainz",
+      "street": {
+        "name": "Boppstraße",
+        "number": 42,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://offenewerkstattmainz.de",
+      "text": "offenewerkstattmainz.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "KOLab Makerspace",
+    "loc": {
+      "lat": 50.3633568,
+      "long": 7.5579490,
+      "plz": 56072,
+      "city": "Koblenz",
+      "street": {
+        "name": "Universitätsstraße",
+        "number": 1,
+        "ext": "Gebäude E und F"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://kreativ-werkstatt.yooco.de",
+      "text": "kreativ-werkstatt.yooco.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "MakerSpace Mayen-Koblenz",
+    "loc": {
+      "lat": 50.4213020,
+      "long": 7.5751657,
       "plz": 56170,
       "city": "Bendorf",
-      "street": "Untere Vallendarer Straße 26",
+      "street": {
+        "name": "Untere Vallendarer Straße",
+        "number": 26,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-myk.de",
       "text": "makerspace-myk.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1161,13 +1807,22 @@
       "long": 8.0219029,
       "plz": 57072,
       "city": "Siegen",
-      "street": "Sandstraße 26",
+      "street": {
+        "name": "Sandstraße",
+        "number": 26,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab-siegen.de",
       "text": "fablab-siegen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1179,13 +1834,22 @@
       "long": 8.0044810,
       "plz": 57072,
       "city": "Siegen",
-      "street": "Effertsufer 104",
+      "street": {
+        "name": "Effertsufer",
+        "number": 104,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://ha.si",
       "text": "ha.si"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1197,13 +1861,184 @@
       "long": 7.8069204,
       "plz": 59067,
       "city": "Hamm",
-      "street": "Banningstraße 15",
+      "street": {
+        "name": "Banningstraße",
+        "number": 15,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab-hamm.de",
       "text": "fablab-hamm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Kreativwerkstatt des Frankfurter Verbands",
+    "loc": {
+      "lat": 50.1364995,
+      "long": 8.6685926,
+      "plz": 60320,
+      "city": "Frankfurt am Main",
+      "street": {
+        "name": "Hansaallee",
+        "number": 150,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.kreativwerkstatt-ffm.de",
+      "text": "kreativwerkstatt-ffm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Kreativwerkstatt des Frankfurter Verbands",
+    "loc": {
+      "lat": 50.1364995,
+      "long": 8.6685926,
+      "plz": 60325,
+      "city": "Frankfurt am Main",
+      "street": {
+        "name": "Robert-Mayer-Straße",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.kreativwerkstatt-ffm.de",
+      "text": "kreativwerkstatt-ffm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "MakeLab Uni Frankfurt",
+    "loc": {
+      "lat": 50.1170558,
+      "long": 8.6499490,
+      "plz": 60325,
+      "city": "Frankfurt am Main",
+      "street": {
+        "name": "Robert-Mayer-Straße",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.uni-frankfurt.de/103729512/Make_Lab",
+      "text": "kreativuni-frankfurt.de/103729512/Make_Lab"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Chaos Computer Club Frankfurt",
+    "loc": {
+      "lat": 50.1088164,
+      "long": 8.6564187,
+      "plz": 60327,
+      "city": "Frankfurt am Main",
+      "street": {
+        "name": "Hohenstaufenstraße",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://ccc-ffm.de",
+      "text": "c-ffm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Hackerspace FFM",
+    "loc": {
+      "lat": 50.1886436,
+      "long": 8.5910195,
+      "plz": 61440,
+      "city": "Oberursel",
+      "street": {
+        "name": "Ludwig-Erhard-Straße",
+        "number": 32,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hackerspace-ffm.de",
+      "text": "hackerspace-ffm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Maker-Werkstadt Frankfurt",
+    "loc": {
+      "lat": 0,
+      "long": 0,
+      "plz": 0,
+      "city": "Frankfurt am Main",
+      "street": {
+        "name": "STRASSE",
+        "number": 0,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://maker-werkstadt.de",
+      "text": "maker-werkstadt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1216,13 +2051,103 @@
       "long": 8.9175025,
       "plz": 63450,
       "city": "Hanau",
-      "street": "Am Markt 14-18",
+      "street": {
+        "name": "Am Markt",
+        "number": 14,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.kulturforum-hanau.de/angebote/49944/index.html",
       "text": "kulturforum-hanau.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+  
+  {
+    "name": "Jugendkulturzentrum Kreativwerkstatt",
+    "loc": {
+      "lat": 49.9710270,
+      "long": 9.1481905,
+      "plz": 63739,
+      "city": "Aschaffenburg",
+      "street": {
+        "name": "Kirchhofweg",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "only for youth",
+    "link": {
+      "url": "https://www.jukuz.de/freizeit-und-bildung/kreativwerkstatt",
+      "text": "jukuz.de/freizeit-und-bildung/kreativwerkstatt"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+  
+  {
+    "name": "Schaffenburg e.V.",
+    "loc": {
+      "lat": 49.9878298,
+      "long": 9.1359044,
+      "plz": 63741,
+      "city": "Aschaffenburg",
+      "street": {
+        "name": "Dorfstraße",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://schaffenburg.org",
+      "text": "schaffenburg.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+  
+  {
+    "name": "Chaos Computer Club Darmstadt",
+    "loc": {
+      "lat": 49.8708503,
+      "long": 8.6512245,
+      "plz": 64283,
+      "city": "Darmstadt",
+      "street": {
+        "name": "Wilhelminenstraße",
+        "number": 17,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.chaos-darmstadt.de",
+      "text": "chaos-darmstadt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1234,13 +2159,22 @@
       "long": 8.6325583,
       "plz": 64293,
       "city": "Darmstadt",
-      "street": "Mainzer Straße 74",
+      "street": {
+        "name": "Mainzer Straße",
+        "number": 74,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-darmstadt.de",
       "text": "makerspace-darmstadt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1252,13 +2186,22 @@
       "long": 8.3085765,
       "plz": 65205,
       "city": "Wiesbaden",
-      "street": "Wandersmannstrasse 60",
+      "street": {
+        "name": "Wandersmannstrasse",
+        "number": 60,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.makerspace-wi.de",
       "text": "makerspace-wi.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1270,13 +2213,22 @@
       "long": 8.4486120,
       "plz": 67059,
       "city": "Ludwigshafen",
-      "street": "Bismarckstraße 44-48",
+      "street": {
+        "name": "Bismarckstraße",
+        "number": 44,
+        "ext": "-48"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.ideenw3rk.de",
       "text": "ideenw3rk.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1288,13 +2240,22 @@
       "long": 8.4526774,
       "plz": 67065,
       "city": "Ludwigshafen am Rhein",
-      "street": "Am Bubenpfad 2",
+      "street": {
+        "name": "Am Bubenpfad",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace-rheinneckar.de",
       "text": "makerspace-rheinneckar.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1306,13 +2267,22 @@
       "long": 8.3563924,
       "plz": 67547,
       "city": "Worms",
-      "street": "Willy-Brandt-Ring 11",
+      "street": {
+        "name": "Willy-Brandt-Ring",
+        "number": 11,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://u10.makercloud.de",
       "text": "u10.makercloud.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1324,13 +2294,22 @@
       "long": 8.5206333,
       "plz": 68309,
       "city": "Mannheim",
-      "street": "Weinheimer Strasse 58-60",
+      "street": {
+        "name": "Weinheimer Strasse",
+        "number": 58,
+        "ext": "-60"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://raumzeitlabor.de",
       "text": "raumzeitlabor.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1342,13 +2321,22 @@
       "long": 8.6465979,
       "plz": 69123,
       "city": "Heidelberg",
-      "street": "Siemensstraße 40",
+      "street": {
+        "name": "Siemensstraße",
+        "number": 40,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.comakingspace.org",
       "text": "comakingspace.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1360,13 +2348,22 @@
       "long": 8.6689824,
       "plz": 69469,
       "city": "Weinheim",
-      "street": "Bergstraße 70",
+      "street": {
+        "name": "Bergstraße",
+        "number": 70,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://www.frsweinheim.de/index.php/schule/makerspace",
       "text": "frsweinheim.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1378,13 +2375,22 @@
       "long": 9.1697130,
       "plz": 70469,
       "city": "Stuttgart",
-      "street": "Siemensstraße 140b",
+      "street": {
+        "name": "Siemensstraße",
+        "number": 140,
+        "ext": "b"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://hobbyhimmel.de",
       "text": "hobbyhimmel.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1396,13 +2402,22 @@
     "long": 9.1007603,
     "plz": 70569,
     "city": "Stuttgart",
-    "street": "Nobelstraße 10",
-    "country": "Germany"
+    "street": {
+        "name": "Nobelstraße",
+        "number": 10,
+        "ext": ""
+      },
+      "country": "Germany"
   },
   "style": "only for students",
   "link": {
     "url": "https://www.hdm-stuttgart.de/makerspace",
     "text": "hdm-stuttgart.de/makerspace"
+  },
+  "dates": {
+    "init": 20010000,
+    "blog.latest": 20010000,
+    "edit.latest": 20250726
   }
 },
 
@@ -1414,13 +2429,22 @@
       "long": 8.8563196,
       "plz": 71083,
       "city": "Herrenberg",
-      "street": "Berliner Straße 1",
+      "street": {
+        "name": "Berliner Straße",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://aerospace-lab.de",
       "text": "aerospace-lab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1432,13 +2456,22 @@
       "long": 9.1828659,
       "plz": 71634,
       "city": "Ludwigsburg",
-      "street": "Reuteallee 46",
+      "street": {
+        "name": "Reuteallee",
+        "number": 46,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.maked-digital.de",
       "text": "maked-digital.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1450,13 +2483,22 @@
       "long": 9.1841940,
       "plz": 71636,
       "city": "Ludwigsburg",
-      "street": "Pflugfelder Straße 23",
+      "street": {
+        "name": "Pflugfelder Straße",
+        "number": 23,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.tinkertank.de",
       "text": "tinkertank.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1468,13 +2510,22 @@
       "long": 9.0630645,
       "plz": 72072,
       "city": "Tübingen",
-      "street": "Ulrichstr. 1",
+      "street": {
+        "name": "Ulrichstraße",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-neckar-alb.org",
       "text": "fablab-neckar-alb.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1486,13 +2537,22 @@
       "long": 9.0751247,
       "plz": 72072,
       "city": "Tübingen",
-      "street": "Bei den Pferdeställen 8",
+      "street": {
+        "name": "Bei den Pferdeställen",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://franzwerk-tuebingen.de",
       "text": "franzwerk-tuebingen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1504,13 +2564,22 @@
       "long": 9.0611375,
       "plz": 72072,
       "city": "Tübingen",
-      "street": "Wöhrdstraße 25",
+      "street": {
+        "name": "Wöhrdstraße",
+        "number": 25,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://ki-maker.space",
       "text": "ki-maker.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1522,13 +2591,22 @@
       "long": 9.0784016,
       "plz": 72072,
       "city": "Tübingen",
-      "street": "Aixer Straße 72",
+      "street": {
+        "name": "Aixer Straße",
+        "number": 72,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.werkstadthaus.de",
       "text": "werkstadthaus.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1540,13 +2618,22 @@
       "long": 8.4853851,
       "plz": 72297,
       "city": "Seewald",
-      "street": "Buchenweg 8",
+      "street": {
+        "name": "Buchenweg",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://lab.sonnenwald.org",
       "text": "lab.sonnenwald.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1558,13 +2645,22 @@
       "long": 9.2035208,
       "plz": 72760,
       "city": "Reutlingen",
-      "street": "Gustav-Wagner-Straße 11",
+      "street": {
+        "name": "Gustav-Wagner-Straße",
+        "number": 11,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makertreff.com",
       "text": "makertreff.com"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1576,13 +2672,22 @@
       "long": 9.1035644,
       "plz": 70569,
       "city": "Stuttgart",
-      "street": "Pfaffenwaldring 45",
+      "street": {
+        "name": "Pfaffenwaldring",
+        "number": 45,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace",
       "text": "tik.uni-stuttgart.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1594,13 +2699,22 @@
       "long": 9.3119614,
       "plz": 73728,
       "city": "Esslingen am Neckar",
-      "street": "Milchstraße 17",
+      "street": {
+        "name": "Milchstraße",
+        "number": 17,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://essembly.de",
       "text": "essembly.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1612,13 +2726,22 @@
       "long": 9.2149291,
       "plz": 74072,
       "city": "Heilbronn",
-      "street": "Experimenta-Platz",
+      "street": {
+        "name": "Experimenta-Platz",
+        "number": 0,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace.experimenta.science",
       "text": "makerspace.experimenta.science"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1630,13 +2753,22 @@
       "long": 9.3362978,
       "plz": 74196,
       "city": "Neuenstadt am Kocher",
-      "street": "Öhringer Str. 24",
+      "street": {
+        "name": "Öhringer Straße",
+        "number": 24,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-neuenstadt.de",
       "text": "fablab-neuenstadt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1648,13 +2780,22 @@
       "long": 8.7383220,
       "plz": 75365,
       "city": "Calw",
-      "street": "Im Zwinger 4",
+      "street": {
+        "name": "Im Zwinger",
+        "number": 4,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://c-hack.de",
       "text": "c-hack.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1666,13 +2807,22 @@
       "long": 8.4291871,
       "plz": 76131,
       "city": "Karlsruhe",
-      "street": "Alter Schlachthof 25a",
+      "street": {
+        "name": "Alter Schlachthof",
+        "number": 25,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab-karlsruhe.de",
       "text": "fablab-karlsruhe.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1684,13 +2834,22 @@
       "long": 8.4071734,
       "plz": 76133,
       "city": "Karlsruhe",
-      "street": "Steinstraße 23",
+      "street": {
+        "name": "Steinstraße",
+        "number": 23,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://entropia.de",
       "text": "entropia.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1702,13 +2861,22 @@
       "long": 8.3839439,
       "plz": 76135,
       "city": "Karlsruhe",
-      "street": "Lorenzstraße 19",
+      "street": {
+        "name": "Lorenzstraße",
+        "number": 19,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://zkm.de/de/suche?search=B%C3%84Mlab",
       "text": "zkm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1720,13 +2888,22 @@
       "long": 8.6204634,
       "plz": 76698,
       "city": "Ubstadt-Weiher",
-      "street": "Bahnhofstraße 2",
+      "street": {
+        "name": "Bahnhofstraße",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab-bruchsal.de",
       "text": "fablab-bruchsal.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1738,13 +2915,22 @@
       "long": 7.9423574,
       "plz": 77652,
       "city": "Offenburg",
-      "street": "Badstraße 24",
+      "street": {
+        "name": "Badstraße",
+        "number": 24,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://emi.hs-offenburg.de/fakultaet-elektrotechnik-medizintechnik-und-informatik/labore/edu-fablab-hso",
       "text": "emi.hs-offenburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1756,33 +2942,51 @@
       "long": 9.1659670,
       "plz": 78462,
       "city": "Konstanz",
-      "street": "Schulthaißstraße 19",
+      "street": {
+        "name": "Schulthaißstraße",
+        "number": 19,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.hacknology.de",
       "text": "hacknology.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
 
-{
-  "name": "Innovationswerkstatt Konstanz",
-  "loc": {
-    "lat": 47.6588972,
-    "long": 9.1663681,
-    "plz": 78462,
-    "city": "Konstanz",
-    "street": "Blarerstraße 56",
-    "country": "Germany"
+  {
+    "name": "Innovationswerkstatt Konstanz",
+    "loc": {
+      "lat": 47.6588972,
+      "long": 9.1663681,
+      "plz": 78462,
+      "city": "Konstanz",
+      "street": {
+        "name": "Blarerstraße",
+        "number": 56,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://www.innovationswerkstatt.org",
+      "text": "innovationswerkstatt.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
   },
-  "style": "commercial",
-  "link": {
-    "url": "https://www.innovationswerkstatt.org",
-    "text": "innovationswerkstatt.org"
-  }
-},
 
 
   {
@@ -1792,13 +2996,22 @@
       "long": 9.1876305,
       "plz": 78464,
       "city": "Konstanz",
-      "street": "Universitätsstraße 10",
+      "street": {
+        "name": "Universitätsstraße",
+        "number": 10,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.uni-konstanz.de/universitaetsentwicklung-forschung-und-transfer/wissens-und-technologietransfer-wtt/fablab-konstanz/",
       "text": "uni-konstanz.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1810,13 +3023,22 @@
       "long": 9.1688982,
       "plz": 78467,
       "city": "Konstanz",
-      "street": "Bücklestraße 3b",
+      "street": {
+        "name": "Bücklestraße",
+        "number": 3,
+        "ext": "b"
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.innolab-bodensee.de",
       "text": "innolab-bodensee.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1828,13 +3050,22 @@
       "long": 9.1589756,
       "plz": 78467,
       "city": "Konstanz",
-      "street": "Am Seerhein 6",
+      "street": {
+        "name": "Am Seerhein",
+        "number": 6,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://werkstatt-kn.de",
       "text": "werkstatt-kn.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1846,13 +3077,22 @@
       "long": 7.8281109,
       "plz": 79110,
       "city": "Freiburg im Breisgau",
-      "street": "Ensisheimer Str. 4",
+      "street": {
+        "name": "Ensisheimer Straße",
+        "number": 4,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://freilab.de",
       "text": "freilab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1864,13 +3104,22 @@
       "long": 11.5341577,
       "plz": 80339,
       "city": "München",
-      "street": "Gollierstraße 70",
+      "street": {
+        "name": "Gollierstraße",
+        "number": 70,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://freilab.de",
       "text": "freilab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1882,13 +3131,22 @@
       "long": 11.5500795,
       "plz": 80636,
       "city": "München",
-      "street": "Dachauer Str. 112h",
+      "street": {
+        "name": "Dachauer Straße",
+        "number": 112,
+        "ext": "h"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.munichmakerlab.de",
       "text": "munichmakerlab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1900,13 +3158,22 @@
       "long": 11.5504107,
       "plz": 80636,
       "city": "München",
-      "street": "Dachauer Straße 110c",
+      "street": {
+        "name": "Dachauer Straße",
+        "number": 110,
+        "ext": "c"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.werkbox3.de",
       "text": "werkbox3.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1918,13 +3185,22 @@
       "long": 11.5567005,
       "plz": 80797,
       "city": "München",
-      "street": "Lothstraße 21",
+      "street": {
+        "name": "Lothstraße",
+        "number": 21,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://clab-hm.de",
       "text": "clab-hm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1936,13 +3212,22 @@
       "long": 11.5524567,
       "plz": 80797,
       "city": "München",
-      "street": "Freddie-Mercury-Straße 5",
+      "street": {
+        "name": "Freddie-Mercury-Straße",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.maker-space.de",
       "text": "maker-space.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1954,13 +3239,22 @@
       "long": 11.5514604,
       "plz": 80797,
       "city": "München",
-      "street": "Freddie-Mercury-Straße 5",
+      "street": {
+        "name": "Freddie-Mercury-Straße",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://tueftellab.de/makerspace/muenchen",
       "text": "tueftellab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1972,13 +3266,22 @@
       "long": 11.5918795,
       "plz": 81667,
       "city": "München",
-      "street": "Rosenheimer Str. 5",
+      "street": {
+        "name": "Rosenheimer Straße",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://erfindergarden.de",
       "text": "erfindergarden.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -1990,13 +3293,22 @@
       "long": 11.7001701,
       "plz": 81829,
       "city": "München",
-      "street": "Heinrich-Böll-Straße 69",
+      "street": {
+        "name": "Heinrich-Böll-Straße",
+        "number": 69,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://nachbarschaftswerkwagnis.org",
       "text": "nachbarschaftswerkwagnis.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2008,13 +3320,22 @@
       "long": 11.3005398,
       "plz": 82205,
       "city": "Gilching",
-      "street": "Römerstraße 28",
+      "street": {
+        "name": "Römerstraße",
+        "number": 28,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.offene-werkstatt-gilching.de",
       "text": "offene-werkstatt-gilching.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2026,13 +3347,22 @@
       "long": 11.2066981,
       "plz": 82418,
       "city": "Murnau am Staffelsee",
-      "street": "James-Loeb-Straße 11,  ",
+      "street": {
+        "name": "James-Loeb-Straße",
+        "number": 11,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerlab-murnau.de",
       "text": "makerlab-murnau.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2044,13 +3374,22 @@
       "long": 12.1072482,
       "plz": 83024,
       "city": "Rosenheim",
-      "street": "Hochschulstraße 1",
+      "street": {
+        "name": "Hochschulstraße",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://ro-lip.th-rosenheim.de",
       "text": "ro-lip.th-rosenheim.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2062,13 +3401,22 @@
       "long": 11.7376338,
       "plz": 83703,
       "city": "Gmund am Tegernsee",
-      "street": "Tölzer Straße 3a",
+      "street": {
+        "name": "Tölzer Straße",
+        "number": 3,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://oberlab.de",
       "text": "oberlab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2080,13 +3428,22 @@
       "long": 11.4343439,
       "plz": 85049,
       "city": "Ingolstadt",
-      "street": "Schloßlände 26",
+      "street": {
+        "name": "Schloßlände",
+        "number": 26,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.brigk.digital/brigk-makerspace",
       "text": "brigk.digital/brigk-makerspace"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2098,13 +3455,22 @@
       "long": 11.9075329,
       "plz": 85614,
       "city": "Kirchseeon",
-      "street": "Am Hirtenfeld 11",
+      "street": {
+        "name": "Am Hirtenfeld",
+        "number": 11,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://makerspace-ebe.de",
       "text": "makerspace-ebe.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2116,13 +3482,22 @@
       "long": 10.3122255,
       "plz": 87439,
       "city": "Kempten im Allgäu",
-      "street": "Landwehrstraße 2",
+      "street": {
+        "name": "Landwehrstraße",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-allgaeu.de",
       "text": "fablab-allgaeu.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2134,13 +3509,22 @@
       "long": 11.6660252,
       "plz": 85748,
       "city": "Garching bei München",
-      "street": "Lichtenbergstraße 6",
+      "street": {
+        "name": "Lichtenbergstraße",
+        "number": 6,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.maker-space.de",
       "text": "maker-space.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2152,13 +3536,22 @@
       "long": 9.6114344,
       "plz": 88212,
       "city": "Ravensburg",
-      "street": "Charlottenstraße 19-21",
+      "street": {
+        "name": "Charlottenstraße",
+        "number": 19,
+        "ext": "-21"
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://www.dgtal.de",
       "text": "dgtal.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2170,13 +3563,22 @@
       "long": 9.8522212,
       "plz": 88239,
       "city": "Wangen im Allgäu",
-      "street": "Am Hang 8",
+      "street": {
+        "name": "Am Hang",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://creapolis-wangen.de",
       "text": "creapolis-wangen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2188,13 +3590,22 @@
       "long": 9.6481626,
       "plz": 88250,
       "city": "Weingarten",
-      "street": "Doggenriedstraße 20",
+      "street": {
+        "name": "Doggenriedstraße",
+        "number": 20,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://home.rwu.de",
       "text": "home.rwu.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2206,13 +3617,22 @@
       "long": 9.991260,
       "plz": 89073,
       "city": "Ulm",
-      "street": "Platzgasse 18",
+      "street": {
+        "name": "Platzgasse",
+        "number": 18,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://frrm.de",
       "text": "frrm.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2224,13 +3644,22 @@
       "long": 9.9904377,
       "plz": 89073,
       "city": "Ulm",
-      "street": "Weinhof 9",
+      "street": {
+        "name": "Weinhof",
+        "number": 9,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.verschwoerhaus.de",
       "text": "verschwoerhaus.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2242,13 +3671,22 @@
       "long": 9.9467254,
       "plz": 89081,
       "city": "Ulm",
-      "street": "Albert-Einstein-Allee 11, Raum 43.1.106",
+      "street": {
+        "name": "Albert-Einstein-Allee",
+        "number": 11,
+        "ext": ", Raum 43.1.106"
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://wiki.fs-et.de/student-lab",
       "text": "wiki.fs-et.de/student-lab"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2260,13 +3698,22 @@
       "long": 10.0020026,
       "plz": 89231,
       "city": "Neu-Ulm",
-      "street": "Augsburger Straße 23-25",
+      "street": {
+        "name": "Augsburger Straße",
+        "number": 23,
+        "ext": "-25"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://temporaerhaus.de",
       "text": "temporaerhaus.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2278,13 +3725,22 @@
       "long": 11.0816744,
       "plz": 90402,
       "city": "Nürnberg",
-      "street": "Königstraße 93",
+      "street": {
+        "name": "Königstraße",
+        "number": 93,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "hthttps://k4cg.org",
       "text": "k4cg.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2296,13 +3752,22 @@
       "long": 10.8793421,
       "plz": 90587,
       "city": "Veitsbronn",
-      "street": "Siegelsdorfer Straße 24",
+      "street": {
+        "name": "Siegelsdorfer Straße",
+        "number": 24,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-fuerth.org",
       "text": "fablab-fuerth.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2314,13 +3779,22 @@
       "long": 10.9926694,
       "plz": 90763,
       "city": "Fürth",
-      "street": "Schwabacher Straße 512",
+      "street": {
+        "name": "Schwabacher Straße",
+        "number": 512,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.fablab-nuernberg.de",
       "text": "fablab-nuernberg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2332,13 +3806,22 @@
       "long": 10.9932841,
       "plz": 90763,
       "city": "Fürth",
-      "street": "Schwabacher-Straße 510",
+      "street": {
+        "name": "Schwabacher-Straße",
+        "number": 510,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "commercial",
     "link": {
       "url": "https://werk-eins.com",
       "text": "werk-eins.com"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2350,13 +3833,22 @@
       "long": 11.0301147,
       "plz": 91058,
       "city": "Erlangen",
-      "street": "Erwin-Rommel-Straße 60",
+      "street": {
+        "name": "Erwin-Rommel-Straße",
+        "number": 60,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students",
     "link": {
       "url": "https://fablab.fau.de",
       "text": "fablab.fau.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2368,13 +3860,22 @@
       "long": 11.3412260,
       "plz": 91220,
       "city": "Schnaittach",
-      "street": "Birkensteingasse 3",
+      "street": {
+        "name": "Birkensteingasse",
+        "number": 3,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://fablab.nueland.de",
       "text": "fablab.nueland.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2386,13 +3887,22 @@
       "long": 10.1779903,
       "plz": 91541,
       "city": "Rothenburg ob der Tauber",
-      "street": "Deutschherrngasse 1",
+      "street": {
+        "name": "Deutschherrngasse",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "http://www.fablab-rothenburg.de",
       "text": "fablab-rothenburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2404,13 +3914,22 @@
       "long": 12.1189611,
       "plz": 93053,
       "city": "Regensburg",
-      "street": "Walderdorffstraße 13b",
+      "street": {
+        "name": "Walderdorffstraße",
+        "number": 13,
+        "ext": "b"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.binary-kitchen.de",
       "text": "binary-kitchen.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2422,13 +3941,22 @@
       "long": 12.1042628,
       "plz": 93053,
       "city": "Regensburg",
-      "street": "Rudolf-Vogt-Straße 18",
+      "street": {
+        "name": "Rudolf-Vogt-Straße",
+        "number": 18,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for students & youth",
     "link": {
       "url": "https://www.mint-labs-regensburg.de",
       "text": "mint-labs-regensburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2440,13 +3968,22 @@
       "long": 12.0940905,
       "plz": 93053,
       "city": "Regensburg",
-      "street": "Tiefstraße W",
+      "street": {
+        "name": "Tiefstraße",
+        "number": 0,
+        "ext": "W"
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://www.uni-regensburg.de/physik/regensburger-schuelerlabor",
       "text": "uni-regensburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2458,13 +3995,22 @@
       "long": 12.1309313,
       "plz": 93055,
       "city": "Regensburg",
-      "street": "Auweg 42a",
+      "street": {
+        "name": "Auweg",
+        "number": 42,
+        "ext": "a"
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "http://planraum.org",
       "text": "planraum.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2476,13 +4022,22 @@
       "long": 12.9481793,
       "plz": 94469,
       "city": "Deggendorf",
-      "street": "Schwaigerbreite 17",
+      "street": {
+        "name": "Schwaigerbreite",
+        "number": 17,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "only for youth",
     "link": {
       "url": "https://www.technik-kinder.de",
       "text": "technik-kinder.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2494,13 +4049,49 @@
       "long": 10.9595537,
       "plz": 96450,
       "city": "Coburg",
-      "street": "Schlachthofstr. 1",
+      "street": {
+        "name": "Schlachthofstraße",
+        "number": 1,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://www.hs-coburg.de/hochschule/organisation/servicestellen/referat-transfer-entrepreneurship/creapolis-makerspace",
       "text": "hs-coburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "FabLab Würzburg",
+    "loc": {
+      "lat": 49.8017338,
+      "long": 9.9286698,
+      "plz": 97080,
+      "city": "Würzburg",
+      "street": {
+        "name": "Schönleinstraße",
+        "number": 5,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.fablab-wuerzburg.de",
+      "text": "fablab-wuerzburg.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2512,13 +4103,22 @@
       "long": 10.9396706,
       "plz": 98693,
       "city": "Ilmenau",
-      "street": "Gustav-Kirchhoff-Platz/ Kirchhoffbau",
+      "street": {
+        "name": "Gustav-Kirchhoff-Platz",
+        "number": 0,
+        "ext": "/ Kirchhoffbau"
+      },
       "country": "Germany"
     },
     "style": "only for students & youth",
     "link": {
       "url": "https://www.tu-ilmenau.de/universitaet/quicklinks/zentralinstitut-fuer-bildung/angebote/unikat",
       "text": "tu-ilmenau.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2530,13 +4130,22 @@
       "long": 11.0400019,
       "plz": 99085,
       "city": "Erfurt",
-      "street": "Liebknechtstraße 8",
+      "street": {
+        "name": "Liebknechtstraße",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
       "url": "https://old.makerspace-erfurt.de",
       "text": "old.makerspace-erfurt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2548,13 +4157,22 @@
       "long": 16.3561031,
       "plz": 1010,
       "city": "Wien",
-      "street": "Rathausstraße 6",
+      "street": {
+        "name": "Rathausstraße",
+        "number": 6,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "",
     "link": {
       "url": "https://metalab.at",
       "text": "metalab.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2566,13 +4184,22 @@
       "long": 16.4067915,
       "plz": 1020,
       "city": "Wien",
-      "street": "Schönngasse 15-17",
+      "street": {
+        "name": "Schönngasse",
+        "number": 15,
+        "ext": "-17"
+      },
       "country": "Austria"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.happylab.at",
       "text": "happylab.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2584,13 +4211,22 @@
       "long": 16.3467836,
       "plz": 1050,
       "city": "Wien",
-      "street": "Schönbrunner Straße 125",
+      "street": {
+        "name": "Schönbrunner Straße",
+        "number": 125,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.makeraustria.at",
       "text": "makeraustria.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2602,13 +4238,22 @@
       "long": 16.2993311,
       "plz": 2340,
       "city": "Mödling",
-      "street": "Diplom-Ingenieur-Wilhelm-Haßlinger-Straße 3",
+      "street": {
+        "name": "Diplom-Ingenieur-Wilhelm-Haßlinger-Straße",
+        "number": 3,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "commercial",
     "link": {
       "url": "http://www.handwerkstadt.org",
       "text": "handwerkstadt.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2620,13 +4265,22 @@
       "long": 16.2119331,
       "plz": 2544,
       "city": "Leobersdorf",
-      "street": "Mühlgasse 8",
+      "street": {
+        "name": "Mühlgasse",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://www.usrspace.at",
       "text": "usrspace.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2638,13 +4292,22 @@
       "long": 15.6201487,
       "plz": 3100,
       "city": "St. Pölten",
-      "street": "Ludwig-Stöhr-Straße 8",
+      "street": {
+        "name": "Ludwig-Stöhr-Straße",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://segvault.space",
       "text": "segvault.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2656,13 +4319,22 @@
       "long": 14.2838510,
       "plz": 4020,
       "city": "Linz",
-      "street": "Hofgasse 19",
+      "street": {
+        "name": "Hofgasse",
+        "number": 19,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://devlol.org",
       "text": "devlol.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2674,13 +4346,22 @@
       "long": 14.3082813,
       "plz": 4030,
       "city": "Linz",
-      "street": "Wüstenrotplatz 2",
+      "street": {
+        "name": "Wüstenrotplatz",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://www.otelolinz.at",
       "text": "otelolinz.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2692,13 +4373,22 @@
       "long": 14.4167987,
       "plz": 4400,
       "city": "Steyr",
-      "street": "Wieserfeldplatz 11",
+      "street": {
+        "name": "Wieserfeldplatz",
+        "number": 11,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://www.steyr-werke.at",
       "text": "steyr-werke.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2710,13 +4400,22 @@
       "long": 13.9231099,
       "plz": 4655,
       "city": "Vorchdorf",
-      "street": "Schulstraße 8",
+      "street": {
+        "name": "Schulstraße",
+        "number": 8,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://otelo.or.at/standort/vorchdorf",
       "text": "otelo.or.at/standort/vorchdorf"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2728,13 +4427,22 @@
       "long": 11.3960576,
       "plz": 6020,
       "city": "Innsbruck",
-      "street": "Tschamlerstraße 3",
+      "street": {
+        "name": "Tschamlerstraße",
+        "number": 3,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "for all",
     "link": {
       "url": "https://it-syndikat.org",
       "text": "it-syndikat.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2746,13 +4454,22 @@
       "long": 14.3171542,
       "plz": 9020,
       "city": "Klagenfurt am Wörthersee",
-      "street": "Lastenstraße 26",
+      "street": {
+        "name": "Lastenstraße",
+        "number": 26,
+        "ext": ""
+      },
       "country": "Austria"
     },
     "style": "commercial",
     "link": {
       "url": "https://www.makerspace-carinthia.com",
       "text": "makerspace-carinthia.com"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2764,13 +4481,22 @@
       "long": 8.7165349,
       "plz": 8406,
       "city": "Winterthur",
-      "street": "Technoparkstrasse 2",
+      "street": {
+        "name": "Technoparkstrasse",
+        "number": 2,
+        "ext": ""
+      },
       "country": "Switzerland"
     },
     "style": "for all",
     "link": {
       "url": "https://fablabwinti.ch",
       "text": "fablabwinti.ch"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2782,13 +4508,22 @@
       "long": 9.3557012,
       "plz": 9000,
       "city": "St. Gallen",
-      "street": "Andreasstrasse 5",
+      "street": {
+        "name": "Andreasstrasse",
+        "number": 5,
+        "ext": ""
+      },
       "country": "Switzerland"
     },
     "style": "for all",
     "link": {
       "url": "https://www.ruum42.ch",
       "text": "ruum42.ch"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
     }
   },
 
@@ -2799,13 +4534,22 @@
     "long": 55,
     "plz": 111111,
     "city": "CITY_CITY",
-    "street": "STREET_STREET",
-    "country": "COUNTRY_COUNTRY"
+    "street": {
+        "name": "STREET_STREET",
+        "number": 0,
+        "ext": ""
+      },
+      "country": "COUNTRY_COUNTRY"
   },
   "style": "STYLE_STYLE",
   "link": {
     "url": "URL_URL_URL",
     "text": "URL_TXT"
+  },
+  "dates": {
+    "init": 20010000,
+    "blog.latest": 20010000,
+    "edit.latest": 20250726
   }
 },
 
@@ -2818,8 +4562,12 @@
     "long": 11.3325925,
     "plz": 39100,
     "city": "Bolzano-Bozen",
-    "street": "Via Volta 13a",
-    "country": "Italy"
+    "street": {
+        "name": "Via Volta",
+        "number": 13,
+        "ext": "a"
+      },
+      "country": "Italy"
   },
   "style": "commercial",
   "link": {
