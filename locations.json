@@ -1107,7 +1107,7 @@
       "plz": 38114,
       "city": "Braunschweig",
       "street": {
-        "name": "Hamburger Str.",
+        "name": "Hamburger Straße",
         "number": 49,
         "ext": ""
       },
@@ -1215,7 +1215,7 @@
       "plz": 41460,
       "city": "Neuss",
       "street": {
-        "name": "Krefelder Str.",
+        "name": "Krefelder Straße",
         "number": 55,
         "ext": ""
       },
@@ -1235,7 +1235,7 @@
 
 
   {
-    "name": "fnordeingang Hackerspace",
+    "name": "fnordeingang",
     "loc": {
       "lat": 51.1862405,
       "long": 6.6926407,
@@ -1316,6 +1316,60 @@
 
 
   {
+    "name": "ideenWerk",
+    "loc": {
+      "lat": 51.2825126,
+      "long": 7.0307407,
+      "plz": 42489,
+      "city": "Wülfrath",
+      "street": {
+        "name": "Wilhelmstraße",
+        "number": 189,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.ideenwerk.me",
+      "text": "ideenwerk.me"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Institut für DIY-Kultur e.V.",
+    "loc": {
+      "lat": 51.1845173,
+      "long": 7.0499224,
+      "plz": 42719,
+      "city": "Solingen",
+      "street": {
+        "name": "Raffaelstraße",
+        "number": 15,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.institutfuerdiykultur.de",
+      "text": "institutfuerdiykultur.de"
+    },
+    "dates": {
+      "space.init": 20200101,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "RUB-Makerspace",
     "loc": {
       "lat": 51.4654434,
@@ -1350,7 +1404,7 @@
       "plz": 45136,
       "city": "Essen",
       "street": {
-        "name": "Sibyllastr.",
+        "name": "Sibyllastraße",
         "number": 9,
         "ext": " (Hinterhof)"
       },
@@ -1360,6 +1414,33 @@
     "link": {
       "url": "https://chaospott.de",
       "text": "chaospott.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Halle1",
+    "loc": {
+      "lat": 51.5740596,
+      "long": 7.0255863,
+      "plz": 45897,
+      "city": "Gelsenkirchen",
+      "street": {
+        "name": "Neidenburger Straße",
+        "number": 43,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://halle1wh.de",
+      "text": "halle1wh.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -1478,6 +1559,33 @@
 
 
   {
+    "name": "Technik- und Design-Café - Amplonius-Gymnasium",
+    "loc": {
+      "lat": 51.5498775,
+      "long": 6.5943044,
+      "plz": 47495,
+      "city": "Rheinberg",
+      "street": {
+        "name": "Dr.-Aloys-Wittrup-Straße",
+        "number": 18,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "only for youth",
+    "link": {
+      "url": "https://www.amplonius.de/technik-und-design-cafe",
+      "text": "amplonius.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "Makerspace Bocholt",
     "loc": {
       "lat": 51.3170762,
@@ -1586,6 +1694,60 @@
 
 
   {
+    "name": "Liebig257",
+    "loc": {
+      "lat": 50.9584849,
+      "long": 6.9407522,
+      "plz": 50739,
+      "city": "Köln",
+      "street": {
+        "name": "Liebigstraße",
+        "number": 257,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://klugev.de/projekte/liebig257",
+      "text": "klugev.de/projekte/liebig257"
+    },
+    "dates": {
+      "space.init": 20200701,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "DingFabrik Köln e.V.",
+    "loc": {
+      "lat": 50.9536877,
+      "long": 6.9307613,
+      "plz": 50823,
+      "city": "Köln",
+      "street": {
+        "name": "Fritz-Voigt-Straße",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://dingfabrik.de",
+      "text": "dingfabrik.de"
+    },
+    "dates": {
+      "space.init": 20100712,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "Chaos Computer Club Cologne e.V.",
     "loc": {
       "lat": 50.9503949,
@@ -1603,6 +1765,33 @@
     "link": {
       "url": "https://koeln.ccc.de",
       "text": "koeln.ccc.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Probierwerk Leverkusen",
+    "loc": {
+      "lat": 51.0679183,
+      "long": 7.0112994,
+      "plz": 51379,
+      "city": "Leverkusen",
+      "street": {
+        "name": "Stauffenbergstraße",
+        "number": 14,
+        "ext": "-20"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://probierwerk.com",
+      "text": "erwerk.com"
     },
     "dates": {
       "space.init": 20010000,
@@ -1957,6 +2146,33 @@
     },
     "dates": {
       "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "INNODIG - HS Trier",
+    "loc": {
+      "lat": 49.6083608,
+      "long": 7.1699258,
+      "plz": 55768,
+      "city": "Hoppstädten-Weiersbach",
+      "street": {
+        "name": "Campusallee",
+        "number": 9915,
+        "ext": " (Gebäude 9915)"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.umwelt-campus.de/forschung/projekte/innovationslabor-digitalisierung-innodig",
+      "text": "umwelt-campus.de"
+    },
+    "dates": {
+      "space.init": 20200113,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
@@ -2444,6 +2660,33 @@
     },
     "dates": {
       "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "h´eck - Hackerspace Saarbrücken",
+    "loc": {
+      "lat": 49.2792729,
+      "long": 7.0357556,
+      "plz": 66125,
+      "city": "Saarbrücken",
+      "street": {
+        "name": "Rathausstraße",
+        "number": 18,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hacksaar.de",
+      "text": "hacksaar.de"
+    },
+    "dates": {
+      "space.init": 20110201,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
@@ -4804,6 +5047,33 @@
 
 
 
+
+
+  {
+    "name": "BASE1 makerspace",
+    "loc": {
+      "lat": 49.6004781,
+      "long": 6.1140391,
+      "plz": 1430,
+      "city": "Luxembourg",
+      "street": {
+        "name": "Boulevard Pierre Dupong",
+        "number": 40,
+        "ext": ""
+      },
+      "country": "Luxemburg"
+    },
+    "style": "only for students & youth",
+    "link": {
+      "url": "https://base1.lu",
+      "text": "base1.lu"
+    },
+    "dates": {
+      "init": 20080523,
+      "blog.latest": 20010000,
+      "edit.latest": 20250726
+    }
+  },
 
 
   {
