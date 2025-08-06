@@ -2,16 +2,17 @@ var map;
 var ajaxRequest;
 var plotlist;
 var plotlayers = [];
+// const key = 'MfoJXkQ2J0VOMKPKK9Df'
 
 // Main Map Tile Layer from OpenStreetMap
-async function initmap() {
+  async function initmap() {
   map = new L.Map('map');
-  var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-  var osm = new L.TileLayer(osmUrl, { minZoom: 2, maxZoom: 19, attribution: osmAttrib });
+    var osmUrl = 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png';
+    var osmAttrib = '\u003ca href=\"https://www.stadiamaps.com\" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org" target="_blank">OpenMapTiles</a>';
+    var osm = new L.TileLayer(osmUrl, {
+      minZoom: 2, maxZoom: 19, tileSize: 512, attribution: osmAttrib, doubleClickZoom: true });
   map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
   map.addLayer(osm);
-
 
 
 
