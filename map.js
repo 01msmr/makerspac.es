@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setupMap() {
     map = new L.Map('map');
-    const osmUrl = 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png';
-    const osmAttrib = '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    const osmUrl = 'https://api.maptiler.com/maps/bright-v2/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
+    const osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
     const osmLayer = new L.TileLayer(osmUrl, {
       minZoom: 2, maxZoom: 19, attribution: osmAttrib
     });
