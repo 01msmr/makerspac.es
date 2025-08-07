@@ -1,3 +1,5 @@
+/* styles.css (Final Cleaned Version) */
+
 body {
   margin: 0;
 }
@@ -7,8 +9,6 @@ body {
   width: 100vw;
   height: 100vh;
 }
-
-
 
 .title {
   font-family: 'Lato', sans-serif;
@@ -26,30 +26,113 @@ body {
   font-size: 1.7em;
 }
 
-/* .frame {
-  color: blue;
+a#titleurl {
+  text-decoration: none;
+}
+
+.search-container {
+  z-index: 1001;
+  position: absolute;
+  top: 1.2em;
+  right: 2.5em;
+  width: 280px;
+}
+
+#search-bar {
+  font-family: 'Lato', sans-serif;
+  width: 100%;
+  font-size: 1em;
+  padding: .6em 1em;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease-in-out;
+}
+
+#search-bar.has-suggestions {
+  box-shadow: none;
+  border: 1px solid black;
+}
+
+#search-bar:focus {
+  outline: none;
+  border-color: #999;
+}
+
+#suggestions-dropdown {
+  background-color: white;
+  border-radius: 0 0 20px 20px;
+  margin-top: -22px;
+  padding-top: 28px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0px 4px 8px 1px rgba(0, 0, 0, 0.35);
+  max-height: 50vh;
+  overflow-y: auto;
+  display: none;
+}
+
+#suggestions-dropdown.is-active {
+  display: block;
+}
+
+#suggestions-dropdown.is-zooming {
+  pointer-events: none;
+}
+
+.suggestion-item {
+  font-family: 'Lato', sans-serif;
+  padding: 10px 25px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.suggestion-item:first-child {
+  margin-top: -22px;
+  padding-top: 28px;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: black;
+  color: white;
+}
+
+.suggestion-item .item-name {
   font-weight: bold;
-} */
-
-/* .tld {
-  font-size: smaller;
 }
 
-.smaller {
-  font-size: smaller;
-} */
+.suggestion-item .item-details {
+  font-size: 0.8em;
+  color: #666;
+}
 
-
-#streetext {
-  opacity: .666 !important;
+.suggestion-item:hover .item-details {
+  font-size: 0.8em;
+  color: #aaa;
 }
 
 
 
-.leaflet-popup-content-wrapper , .leaflet-popup-tip 
-{
+.leaflet-marker-icon {
+  transition: width .05s ease-in, height .05s ease-in, margin .05s ease-in;
+}
+
+
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
   background-color: rgba(188, 255, 222, .83);
 }
+
+
+
 
 .leaflet-popup-content-wrapper {
   overflow: hidden;
@@ -131,118 +214,3 @@ hr {
   color: black;
   font-weight: 800;
 }
-
-
-
-
-
-
-
-
-.search-container {
-  z-index: 1001;
-  position: absolute;
-  top: 1.2em;
-  right: 2.5em;
-  width: 280px;
-}
-
-#search-bar {
-  font-family: 'Lato', sans-serif;
-  width: 100%;
-  font-size: 1em;
-  padding: .6em 1em;
-  border-radius: 9999px;
-  /* Unchanged as requested */
-  border: 1px solid #ccc;
-  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
-  box-sizing: border-box;
-  /* MODIFIED: Added position and z-index to ensure it sits ON TOP */
-  position: relative;
-  z-index: 2;
-}
-
-#search-bar:focus {
-  outline: none;
-  border-color: #999;
-}
-
-#suggestions-dropdown {
-  background-color: white;
-  border-radius: .6em;
-  /* Unchanged as requested */
-  /* MODIFIED: The key changes for the "underlap" effect are here */
-  margin-top: -22px;
-  /* Pulls the dropdown up behind the search bar */
-  padding-top: 28px;
-  /* Pushes the list content down to create a blank space at the top */
-  position: relative;
-  z-index: 1;
-  /* Ensures the dropdown sits UNDER the search bar */
-
-  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
-  max-height: 50vh;
-  overflow-y: auto;
-  display: none;
-}
-
-/* This class now only controls visibility, not shape */
-#suggestions-dropdown.is-active {
-  display: block;
-}
-
-/* The rest of the styles are unchanged */
-.suggestion-item {
-  font-family: 'Lato', sans-serif;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-}
-
-.suggestion-item:last-child {
-  border-bottom: none;
-}
-
-.suggestion-item:hover {
-  background-color: #f0f0f0;
-}
-
-.suggestion-item .item-name {
-  font-weight: bold;
-  color: #333;
-}
-
-.suggestion-item .item-details {
-  font-size: 0.8em;
-  color: #777;
-}
-
-
-
-
-
-
-
-
-
-/* Optional: Style for when the user clicks into the search bar */
-#search-bar:focus {
-  outline: none;
-  border-color: #6FE9A6;
-  /* Matches your title background color */
-}
-
-
-
-@media (-webkit-min-device-pixel-ratio: 2),
-(min-resolution: 192dpi) {
-
-  /* Styles for high-DPI displays */
-  .leaflet-tile {
-    background-size: 200%;
-    /* Adjust background size for high-DPI */
-  }
-}
-
-
-
