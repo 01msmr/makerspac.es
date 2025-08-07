@@ -136,6 +136,104 @@ hr {
 
 
 
+
+
+
+.search-container {
+  z-index: 1001;
+  position: absolute;
+  top: 1.2em;
+  right: 2.5em;
+  width: 280px;
+}
+
+#search-bar {
+  font-family: 'Lato', sans-serif;
+  width: 100%;
+  font-size: 1em;
+  padding: .6em 1em;
+  border-radius: 9999px;
+  /* Unchanged as requested */
+  border: 1px solid #ccc;
+  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  /* MODIFIED: Added position and z-index to ensure it sits ON TOP */
+  position: relative;
+  z-index: 2;
+}
+
+#search-bar:focus {
+  outline: none;
+  border-color: #999;
+}
+
+#suggestions-dropdown {
+  background-color: white;
+  border-radius: .6em;
+  /* Unchanged as requested */
+  /* MODIFIED: The key changes for the "underlap" effect are here */
+  margin-top: -22px;
+  /* Pulls the dropdown up behind the search bar */
+  padding-top: 28px;
+  /* Pushes the list content down to create a blank space at the top */
+  position: relative;
+  z-index: 1;
+  /* Ensures the dropdown sits UNDER the search bar */
+
+  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
+  max-height: 50vh;
+  overflow-y: auto;
+  display: none;
+}
+
+/* This class now only controls visibility, not shape */
+#suggestions-dropdown.is-active {
+  display: block;
+}
+
+/* The rest of the styles are unchanged */
+.suggestion-item {
+  font-family: 'Lato', sans-serif;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+}
+
+.suggestion-item .item-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.suggestion-item .item-details {
+  font-size: 0.8em;
+  color: #777;
+}
+
+
+
+
+
+
+
+
+
+/* Optional: Style for when the user clicks into the search bar */
+#search-bar:focus {
+  outline: none;
+  border-color: #6FE9A6;
+  /* Matches your title background color */
+}
+
+
+
 @media (-webkit-min-device-pixel-ratio: 2),
 (min-resolution: 192dpi) {
 
