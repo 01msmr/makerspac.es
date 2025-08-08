@@ -21,8 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
   });
 
-  // --- THIS IS THE FIX ---
-  // Define a new icon that is 150% larger. We pre-calculate all the sizes.
+  // Define a new icon that is 50% larger. pre-calculate all the sizes.
   const hoverIcon = new L.Icon({
     iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -45,10 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setupMap() {
     map = new L.Map('map');
-    const osmUrl = 'https://api.maptiler.com/maps/bright-v2/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
+    const osmUrl = 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
     const osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
     const osmLayer = new L.TileLayer(osmUrl, {
-      minZoom: 2, maxZoom: 19, attribution: osmAttrib
+      minZoom: 2, maxZoom: 19, tileSize: 512,
+      zoomOffset: -1, attribution: osmAttrib
     });
     map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
     map.addLayer(osmLayer);
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredLocations.forEach(location => {
           const item = document.createElement('div');
           item.classList.add('suggestion-item');
-          item.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${zfill(location.loc.plz, location.loc.country)} ${location.loc.city}</div>`;
+          item.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
 
           item.addEventListener('mouseover', () => {
             const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);

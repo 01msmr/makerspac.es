@@ -50,6 +50,7 @@ a#titleurl {
   position: relative;
   z-index: 2;
   transition: all 0.2s ease-in-out;
+  opacity: 0.6;
 }
 
 #search-bar.has-suggestions {
@@ -60,13 +61,14 @@ a#titleurl {
 #search-bar:focus {
   outline: none;
   border-color: #999;
+  opacity: 0.75;
 }
 
 #suggestions-dropdown {
   background-color: white;
-  border-radius: 0 0 20px 20px;
-  margin-top: -22px;
-  padding-top: 28px;
+  border-radius: 20px;
+  margin-top: -40px;
+  padding-top: 40px;
   position: relative;
   z-index: 1;
   box-shadow: 0px 4px 8px 1px rgba(0, 0, 0, 0.35);
@@ -77,6 +79,7 @@ a#titleurl {
 
 #suggestions-dropdown.is-active {
   display: block;
+  opacity: 0.8;
 }
 
 #suggestions-dropdown.is-zooming {
@@ -91,8 +94,8 @@ a#titleurl {
 }
 
 .suggestion-item:first-child {
-  margin-top: -22px;
-  padding-top: 28px;
+  margin-top: -40px;
+  padding-top: 56px;
 }
 
 .suggestion-item:last-child {
@@ -115,13 +118,13 @@ a#titleurl {
 
 .suggestion-item:hover .item-details {
   font-size: 0.8em;
-  color: #aaa;
+  color: #ccc;
 }
 
 
 
 .leaflet-marker-icon {
-  transition: width .05s ease-in, height .05s ease-in, margin .05s ease-in;
+  transition: width .10s ease-in, width .10s ease-in, height .10s ease-in, margin .10s ease-in;
 }
 
 
