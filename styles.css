@@ -95,8 +95,8 @@ a#titleurl {
   font-family: 'Lato', sans-serif;
   padding: 8px 12px;
   cursor: pointer;
-  border-bottom: 1px solid #ddd;
   position: relative;
+  border-bottom: 1px solid #ddd;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -105,8 +105,8 @@ a#titleurl {
 
 /* Jedes zweite Element mit alternativer Farbe und ohne Border */
 .suggestion-item:nth-child(2n) {
-  background-color: #eee;
-  border-bottom: none;
+  background-color: #f6f6f6;
+  border-bottom: 1px solid #eee;
 }
 
 .suggestion-item:last-child {

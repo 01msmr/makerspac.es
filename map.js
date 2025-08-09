@@ -202,171 +202,188 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Zentrale Suchfunktion - ausgelagert für bessere Wartbarkeit
+  function performSearch() {
+    const searchBar = document.getElementById('search-bar');
+    const suggestionsDropdown = document.getElementById('suggestions-dropdown');
+
+    clearTimeout(zoomDebounceTimeout);
+    const searchQuery = searchBar.value.toLowerCase();
+    suggestionsDropdown.innerHTML = '';
+    removeConnectionLine();
+
+    if (searchQuery.length < 1) {
+      suggestionsDropdown.classList.remove('is-active');
+      searchBar.classList.remove('has-suggestions');
+      allMarkers.forEach(marker => marker.setIcon(defaultIcon));
+      return;
+    }
+
+    const filteredLocations = json.filter(location =>
+      location.name.toLowerCase().includes(searchQuery) ||
+      zfill(location.loc.plz, location.loc.country).startsWith(searchQuery) ||
+      location.loc.city.toLowerCase().includes(searchQuery)
+    );
+
+    const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+    allMarkers.forEach(marker => {
+      marker.setIcon(filteredIds.has(marker.uniqueId) ? highlightIcon : defaultIcon);
+    });
+
+    if (filteredLocations.length > 0) {
+      suggestionsDropdown.classList.add('is-active');
+      searchBar.classList.add('has-suggestions');
+
+      filteredLocations.forEach((location, index) => {
+        const item = document.createElement('div');
+        item.classList.add('suggestion-item');
+
+        const numberCircle = document.createElement('div');
+        numberCircle.classList.add('item-number');
+        numberCircle.textContent = (index + 1).toString();
+
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('item-content');
+        contentDiv.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
+
+        item.appendChild(numberCircle);
+        item.appendChild(contentDiv);
+
+        item.addEventListener('mouseenter', () => {
+          // Berechne korrekte Position und Höhe des gehoverten Elements
+          const itemRect = item.getBoundingClientRect();
+          const itemHeight = itemRect.height;
+
+          // Erstelle SVG-Element mit ursprünglicher Breite (60px) und 20px Überstand
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.id = 'current-connector';
+          svg.style.cssText = `
+            position: fixed !important;
+            left: ${itemRect.left - 60}px !important;
+            top: ${itemRect.top}px !important;
+            width: 80px !important;
+            height: ${itemHeight}px !important;
+            z-index: 999 !important;
+            pointer-events: none !important;
+          `;
+
+          // ViewBox: ursprüngliche 52 Einheiten für 60px breiten Teil, plus 20px rechteckige Erweiterung
+          svg.setAttribute('viewBox', '169 259 72 71');
+          svg.setAttribute('preserveAspectRatio', 'none');
+
+          // Ursprünglicher Pfad mit 20px rechteckiger Erweiterung
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'm169.14,297.303L169.505,297.303C179.656,296.897 190.964,304.015 194.988,313.343C199.01,322.661 210.299,329.776 220.44,329.383L220.44,329.383L240.44,329.383L240.44,259.286L220.44,259.286L220.44,259.286C210.299,258.893 199.01,266.008 194.988,275.326C190.964,284.654 179.656,291.772 169.505,291.366L169.14,291.366L169.14,297.303Z');
+          path.setAttribute('fill', 'black');
+          path.setAttribute('opacity', '1');
+
+          svg.appendChild(path);
+          document.body.appendChild(svg);
+
+          console.log('New SVG callout created with height:', itemHeight);
+
+          const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+          if (targetMarker) {
+            targetMarker.setIcon(hoverIcon);
+            createConnectionLine(item, targetMarker);
+          }
+        });
+
+        item.addEventListener('mouseleave', () => {
+          // Entferne SVG-Element
+          const svg = document.getElementById('current-connector');
+          if (svg) {
+            document.body.removeChild(svg);
+            console.log('SVG callout removed');
+          }
+
+          const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+          if (targetMarker) {
+            targetMarker.setIcon(highlightIcon);
+          }
+          removeConnectionLine();
+        });
+
+        item.addEventListener('click', () => {
+          map.flyTo([location.loc.lat, location.loc.long], 15);
+          const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+          if (targetMarker) targetMarker.openPopup();
+          searchBar.value = location.name;
+          suggestionsDropdown.classList.remove('is-active');
+          searchBar.classList.remove('has-suggestions');
+          removeConnectionLine();
+        });
+
+        suggestionsDropdown.appendChild(item);
+      });
+    } else {
+      suggestionsDropdown.classList.remove('is-active');
+      searchBar.classList.remove('has-suggestions');
+    }
+
+    if (filteredLocations.length > 0) {
+      zoomDebounceTimeout = setTimeout(() => {
+        const markersToZoom = filteredLocations.map(loc => allMarkers.find(m => m.uniqueId === loc.uniqueId)).filter(Boolean);
+
+        suggestionsDropdown.classList.add('is-zooming');
+        removeConnectionLine();
+
+        let zoomPromise;
+        if (markersToZoom.length > 1) {
+          zoomPromise = new Promise(resolve => {
+            let zoomEnded = false;
+            let moveEnded = false;
+
+            const checkComplete = () => {
+              if (zoomEnded && moveEnded) resolve();
+            };
+
+            map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+            map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+            map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2));
+          });
+        } else if (markersToZoom.length === 1) {
+          zoomPromise = new Promise(resolve => {
+            let zoomEnded = false;
+            let moveEnded = false;
+
+            const checkComplete = () => {
+              if (zoomEnded && moveEnded) resolve();
+            };
+
+            map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+            map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+            map.flyTo(markersToZoom[0].getLatLng(), 13);
+          });
+        }
+
+        if (zoomPromise) {
+          zoomPromise.then(() => {
+            suggestionsDropdown.classList.remove('is-zooming');
+          });
+        } else {
+          suggestionsDropdown.classList.remove('is-zooming');
+        }
+      }, 1000);
+    }
+  }
+
   function setupSearch() {
     const searchBar = document.getElementById('search-bar');
     const suggestionsDropdown = document.getElementById('suggestions-dropdown');
 
-    searchBar.addEventListener('keyup', () => {
-      clearTimeout(zoomDebounceTimeout);
-      const searchQuery = searchBar.value.toLowerCase();
-      suggestionsDropdown.innerHTML = '';
-      removeConnectionLine();
+    // Focus auf Suchfeld beim Laden der Website
+    searchBar.focus();
 
-      if (searchQuery.length < 1) {
-        suggestionsDropdown.classList.remove('is-active');
-        searchBar.classList.remove('has-suggestions');
-        allMarkers.forEach(marker => marker.setIcon(defaultIcon));
-        return;
-      }
+    // Keyup-Event führt die Suche aus
+    searchBar.addEventListener('keyup', performSearch);
 
-      const filteredLocations = json.filter(location =>
-        location.name.toLowerCase().includes(searchQuery) ||
-        zfill(location.loc.plz, location.loc.country).startsWith(searchQuery) ||
-        location.loc.city.toLowerCase().includes(searchQuery)
-      );
-
-      const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
-      allMarkers.forEach(marker => {
-        marker.setIcon(filteredIds.has(marker.uniqueId) ? highlightIcon : defaultIcon);
-      });
-
-      if (filteredLocations.length > 0) {
-        suggestionsDropdown.classList.add('is-active');
-        searchBar.classList.add('has-suggestions');
-
-        filteredLocations.forEach((location, index) => {
-          const item = document.createElement('div');
-          item.classList.add('suggestion-item');
-
-          const numberCircle = document.createElement('div');
-          numberCircle.classList.add('item-number');
-          numberCircle.textContent = (index + 1).toString();
-
-          const contentDiv = document.createElement('div');
-          contentDiv.classList.add('item-content');
-          contentDiv.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
-
-          item.appendChild(numberCircle);
-          item.appendChild(contentDiv);
-
-          item.addEventListener('mouseenter', () => {
-            // Berechne korrekte Position und Höhe des gehoverten Elements
-            const itemRect = item.getBoundingClientRect();
-            const itemHeight = itemRect.height;
-
-            // Erstelle SVG-Element mit ursprünglicher Breite (60px) und 20px Überstand
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.id = 'current-connector';
-            svg.style.cssText = `
-              position: fixed !important;
-              left: ${itemRect.left - 60}px !important;
-              top: ${itemRect.top}px !important;
-              width: 80px !important;
-              height: ${itemHeight}px !important;
-              z-index: 999 !important;
-              pointer-events: none !important;
-            `;
-
-            // ViewBox: ursprüngliche 52 Einheiten für 60px breiten Teil, plus 20px rechteckige Erweiterung
-            svg.setAttribute('viewBox', '169 259 72 71');
-            svg.setAttribute('preserveAspectRatio', 'none');
-
-            // Ursprünglicher Pfad mit 20px rechteckiger Erweiterung
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', 'm169.14,297.303L169.505,297.303C179.656,296.897 190.964,304.015 194.988,313.343C199.01,322.661 210.299,329.776 220.44,329.383L220.44,329.383L240.44,329.383L240.44,259.286L220.44,259.286L220.44,259.286C210.299,258.893 199.01,266.008 194.988,275.326C190.964,284.654 179.656,291.772 169.505,291.366L169.14,291.366L169.14,297.303Z');
-            path.setAttribute('fill', 'black');
-            path.setAttribute('opacity', '1');
-
-            svg.appendChild(path);
-            document.body.appendChild(svg);
-
-            console.log('New SVG callout created with height:', itemHeight);
-
-            const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
-            if (targetMarker) {
-              targetMarker.setIcon(hoverIcon);
-              createConnectionLine(item, targetMarker);
-            }
-          });
-
-          item.addEventListener('mouseleave', () => {
-            // Entferne SVG-Element
-            const svg = document.getElementById('current-connector');
-            if (svg) {
-              document.body.removeChild(svg);
-              console.log('SVG callout removed');
-            }
-
-            const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
-            if (targetMarker) {
-              targetMarker.setIcon(highlightIcon);
-            }
-            removeConnectionLine();
-          });
-
-          item.addEventListener('click', () => {
-            map.flyTo([location.loc.lat, location.loc.long], 15);
-            const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
-            if (targetMarker) targetMarker.openPopup();
-            searchBar.value = location.name;
-            suggestionsDropdown.classList.remove('is-active');
-            searchBar.classList.remove('has-suggestions');
-            removeConnectionLine();
-          });
-
-          suggestionsDropdown.appendChild(item);
-        });
-      } else {
-        suggestionsDropdown.classList.remove('is-active');
-        searchBar.classList.remove('has-suggestions');
-      }
-
-      if (filteredLocations.length > 0) {
-        zoomDebounceTimeout = setTimeout(() => {
-          const markersToZoom = filteredLocations.map(loc => allMarkers.find(m => m.uniqueId === loc.uniqueId)).filter(Boolean);
-
-          suggestionsDropdown.classList.add('is-zooming');
-          removeConnectionLine();
-
-          let zoomPromise;
-          if (markersToZoom.length > 1) {
-            zoomPromise = new Promise(resolve => {
-              let zoomEnded = false;
-              let moveEnded = false;
-
-              const checkComplete = () => {
-                if (zoomEnded && moveEnded) resolve();
-              };
-
-              map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
-              map.once('moveend', () => { moveEnded = true; checkComplete(); });
-
-              map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2));
-            });
-          } else if (markersToZoom.length === 1) {
-            zoomPromise = new Promise(resolve => {
-              let zoomEnded = false;
-              let moveEnded = false;
-
-              const checkComplete = () => {
-                if (zoomEnded && moveEnded) resolve();
-              };
-
-              map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
-              map.once('moveend', () => { moveEnded = true; checkComplete(); });
-
-              map.flyTo(markersToZoom[0].getLatLng(), 13);
-            });
-          }
-
-          if (zoomPromise) {
-            zoomPromise.then(() => {
-              suggestionsDropdown.classList.remove('is-zooming');
-            });
-          } else {
-            suggestionsDropdown.classList.remove('is-zooming');
-          }
-        }, 1000);
+    // Event-Listener für erneuten Focus (führt Suche mit aktuellem Inhalt aus)
+    searchBar.addEventListener('focus', () => {
+      if (searchBar.value.trim().length > 0) {
+        performSearch();
       }
     });
 
