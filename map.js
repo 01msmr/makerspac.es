@@ -18,13 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const defaultIcon = new L.Icon.Default();
   const highlightIcon = new L.Icon({
-    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
   });
 
   const hoverIcon = new L.Icon({
-    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png',
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
+  <path fill="#0000ff" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
+  <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
+</svg>`),
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [37.5, 61.5],
     iconAnchor: [18.75, 61.5],
@@ -38,13 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // Zuerst nach Breitengrad sortieren (höhere Werte = weiter nördlich)
       // Negative Sortierung, da wir von oben nach unten wollen
       const latDiff = b.loc.lat - a.loc.lat;
-      
-      // // Bei ähnlichen Breitengraden (Unterschied < 0.02°) nach Längengrad sortieren
-      // if (Math.abs(latDiff) < 0.02) {
-      //   // Von links nach rechts (niedrigere Längenwerte zuerst)
-      //   return a.loc.long - b.loc.long;
-      //}
-      
+
+      // Bei ähnlichen Breitengraden (Unterschied < 0.1°) nach Längengrad sortieren
+      if (Math.abs(latDiff) < 0.1) {
+        // Von links nach rechts (niedrigere Längenwerte zuerst)
+        return a.loc.long - b.loc.long;
+      }
+
       return latDiff;
     });
   }
@@ -76,9 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapContainer = document.getElementById('map');
     const mapRect = mapContainer.getBoundingClientRect();
 
-    // Punkt 1: Anfang des SVG-Pfads (ursprünglich bei 60px Überstand)
-    const connectionEndX = suggestionRect.left - 60 - mapRect.left;
-    const connectionEndY = suggestionRect.top + (suggestionRect.height / 2) - mapRect.top;
+    // Punkt 1: Anfang des SVG-Pfads (am sichtbaren Radius-Teil des SVG-Objekts)
+    const connectionEndX = suggestionRect.left - 50 - mapRect.left;
+    const connectionEndY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
     const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
     // Punkt: Marker Position (Pin)
@@ -87,36 +90,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Erstelle komplexere Bézier-Kurve mit mehreren Kontrollpunkten
     const curvePoints = [];
-    
+
     // Berechne die ungefähre Linienlänge für adaptive Punktanzahl
     const deltaX = Math.abs(markerPixel.x - connectionEndX);
     const deltaY = Math.abs(markerPixel.y - connectionEndY);
     const approximateLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // Adaptive Punktanzahl: mindestens 25, höchstens 150, etwa 1 Punkt pro 1 Pixel
-    const steps = Math.max(25, Math.min(150, Math.round(approximateLength)));
+
+    // Adaptive Punktanzahl: mindestens 100, höchstens 400, etwa 1 Punkt pro 1 Pixel
+    const steps = Math.max(100, Math.min(400, Math.round(approximateLength)));
 
     // Kontrollpunkte definieren
     const controlPoints = [];
 
     // Hauptkontrollpunkt: Angepasst je nach Pin-Position
     let mainControlX, mainControlY;
-    
-    if (markerPixel.x > connectionEndX) {
-      // Pin RECHTS vom Startpunkt: Hauptkontrollpunkt links verschieben für bessere Kurvenführung
+
+    if (markerPixel.x > (connectionEndX - 80)) {
+      // Pin ist bis zu 80px links vom Startpunkt oder weiter rechts: Zweiter Fall
+      // Hauptkontrollpunkt links verschieben für bessere Kurvenführung
       mainControlX = connectionEndX - 60;
       mainControlY = connectionEndY;
     } else {
-      // Pin LINKS vom Startpunkt: Hauptkontrollpunkt wie bisher
+      // Pin ist mehr als 80px links vom Startpunkt: Erster Fall
+      // Hauptkontrollpunkt wie bisher
       mainControlX = markerPixel.x;
       mainControlY = connectionEndY;
     }
-    
+
     const mainControlLatLng = map.containerPointToLatLng([mainControlX, mainControlY]);
     controlPoints.push(mainControlLatLng);
 
-    // Zusätzlicher Kontrollpunkt auf halber Höhe für Pin RECHTS vom Startpunkt
-    if (markerPixel.x > connectionEndX) {
+    // Zusätzlicher Kontrollpunkt auf halber Höhe für zweiten Fall
+    if (markerPixel.x > (connectionEndX - 80)) {
       const midHeightControlX = markerPixel.x - 240;
       const midHeightControlY = connectionEndY + (markerPixel.y - connectionEndY) / 2;
       const midHeightControlLatLng = map.containerPointToLatLng([midHeightControlX, midHeightControlY]);
@@ -127,15 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const heightDifference = Math.abs(markerPixel.y - connectionEndY);
     if (heightDifference > 100) {
       let preMarkerControlX;
-      
-      if (markerPixel.x > connectionEndX) {
-        // Pin RECHTS vom Startpunkt: Kontrollpunkt 80px LINKS vom Pin
+
+      if (markerPixel.x > (connectionEndX - 80)) {
+        // Zweiter Fall: Kontrollpunkt 80px LINKS vom Pin
         preMarkerControlX = markerPixel.x - 80;
       } else {
-        // Pin LINKS vom Startpunkt: Kontrollpunkt 80px RECHTS vom Pin (wie bisher)
+        // Erster Fall: Kontrollpunkt 80px RECHTS vom Pin
         preMarkerControlX = markerPixel.x + 80;
       }
-      
+
       const preMarkerControlY = markerPixel.y;
       const preMarkerControlLatLng = map.containerPointToLatLng([preMarkerControlX, preMarkerControlY]);
       controlPoints.push(preMarkerControlLatLng);
@@ -192,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Erstelle Linie
     connectionLine = L.polyline(curvePoints, {
-      color: '#000000',
+      color: 'blue',
       weight: 5.5,
       opacity: 1,
       interactive: false,
@@ -229,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadData() {
+    
     try {
       const response = await fetch("./locations.json");
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -237,15 +243,43 @@ document.addEventListener('DOMContentLoaded', () => {
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
-          const marker = L.marker([location.loc.lat, location.loc.long], { icon: defaultIcon }).addTo(map);
+          const marker = L.marker([location.loc.lat, location.loc.long], {
+            icon: defaultIcon, opacity: 0.66}).addTo(map);
           marker.uniqueId = location.uniqueId;
           marker.bindPopup(`<h3 id="style">${location.style}</h3><a id="titleurl" href="${location.link.url}" target="_blank"><h3>${location.name}</h3><br><br></a>${location.loc.street.name} ${location.loc.street.number}<span id="streetext">${location.loc.street.ext}</span><br><b>${zfill(location.loc.plz, location.loc.country)} ${location.loc.city}</b><br>${location.loc.country}<br><a id="url" href="${location.link.url}" target="_blank"><b>${location.link.text}</b></a>`);
+
+          // HIER den neuen Code einfügen:
+          marker.on('popupopen', () => {
+            const popup = marker.getPopup();
+            const popupElement = popup._container;
+            const logoElement = document.querySelector('.title');
+
+            if (popupElement && logoElement) {
+              const popupRect = popupElement.getBoundingClientRect();
+              const logoRect = logoElement.getBoundingClientRect();
+
+              const isOverlapping = !(popupRect.right < logoRect.left ||
+                popupRect.left > logoRect.right ||
+                popupRect.bottom < logoRect.top ||
+                popupRect.top > logoRect.bottom);
+
+              if (isOverlapping) {
+                logoElement.classList.add('popup-active');
+              }
+            }
+          });
+
+          marker.on('popupclose', () => {
+            document.querySelector('.title').classList.remove('popup-active');
+          });
+
           allMarkers.push(marker);
         }
       });
     } catch (error) {
       console.error("Error fetching or parsing locations.json:", error);
       alert("Failed to load location pins.");
+      
     }
   }
 
@@ -262,7 +296,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchQuery.length < 1) {
       suggestionsDropdown.classList.remove('is-active');
       searchBar.classList.remove('has-suggestions');
-      allMarkers.forEach(marker => marker.setIcon(defaultIcon));
+      allMarkers.forEach(marker => {
+        if (filteredIds.has(marker.uniqueId)) {
+          marker.setIcon(highlightIcon);
+          marker.setOpacity(1); // Gefilterte Pins: volle Sichtbarkeit
+        } else {
+          marker.setIcon(defaultIcon);
+          marker.setOpacity(0.6); // Nicht-gefilterte Pins: reduzierte Sichtbarkeit
+        }
+      });
       return;
     }
 
@@ -284,6 +326,18 @@ document.addEventListener('DOMContentLoaded', () => {
       suggestionsDropdown.classList.add('is-active');
       searchBar.classList.add('has-suggestions');
 
+      // Opacity SOFORT setzen, bevor der Zoom-Timeout startet
+      const filteredIds = new Set(sortedFilteredLocations.map(loc => loc.uniqueId));
+      allMarkers.forEach(marker => {
+        if (filteredIds.has(marker.uniqueId)) {
+          marker.setIcon(highlightIcon);
+          marker.setOpacity(1); // Sofort auf volle Sichtbarkeit setzen
+        } else {
+          marker.setIcon(defaultIcon);
+          marker.setOpacity(0.6);
+        }
+      });
+
       sortedFilteredLocations.forEach((location, index) => {
         const item = document.createElement('div');
         item.classList.add('suggestion-item');
@@ -300,32 +354,42 @@ document.addEventListener('DOMContentLoaded', () => {
         item.appendChild(contentDiv);
 
         item.addEventListener('mouseenter', () => {
+          
+          // Schließe alle offenen Popups von anderen Markern
+          allMarkers.forEach(marker => {
+            if (marker.isPopupOpen()) {
+              marker.closePopup();
+            }
+          });
+
           // Berechne korrekte Position und Höhe des gehoverten Elements
           const itemRect = item.getBoundingClientRect();
           const itemHeight = itemRect.height;
 
-          // Erstelle SVG-Element mit ursprünglicher Breite (60px) und 20px Überstand
+          // Erstelle SVG-Element soweit nach rechts verschoben, dass nur der Radius-Teil sichtbar ist
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           svg.id = 'current-connector';
           svg.style.cssText = `
             position: fixed !important;
-            left: ${itemRect.left - 60}px !important;
-            top: ${itemRect.top}px !important;
+            left: ${itemRect.left - 50}px !important;
+            top: ${itemRect.top - 0.5}px !important;
             width: 80px !important;
             height: ${itemHeight}px !important;
             z-index: 999 !important;
             pointer-events: none !important;
           `;
 
-          // ViewBox: ursprüngliche 52 Einheiten für 60px breiten Teil, plus 20px rechteckige Erweiterung
-          svg.setAttribute('viewBox', '169 259 72 71');
+          // ViewBox für das neue SVG (angepasst an den bereitgestellten Code)
+          svg.setAttribute('viewBox', '65 0 570 620');
           svg.setAttribute('preserveAspectRatio', 'none');
 
-          // Ursprünglicher Pfad mit 20px rechteckiger Erweiterung
+          // Neuer SVG-Pfad
           const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', 'm169.14,297.303L169.505,297.303C179.656,296.897 190.964,304.015 194.988,313.343C199.01,322.661 210.299,329.776 220.44,329.383L220.44,329.383L240.44,329.383L240.44,259.286L220.44,259.286L220.44,259.286C210.299,258.893 199.01,266.008 194.988,275.326C190.964,284.654 179.656,291.772 169.505,291.366L169.14,291.366L169.14,297.303Z');
-          path.setAttribute('fill', 'black');
-          path.setAttribute('opacity', '1');
+          path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 265.373,508.216 276.615,526.112C287.858,544.008 302.534,560.527 319.618,573.988C336.703,587.45 356.196,597.856 376.225,604.6C396.254,611.345 416.818,614.43 436.232,614.412L632.86,614.412L632.86,6.618Z');
+          path.setAttribute('fill', 'blue');
+          path.setAttribute('fill-rule', 'nonzero');
+          path.setAttribute('stroke', 'blue');
+          path.setAttribute('stroke-width', '0.24px');
 
           svg.appendChild(path);
           document.body.appendChild(svg);
@@ -333,13 +397,15 @@ document.addEventListener('DOMContentLoaded', () => {
           // Funktion zum Aktualisieren der SVG-Position beim Scrollen
           const updateSVGPosition = () => {
             const currentItemRect = item.getBoundingClientRect();
-            svg.style.left = `${currentItemRect.left - 60}px`;
-            svg.style.top = `${currentItemRect.top}px`;
+            svg.style.left = `${currentItemRect.left - 50}px`;
+            svg.style.top = `${currentItemRect.top - 0.5}px`;
             svg.style.height = `${currentItemRect.height}px`;
-            
+
             // Aktualisiere auch die Verbindungslinie
             const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
             if (targetMarker) {
+              targetMarker.setIcon(hoverIcon);
+              targetMarker.setOpacity(1); // Gehoverte Pins: volle Sichtbarkeit
               createConnectionLine(item, targetMarker);
             }
           };
@@ -363,12 +429,32 @@ document.addEventListener('DOMContentLoaded', () => {
             targetMarker.setIcon(hoverIcon);
             createConnectionLine(item, targetMarker);
           }
+
+          // Timeout für automatisches Popup-Öffnen nach 1.5s
+          const popupTimeout = setTimeout(() => {
+            const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+            if (targetMarker) {
+              targetMarker.openPopup();
+            }
+          }, 675);
+
+          // Timeout am SVG speichern für späteren Cleanup
+          svg._popupTimeout = popupTimeout;
+
+          console.log('New SVG callout created with height:', itemHeight);
+
         });
 
         item.addEventListener('mouseleave', () => {
           // Entferne SVG-Element
           const svg = document.getElementById('current-connector');
           if (svg) {
+            
+            // Entferne Popup-Timeout
+            if (svg._popupTimeout) {
+              clearTimeout(svg._popupTimeout);
+            }
+
             // Entferne Scroll-Listener
             if (svg._scrollListener) {
               suggestionsDropdown.removeEventListener('scroll', svg._scrollListener);
@@ -381,8 +467,19 @@ document.addEventListener('DOMContentLoaded', () => {
           const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
           if (targetMarker) {
             targetMarker.setIcon(highlightIcon);
+            targetMarker.setOpacity(1); // Bleibt bei voller Sichtbarkeit (da gefiltert)
           }
           removeConnectionLine();
+
+          // Entferne alle bestehenden SVG-Objekte
+          const existingSVG = document.getElementById('current-connector');
+          if (existingSVG) {
+            if (existingSVG._scrollListener) {
+              suggestionsDropdown.removeEventListener('scroll', existingSVG._scrollListener);
+              window.removeEventListener('scroll', existingSVG._scrollListener);
+            }
+            document.body.removeChild(existingSVG);
+          }
         });
 
         item.addEventListener('click', () => {
@@ -409,6 +506,16 @@ document.addEventListener('DOMContentLoaded', () => {
         suggestionsDropdown.classList.add('is-zooming');
         removeConnectionLine();
 
+        // Entferne auch alle SVG-Objekte beim Zoom
+        const existingSVG = document.getElementById('current-connector');
+        if (existingSVG) {
+          if (existingSVG._scrollListener) {
+            suggestionsDropdown.removeEventListener('scroll', existingSVG._scrollListener);
+            window.removeEventListener('scroll', existingSVG._scrollListener);
+          }
+          document.body.removeChild(existingSVG);
+        }
+
         let zoomPromise;
         if (markersToZoom.length > 1) {
           zoomPromise = new Promise(resolve => {
@@ -433,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
               if (zoomEnded && moveEnded) resolve();
             };
 
-            map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
             map.once('moveend', () => { moveEnded = true; checkComplete(); });
 
             map.flyTo(markersToZoom[0].getLatLng(), 13);
@@ -443,9 +549,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (zoomPromise) {
           zoomPromise.then(() => {
             suggestionsDropdown.classList.remove('is-zooming');
+
+            // Opacity nach dem Zoom wiederherstellen
+            const filteredIds = new Set(sortedFilteredLocations.map(loc => loc.uniqueId));
+            allMarkers.forEach(marker => {
+              if (filteredIds.has(marker.uniqueId)) {
+                marker.setOpacity(1); // Gefilterte Pins: volle Sichtbarkeit
+              } else {
+                marker.setOpacity(0.6); // Andere Pins: reduzierte Sichtbarkeit
+              }
+            });
           });
-        } else {
-          suggestionsDropdown.classList.remove('is-zooming');
         }
       }, 1000);
     }

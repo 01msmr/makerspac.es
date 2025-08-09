@@ -11,7 +11,7 @@ body {
 
 .title {
   font-family: 'Lato', sans-serif;
-  z-index: 1000;
+  z-index: 400;
   position: absolute;
   left: 2.5em;
   top: 1em;
@@ -23,7 +23,15 @@ body {
   box-shadow: .2em -.1em .6em .35em rgba(0, 0, 0, 0.55);
   font-weight: bold;
   font-size: 1.7em;
+  transition: opacity 0.75s ease-in-out;
 }
+
+
+.title.popup-active {
+  opacity: 0.12;
+  transition: opacity 0.25s ease-in-out;
+}
+
 
 a#titleurl {
   text-decoration: none;
@@ -94,6 +102,8 @@ a#titleurl {
 .suggestion-item {
   font-family: 'Lato', sans-serif;
   padding: 8px 12px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
   cursor: pointer;
   position: relative;
   border-bottom: 1px solid #ddd;
@@ -114,13 +124,13 @@ a#titleurl {
 }
 
 .suggestion-item:hover {
-  background-color: black;
+  background-color: blue;
   color: white;
 }
 
 .suggestion-item:hover .item-number {
   background-color: white;
-  color: black;
+  color: blue;
   border-color: white;
 }
 
@@ -146,11 +156,11 @@ a#titleurl {
 
 /* Nummerierungskreis */
 .item-number {
-  width: 24px;
-  height: 24px;
-  background-color: black;
+  width: 36px;
+  height: 36px;
+  background-color: blue;
   color: white;
-  border: 2px solid #333;
+  /* border: 2px solid #333; */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -211,6 +221,12 @@ a#titleurl {
   /* Nur hier transform stoppen */
 }
 
+/* Popup mit schnellerer Animation (schneller als im Standard sichtbar) */
+.leaflet-popup {
+  /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
+  animation: popupFadeIn 0.15s ease-out !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background-color: rgba(188, 255, 222, .83);
@@ -218,6 +234,26 @@ a#titleurl {
 
 .leaflet-popup-content-wrapper {
   overflow: hidden;
+  z-index: 800;
+  /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
+  /* Animation entfernen - nur das übergeordnete Element animieren */
+}
+
+
+/* Sanfte Animation ohne Scale-Transform */
+@keyframes popupFadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+
+.leaflet-popup-fade-animation {
+  animation: none !important;
 }
 
 .spac {
