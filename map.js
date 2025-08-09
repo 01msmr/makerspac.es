@@ -1,4 +1,4 @@
-// map.js (Updated with new SVG)
+// map.js (Updated with improved connection lines and styling)
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 3-Punkt Bézier: Geschweifte Verbindung -> horizontal -> vertikal -> Pin
+  // Verbesserte Bézier-Kurve mit zusätzlichen Kontrollpunkten
   function createConnectionLine(suggestionItem, targetMarker) {
     // Entferne alte Linie
     removeConnectionLine();
@@ -55,46 +55,98 @@ document.addEventListener('DOMContentLoaded', () => {
     const numberCircle = suggestionItem.querySelector('.item-number');
     if (!numberCircle) return;
 
-    const circleRect = numberCircle.getBoundingClientRect();
+    const suggestionRect = suggestionItem.getBoundingClientRect();
     const mapContainer = document.getElementById('map');
     const mapRect = mapContainer.getBoundingClientRect();
 
-    // Punkt 1: Anfang des SVG-Pfads (linkes Ende)
-    // SVG ist bei left-60 positioniert, Pfad beginnt bei Koordinate 169 in ViewBox 169-228
-    // Das entspricht: left-60 + (169-169)/(228-169) * 80 = left-60 + 0 = left-60
-    const suggestionRect = suggestionItem.getBoundingClientRect();
-    const connectionEndX = suggestionRect.left - 60 - mapRect.left; // Anfang des SVG-Pfads
+    // Punkt 1: Anfang des SVG-Pfads (ursprünglich bei 60px Überstand)
+    const connectionEndX = suggestionRect.left - 60 - mapRect.left;
     const connectionEndY = suggestionRect.top + (suggestionRect.height / 2) - mapRect.top;
     const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
-    // Punkt 3: Marker Position
+    // Punkt: Marker Position (Pin)
     const endLatLng = targetMarker.getLatLng();
     const markerPixel = map.latLngToContainerPoint(endLatLng);
 
-    // Punkt 2: X wie PIN, Y wie Verbindungsende (erst horizontal, dann vertikal)
-    const controlPixelX = markerPixel.x;
-    const controlPixelY = connectionEndY;
-    const controlLatLng = map.containerPointToLatLng([controlPixelX, controlPixelY]);
-
-    // Erstelle glatte Bézier-Kurve
+    // Erstelle komplexere Bézier-Kurve mit mehreren Kontrollpunkten
     const curvePoints = [];
-    const steps = 80;
+    const steps = 100;
 
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const lat = Math.pow(1 - t, 2) * startLatLng.lat +
-        2 * (1 - t) * t * controlLatLng.lat +
-        Math.pow(t, 2) * endLatLng.lat;
-      const lng = Math.pow(1 - t, 2) * startLatLng.lng +
-        2 * (1 - t) * t * controlLatLng.lng +
-        Math.pow(t, 2) * endLatLng.lng;
-      curvePoints.push([lat, lng]);
+    // Kontrollpunkte definieren
+    const controlPoints = [];
+
+    // Erster Kontrollpunkt: 60px links vom Startpunkt (falls Pin rechts liegt) - halbiert von 120px
+    if (markerPixel.x > connectionEndX) {
+      const leftControlX = connectionEndX - 60;
+      const leftControlY = connectionEndY;
+      const leftControlLatLng = map.containerPointToLatLng([leftControlX, leftControlY]);
+      controlPoints.push(leftControlLatLng);
     }
 
-    // Erstelle Linie (50% breiter)
+    // Hauptkontrollpunkt: X wie PIN, Y wie Verbindungsende
+    const mainControlX = markerPixel.x;
+    const mainControlY = connectionEndY;
+    const mainControlLatLng = map.containerPointToLatLng([mainControlX, mainControlY]);
+    controlPoints.push(mainControlLatLng);
+
+    // Zusätzlicher Kontrollpunkt vor dem Pin (80px rechts vom Pin bei deutlichem Höhenunterschied)
+    const heightDifference = Math.abs(markerPixel.y - connectionEndY);
+    if (heightDifference > 100) { // Nur bei deutlichem Höhenunterschied
+      const preMarkerControlX = markerPixel.x + 80;
+      const preMarkerControlY = markerPixel.y;
+      const preMarkerControlLatLng = map.containerPointToLatLng([preMarkerControlX, preMarkerControlY]);
+      controlPoints.push(preMarkerControlLatLng);
+    }
+
+    // Erstelle Kurve basierend auf Anzahl der Kontrollpunkte
+    if (controlPoints.length === 1) {
+      // Einfache quadratische Bézier-Kurve
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 2) * startLatLng.lat +
+          2 * (1 - t) * t * controlPoints[0].lat +
+          Math.pow(t, 2) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 2) * startLatLng.lng +
+          2 * (1 - t) * t * controlPoints[0].lng +
+          Math.pow(t, 2) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    } else if (controlPoints.length === 2) {
+      // Kubische Bézier-Kurve
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 3) * startLatLng.lat +
+          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lat +
+          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lat +
+          Math.pow(t, 3) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 3) * startLatLng.lng +
+          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lng +
+          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lng +
+          Math.pow(t, 3) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    } else if (controlPoints.length === 3) {
+      // Quartische Bézier-Kurve (4 Kontrollpunkte + Start/End)
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 4) * startLatLng.lat +
+          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lat +
+          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lat +
+          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lat +
+          Math.pow(t, 4) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 4) * startLatLng.lng +
+          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lng +
+          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lng +
+          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lng +
+          Math.pow(t, 4) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    }
+
+    // Erstelle Linie
     connectionLine = L.polyline(curvePoints, {
       color: '#000000',
-      weight: 5,
+      weight: 5.5,
       opacity: 1,
       interactive: false,
       bubblingMouseEvents: false,
@@ -103,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).addTo(map);
 
     connectionLine.bringToFront();
-    console.log('Connection line created from curved connector');
+    console.log('Enhanced connection line created with', controlPoints.length, 'control points');
   }
 
   async function initializeApp() {
@@ -202,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemRect = item.getBoundingClientRect();
             const itemHeight = itemRect.height;
 
-            // Erstelle SVG-Element mit dem neuen Design (erst skaliert auf 60px, dann erweitert um 20px)
+            // Erstelle SVG-Element mit ursprünglicher Breite (60px) und 20px Überstand
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.id = 'current-connector';
             svg.style.cssText = `
@@ -216,13 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             // ViewBox: ursprüngliche 52 Einheiten für 60px breiten Teil, plus 20px rechteckige Erweiterung
-            // 52 Einheiten für den Callout + entsprechende Einheiten für das Rechteck
             svg.setAttribute('viewBox', '169 259 72 71');
             svg.setAttribute('preserveAspectRatio', 'none');
 
-            // Erstelle den Pfad: ursprünglicher Callout (60px) + rechteckige Erweiterung (20px)
+            // Ursprünglicher Pfad mit 20px rechteckiger Erweiterung
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            // Ursprünglicher Callout bis 220.44, dann rechteckige Erweiterung bis 240.44
             path.setAttribute('d', 'm169.14,297.303L169.505,297.303C179.656,296.897 190.964,304.015 194.988,313.343C199.01,322.661 210.299,329.776 220.44,329.383L220.44,329.383L240.44,329.383L240.44,259.286L220.44,259.286L220.44,259.286C210.299,258.893 199.01,266.008 194.988,275.326C190.964,284.654 179.656,291.772 169.505,291.366L169.14,291.366L169.14,297.303Z');
             path.setAttribute('fill', 'black');
             path.setAttribute('opacity', '1');
