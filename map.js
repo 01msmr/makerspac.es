@@ -1,4 +1,4 @@
-// map.js (Updated with improved connection lines and styling)
+// map.js (Updated with improved connection lines and geographic sorting)
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -31,6 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
     popupAnchor: [1.5, -51],
     shadowSize: [61.5, 61.5]
   });
+
+  // Geografische Sortierungsfunktion
+  function sortLocationsByGeography(locations) {
+    return locations.sort((a, b) => {
+      // Zuerst nach Breitengrad sortieren (höhere Werte = weiter nördlich)
+      // Negative Sortierung, da wir von oben nach unten wollen
+      const latDiff = b.loc.lat - a.loc.lat;
+      
+      // // Bei ähnlichen Breitengraden (Unterschied < 0.02°) nach Längengrad sortieren
+      // if (Math.abs(latDiff) < 0.02) {
+      //   // Von links nach rechts (niedrigere Längenwerte zuerst)
+      //   return a.loc.long - b.loc.long;
+      //}
+      
+      return latDiff;
+    });
+  }
 
   // Einfache Linien-Entfernung
   function removeConnectionLine() {
@@ -70,29 +87,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Erstelle komplexere Bézier-Kurve mit mehreren Kontrollpunkten
     const curvePoints = [];
-    const steps = 100;
+    
+    // Berechne die ungefähre Linienlänge für adaptive Punktanzahl
+    const deltaX = Math.abs(markerPixel.x - connectionEndX);
+    const deltaY = Math.abs(markerPixel.y - connectionEndY);
+    const approximateLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Adaptive Punktanzahl: mindestens 25, höchstens 150, etwa 1 Punkt pro 1 Pixel
+    const steps = Math.max(25, Math.min(150, Math.round(approximateLength)));
 
     // Kontrollpunkte definieren
     const controlPoints = [];
 
-    // Erster Kontrollpunkt: 60px links vom Startpunkt (falls Pin rechts liegt) - halbiert von 120px
+    // Hauptkontrollpunkt: Angepasst je nach Pin-Position
+    let mainControlX, mainControlY;
+    
     if (markerPixel.x > connectionEndX) {
-      const leftControlX = connectionEndX - 60;
-      const leftControlY = connectionEndY;
-      const leftControlLatLng = map.containerPointToLatLng([leftControlX, leftControlY]);
-      controlPoints.push(leftControlLatLng);
+      // Pin RECHTS vom Startpunkt: Hauptkontrollpunkt links verschieben für bessere Kurvenführung
+      mainControlX = connectionEndX - 60;
+      mainControlY = connectionEndY;
+    } else {
+      // Pin LINKS vom Startpunkt: Hauptkontrollpunkt wie bisher
+      mainControlX = markerPixel.x;
+      mainControlY = connectionEndY;
     }
-
-    // Hauptkontrollpunkt: X wie PIN, Y wie Verbindungsende
-    const mainControlX = markerPixel.x;
-    const mainControlY = connectionEndY;
+    
     const mainControlLatLng = map.containerPointToLatLng([mainControlX, mainControlY]);
     controlPoints.push(mainControlLatLng);
 
-    // Zusätzlicher Kontrollpunkt vor dem Pin (80px rechts vom Pin bei deutlichem Höhenunterschied)
+    // Zusätzlicher Kontrollpunkt auf halber Höhe für Pin RECHTS vom Startpunkt
+    if (markerPixel.x > connectionEndX) {
+      const midHeightControlX = markerPixel.x - 240;
+      const midHeightControlY = connectionEndY + (markerPixel.y - connectionEndY) / 2;
+      const midHeightControlLatLng = map.containerPointToLatLng([midHeightControlX, midHeightControlY]);
+      controlPoints.push(midHeightControlLatLng);
+    }
+
+    // Zusätzlicher Kontrollpunkt vor dem Pin bei deutlichem Höhenunterschied
     const heightDifference = Math.abs(markerPixel.y - connectionEndY);
-    if (heightDifference > 100) { // Nur bei deutlichem Höhenunterschied
-      const preMarkerControlX = markerPixel.x + 80;
+    if (heightDifference > 100) {
+      let preMarkerControlX;
+      
+      if (markerPixel.x > connectionEndX) {
+        // Pin RECHTS vom Startpunkt: Kontrollpunkt 80px LINKS vom Pin
+        preMarkerControlX = markerPixel.x - 80;
+      } else {
+        // Pin LINKS vom Startpunkt: Kontrollpunkt 80px RECHTS vom Pin (wie bisher)
+        preMarkerControlX = markerPixel.x + 80;
+      }
+      
       const preMarkerControlY = markerPixel.y;
       const preMarkerControlLatLng = map.containerPointToLatLng([preMarkerControlX, preMarkerControlY]);
       controlPoints.push(preMarkerControlLatLng);
@@ -141,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
           Math.pow(t, 4) * endLatLng.lng;
         curvePoints.push([lat, lng]);
       }
+    } else {
+      // Fallback: Einfache gerade Linie bei unerwarteter Anzahl von Kontrollpunkten
+      curvePoints.push([startLatLng.lat, startLatLng.lng]);
+      curvePoints.push([endLatLng.lat, endLatLng.lng]);
     }
 
     // Erstelle Linie
@@ -225,16 +272,19 @@ document.addEventListener('DOMContentLoaded', () => {
       location.loc.city.toLowerCase().includes(searchQuery)
     );
 
-    const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+    // Geografische Sortierung der gefilterten Ergebnisse
+    const sortedFilteredLocations = sortLocationsByGeography(filteredLocations);
+
+    const filteredIds = new Set(sortedFilteredLocations.map(loc => loc.uniqueId));
     allMarkers.forEach(marker => {
       marker.setIcon(filteredIds.has(marker.uniqueId) ? highlightIcon : defaultIcon);
     });
 
-    if (filteredLocations.length > 0) {
+    if (sortedFilteredLocations.length > 0) {
       suggestionsDropdown.classList.add('is-active');
       searchBar.classList.add('has-suggestions');
 
-      filteredLocations.forEach((location, index) => {
+      sortedFilteredLocations.forEach((location, index) => {
         const item = document.createElement('div');
         item.classList.add('suggestion-item');
 
@@ -280,6 +330,32 @@ document.addEventListener('DOMContentLoaded', () => {
           svg.appendChild(path);
           document.body.appendChild(svg);
 
+          // Funktion zum Aktualisieren der SVG-Position beim Scrollen
+          const updateSVGPosition = () => {
+            const currentItemRect = item.getBoundingClientRect();
+            svg.style.left = `${currentItemRect.left - 60}px`;
+            svg.style.top = `${currentItemRect.top}px`;
+            svg.style.height = `${currentItemRect.height}px`;
+            
+            // Aktualisiere auch die Verbindungslinie
+            const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+            if (targetMarker) {
+              createConnectionLine(item, targetMarker);
+            }
+          };
+
+          // Event-Listener für Scroll-Events hinzufügen
+          const scrollListener = () => {
+            updateSVGPosition();
+          };
+
+          // Scroll-Listener sowohl für das Dropdown als auch für das Fenster
+          suggestionsDropdown.addEventListener('scroll', scrollListener);
+          window.addEventListener('scroll', scrollListener);
+
+          // Speichere den Scroll-Listener am SVG für späteren Cleanup
+          svg._scrollListener = scrollListener;
+
           console.log('New SVG callout created with height:', itemHeight);
 
           const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
@@ -293,6 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
           // Entferne SVG-Element
           const svg = document.getElementById('current-connector');
           if (svg) {
+            // Entferne Scroll-Listener
+            if (svg._scrollListener) {
+              suggestionsDropdown.removeEventListener('scroll', svg._scrollListener);
+              window.removeEventListener('scroll', svg._scrollListener);
+            }
             document.body.removeChild(svg);
             console.log('SVG callout removed');
           }
@@ -321,9 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
       searchBar.classList.remove('has-suggestions');
     }
 
-    if (filteredLocations.length > 0) {
+    if (sortedFilteredLocations.length > 0) {
       zoomDebounceTimeout = setTimeout(() => {
-        const markersToZoom = filteredLocations.map(loc => allMarkers.find(m => m.uniqueId === loc.uniqueId)).filter(Boolean);
+        const markersToZoom = sortedFilteredLocations.map(loc => allMarkers.find(m => m.uniqueId === loc.uniqueId)).filter(Boolean);
 
         suggestionsDropdown.classList.add('is-zooming');
         removeConnectionLine();
