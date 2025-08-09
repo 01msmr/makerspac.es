@@ -273,6 +273,41 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.title').classList.remove('popup-active');
           });
 
+
+          // neuen Pin-Hover-Events:
+          marker.on('mouseover', () => {
+            marker.openPopup();
+          });
+
+          // Simuliere den Hover-Effekt im Dropdown, wenn ein Pin gefiltert ist
+          const suggestionItems = document.querySelectorAll('.suggestion-item');
+          suggestionItems.forEach(item => {
+            const itemNumberElement = item.querySelector('.item-number');
+            if (itemNumberElement) {
+              // Finde das Item durch Vergleich der uniqueId
+              const itemContent = item.querySelector('.item-name');
+              if (itemContent && itemContent.textContent === location.name) {
+                // Simuliere mouseenter Event
+                item.style.backgroundColor = 'blue';
+                item.style.color = 'white';
+                itemNumberElement.style.backgroundColor = 'white';
+                itemNumberElement.style.color = 'blue';
+
+                // Erstelle SVG und Linie (gleicher Code wie im mouseenter)
+                // ... (den kompletten mouseenter Code hier einfügen)
+              }
+            }
+          });
+
+
+
+
+
+          marker.on('mouseout', () => {
+            marker.closePopup();
+          });
+
+
           allMarkers.push(marker);
         }
       });
@@ -436,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetMarker) {
               targetMarker.openPopup();
             }
-          }, 675);
+          }, 500);
 
           // Timeout am SVG speichern für späteren Cleanup
           svg._popupTimeout = popupTimeout;

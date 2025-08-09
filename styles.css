@@ -224,7 +224,12 @@ a#titleurl {
 /* Popup mit schnellerer Animation (schneller als im Standard sichtbar) */
 .leaflet-popup {
   /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
-  animation: popupFadeIn 0.15s ease-out !important;
+  animation: popupFadeIn 0.10s ease-out !important;
+}
+
+/* Popup ausblenden (schneller) */
+.leaflet-popup.leaflet-popup-closing {
+  animation: popupFadeOut 0.02s ease-out !important;
 }
 
 .leaflet-popup-content-wrapper,
@@ -240,16 +245,38 @@ a#titleurl {
 }
 
 
+
 /* Sanfte Animation ohne Scale-Transform */
 @keyframes popupFadeIn {
   0% {
     opacity: 0;
   }
 
-  100% {
+  50% {
+  opacity: .66;
+}
+
+100% {
+  opacity: 1;
+}
+}
+
+/* Ausblend-Animation (schneller) */
+@keyframes popupFadeOut {
+  0% {
     opacity: 1;
   }
+
+50% {
+  opacity: .33;
 }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
 
 
 .leaflet-popup-fade-animation {
