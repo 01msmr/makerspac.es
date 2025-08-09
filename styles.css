@@ -1,5 +1,4 @@
-/* styles.css (Final Cleaned Version) */
-
+/* styles.css (Enhanced with connection line styles) */
 body {
   margin: 0;
 }
@@ -36,6 +35,8 @@ a#titleurl {
   top: 1.2em;
   right: 2.5em;
   width: 280px;
+  overflow: visible;
+  /* Wichtig für geschweifte Elemente */
 }
 
 #search-bar {
@@ -67,36 +68,91 @@ a#titleurl {
 #suggestions-dropdown {
   background-color: white;
   border-radius: 20px;
+  /* border-top-left-radius: 20px;
+  border-top-right-radius: 20px; */
   margin-top: -40px;
-  padding-top: 40px;
+  padding-top: 48px;
+  /* margin-bottom: -20px;
+  padding-bottom: 20px; */
   position: relative;
   z-index: 1;
   box-shadow: 0px 4px 8px 1px rgba(0, 0, 0, 0.35);
   max-height: 50vh;
   overflow-y: auto;
+  overflow-x: visible;
+  /* Wichtig: Damit das geschweifte Element sichtbar ist */
   display: none;
 }
 
 #suggestions-dropdown.is-active {
   display: block;
-  opacity: 0.8;
+  opacity: 1;
 }
 
 #suggestions-dropdown.is-zooming {
   pointer-events: none;
 }
 
+/* Geschweifte Verbindung links vom gehoverten Element */
 .suggestion-item {
   font-family: 'Lato', sans-serif;
-  padding: 10px 25px;
+  padding: 10px 10px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.suggestion-item:first-child {
+/* Test: Einfaches sichtbares Element statt geschweifte Form */
+.suggestion-item::before {
+  content: '';
+  position: absolute;
+  left: -40px;
+  /* Noch weiter links */
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background-color: red;
+  /* Auffällige Farbe zum Testen */
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.suggestion-item:hover::before {
+  opacity: 1;
+  /* Voll sichtbar für Test */
+}
+
+/* Nummerierungskreis */
+.item-number {
+  width: 24px;
+  height: 24px;
+  background-color: black;
+  color: white;
+  border: 2px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  /* 30% größer: 14 * 1.3 = 18.2 ≈ 18px */
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.item-content {
+  flex-grow: 1;
+}
+
+/* .suggestion-item:first-child {
   margin-top: -40px;
   padding-top: 56px;
-}
+} */
 
 .suggestion-item:last-child {
   border-bottom: none;
@@ -105,6 +161,12 @@ a#titleurl {
 .suggestion-item:hover {
   background-color: black;
   color: white;
+}
+
+.suggestion-item:hover .item-number {
+  background-color: white;
+  color: black;
+  border-color: white;
 }
 
 .suggestion-item .item-name {
@@ -121,28 +183,69 @@ a#titleurl {
   color: #ccc;
 }
 
-
-
-.leaflet-marker-icon {
-  transition: width .10s ease-in, width .10s ease-in, height .10s ease-in, margin .10s ease-in;
+/* S-Kurven Verbindungslinie Styling */
+.connection-line {
+  pointer-events: none !important;
+  z-index: 100 !important;
 }
 
+/* Glatte Animation für die S-Kurve */
+.leaflet-interactive {
+  transition: all 0.2s ease-in-out;
+}
 
+/* Pin-Stabilisierung ohne Positionierung zu zerstören */
+.leaflet-marker-icon {
+  transition: width .10s ease-in, width .10s ease-in, height .10s ease-in, margin .10s ease-in;
+  animation: none !important;
+  will-change: auto !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  /* transform: none entfernt - das macht Pins unsichtbar */
+}
+
+.leaflet-marker-icon * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Nur während Zoom: Transforms stoppen */
+.leaflet-zoom-animated .leaflet-marker-icon,
+.is-zooming .leaflet-marker-icon,
+.leaflet-marker-icon.leaflet-zoom-hide {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  /* Nur hier transform stoppen */
+}
+
+/* Animation für echte SVG-Bézier-Kurve vom Kreis zum Pin */
+/* @keyframes drawBezierCurve {
+  0% {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+
+  100% {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+}
+
+.bezier-curve-animated {
+  animation: drawBezierCurve 2.5s ease-out forwards;
+} */
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background-color: rgba(188, 255, 222, .83);
 }
 
-
-
-
 .leaflet-popup-content-wrapper {
   overflow: hidden;
 }
 
 .spac {
-  /* padding: 0 .15em 0 1.5em; */
   padding-left: 1.5em;
   margin: 0 .1em 0 .1em;
   border-radius: .25em;
@@ -190,7 +293,6 @@ a h3 {
 }
 
 a:hover h3 {
-  /* color: rgb(200, 200, 255) !important; */
   color: blue !important;
   background: white;
   border-color: blue;
@@ -209,7 +311,6 @@ hr {
   font-size: small;
   text-transform: uppercase;
   font-style: italic;
-  /* color: gray; */
   font-weight: 400;
 }
 

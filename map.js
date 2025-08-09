@@ -1,10 +1,11 @@
-// map.js (Final, Guaranteed Working Version)
+// map.js (Updated with new SVG)
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
     e.preventDefault();
     const search = document.querySelector('#search-bar')
     search.focus()
+    search.select() // Markiert den gesamten Text, sodass er überschrieben werden kann
   }
 })
 
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let allMarkers = [];
   let json = [];
   let zoomDebounceTimeout;
+  let connectionLine = null;
 
   const defaultIcon = new L.Icon.Default();
   const highlightIcon = new L.Icon({
@@ -21,15 +23,88 @@ document.addEventListener('DOMContentLoaded', () => {
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
   });
 
-  // Define a new icon that is 50% larger. pre-calculate all the sizes.
   const hoverIcon = new L.Icon({
     iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [37.5, 61.5], // 25x1.5, 41x1.5
-    iconAnchor: [18.75, 61.5], // 12x1.5, 41x1.5
-    popupAnchor: [1.5, -51],    // 1x1.5, -34x1.5
-    shadowSize: [61.5, 61.5]  // 41x1.5
+    iconSize: [37.5, 61.5],
+    iconAnchor: [18.75, 61.5],
+    popupAnchor: [1.5, -51],
+    shadowSize: [61.5, 61.5]
   });
+
+  // Einfache Linien-Entfernung
+  function removeConnectionLine() {
+    if (connectionLine) {
+      try {
+        if (map.hasLayer(connectionLine)) {
+          map.removeLayer(connectionLine);
+        }
+      } catch (e) {
+        console.log('Error removing line:', e);
+      }
+      connectionLine = null;
+      console.log('Connection line removed');
+    }
+  }
+
+  // 3-Punkt Bézier: Geschweifte Verbindung -> horizontal -> vertikal -> Pin
+  function createConnectionLine(suggestionItem, targetMarker) {
+    // Entferne alte Linie
+    removeConnectionLine();
+
+    const numberCircle = suggestionItem.querySelector('.item-number');
+    if (!numberCircle) return;
+
+    const circleRect = numberCircle.getBoundingClientRect();
+    const mapContainer = document.getElementById('map');
+    const mapRect = mapContainer.getBoundingClientRect();
+
+    // Punkt 1: Anfang des SVG-Pfads (linkes Ende)
+    // SVG ist bei left-60 positioniert, Pfad beginnt bei Koordinate 169 in ViewBox 169-228
+    // Das entspricht: left-60 + (169-169)/(228-169) * 80 = left-60 + 0 = left-60
+    const suggestionRect = suggestionItem.getBoundingClientRect();
+    const connectionEndX = suggestionRect.left - 60 - mapRect.left; // Anfang des SVG-Pfads
+    const connectionEndY = suggestionRect.top + (suggestionRect.height / 2) - mapRect.top;
+    const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
+
+    // Punkt 3: Marker Position
+    const endLatLng = targetMarker.getLatLng();
+    const markerPixel = map.latLngToContainerPoint(endLatLng);
+
+    // Punkt 2: X wie PIN, Y wie Verbindungsende (erst horizontal, dann vertikal)
+    const controlPixelX = markerPixel.x;
+    const controlPixelY = connectionEndY;
+    const controlLatLng = map.containerPointToLatLng([controlPixelX, controlPixelY]);
+
+    // Erstelle glatte Bézier-Kurve
+    const curvePoints = [];
+    const steps = 80;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const lat = Math.pow(1 - t, 2) * startLatLng.lat +
+        2 * (1 - t) * t * controlLatLng.lat +
+        Math.pow(t, 2) * endLatLng.lat;
+      const lng = Math.pow(1 - t, 2) * startLatLng.lng +
+        2 * (1 - t) * t * controlLatLng.lng +
+        Math.pow(t, 2) * endLatLng.lng;
+      curvePoints.push([lat, lng]);
+    }
+
+    // Erstelle Linie (50% breiter)
+    connectionLine = L.polyline(curvePoints, {
+      color: '#000000',
+      weight: 5,
+      opacity: 1,
+      interactive: false,
+      bubblingMouseEvents: false,
+      smoothFactor: 0,
+      noClip: true
+    }).addTo(map);
+
+    connectionLine.bringToFront();
+    console.log('Connection line created from curved connector');
+  }
 
   async function initializeApp() {
     try {
@@ -83,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(zoomDebounceTimeout);
       const searchQuery = searchBar.value.toLowerCase();
       suggestionsDropdown.innerHTML = '';
+      removeConnectionLine();
 
       if (searchQuery.length < 1) {
         suggestionsDropdown.classList.remove('is-active');
@@ -105,18 +181,77 @@ document.addEventListener('DOMContentLoaded', () => {
       if (filteredLocations.length > 0) {
         suggestionsDropdown.classList.add('is-active');
         searchBar.classList.add('has-suggestions');
-        filteredLocations.forEach(location => {
+
+        filteredLocations.forEach((location, index) => {
           const item = document.createElement('div');
           item.classList.add('suggestion-item');
-          item.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
 
-          item.addEventListener('mouseover', () => {
+          const numberCircle = document.createElement('div');
+          numberCircle.classList.add('item-number');
+          numberCircle.textContent = (index + 1).toString();
+
+          const contentDiv = document.createElement('div');
+          contentDiv.classList.add('item-content');
+          contentDiv.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
+
+          item.appendChild(numberCircle);
+          item.appendChild(contentDiv);
+
+          item.addEventListener('mouseenter', () => {
+            // Berechne korrekte Position und Höhe des gehoverten Elements
+            const itemRect = item.getBoundingClientRect();
+            const itemHeight = itemRect.height;
+
+            // Erstelle SVG-Element mit dem neuen Design (erst skaliert auf 60px, dann erweitert um 20px)
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'current-connector';
+            svg.style.cssText = `
+              position: fixed !important;
+              left: ${itemRect.left - 60}px !important;
+              top: ${itemRect.top}px !important;
+              width: 80px !important;
+              height: ${itemHeight}px !important;
+              z-index: 999 !important;
+              pointer-events: none !important;
+            `;
+
+            // ViewBox: ursprüngliche 52 Einheiten für 60px breiten Teil, plus 20px rechteckige Erweiterung
+            // 52 Einheiten für den Callout + entsprechende Einheiten für das Rechteck
+            svg.setAttribute('viewBox', '169 259 72 71');
+            svg.setAttribute('preserveAspectRatio', 'none');
+
+            // Erstelle den Pfad: ursprünglicher Callout (60px) + rechteckige Erweiterung (20px)
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // Ursprünglicher Callout bis 220.44, dann rechteckige Erweiterung bis 240.44
+            path.setAttribute('d', 'm169.14,297.303L169.505,297.303C179.656,296.897 190.964,304.015 194.988,313.343C199.01,322.661 210.299,329.776 220.44,329.383L220.44,329.383L240.44,329.383L240.44,259.286L220.44,259.286L220.44,259.286C210.299,258.893 199.01,266.008 194.988,275.326C190.964,284.654 179.656,291.772 169.505,291.366L169.14,291.366L169.14,297.303Z');
+            path.setAttribute('fill', 'black');
+            path.setAttribute('opacity', '1');
+
+            svg.appendChild(path);
+            document.body.appendChild(svg);
+
+            console.log('New SVG callout created with height:', itemHeight);
+
             const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
-            if (targetMarker) targetMarker.setIcon(hoverIcon); // Use the LARGE black icon
+            if (targetMarker) {
+              targetMarker.setIcon(hoverIcon);
+              createConnectionLine(item, targetMarker);
+            }
           });
-          item.addEventListener('mouseout', () => {
+
+          item.addEventListener('mouseleave', () => {
+            // Entferne SVG-Element
+            const svg = document.getElementById('current-connector');
+            if (svg) {
+              document.body.removeChild(svg);
+              console.log('SVG callout removed');
+            }
+
             const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
-            if (targetMarker) targetMarker.setIcon(highlightIcon); // Use the NORMAL red icon
+            if (targetMarker) {
+              targetMarker.setIcon(highlightIcon);
+            }
+            removeConnectionLine();
           });
 
           item.addEventListener('click', () => {
@@ -126,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchBar.value = location.name;
             suggestionsDropdown.classList.remove('is-active');
             searchBar.classList.remove('has-suggestions');
+            removeConnectionLine();
           });
 
           suggestionsDropdown.appendChild(item);
@@ -140,14 +276,45 @@ document.addEventListener('DOMContentLoaded', () => {
           const markersToZoom = filteredLocations.map(loc => allMarkers.find(m => m.uniqueId === loc.uniqueId)).filter(Boolean);
 
           suggestionsDropdown.classList.add('is-zooming');
-          map.once('zoomend', () => {
-            suggestionsDropdown.classList.remove('is-zooming');
-          });
+          removeConnectionLine();
 
+          let zoomPromise;
           if (markersToZoom.length > 1) {
-            map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2));
+            zoomPromise = new Promise(resolve => {
+              let zoomEnded = false;
+              let moveEnded = false;
+
+              const checkComplete = () => {
+                if (zoomEnded && moveEnded) resolve();
+              };
+
+              map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+              map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+              map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2));
+            });
           } else if (markersToZoom.length === 1) {
-            map.flyTo(markersToZoom[0].getLatLng(), 13);
+            zoomPromise = new Promise(resolve => {
+              let zoomEnded = false;
+              let moveEnded = false;
+
+              const checkComplete = () => {
+                if (zoomEnded && moveEnded) resolve();
+              };
+
+              map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+              map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+              map.flyTo(markersToZoom[0].getLatLng(), 13);
+            });
+          }
+
+          if (zoomPromise) {
+            zoomPromise.then(() => {
+              suggestionsDropdown.classList.remove('is-zooming');
+            });
+          } else {
+            suggestionsDropdown.classList.remove('is-zooming');
           }
         }, 1000);
       }
@@ -157,7 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!e.target.closest('.search-container')) {
         suggestionsDropdown.classList.remove('is-active');
         searchBar.classList.remove('has-suggestions');
+        removeConnectionLine();
       }
+    });
+
+    map.on('zoomstart movestart', () => {
+      removeConnectionLine();
     });
   }
 
