@@ -35,23 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     shadowSize: [61.5, 61.5]
   });
 
-  // Geografische Sortierungsfunktion
-  function sortLocationsByGeography(locations) {
-    return locations.sort((a, b) => {
-      // Zuerst nach Breitengrad sortieren (höhere Werte = weiter nördlich)
-      // Negative Sortierung, da wir von oben nach unten wollen
-      const latDiff = b.loc.lat - a.loc.lat;
-
-      // Bei ähnlichen Breitengraden (Unterschied < 0.1°) nach Längengrad sortieren
-      if (Math.abs(latDiff) < 0.1) {
-        // Von links nach rechts (niedrigere Längenwerte zuerst)
-        return a.loc.long - b.loc.long;
-      }
-
-      return latDiff;
-    });
-  }
-
   // Einfache Linien-Entfernung
   function removeConnectionLine() {
     if (connectionLine) {
@@ -71,9 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function createConnectionLine(suggestionItem, targetMarker) {
     // Entferne alte Linie
     removeConnectionLine();
-
-    const numberCircle = suggestionItem.querySelector('.item-number');
-    if (!numberCircle) return;
 
     const suggestionRect = suggestionItem.getBoundingClientRect();
     const mapContainer = document.getElementById('map');
@@ -128,9 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
       controlPoints.push(midHeightControlLatLng);
     }
 
-    // Zusätzlicher Kontrollpunkt vor dem Pin bei deutlichem Höhenunterschied
-    const heightDifference = Math.abs(markerPixel.y - connectionEndY);
-    if (heightDifference > 100) {
+    // KORRIGIERT: Zusätzlicher Kontrollpunkt vor dem Pin - immer hinzufügen wenn horizontaler Abstand > 30px
+    const horizontalDistance = Math.abs(markerPixel.x - connectionEndX);
+    if (horizontalDistance > 30) { // Reduzierte Schwelle von 100 auf 30px
       let preMarkerControlX;
 
       if (markerPixel.x > (connectionEndX - 80)) {
@@ -210,6 +190,25 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Enhanced connection line created with', controlPoints.length, 'control points');
   }
 
+
+
+  // Geografische Sortierungsfunktion
+  function sortLocationsByGeography(locations) {
+    return locations.sort((a, b) => {
+      // Zuerst nach Breitengrad sortieren (höhere Werte = weiter nördlich)
+      // Negative Sortierung, da wir von oben nach unten wollen
+      const latDiff = b.loc.lat - a.loc.lat;
+
+      // Bei ähnlichen Breitengraden (Unterschied < 0.1°) nach Längengrad sortieren
+      if (Math.abs(latDiff) < 0.1) {
+        // Von links nach rechts (niedrigere Längenwerte zuerst)
+        return a.loc.long - b.loc.long;
+      }
+
+      return latDiff;
+    });
+  }
+
   async function initializeApp() {
     try {
       setupMap();
@@ -234,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadData() {
-    
+
     try {
       const response = await fetch("./locations.json");
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -244,7 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
           const marker = L.marker([location.loc.lat, location.loc.long], {
-            icon: defaultIcon, opacity: 0.66}).addTo(map);
+            icon: defaultIcon, opacity: 0.66
+          }).addTo(map);
           marker.uniqueId = location.uniqueId;
           marker.bindPopup(`<h3 id="style">${location.style}</h3><a id="titleurl" href="${location.link.url}" target="_blank"><h3>${location.name}</h3><br><br></a>${location.loc.street.name} ${location.loc.street.number}<span id="streetext">${location.loc.street.ext}</span><br><b>${zfill(location.loc.plz, location.loc.country)} ${location.loc.city}</b><br>${location.loc.country}<br><a id="url" href="${location.link.url}" target="_blank"><b>${location.link.text}</b></a>`);
 
@@ -299,14 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
 
-
-
-
-
-          marker.on('mouseout', () => {
-            marker.closePopup();
-          });
-
+          // mouseout Event entfernt - Popup bleibt geöffnet
 
           allMarkers.push(marker);
         }
@@ -314,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error("Error fetching or parsing locations.json:", error);
       alert("Failed to load location pins.");
-      
+
     }
   }
 
@@ -328,17 +321,22 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestionsDropdown.innerHTML = '';
     removeConnectionLine();
 
+    // Entferne alle bestehenden SVG-Objekte bei neuer Suche
+    const existingSVG = document.getElementById('current-connector');
+    if (existingSVG) {
+      if (existingSVG._scrollListener) {
+        suggestionsDropdown.removeEventListener('scroll', existingSVG._scrollListener);
+        window.removeEventListener('scroll', existingSVG._scrollListener);
+      }
+      document.body.removeChild(existingSVG);
+    }
+
     if (searchQuery.length < 1) {
       suggestionsDropdown.classList.remove('is-active');
       searchBar.classList.remove('has-suggestions');
       allMarkers.forEach(marker => {
-        if (filteredIds.has(marker.uniqueId)) {
-          marker.setIcon(highlightIcon);
-          marker.setOpacity(1); // Gefilterte Pins: volle Sichtbarkeit
-        } else {
-          marker.setIcon(defaultIcon);
-          marker.setOpacity(0.6); // Nicht-gefilterte Pins: reduzierte Sichtbarkeit
-        }
+        marker.setIcon(defaultIcon);
+        marker.setOpacity(0.66); // Zurück zur Standardsichtbarkeit
       });
       return;
     }
@@ -362,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
       searchBar.classList.add('has-suggestions');
 
       // Opacity SOFORT setzen, bevor der Zoom-Timeout startet
-      const filteredIds = new Set(sortedFilteredLocations.map(loc => loc.uniqueId));
       allMarkers.forEach(marker => {
         if (filteredIds.has(marker.uniqueId)) {
           marker.setIcon(highlightIcon);
@@ -373,23 +370,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      sortedFilteredLocations.forEach((location, index) => {
+      sortedFilteredLocations.forEach((location) => {
         const item = document.createElement('div');
         item.classList.add('suggestion-item');
-
-        const numberCircle = document.createElement('div');
-        numberCircle.classList.add('item-number');
-        numberCircle.textContent = (index + 1).toString();
 
         const contentDiv = document.createElement('div');
         contentDiv.classList.add('item-content');
         contentDiv.innerHTML = `<div class="item-name">${location.name}</div><div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div><div class="item-details"><b>${zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>`;
 
-        item.appendChild(numberCircle);
         item.appendChild(contentDiv);
 
         item.addEventListener('mouseenter', () => {
-          
+
           // Schließe alle offenen Popups von anderen Markern
           allMarkers.forEach(marker => {
             if (marker.isPopupOpen()) {
@@ -465,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             createConnectionLine(item, targetMarker);
           }
 
-          // Timeout für automatisches Popup-Öffnen nach 1.5s
+          // Timeout für automatisches Popup-Öffnen nach 0.5s
           const popupTimeout = setTimeout(() => {
             const targetMarker = allMarkers.find(m => m.uniqueId === location.uniqueId);
             if (targetMarker) {
@@ -484,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Entferne SVG-Element
           const svg = document.getElementById('current-connector');
           if (svg) {
-            
+
             // Entferne Popup-Timeout
             if (svg._popupTimeout) {
               clearTimeout(svg._popupTimeout);
@@ -575,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
               if (zoomEnded && moveEnded) resolve();
             };
 
+            map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
             map.once('moveend', () => { moveEnded = true; checkComplete(); });
 
             map.flyTo(markersToZoom[0].getLatLng(), 13);
