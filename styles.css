@@ -48,50 +48,6 @@ a#titleurl {
 }
 
 
-/* .user-guide {
-  z-index: 1000;
-  width: 30px;
-  height: 30px;
-  transition: all 0.2s ease-in;
-  overflow: hidden;
-  font-family: 'Lato', sans-serif;
-  position: absolute;
-  right: 1.6em;
-  bottom: 1.5em;
-  border-radius: 20px;
-  padding: 8px !important;
-  background-color: #ffff00;
-  box-shadow: 4px 8px 24px 4px rgba(0, 0, 0, 0.15) inset;
-  line-height: 1.5em;
-}
-
-.user-guide:hover {
-  width: 260px !important;
-  height: 40%;
-  padding-top: 0px;
-  background-color: #ffff00;
-  box-shadow: 4px 8px 24px 4px rgba(0, 0, 0, 0.6) inset;
-  line-height: 1.5em;
-  transition: all 0.4s ease-out;
-}
-
-.user-guide-text {
-  width: 100% !important;
-  height: 100% !important;
-  padding: 0;
-  background-color: transparent;
-}
-
-.user-guide h3 {
-  text-align: center;
-}
-
-
-.user-guide ul li {
-  position: relative;
-  left: -0.8em;
-} */
-
 
 
 .user-guide {
@@ -111,6 +67,7 @@ a#titleurl {
   line-height: 1.5em;
   /* Verzögertes Schließen */
   transition-delay: 0s;
+  opacity: 0.66;
 }
 
 .user-guide:hover {
@@ -120,15 +77,17 @@ a#titleurl {
   background-color: #ffff00;
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.7);
   line-height: 1.5em;
-  transition: all 0.5s ease-out;
+  transition: all 0.4s ease-out;
   /* Sofortiges Öffnen */
   transition-delay: 0s;
   cursor:help;
+  opacity: 0.90;
 }
 
 /* Verzögertes Schließen beim Verlassen */
 .user-guide:not(:hover) {
   transition-delay: 0.6s;
+  opacity: 0.66;
 }
 
 .user-guide h3 {
@@ -137,15 +96,15 @@ a#titleurl {
   font-size: 1em;
 }
 
-.user-guide ul {
+.user-guide ol {
   margin: 0;
   padding-left: 1.2em;
-  list-style-type: disc;
 }
 
-.user-guide ul li {
-  margin-bottom: 0.5em;
+.user-guide ol li {
+  margin-bottom: 1.5em;
   font-size: 0.9em;
+  line-height: 1.5em;
 }
 
 
