@@ -1,5 +1,41 @@
 // map.js - Fokus nur auf Map-Funktionalität
 
+// User Guide Funktionen
+function closeUserGuide() {
+  const userGuide = document.getElementById('user-guide');
+  if (userGuide && !userGuide.classList.contains('hidden')) {
+    userGuide.classList.add('hidden');
+    setTimeout(() => {
+      userGuide.style.display = 'none';
+    }, 500);
+    console.log('User Guide closed');
+  }
+}
+
+// User Guide beim Laden anzeigen
+function showUserGuide() {
+  console.log('showUserGuide() called');
+  const userGuide = document.getElementById('user-guide');
+  console.log('User Guide element:', userGuide);
+
+  if (userGuide) {
+    userGuide.style.display = 'block';
+    userGuide.style.visibility = 'visible';
+    userGuide.classList.remove('hidden');
+
+    // Nur minimale Styling-Überschreibungen
+    userGuide.style.zIndex = '9999';
+
+    console.log('User Guide shown');
+  } else {
+    console.error('User Guide element not found');
+  }
+}
+
+// Mache Funktionen global verfügbar
+window.closeUserGuide = closeUserGuide;
+window.showUserGuide = showUserGuide;
+
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
     e.preventDefault();
@@ -10,6 +46,13 @@ window.addEventListener("keydown", (e) => {
 })
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, checking for user guide...');
+
+  // Sofort nach DOM-Load prüfen
+  setTimeout(() => {
+    showUserGuide();
+  }, 100);
+
   let map;
   let allMarkers = [];
   let json = [];
@@ -258,6 +301,14 @@ document.addEventListener('DOMContentLoaded', () => {
           // Hover-Event für Pins
           marker.on('mouseover', () => {
             marker.openPopup();
+            // Schließe User Guide bei Hover über Pin
+            closeUserGuide();
+          });
+
+          // Click-Event für Pins
+          marker.on('click', () => {
+            // Schließe User Guide bei Click auf Pin
+            closeUserGuide();
           });
 
           allMarkers.push(marker);
@@ -270,9 +321,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setupSearch() {
+    // Stelle sicher, dass mapUtils verfügbar ist
+    if (!window.mapUtils) {
+      console.error('mapUtils not available when setting up search');
+      return;
+    }
+
     // Initialisiere den SearchManager
     const icons = { defaultIcon, highlightIcon, hoverIcon };
     searchManager = new SearchManager(map, allMarkers, json, icons, zfill);
+
+    // Mache SearchManager global verfügbar für Debugging
+    window.searchManager = searchManager;
+
+    console.log('SearchManager initialized successfully');
+
+    // Zeige User Guide an (ohne Auto-Hide)
+    showUserGuide();
   }
 
   // Starte die App

@@ -47,6 +47,108 @@ a#titleurl {
   /* Wichtig für geschweifte Elemente */
 }
 
+
+/* .user-guide {
+  z-index: 1000;
+  width: 30px;
+  height: 30px;
+  transition: all 0.2s ease-in;
+  overflow: hidden;
+  font-family: 'Lato', sans-serif;
+  position: absolute;
+  right: 1.6em;
+  bottom: 1.5em;
+  border-radius: 20px;
+  padding: 8px !important;
+  background-color: #ffff00;
+  box-shadow: 4px 8px 24px 4px rgba(0, 0, 0, 0.15) inset;
+  line-height: 1.5em;
+}
+
+.user-guide:hover {
+  width: 260px !important;
+  height: 40%;
+  padding-top: 0px;
+  background-color: #ffff00;
+  box-shadow: 4px 8px 24px 4px rgba(0, 0, 0, 0.6) inset;
+  line-height: 1.5em;
+  transition: all 0.4s ease-out;
+}
+
+.user-guide-text {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0;
+  background-color: transparent;
+}
+
+.user-guide h3 {
+  text-align: center;
+}
+
+
+.user-guide ul li {
+  position: relative;
+  left: -0.8em;
+} */
+
+
+
+.user-guide {
+  z-index: 2000;
+  width: 30px;
+  height: 30px;
+  transition: all 0.15s ease-in;
+  overflow: hidden;
+  font-family: 'Lato', sans-serif;
+  position: absolute;
+  right: 1.6em;
+  bottom: 2.3em;
+  border-radius: 20px;
+  padding: 8px;
+  background-color: #ffff00;
+  box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1.5em;
+  /* Verzögertes Schließen */
+  transition-delay: 0s;
+}
+
+.user-guide:hover {
+  width: 260px;
+  height: 40%;
+  padding: 12px;
+  background-color: #ffff00;
+  box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.7);
+  line-height: 1.5em;
+  transition: all 0.5s ease-out;
+  /* Sofortiges Öffnen */
+  transition-delay: 0s;
+  cursor:help;
+}
+
+/* Verzögertes Schließen beim Verlassen */
+.user-guide:not(:hover) {
+  transition-delay: 0.6s;
+}
+
+.user-guide h3 {
+  text-align: center;
+  margin: 0.5em 0;
+  font-size: 1em;
+}
+
+.user-guide ul {
+  margin: 0;
+  padding-left: 1.2em;
+  list-style-type: disc;
+}
+
+.user-guide ul li {
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+}
+
+
 #search-bar {
   font-family: 'Lato', sans-serif;
   width: 100%;
@@ -211,7 +313,7 @@ a#titleurl {
 
 .leaflet-popup-content-wrapper {
   overflow: hidden;
-  z-index: 800;
+  z-index: 1100;
   /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
   /* Animation entfernen - nur das übergeordnete Element animieren */
 }
@@ -328,3 +430,82 @@ hr {
   color: black;
   font-weight: 800;
 }
+
+
+
+
+
+
+
+
+
+
+
+.search-container {
+  z-index: 1001;
+  position: absolute;
+  top: 1.2em;
+  right: 1.5em;
+  width: 280px;
+  overflow: visible;
+  /* Wichtig für geschweifte Elemente */
+}
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+#search-bar {
+  font-family: 'Lato', sans-serif;
+  width: 100%;
+  font-size: 1em;
+  padding: .6em 2.2em .6em 1em;
+  /* Angepasstes Padding für den Counter */
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+  /* transition: all 0.5s ease-in-out; */
+  opacity: 0.6;
+}
+
+.search-counter {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: blue;
+  border: 1px solid #0000ff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Lato', sans-serif;
+  font-size: 1.0em;
+  font-weight: bold;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+.search-counter.visible {
+  opacity: 1;
+}
+
+.search-counter.has-results {
+  background-color: white;
+}
+
+.search-counter.no-results {
+  border: none;
+  visibility: hidden;
+  display: none;
+}
+
+

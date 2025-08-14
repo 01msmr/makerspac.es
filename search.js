@@ -12,6 +12,7 @@ class SearchManager {
 
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
+    this.searchCounter = document.getElementById('search-counter');
 
     this.initializeEventListeners();
   }
@@ -21,7 +22,11 @@ class SearchManager {
     this.searchBar.focus();
 
     // Keyup-Event für die Suche
-    this.searchBar.addEventListener('keyup', () => this.performSearch());
+    this.searchBar.addEventListener('keyup', () => {
+      this.performSearch();
+      // Schließe User Guide bei Suche
+      this.closeUserGuideOnInteraction();
+    });
 
     // Focus Event
     this.searchBar.addEventListener('focus', () => {
@@ -30,16 +35,21 @@ class SearchManager {
       }
     });
 
-    // Click außerhalb schließt Dropdown
+    // Click außerhalb schließt Dropdown (aber nicht User Guide)
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) {
         this.closeDropdown();
       }
     });
 
-    // Map-Events für Connection Line Cleanup
+    // Map-Events für Connection Line Cleanup und User Guide schließen
     this.map.on('zoomstart movestart', () => {
       this.removeConnectionLine();
+    });
+
+    // User Guide bei Map-Interaktion schließen
+    this.map.on('click', () => {
+      this.closeUserGuideOnInteraction();
     });
   }
 
@@ -67,6 +77,7 @@ class SearchManager {
     // Update UI
     const hasResults = sortedFilteredLocations.length > 0;
     this.updateDropdownUI(hasResults);
+    this.updateSearchCounter(sortedFilteredLocations.length);
 
     // Erstelle Suggestion Items
     if (hasResults) {
@@ -85,11 +96,9 @@ class SearchManager {
 
   sortLocationsByGeography(locations) {
     return locations.sort((a, b) => {
-      const latDiff = b.loc.lat - a.loc.lat;
-      if (Math.abs(latDiff) < 0.1) {
-        return a.loc.long - b.loc.long;
-      }
-      return latDiff;
+      // Strikte Nord-Süd Sortierung: Nur nach Breitengrad (latitude)
+      // Höhere Werte = weiter nördlich → diese kommen zuerst
+      return b.loc.lat - a.loc.lat;
     });
   }
 
@@ -114,6 +123,22 @@ class SearchManager {
     } else {
       this.suggestionsDropdown.classList.remove('is-active');
       this.searchBar.classList.remove('has-suggestions');
+    }
+  }
+
+  updateSearchCounter(count) {
+    this.searchCounter.textContent = count;
+
+    if (count > 0) {
+      this.searchCounter.classList.add('visible', 'has-results');
+      this.searchCounter.classList.remove('no-results');
+    } else if (this.searchBar.value.length > 0) {
+      // Zeige "0" wenn gesucht wird aber keine Ergebnisse gefunden werden
+      this.searchCounter.classList.add('visible', 'no-results');
+      this.searchCounter.classList.remove('has-results');
+    } else {
+      // Verstecke Counter wenn keine Suche aktiv ist
+      this.searchCounter.classList.remove('visible', 'has-results', 'no-results');
     }
   }
 
@@ -157,6 +182,9 @@ class SearchManager {
   }
 
   handleSuggestionMouseEnter(item, location) {
+    // Schließe User Guide bei Hover über Suchergebnisse
+    this.closeUserGuideOnInteraction();
+
     // Schließe alle offenen Popups
     this.allMarkers.forEach(marker => {
       if (marker.isPopupOpen()) {
@@ -186,6 +214,9 @@ class SearchManager {
   }
 
   handleSuggestionClick(location) {
+    // Schließe User Guide bei Click auf Suchergebnis
+    this.closeUserGuideOnInteraction();
+
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
 
     const targetMarker = this.findMarkerByLocation(location);
@@ -356,6 +387,7 @@ class SearchManager {
 
   handleEmptySearch() {
     this.updateDropdownUI(false);
+    this.updateSearchCounter(0);
     this.allMarkers.forEach(marker => {
       marker.setIcon(this.icons.defaultIcon);
       marker.setOpacity(0.66);
@@ -371,6 +403,13 @@ class SearchManager {
   cleanupUI() {
     this.removeConnectionLine();
     this.cleanupHoverSVG();
+  }
+
+  // User Guide Funktionen
+  closeUserGuideOnInteraction() {
+    if (window.closeUserGuide) {
+      window.closeUserGuide();
+    }
   }
 
   // Diese Funktionen verwenden die map.js Implementierung

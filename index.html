@@ -29,9 +29,26 @@
 
   <!-- search bar container -->
   <div class="search-container">
-    <input type="text" id="search-bar" placeholder="Filtere nach Name, Stadt oder PLZ" autocomplete="off">
+    <div class="search-input-wrapper">
+      <input type="text" id="search-bar" placeholder="Filtere nach Name, Stadt oder PLZ" autocomplete="off">
+      <div class="search-counter" id="search-counter">0</div>
+    </div>
     <div id="suggestions-dropdown"></div> <!-- This is the new container for results -->
   </div>
+
+  <!-- User Guide  -->
+  <div class="user-guide">
+    <h3>⁉ User Guide</h3>
+      <ul>
+        <li><strong><!-- ⌨️ -->Shortcut:</strong> <br /> Ctrl-F / Cmd-F fokussiert Suche</li>
+        <li><strong><!-- 🔍 -->Filtere</strong> <br /> … nach Name, Stadt oder PLZ</li>
+        <li><strong><!-- 📊 -->Anzahl</strong> <br /> … gefilterter Makerspaces</li>
+        <li><strong><!-- 🗺️ -->Auto-Zoom</strong> <br <br /> … auf gefilterte Pins</li>
+        <li><strong><!-- 🎯 -->Hervorhebung:</strong> <br /> … markierter Elemente</li>
+      </ul>
+    </h3>
+  </div>
+  
 
   <!-- JavaScript-Dateien in der richtigen Reihenfolge laden -->
   <script src="utils.js"></script>

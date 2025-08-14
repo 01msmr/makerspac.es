@@ -3,31 +3,29 @@
 window.Utils = {
   // PLZ-Formatierung
   zfill(plz, country) {
-    const expectedLengths = { 
-      Germany: 5, 
-      Austria: 4, 
-      Switzerland: 4, 
-      Poland: 5, 
-      USA: 5, 
-      Italy: 5, 
-      Spain: 5, 
-      France: 5, 
-      Luxemburg: 4, 
-      Netherlands: 4 
+    const expectedLengths = {
+      Germany: 5,
+      Austria: 4,
+      Switzerland: 4,
+      Poland: 5,
+      USA: 5,
+      Italy: 5,
+      Spain: 5,
+      France: 5,
+      Luxemburg: 4,
+      Netherlands: 4
     };
     let plzStr = String(plz);
     let expectedLength = expectedLengths[country] || plzStr.length;
     return plzStr.padStart(expectedLength, "0");
   },
 
-  // Geografische Sortierung
+  // Strikte Nord-Süd Sortierung
   sortLocationsByGeography(locations) {
     return locations.sort((a, b) => {
-      const latDiff = b.loc.lat - a.loc.lat;
-      if (Math.abs(latDiff) < 0.1) {
-        return a.loc.long - b.loc.long;
-      }
-      return latDiff;
+      // Nur nach Breitengrad sortieren: Nord → Süd
+      // Höhere latitude-Werte (nördlicher) kommen zuerst
+      return b.loc.lat - a.loc.lat;
     });
   },
 
