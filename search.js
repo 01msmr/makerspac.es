@@ -70,7 +70,7 @@ class SearchManager {
       // Zoom-Rahmen - Verzögertes Zurückzoomen bei leerer Suche
       this.zoomDebounceTimeout = setTimeout(() => {
         this.handleEmptySearch();
-      }, 1000); // Gleiche 1s Verzögerung wie bei normaler Suche
+      }, 600); // Gleiche 0.6s Verzögerung wie bei normaler Suche
       return;
     }
 
@@ -354,7 +354,7 @@ class SearchManager {
         // Zoom-Rahmen - Speichere aktuelle Bounds für nächste Suche
         this.previousZoomBounds = newBounds;
       }
-    }, 1000);
+    }, 600);
   }
 
   // Zoom-Rahmen - Normaler Zoom mit Rahmen-Speicherung
@@ -363,9 +363,10 @@ class SearchManager {
     this.removeZoomPreviewFrame();
     this.createZoomPreviewFrame(bounds);
 
+    // Zoom-Rahmen - Warte 0.2s für Einblendung + 1s für Anzeige
     setTimeout(() => {
       this.executeZoom(markersToZoom, filteredLocations, bounds);
-    }, 1000);
+    }, 800); // 0.2s Einblendung + 1s Anzeige
   }
 
   // Zoom-Rahmen - 3-Rahmen-Zoom: Erster + Zweiter + Gemeinsamer
@@ -376,7 +377,7 @@ class SearchManager {
       Math.min(firstBounds.getWest(), secondBounds.getWest())],
       [Math.max(firstBounds.getNorth(), secondBounds.getNorth()),
       Math.max(firstBounds.getEast(), secondBounds.getEast())]
-    ]).pad(0.1); // 10% Puffer
+    ]).pad(0.05); // 10% Puffer
 
     console.log('Zoom-Rahmen: Schritt 1 - Zeige gemeinsamen Rahmen und zoome');
 
@@ -396,10 +397,10 @@ class SearchManager {
       this.map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
       this.map.once('moveend', () => { moveEnded = true; checkComplete(); });
 
-      // Zoom zum gemeinsamen Bereich
+      // Zoom zum gemeinsamen Bereich - warte 0.2s für Einblendung + 1s für Anzeige
       setTimeout(() => {
         this.map.flyToBounds(combinedBounds, { duration: 0.8 });
-      }, 600); // 0.6s für Rahmen-Anzeige
+      }, 800); // 0.2s Einblendung + 1s Anzeige
     });
 
     // Zoom-Rahmen - Schritt 3: Nach gemeinsamen Zoom, wechsle DIREKT zum finalen Rahmen
@@ -418,7 +419,7 @@ class SearchManager {
         // Zoom-Rahmen - Sofort neuen Rahmen erstellen (ohne Fade-Out/In Pause)
         this.createZoomPreviewFrame(secondBounds);
 
-        // Zoom-Rahmen - Längere Anzeige des finalen Rahmens
+        // Zoom-Rahmen - Längere Anzeige des finalen Rahmens (0.2s Einblendung + 1.5s Anzeige)
         setTimeout(() => {
           console.log('Zoom-Rahmen: Starte finalen Zoom - Rahmen bleibt sichtbar');
 
@@ -434,13 +435,13 @@ class SearchManager {
             zoomPromise.then(() => {
               this.suggestionsDropdown.classList.remove('is-zooming');
               this.restoreMarkerOpacity(filteredLocations);
-              // Zoom-Rahmen - Entferne Rahmen erst NACH dem Zoom mit Verzögerung
+              // Zoom-Rahmen - Cleanup: Entferne ALLE Zoom-Rahmen am Ende
               setTimeout(() => {
-                this.removeZoomPreviewFrame();
+                this.removeAllZoomFrames();
               }, 800); // 0.8s nach Zoom-Ende für längere Sichtbarkeit
             });
           }
-        }, 600); // 0.6s für finalen Rahmen
+        }, 800); // 0.2s Einblendung + 1.5s Anzeige
       }, 50); // 0.1s Wartezeit zwischen den Zooms
     });
   }
@@ -475,7 +476,7 @@ class SearchManager {
 
         setTimeout(() => {
           this.executeZoom(markersToZoom, filteredLocations, targetBounds);
-        }, 1000);
+        }, 600);
       }, 300); // 0.3s Wartezeit
     });
   }
@@ -632,32 +633,48 @@ class SearchManager {
       [extendedBounds.getNorth(), extendedBounds.getWest()]
     ];
 
-    // Zoom-Rahmen - Erstelle das Overlay mit Loch
+    // Zoom-Rahmen - Erstelle das Overlay mit Loch (unsichtbar)
     this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
       color: 'grey',
       fillColor: 'grey',
       fillOpacity: 0.4,
-      opacity: 0,
+      opacity: 0, // Startet unsichtbar
       weight: 0,
       interactive: false,
       pane: 'overlayPane'
     }).addTo(this.map);
 
-    // Zoom-Rahmen - Zeige mit Animation
+    // Zoom-Rahmen - Sanfte Einblendung über 0.3s
     setTimeout(() => {
       if (this.zoomPreviewOverlay) {
         this.zoomPreviewOverlay.setStyle({ opacity: 0.66 });
       }
-    }, 50);
+    }, 20); // Kurze Verzögerung für sanftes Einblenden
 
-    console.log('Zoom-Rahmen mit korrekten Browser-Proportionen:', {
-      'Viewport': `${viewportWidth}×${viewportHeight}`,
-      'Viewport Ratio': viewportAspectRatio.toFixed(3),
-      'Target Zoom': targetZoom,
-      'Frame Size (Degrees)': `${frameWidth.toFixed(6)}×${frameHeight.toFixed(6)}`,
-      'Frame Ratio': (frameWidth / frameHeight).toFixed(3),
-      'Soll Browser-Ratio entsprechen': viewportAspectRatio.toFixed(3)
+    console.log('Zoom-Rahmen mit sanfter Einblendung erstellt');
+  }
+
+  // Zoom-Rahmen - Entfernt ALLE Zoom-Rahmen (Cleanup-Funktion)
+  removeAllZoomFrames() {
+    // Zoom-Rahmen - Entferne aktuellen Overlay
+    if (this.zoomPreviewOverlay) {
+      if (this.map.hasLayer(this.zoomPreviewOverlay)) {
+        this.map.removeLayer(this.zoomPreviewOverlay);
+      }
+      this.zoomPreviewOverlay = null;
+    }
+
+    // Zoom-Rahmen - Suche und entferne alle möglichen Zoom-Rahmen auf der Karte
+    this.map.eachLayer((layer) => {
+      if (layer instanceof L.Polygon &&
+        layer.options &&
+        layer.options.pane === 'overlayPane' &&
+        layer.options.fillColor === 'grey') {
+        this.map.removeLayer(layer);
+      }
     });
+
+    console.log('Zoom-Rahmen: Alle Rahmen entfernt (Cleanup)');
   }
 
   // Zoom-Rahmen - Entfernt den Vorschau-Rahmen
