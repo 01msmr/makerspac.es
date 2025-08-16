@@ -363,10 +363,10 @@ class SearchManager {
     this.removeZoomPreviewFrame();
     this.createZoomPreviewFrame(bounds);
 
-    // Zoom-Rahmen - Warte 0.2s für Einblendung + 1s für Anzeige
+    // Zoom-Rahmen - Warte 0.2s für Einblendung + 0.6s für Anzeige
     setTimeout(() => {
       this.executeZoom(markersToZoom, filteredLocations, bounds);
-    }, 800); // 0.2s Einblendung + 1s Anzeige
+    }, 800); // 0.2s Einblendung + .6s Anzeige
   }
 
   // Zoom-Rahmen - 3-Rahmen-Zoom: Erster + Zweiter + Gemeinsamer
@@ -397,10 +397,10 @@ class SearchManager {
       this.map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
       this.map.once('moveend', () => { moveEnded = true; checkComplete(); });
 
-      // Zoom zum gemeinsamen Bereich - warte 0.2s für Einblendung + 1s für Anzeige
+      // Zoom zum gemeinsamen Bereich - warte 0.2s für Einblendung + 0.6s für Anzeige
       setTimeout(() => {
         this.map.flyToBounds(combinedBounds, { duration: 0.8 });
-      }, 800); // 0.2s Einblendung + 1s Anzeige
+      }, 800); // 0.2s Einblendung + 0.6s Anzeige
     });
 
     // Zoom-Rahmen - Schritt 3: Nach gemeinsamen Zoom, wechsle DIREKT zum finalen Rahmen
@@ -419,7 +419,7 @@ class SearchManager {
         // Zoom-Rahmen - Sofort neuen Rahmen erstellen (ohne Fade-Out/In Pause)
         this.createZoomPreviewFrame(secondBounds);
 
-        // Zoom-Rahmen - Längere Anzeige des finalen Rahmens (0.2s Einblendung + 1.5s Anzeige)
+        // Zoom-Rahmen - Längere Anzeige des finalen Rahmens (0.2s Einblendung + 0.6s Anzeige)
         setTimeout(() => {
           console.log('Zoom-Rahmen: Starte finalen Zoom - Rahmen bleibt sichtbar');
 
@@ -441,8 +441,8 @@ class SearchManager {
               }, 800); // 0.8s nach Zoom-Ende für längere Sichtbarkeit
             });
           }
-        }, 800); // 0.2s Einblendung + 1.5s Anzeige
-      }, 50); // 0.1s Wartezeit zwischen den Zooms
+        }, 800); // 0.2s Einblendung + 0.6s Anzeige
+      }, 50); // 0.05s Wartezeit zwischen den Zooms
     });
   }
 
@@ -572,7 +572,7 @@ class SearchManager {
     // this.removeZoomPreviewFrame(); // Entfernt, damit Rahmen bei neuer Filterung bleibt
   }
 
-  // Zoom-Rahmen - Erstellt und zeigt den Vorschau-Rahmen
+  // Erweiterte createZoomPreviewFrame Funktion mit Dropdown-Opacity-Kontrolle
   createZoomPreviewFrame(bounds) {
     this.removeZoomPreviewFrame();
 
@@ -580,7 +580,6 @@ class SearchManager {
     const mapContainer = document.getElementById('map');
     const viewportWidth = mapContainer.clientWidth;
     const viewportHeight = mapContainer.clientHeight;
-    const viewportAspectRatio = viewportWidth / viewportHeight;
 
     // Zoom-Rahmen - Berechne das Zentrum der ursprünglichen Bounds
     const centerLat = bounds.getCenter().lat;
@@ -633,30 +632,201 @@ class SearchManager {
       [extendedBounds.getNorth(), extendedBounds.getWest()]
     ];
 
-    // Zoom-Rahmen - Erstelle das Overlay mit Loch (unsichtbar)
+    // Zoom-Rahmen - Erstelle das Overlay mit Loch
     this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
-      color: 'grey',
-      fillColor: 'grey',
-      fillOpacity: 0.4,
+      color: 'black',
+      fillColor: 'black',
+      fillOpacity: 0, // Startet unsichtbar
       opacity: 0, // Startet unsichtbar
       weight: 0,
       interactive: false,
-      pane: 'overlayPane'
+      pane: 'overlayPane',
+      className: 'zoom-preview-overlay'
     }).addTo(this.map);
 
-    // Zoom-Rahmen - Sanfte Einblendung über 0.3s
+    // Zoom-Rahmen - Sanfte Einblendung
     setTimeout(() => {
-      if (this.zoomPreviewOverlay) {
-        this.zoomPreviewOverlay.setStyle({ opacity: 0.66 });
-      }
-    }, 20); // Kurze Verzögerung für sanftes Einblenden
+      if (this.zoomPreviewOverlay && this.zoomPreviewOverlay._path) {
+        const pathElement = this.zoomPreviewOverlay._path;
+        if (pathElement) {
+          pathElement.style.transition = 'opacity 0.25s ease-in-out, fill-opacity 0.25s ease-in-out';
+          pathElement.style.fillOpacity = '0.4';
+        }
 
-    console.log('Zoom-Rahmen mit sanfter Einblendung erstellt');
+        this.zoomPreviewOverlay.setStyle({
+          opacity: 0.66,
+          fillOpacity: 0.4
+        });
+
+        // *** NEU: Dropdown-Overlap-Erkennung starten ***
+        this.startDropdownOverlapDetection(extendedBounds);
+      }
+    }, 50);
+
+    console.log('Zoom-Rahmen mit Dropdown-Overlap-Erkennung erstellt');
   }
 
-  // Zoom-Rahmen - Entfernt ALLE Zoom-Rahmen (Cleanup-Funktion)
+  // *** NEU: Dropdown-Overlap-Erkennung ***
+  startDropdownOverlapDetection(zoomFrameBounds) {
+    // Stoppe vorherige Überwachung
+    this.stopDropdownOverlapDetection();
+
+    // Überwachungs-Funktion
+    this.overlapCheckFunction = () => {
+      this.checkDropdownZoomFrameOverlap(zoomFrameBounds);
+    };
+
+    // Kontinuierliche Überwachung alle 100ms
+    this.overlapCheckInterval = setInterval(this.overlapCheckFunction, 100);
+
+    // Sofortige erste Prüfung
+    this.checkDropdownZoomFrameOverlap(zoomFrameBounds);
+  }
+
+  // *** NEU: Erweiterte Überlappungs-Prüfung mit 20%-Regel ***
+  checkDropdownZoomFrameOverlap(zoomFrameBounds) {
+    const dropdown = this.suggestionsDropdown;
+
+    // Prüfe ob Dropdown sichtbar ist
+    if (!dropdown || !dropdown.classList.contains('is-active')) {
+      // Dropdown nicht sichtbar - Opacity zurücksetzen
+      this.resetDropdownOpacity();
+      return;
+    }
+
+    // Berechne Dropdown-Position in Weltkoordinaten
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const mapContainer = document.getElementById('map');
+    const mapRect = mapContainer.getBoundingClientRect();
+
+    // Konvertiere Dropdown-Ecken zu LatLng
+    const dropdownTopLeft = this.map.containerPointToLatLng([
+      dropdownRect.left - mapRect.left,
+      dropdownRect.top - mapRect.top
+    ]);
+
+    const dropdownBottomRight = this.map.containerPointToLatLng([
+      dropdownRect.right - mapRect.left,
+      dropdownRect.bottom - mapRect.top
+    ]);
+
+    const dropdownBounds = L.latLngBounds(dropdownBottomRight, dropdownTopLeft);
+
+    // Prüfe grundsätzliche Überlappung
+    if (!zoomFrameBounds.intersects(dropdownBounds)) {
+      this.resetDropdownOpacity();
+      return;
+    }
+
+    // *** NEU: Berechne Überlappungs-Prozentsatz der Zoomrahmen-Breite ***
+
+    // Zoomrahmen-Pixel-Koordinaten berechnen
+    const zoomFrameTopLeft = this.map.latLngToContainerPoint(
+      L.latLng(zoomFrameBounds.getNorth(), zoomFrameBounds.getWest())
+    );
+    const zoomFrameBottomRight = this.map.latLngToContainerPoint(
+      L.latLng(zoomFrameBounds.getSouth(), zoomFrameBounds.getEast())
+    );
+
+    // Zoomrahmen-Abmessungen in Pixeln
+    const zoomFrameLeft = Math.min(zoomFrameTopLeft.x, zoomFrameBottomRight.x);
+    const zoomFrameRight = Math.max(zoomFrameTopLeft.x, zoomFrameBottomRight.x);
+    const zoomFrameWidth = zoomFrameRight - zoomFrameLeft;
+
+    // Dropdown-Abmessungen relativ zur Karte
+    const dropdownLeft = dropdownRect.left - mapRect.left;
+    const dropdownRight = dropdownRect.right - mapRect.left;
+
+    // Berechne überlappende Breite
+    const overlapLeft = Math.max(zoomFrameLeft, dropdownLeft);
+    const overlapRight = Math.min(zoomFrameRight, dropdownRight);
+    const overlapWidth = Math.max(0, overlapRight - overlapLeft);
+
+    // Berechne Prozentsatz der überlappenden Zoomrahmen-Breite
+    const overlapPercentage = (overlapWidth / zoomFrameWidth) * 100;
+
+    console.log(`Zoomrahmen-Überlappung: ${overlapPercentage.toFixed(1)}% der Breite`);
+
+    // *** Nur wenn mehr als 80% der Zoomrahmen-Breite überlappt (weniger als 20% sichtbar) ***
+    if (overlapPercentage > 80) {
+      this.reduceDropdownOpacity();
+    } else {
+      this.resetDropdownOpacity();
+    }
+  }
+
+  // *** NEU: Dropdown-Opacity reduzieren auf 0.33 ***
+  reduceDropdownOpacity() {
+    const dropdown = this.suggestionsDropdown;
+    if (dropdown && !dropdown.classList.contains('overlap-reduced')) {
+      dropdown.style.transition = 'opacity 0.3s ease-in-out';
+      dropdown.style.opacity = '0.33';
+      dropdown.classList.add('overlap-reduced');
+      console.log('Dropdown-Opacity auf 0.33 reduziert (Zoomrahmen >80% überlappt)');
+    }
+  }
+
+  // *** NEU: Dropdown-Opacity zurücksetzen ***
+  resetDropdownOpacity() {
+    const dropdown = this.suggestionsDropdown;
+    if (dropdown && dropdown.classList.contains('overlap-reduced')) {
+      dropdown.style.transition = 'opacity 0.3s ease-in-out';
+      dropdown.style.opacity = '1';
+      dropdown.classList.remove('overlap-reduced');
+      console.log('Dropdown-Opacity auf 1 zurückgesetzt');
+    }
+  }
+
+  // *** NEU: Überwachung stoppen ***
+  stopDropdownOverlapDetection() {
+    if (this.overlapCheckInterval) {
+      clearInterval(this.overlapCheckInterval);
+      this.overlapCheckInterval = null;
+    }
+
+    // Opacity zurücksetzen beim Stoppen
+    this.resetDropdownOpacity();
+  }
+
+  // Erweiterte removeZoomPreviewFrame Funktion
+  removeZoomPreviewFrame() {
+    // *** NEU: Stoppe Overlap-Erkennung ***
+    this.stopDropdownOverlapDetection();
+
+    if (this.zoomPreviewOverlay) {
+      // Sanfte Ausblendung
+      if (this.zoomPreviewOverlay._path) {
+        const pathElement = this.zoomPreviewOverlay._path;
+        if (pathElement) {
+          pathElement.style.transition = 'opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out';
+          pathElement.style.opacity = '0';
+          pathElement.style.fillOpacity = '0';
+        }
+      }
+
+      this.zoomPreviewOverlay.setStyle({
+        opacity: 0,
+        fillOpacity: 0
+      });
+
+      // Nach Ausblendung entfernen
+      setTimeout(() => {
+        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
+          this.map.removeLayer(this.zoomPreviewOverlay);
+        }
+        this.zoomPreviewOverlay = null;
+      }, 350);
+
+      console.log('Zoom-Rahmen mit sanfter Ausblendung entfernt');
+    }
+  }
+
+  // Erweiterte removeAllZoomFrames Funktion
   removeAllZoomFrames() {
-    // Zoom-Rahmen - Entferne aktuellen Overlay
+    // *** NEU: Stoppe Overlap-Erkennung ***
+    this.stopDropdownOverlapDetection();
+
+    // Entferne aktuellen Overlay
     if (this.zoomPreviewOverlay) {
       if (this.map.hasLayer(this.zoomPreviewOverlay)) {
         this.map.removeLayer(this.zoomPreviewOverlay);
@@ -664,12 +834,12 @@ class SearchManager {
       this.zoomPreviewOverlay = null;
     }
 
-    // Zoom-Rahmen - Suche und entferne alle möglichen Zoom-Rahmen auf der Karte
+    // Suche und entferne alle möglichen Zoom-Rahmen auf der Karte
     this.map.eachLayer((layer) => {
       if (layer instanceof L.Polygon &&
         layer.options &&
         layer.options.pane === 'overlayPane' &&
-        layer.options.fillColor === 'grey') {
+        (layer.options.fillColor === 'grey' || layer.options.fillColor === 'black')) {
         this.map.removeLayer(layer);
       }
     });
@@ -677,27 +847,7 @@ class SearchManager {
     console.log('Zoom-Rahmen: Alle Rahmen entfernt (Cleanup)');
   }
 
-  // Zoom-Rahmen - Entfernt den Vorschau-Rahmen
-  removeZoomPreviewFrame() {
-    // Zoom-Rahmen - Entferne Overlay
-    if (this.zoomPreviewOverlay) {
-      this.zoomPreviewOverlay.setStyle({ opacity: 0 });
 
-      setTimeout(() => {
-        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
-          this.map.removeLayer(this.zoomPreviewOverlay);
-        }
-        this.zoomPreviewOverlay = null;
-      }, 200);
-
-      console.log('Zoom-Rahmen removed');
-    }
-  }
-
-  // User Guide Funktionen
-  closeUserGuideOnInteraction() {
-    // User Guide wird nur per CSS gesteuert, kein JavaScript nötig
-  }
 
   // Diese Funktionen verwenden die map.js Implementierung
   createConnectionLine(item, targetMarker) {

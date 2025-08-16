@@ -473,3 +473,47 @@ hr {
   visibility: hidden;
   display: none;
 }
+
+
+
+
+
+
+
+/* Zoomrahmen mit sanfter Transition */
+.leaflet-overlay-pane svg path {
+  transition: opacity 0.4s ease-in-out, fill-opacity 0.4s ease-in-out !important;
+}
+
+/* Spezifisch für Zoomrahmen-Polygone */
+.zoom-preview-overlay {
+  transition: opacity 0.4s ease-in-out !important;
+}
+
+/* Verbesserte Transition für alle Polygon-Overlays */
+.leaflet-interactive {
+  transition: opacity 0.4s ease-in-out, fill-opacity 0.4s ease-in-out;
+}
+
+
+
+
+
+/* Ergänzung für styles.css - Dropdown-Opacity-Transitions */
+
+/* Dropdown-Opacity-Transitions für Zoomrahmen-Überlappung */
+#suggestions-dropdown {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Explizite Klasse für reduzierte Opacity auf 0.33 */
+#suggestions-dropdown.overlap-reduced {
+  opacity: 0.33 !important;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Sicherstellen, dass normale Dropdown-Opacity definiert ist */
+#suggestions-dropdown.is-active {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
