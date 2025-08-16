@@ -11,6 +11,8 @@ class SearchManager {
     this.connectionLine = null;
     // Zoom-Rahmen - Element für die Zoom-Vorschau (nur Overlay)
     this.zoomPreviewOverlay = null;
+    // Zoom-Rahmen - Erinnerung an vorherigen Rahmen für 2-Schritt-Zoom
+    this.previousZoomBounds = null;
 
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
@@ -56,7 +58,7 @@ class SearchManager {
   }
 
   performSearch() {
-    const searchQuery = this.searchBar.value.toLowerCase();
+    const searchQuery = this.searchBar.value.trim().toLowerCase(); // trim() entfernt Leerzeichen
 
     // Cleanup
     clearTimeout(this.zoomDebounceTimeout);
@@ -316,9 +318,6 @@ class SearchManager {
   setupAutoZoom(filteredLocations) {
     if (filteredLocations.length === 0) return;
 
-    // Zoom-Rahmen - Entferne vorherigen Rahmen bei neuer Filterung
-    this.removeZoomPreviewFrame();
-
     this.zoomDebounceTimeout = setTimeout(() => {
       const markersToZoom = filteredLocations
         .map(loc => this.findMarkerByLocation(loc))
@@ -328,39 +327,122 @@ class SearchManager {
       this.removeConnectionLine();
       this.cleanupHoverSVG(); // Cleanup ohne Zoom-Rahmen-Entfernung
 
-      // Zoom-Rahmen - Berechne die Bounds
-      let bounds;
+      // Zoom-Rahmen - Berechne die neuen (zweiten) Bounds
+      let newBounds;
       if (markersToZoom.length > 1) {
-        bounds = L.featureGroup(markersToZoom).getBounds().pad(0.2);
+        newBounds = L.featureGroup(markersToZoom).getBounds().pad(0.2);
       } else if (markersToZoom.length === 1) {
         const center = markersToZoom[0].getLatLng();
         const radius = 0.01; // Ungefähr 1km Radius für Zoom-Level 13
-        bounds = L.latLngBounds(
+        newBounds = L.latLngBounds(
           [center.lat - radius, center.lng - radius],
           [center.lat + radius, center.lng + radius]
         );
       }
 
-      if (bounds) {
-        // Zoom-Rahmen - Prüfe ob neue Bounds außerhalb des aktuellen Viewports liegen
-        const currentBounds = this.map.getBounds();
-        const isOutsideViewport = !currentBounds.intersects(bounds);
-
-        if (isOutsideViewport) {
-          // Zoom-Rahmen - 2-Schritt-Zoom durch direkte Zoom-Calls
-          console.log('Zoom-Rahmen: Ziel außerhalb Viewport - starte 2-Schritt-Zoom');
-          this.executeTwoStepZoomDirect(filteredLocations, bounds, markersToZoom);
+      if (newBounds) {
+        // Zoom-Rahmen - Prüfe ob vorheriger Rahmen existiert und neuer außerhalb liegt
+        if (this.previousZoomBounds && !this.previousZoomBounds.intersects(newBounds)) {
+          console.log('Zoom-Rahmen: 2-Schritt-Zoom mit Rahmen-Erinnerung');
+          this.executeThreeFrameZoom(this.previousZoomBounds, newBounds, markersToZoom, filteredLocations);
         } else {
-          // Zoom-Rahmen - Normaler 1-Schritt-Zoom mit Rahmen
+          // Zoom-Rahmen - Normaler 1-Schritt-Zoom
           console.log('Zoom-Rahmen: Normaler 1-Schritt-Zoom');
-          this.createZoomPreviewFrame(bounds);
-
-          setTimeout(() => {
-            this.executeZoom(markersToZoom, filteredLocations, bounds);
-          }, 1000);
+          this.executeNormalZoom(newBounds, markersToZoom, filteredLocations);
         }
+
+        // Zoom-Rahmen - Speichere aktuelle Bounds für nächste Suche
+        this.previousZoomBounds = newBounds;
       }
     }, 1000);
+  }
+
+  // Zoom-Rahmen - Normaler Zoom mit Rahmen-Speicherung
+  executeNormalZoom(bounds, markersToZoom, filteredLocations) {
+    // Zoom-Rahmen - Entferne vorherigen Rahmen und zeige neuen
+    this.removeZoomPreviewFrame();
+    this.createZoomPreviewFrame(bounds);
+
+    setTimeout(() => {
+      this.executeZoom(markersToZoom, filteredLocations, bounds);
+    }, 1000);
+  }
+
+  // Zoom-Rahmen - 3-Rahmen-Zoom: Erster + Zweiter + Gemeinsamer
+  executeThreeFrameZoom(firstBounds, secondBounds, markersToZoom, filteredLocations) {
+    // Zoom-Rahmen - Schritt 1: Berechne gemeinsamen (dritten) Rahmen
+    const combinedBounds = L.latLngBounds([
+      [Math.min(firstBounds.getSouth(), secondBounds.getSouth()),
+      Math.min(firstBounds.getWest(), secondBounds.getWest())],
+      [Math.max(firstBounds.getNorth(), secondBounds.getNorth()),
+      Math.max(firstBounds.getEast(), secondBounds.getEast())]
+    ]).pad(0.1); // 10% Puffer
+
+    console.log('Zoom-Rahmen: Schritt 1 - Zeige gemeinsamen Rahmen und zoome');
+
+    // Zoom-Rahmen - Entferne vorherigen Rahmen und zeige gemeinsamen
+    this.removeZoomPreviewFrame();
+    this.createZoomPreviewFrame(combinedBounds);
+
+    // Zoom-Rahmen - Schritt 2: Zoom zum gemeinsamen Rahmen
+    const combinedZoomPromise = new Promise(resolve => {
+      let zoomEnded = false;
+      let moveEnded = false;
+
+      const checkComplete = () => {
+        if (zoomEnded && moveEnded) resolve();
+      };
+
+      this.map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+      this.map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+      // Zoom zum gemeinsamen Bereich
+      setTimeout(() => {
+        this.map.flyToBounds(combinedBounds, { duration: 0.8 });
+      }, 600); // 0.6s für Rahmen-Anzeige
+    });
+
+    // Zoom-Rahmen - Schritt 3: Nach gemeinsamen Zoom, wechsle DIREKT zum finalen Rahmen
+    combinedZoomPromise.then(() => {
+      console.log('Zoom-Rahmen: Schritt 1 beendet, wechsle nach 0.1s zu finalem Rahmen');
+
+      setTimeout(() => {
+        console.log('Zoom-Rahmen: Schritt 2 - Wechsle direkt zu finalem Rahmen');
+
+        // Zoom-Rahmen - DIREKTER Wechsel ohne removeZoomPreviewFrame()
+        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
+          this.map.removeLayer(this.zoomPreviewOverlay);
+        }
+        this.zoomPreviewOverlay = null;
+
+        // Zoom-Rahmen - Sofort neuen Rahmen erstellen (ohne Fade-Out/In Pause)
+        this.createZoomPreviewFrame(secondBounds);
+
+        // Zoom-Rahmen - Längere Anzeige des finalen Rahmens
+        setTimeout(() => {
+          console.log('Zoom-Rahmen: Starte finalen Zoom - Rahmen bleibt sichtbar');
+
+          // Zoom-Rahmen - Starte Zoom OHNE Rahmen-Entfernung
+          let zoomPromise;
+          if (markersToZoom.length > 1) {
+            zoomPromise = this.createMultiMarkerZoom(markersToZoom);
+          } else if (markersToZoom.length === 1) {
+            zoomPromise = this.createSingleMarkerZoom(markersToZoom[0]);
+          }
+
+          if (zoomPromise) {
+            zoomPromise.then(() => {
+              this.suggestionsDropdown.classList.remove('is-zooming');
+              this.restoreMarkerOpacity(filteredLocations);
+              // Zoom-Rahmen - Entferne Rahmen erst NACH dem Zoom mit Verzögerung
+              setTimeout(() => {
+                this.removeZoomPreviewFrame();
+              }, 800); // 0.8s nach Zoom-Ende für längere Sichtbarkeit
+            });
+          }
+        }, 600); // 0.6s für finalen Rahmen
+      }, 50); // 0.1s Wartezeit zwischen den Zooms
+    });
   }
 
   // Zoom-Rahmen - 2-Schritt-Zoom durch direkte Zoom-Calls
@@ -469,7 +551,8 @@ class SearchManager {
       marker.setOpacity(0.66);
     });
 
-    // Zoom-Rahmen - Bei leerer Suche langsam zum Startpunkt zoomen (ohne zusätzliche Verzögerung hier)
+    // Zoom-Rahmen - Bei leerer Suche langsam zum Startpunkt zoomen und Erinnerung löschen
+    this.previousZoomBounds = null; // Lösche Rahmen-Erinnerung
     this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, {
       duration: 1.5 // 1.5 Sekunden für perfektes Timing
     });
