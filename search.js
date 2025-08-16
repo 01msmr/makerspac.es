@@ -13,10 +13,17 @@ class SearchManager {
     this.zoomPreviewOverlay = null;
     // Zoom-Rahmen - Erinnerung an vorherigen Rahmen für 2-Schritt-Zoom
     this.previousZoomBounds = null;
+    // Dropdown-Overlap-Erkennung
+    this.overlapCheckInterval = null;
+    this.overlapCheckFunction = null;
 
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
+
+    // *** NEU: Keyboard-Navigation Variablen ***
+    this.currentDropdownIndex = -1; // -1 = kein Element aktiv
+    this.dropdownItems = []; // Array der aktuellen Dropdown-Items
 
     this.initializeEventListeners();
   }
@@ -25,8 +32,33 @@ class SearchManager {
     // Focus auf Suchfeld beim Laden
     this.searchBar.focus();
 
+    // *** NEU: Globale Keyboard-Navigation (überall auf der Seite) ***
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        this.handleTabKey();
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        this.navigateDropdown('down');
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        this.navigateDropdown('up');
+      } else if (e.code === 'Enter') {
+        e.preventDefault();
+        this.handleEnterKey();
+      } else if (e.code === 'Escape') {
+        e.preventDefault();
+        this.handleEscapeKey();
+      }
+    });
+
     // Keyup-Event für die Suche
-    this.searchBar.addEventListener('keyup', () => {
+    this.searchBar.addEventListener('keyup', (e) => {
+      // Ignoriere Navigation-Tasten für Search
+      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.code)) {
+        return;
+      }
+
       this.performSearch();
       // Schließe User Guide bei Suche
       this.closeUserGuideOnInteraction();
@@ -55,6 +87,174 @@ class SearchManager {
     this.map.on('click', () => {
       this.closeUserGuideOnInteraction();
     });
+  }
+
+  // *** NEU: Tabulator-Taste Behandlung ***
+  handleTabKey() {
+    console.log('Tab-Taste gedrückt - springe ins Suchfeld');
+    this.searchBar.focus();
+    this.searchBar.value = ''; // Leere das Suchfeld
+    this.currentDropdownIndex = -1; // Reset Dropdown-Navigation
+    this.clearActiveDropdownItem();
+
+    // Triggere Search-Reset
+    this.performSearch();
+
+    // Schließe User Guide
+    this.closeUserGuideOnInteraction();
+  }
+
+  // *** NEU: Cursortasten-Navigation im Dropdown ***
+  navigateDropdown(direction) {
+    // Update Dropdown-Items Array
+    this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
+
+    if (this.dropdownItems.length === 0) {
+      console.log('Keine Dropdown-Items verfügbar');
+      return;
+    }
+
+    // Berechne neuen Index
+    if (direction === 'down') {
+      if (this.currentDropdownIndex < this.dropdownItems.length - 1) {
+        this.currentDropdownIndex++;
+      } else {
+        this.currentDropdownIndex = 0; // Wrap to first
+      }
+    } else if (direction === 'up') {
+      if (this.currentDropdownIndex > 0) {
+        this.currentDropdownIndex--;
+      } else {
+        this.currentDropdownIndex = this.dropdownItems.length - 1; // Wrap to last
+      }
+    }
+
+    // Aktualisiere visuelle Darstellung
+    this.updateActiveDropdownItem();
+
+    // Scrolle zu aktivem Element
+    this.scrollToActiveItem();
+
+    console.log(`Navigation ${direction}: Item ${this.currentDropdownIndex + 1}/${this.dropdownItems.length} aktiv`);
+  }
+
+  // *** NEU: Aktives Dropdown-Item visuell markieren (nutzt vorhandenes CSS) ***
+  updateActiveDropdownItem() {
+    // Entferne previous hover-Effekte
+    this.clearActiveDropdownItem();
+
+    // Aktiviere CSS :hover Zustand für aktuelles Item
+    if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
+      const activeItem = this.dropdownItems[this.currentDropdownIndex];
+
+      // Direkte CSS-Hover-Simulation über Style-Eigenschaften
+      activeItem.style.backgroundColor = 'blue';
+      activeItem.style.color = 'white';
+
+      // Setze auch die item-details Farbe (wie im CSS :hover definiert)
+      const itemDetails = activeItem.querySelectorAll('.item-details');
+      itemDetails.forEach(detail => {
+        detail.style.color = '#ccc';
+      });
+
+      // Zusätzlich: Triggere mouseenter Event für Connection Line etc.
+      const mouseEnterEvent = new MouseEvent('mouseenter', {
+        bubbles: true,
+        cancelable: true
+      });
+      activeItem.dispatchEvent(mouseEnterEvent);
+
+      console.log(`Keyboard-Navigation: Item ${this.currentDropdownIndex + 1} aktiviert`);
+    }
+  }
+
+  // *** NEU: Hover-Effekte entfernen (nutzt vorhandenes CSS) ***
+  clearActiveDropdownItem() {
+    this.dropdownItems.forEach(item => {
+      // Entferne direktes Styling
+      item.style.backgroundColor = '';
+      item.style.color = '';
+
+      // Setze item-details Farbe zurück
+      const itemDetails = item.querySelectorAll('.item-details');
+      itemDetails.forEach(detail => {
+        detail.style.color = '';
+      });
+
+      // Zusätzlich: Triggere mouseleave Event für Connection Line Cleanup
+      const mouseLeaveEvent = new MouseEvent('mouseleave', {
+        bubbles: true,
+        cancelable: true
+      });
+      item.dispatchEvent(mouseLeaveEvent);
+    });
+  }
+
+  // *** NEU: Zum aktiven Element scrollen ***
+  scrollToActiveItem() {
+    if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
+      const activeItem = this.dropdownItems[this.currentDropdownIndex];
+      const dropdown = this.suggestionsDropdown;
+
+      // Element-Position berechnen
+      const itemTop = activeItem.offsetTop;
+      const itemHeight = activeItem.offsetHeight;
+      const dropdownScrollTop = dropdown.scrollTop;
+      const dropdownHeight = dropdown.clientHeight;
+
+      // Prüfe ob Element vollständig sichtbar ist
+      const itemBottom = itemTop + itemHeight;
+      const visibleTop = dropdownScrollTop;
+      const visibleBottom = dropdownScrollTop + dropdownHeight;
+
+      if (itemTop < visibleTop) {
+        // Element ist oben außerhalb - scrolle nach oben
+        dropdown.scrollTop = itemTop;
+      } else if (itemBottom > visibleBottom) {
+        // Element ist unten außerhalb - scrolle nach unten
+        dropdown.scrollTop = itemBottom - dropdownHeight;
+      }
+
+      console.log(`Scrolled to item ${this.currentDropdownIndex + 1}`);
+    }
+  }
+
+  // *** NEU: Location-Daten aus Dropdown-Item extrahieren ***
+  getLocationFromDropdownItem(dropdownItem) {
+    const itemName = dropdownItem.querySelector('.item-name')?.textContent;
+    if (itemName) {
+      return this.json.find(location => location.name === itemName);
+    }
+    return null;
+  }
+
+  // *** NEU: Enter-Taste Behandlung ***
+  handleEnterKey() {
+    if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
+      // Aktives Dropdown-Item auswählen
+      const activeItem = this.dropdownItems[this.currentDropdownIndex];
+      const location = this.getLocationFromDropdownItem(activeItem);
+
+      if (location) {
+        console.log(`Enter: Wähle Item ${this.currentDropdownIndex + 1} - ${location.name}`);
+        this.handleSuggestionClick(location);
+      }
+    } else if (this.dropdownItems.length === 1) {
+      // Wenn nur ein Item da ist, wähle es aus
+      const location = this.getLocationFromDropdownItem(this.dropdownItems[0]);
+      if (location) {
+        console.log('Enter: Wähle einziges verfügbares Item');
+        this.handleSuggestionClick(location);
+      }
+    }
+  }
+
+  // *** NEU: Escape-Taste Behandlung ***
+  handleEscapeKey() {
+    console.log('Escape: Schließe Dropdown und reset Navigation');
+    this.closeDropdown();
+    this.currentDropdownIndex = -1;
+    this.clearActiveDropdownItem();
   }
 
   performSearch() {
@@ -149,11 +349,19 @@ class SearchManager {
     }
   }
 
+  // *** ERWEITERT: createSuggestionItems mit Navigation-Reset ***
   createSuggestionItems(locations) {
+    // Reset Navigation bei neuen Items
+    this.currentDropdownIndex = -1;
+    this.clearActiveDropdownItem();
+
     locations.forEach(location => {
       const item = this.createSuggestionItem(location);
       this.suggestionsDropdown.appendChild(item);
     });
+
+    // Update Items-Array
+    this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
   }
 
   createSuggestionItem(location) {
@@ -446,41 +654,6 @@ class SearchManager {
     });
   }
 
-  // Zoom-Rahmen - 2-Schritt-Zoom durch direkte Zoom-Calls
-  executeTwoStepZoomDirect(filteredLocations, targetBounds, markersToZoom) {
-    // Zoom-Rahmen - Schritt 1: Zoom zur Startposition (ohne Rahmen)
-    console.log('Zoom-Rahmen: Schritt 1 - Zoom zur Startposition');
-
-    const startZoomPromise = new Promise(resolve => {
-      let zoomEnded = false;
-      let moveEnded = false;
-
-      const checkComplete = () => {
-        if (zoomEnded && moveEnded) resolve();
-      };
-
-      this.map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
-      this.map.once('moveend', () => { moveEnded = true; checkComplete(); });
-
-      // Zoom zur Startposition
-      this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, { duration: 1.2 });
-    });
-
-    // Zoom-Rahmen - Schritt 2: Nach Startposition-Zoom, warte 0.3s und zoome zum Ziel
-    startZoomPromise.then(() => {
-      console.log('Zoom-Rahmen: Schritt 1 beendet, starte Schritt 2 nach 0.3s');
-
-      setTimeout(() => {
-        console.log('Zoom-Rahmen: Schritt 2 - Zeige Rahmen und zoome zum Ziel');
-        this.createZoomPreviewFrame(targetBounds);
-
-        setTimeout(() => {
-          this.executeZoom(markersToZoom, filteredLocations, targetBounds);
-        }, 600);
-      }, 300); // 0.3s Wartezeit
-    });
-  }
-
   executeZoom(markersToZoom, filteredLocations, bounds) {
     let zoomPromise;
 
@@ -559,10 +732,15 @@ class SearchManager {
     });
   }
 
+  // *** ERWEITERT: closeDropdown mit Navigation-Reset ***
   closeDropdown() {
     this.suggestionsDropdown.classList.remove('is-active');
     this.searchBar.classList.remove('has-suggestions');
     this.removeConnectionLine();
+
+    // *** NEU: Reset Keyboard-Navigation ***
+    this.currentDropdownIndex = -1;
+    this.clearActiveDropdownItem();
   }
 
   cleanupUI() {
@@ -572,7 +750,7 @@ class SearchManager {
     // this.removeZoomPreviewFrame(); // Entfernt, damit Rahmen bei neuer Filterung bleibt
   }
 
-  // Erweiterte createZoomPreviewFrame Funktion mit Dropdown-Opacity-Kontrolle
+  // Zoom-Rahmen - Erstellt und zeigt den Vorschau-Rahmen (KORRIGIERT)
   createZoomPreviewFrame(bounds) {
     this.removeZoomPreviewFrame();
 
@@ -580,6 +758,7 @@ class SearchManager {
     const mapContainer = document.getElementById('map');
     const viewportWidth = mapContainer.clientWidth;
     const viewportHeight = mapContainer.clientHeight;
+    const viewportAspectRatio = viewportWidth / viewportHeight;
 
     // Zoom-Rahmen - Berechne das Zentrum der ursprünglichen Bounds
     const centerLat = bounds.getCenter().lat;
@@ -632,7 +811,7 @@ class SearchManager {
       [extendedBounds.getNorth(), extendedBounds.getWest()]
     ];
 
-    // Zoom-Rahmen - Erstelle das Overlay mit Loch
+    // Zoom-Rahmen - Erstelle das Overlay mit Loch (KORRIGIERT für sanfte Einblendung)
     this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
       color: 'black',
       fillColor: 'black',
@@ -641,18 +820,22 @@ class SearchManager {
       weight: 0,
       interactive: false,
       pane: 'overlayPane',
-      className: 'zoom-preview-overlay'
+      className: 'zoom-preview-overlay' // CSS-Klasse für Transitions
     }).addTo(this.map);
 
-    // Zoom-Rahmen - Sanfte Einblendung
+    // Zoom-Rahmen - KORRIGIERT: Sanfte Einblendung über CSS-Transitions
+    // Kurze Verzögerung, dann CSS-Eigenschaften direkt am DOM-Element setzen
     setTimeout(() => {
       if (this.zoomPreviewOverlay && this.zoomPreviewOverlay._path) {
+        // Zugriff auf das SVG-Path-Element für direkte CSS-Manipulation
         const pathElement = this.zoomPreviewOverlay._path;
         if (pathElement) {
           pathElement.style.transition = 'opacity 0.25s ease-in-out, fill-opacity 0.25s ease-in-out';
+          // pathElement.style.opacity = '0.4';
           pathElement.style.fillOpacity = '0.4';
         }
 
+        // Fallback: Leaflet's setStyle als Backup
         this.zoomPreviewOverlay.setStyle({
           opacity: 0.66,
           fillOpacity: 0.4
@@ -661,9 +844,9 @@ class SearchManager {
         // *** NEU: Dropdown-Overlap-Erkennung starten ***
         this.startDropdownOverlapDetection(extendedBounds);
       }
-    }, 50);
+    }, 50); // Etwas längere Verzögerung für DOM-Bereitschaft
 
-    console.log('Zoom-Rahmen mit Dropdown-Overlap-Erkennung erstellt');
+    console.log('Zoom-Rahmen mit verbesserter sanfter Einblendung erstellt');
   }
 
   // *** NEU: Dropdown-Overlap-Erkennung ***
@@ -788,40 +971,7 @@ class SearchManager {
     this.resetDropdownOpacity();
   }
 
-  // Erweiterte removeZoomPreviewFrame Funktion
-  removeZoomPreviewFrame() {
-    // *** NEU: Stoppe Overlap-Erkennung ***
-    this.stopDropdownOverlapDetection();
-
-    if (this.zoomPreviewOverlay) {
-      // Sanfte Ausblendung
-      if (this.zoomPreviewOverlay._path) {
-        const pathElement = this.zoomPreviewOverlay._path;
-        if (pathElement) {
-          pathElement.style.transition = 'opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out';
-          pathElement.style.opacity = '0';
-          pathElement.style.fillOpacity = '0';
-        }
-      }
-
-      this.zoomPreviewOverlay.setStyle({
-        opacity: 0,
-        fillOpacity: 0
-      });
-
-      // Nach Ausblendung entfernen
-      setTimeout(() => {
-        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
-          this.map.removeLayer(this.zoomPreviewOverlay);
-        }
-        this.zoomPreviewOverlay = null;
-      }, 350);
-
-      console.log('Zoom-Rahmen mit sanfter Ausblendung entfernt');
-    }
-  }
-
-  // Erweiterte removeAllZoomFrames Funktion
+  // Zoom-Rahmen - Entfernt ALLE Zoom-Rahmen (Cleanup-Funktion) - UNVERÄNDERT
   removeAllZoomFrames() {
     // *** NEU: Stoppe Overlap-Erkennung ***
     this.stopDropdownOverlapDetection();
@@ -847,7 +997,39 @@ class SearchManager {
     console.log('Zoom-Rahmen: Alle Rahmen entfernt (Cleanup)');
   }
 
+  // Zoom-Rahmen - Entfernt den Vorschau-Rahmen (KORRIGIERT für sanfte Ausblendung)
+  removeZoomPreviewFrame() {
+    // *** NEU: Stoppe Overlap-Erkennung ***
+    this.stopDropdownOverlapDetection();
 
+    if (this.zoomPreviewOverlay) {
+      // KORRIGIERT: Sanfte Ausblendung über CSS
+      if (this.zoomPreviewOverlay._path) {
+        const pathElement = this.zoomPreviewOverlay._path;
+        if (pathElement) {
+          pathElement.style.transition = 'opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out';
+          pathElement.style.opacity = '0';
+          pathElement.style.fillOpacity = '0';
+        }
+      }
+
+      // Fallback: Leaflet's setStyle
+      this.zoomPreviewOverlay.setStyle({
+        opacity: 0,
+        fillOpacity: 0
+      });
+
+      // Nach Ausblendung entfernen
+      setTimeout(() => {
+        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
+          this.map.removeLayer(this.zoomPreviewOverlay);
+        }
+        this.zoomPreviewOverlay = null;
+      }, 350); // Entspricht der Ausblend-Dauer
+
+      console.log('Zoom-Rahmen mit sanfter Ausblendung entfernt');
+    }
+  }
 
   // Diese Funktionen verwenden die map.js Implementierung
   createConnectionLine(item, targetMarker) {
@@ -868,6 +1050,13 @@ class SearchManager {
       console.log('Connection line removed from search.js');
     } else {
       console.error('mapUtils.removeConnectionLine not available');
+    }
+  }
+
+  // User Guide Funktionen (falls nicht bereits in map.js verfügbar)
+  closeUserGuideOnInteraction() {
+    if (window.closeUserGuide) {
+      window.closeUserGuide();
     }
   }
 }
