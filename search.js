@@ -60,8 +60,6 @@ class SearchManager {
       }
 
       this.performSearch();
-      // Schließe User Guide bei Suche
-      this.closeUserGuideOnInteraction();
     });
 
     // Focus Event
@@ -71,21 +69,16 @@ class SearchManager {
       }
     });
 
-    // Click außerhalb schließt Dropdown (aber nicht User Guide)
+    // Click außerhalb schließt Dropdown
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) {
         this.closeDropdown();
       }
     });
 
-    // Map-Events für Connection Line Cleanup und User Guide schließen
+    // Map-Events für Connection Line Cleanup 
     this.map.on('zoomstart movestart', () => {
       this.removeConnectionLine();
-    });
-
-    // User Guide bei Map-Interaktion schließen
-    this.map.on('click', () => {
-      this.closeUserGuideOnInteraction();
     });
   }
 
@@ -95,7 +88,6 @@ class SearchManager {
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
     this.performSearch();
-    this.closeUserGuideOnInteraction();
   }
 
   // *** NEU: Cursortasten-Navigation im Dropdown ***
@@ -286,7 +278,6 @@ class SearchManager {
   }
 
   handleSuggestionMouseEnter(item, location) {
-    this.closeUserGuideOnInteraction();
     this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
     this.createHoverSVG(item, location);
     const targetMarker = this.findMarkerByLocation(location);
@@ -312,7 +303,6 @@ class SearchManager {
 
   handleSuggestionClick(location) {
     clearTimeout(this.zoomDebounceTimeout); // Verhindert, dass ein Auto-Zoom den Klick überschreibt
-    this.closeUserGuideOnInteraction();
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
@@ -595,9 +585,6 @@ class SearchManager {
     }
   }
 
-  closeUserGuideOnInteraction() {
-    if (window.closeUserGuide) window.closeUserGuide();
-  }
 }
 
 window.SearchManager = SearchManager;
