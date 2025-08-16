@@ -9,6 +9,8 @@ class SearchManager {
     this.zfill = zfill;
     this.zoomDebounceTimeout = null;
     this.connectionLine = null;
+    // Zoom-Rahmen - Element für die Zoom-Vorschau (nur Overlay)
+    this.zoomPreviewOverlay = null;
 
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
@@ -61,9 +63,12 @@ class SearchManager {
     this.suggestionsDropdown.innerHTML = '';
     this.cleanupUI();
 
-    // Early return für leere Suche
+    // Early return für leere Suche - aber mit Delay wie bei normaler Suche
     if (searchQuery.length < 1) {
-      this.handleEmptySearch();
+      // Zoom-Rahmen - Verzögertes Zurückzoomen bei leerer Suche
+      this.zoomDebounceTimeout = setTimeout(() => {
+        this.handleEmptySearch();
+      }, 1000); // Gleiche 1s Verzögerung wie bei normaler Suche
       return;
     }
 
@@ -311,6 +316,9 @@ class SearchManager {
   setupAutoZoom(filteredLocations) {
     if (filteredLocations.length === 0) return;
 
+    // Zoom-Rahmen - Entferne vorherigen Rahmen bei neuer Filterung
+    this.removeZoomPreviewFrame();
+
     this.zoomDebounceTimeout = setTimeout(() => {
       const markersToZoom = filteredLocations
         .map(loc => this.findMarkerByLocation(loc))
@@ -318,13 +326,33 @@ class SearchManager {
 
       this.suggestionsDropdown.classList.add('is-zooming');
       this.removeConnectionLine();
-      this.cleanupUI();
+      this.cleanupHoverSVG(); // Cleanup ohne Zoom-Rahmen-Entfernung
 
-      this.executeZoom(markersToZoom, filteredLocations);
+      // Zoom-Rahmen - Berechne die Bounds und zeige Vorschau-Rahmen
+      let bounds;
+      if (markersToZoom.length > 1) {
+        bounds = L.featureGroup(markersToZoom).getBounds().pad(0.2);
+      } else if (markersToZoom.length === 1) {
+        const center = markersToZoom[0].getLatLng();
+        const radius = 0.01; // Ungefähr 1km Radius für Zoom-Level 13
+        bounds = L.latLngBounds(
+          [center.lat - radius, center.lng - radius],
+          [center.lat + radius, center.lng + radius]
+        );
+      }
+
+      if (bounds) {
+        // Zoom-Rahmen - Zeige Vorschau für 1 Sekunde bevor gezoomt wird
+        this.createZoomPreviewFrame(bounds);
+
+        setTimeout(() => {
+          this.executeZoom(markersToZoom, filteredLocations, bounds);
+        }, 1000);
+      }
     }, 1000);
   }
 
-  executeZoom(markersToZoom, filteredLocations) {
+  executeZoom(markersToZoom, filteredLocations, bounds) {
     let zoomPromise;
 
     if (markersToZoom.length > 1) {
@@ -337,6 +365,8 @@ class SearchManager {
       zoomPromise.then(() => {
         this.suggestionsDropdown.classList.remove('is-zooming');
         this.restoreMarkerOpacity(filteredLocations);
+        // Zoom-Rahmen - Entferne Vorschau-Rahmen nachdem Zoom beendet ist
+        this.removeZoomPreviewFrame();
       });
     }
   }
@@ -392,6 +422,11 @@ class SearchManager {
       marker.setIcon(this.icons.defaultIcon);
       marker.setOpacity(0.66);
     });
+
+    // Zoom-Rahmen - Bei leerer Suche langsam zum Startpunkt zoomen (ohne zusätzliche Verzögerung hier)
+    this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, {
+      duration: 1.5 // 1.5 Sekunden für perfektes Timing
+    });
   }
 
   closeDropdown() {
@@ -403,6 +438,114 @@ class SearchManager {
   cleanupUI() {
     this.removeConnectionLine();
     this.cleanupHoverSVG();
+    // Zoom-Rahmen - Cleanup bei UI-Reset (aber nicht bei neuer Filterung)
+    // this.removeZoomPreviewFrame(); // Entfernt, damit Rahmen bei neuer Filterung bleibt
+  }
+
+  // Zoom-Rahmen - Erstellt und zeigt den Vorschau-Rahmen
+  createZoomPreviewFrame(bounds) {
+    this.removeZoomPreviewFrame();
+
+    // Zoom-Rahmen - Berechne die Browser-Viewport-Dimensionen
+    const mapContainer = document.getElementById('map');
+    const viewportWidth = mapContainer.clientWidth;
+    const viewportHeight = mapContainer.clientHeight;
+    const viewportAspectRatio = viewportWidth / viewportHeight;
+
+    // Zoom-Rahmen - Berechne das Zentrum der ursprünglichen Bounds
+    const centerLat = bounds.getCenter().lat;
+    const centerLng = bounds.getCenter().lng;
+
+    // Zoom-Rahmen - Berechne den Zoom-Level, den Leaflet für diese Bounds verwenden wird
+    const targetZoom = this.map.getBoundsZoom(bounds);
+
+    // Zoom-Rahmen - Verwende Leaflet's eigene Methoden für Pixel-zu-LatLng-Umrechnung
+    const mapCenter = L.latLng(centerLat, centerLng);
+
+    // Zoom-Rahmen - Berechne die Ecken des sichtbaren Bereichs basierend auf Pixel-Offset
+    const halfWidth = viewportWidth / 2;
+    const halfHeight = viewportHeight / 2;
+
+    // Zoom-Rahmen - Simuliere die Pixel-Koordinaten bei dem Ziel-Zoom-Level
+    const centerPoint = this.map.project(mapCenter, targetZoom);
+
+    const topLeft = this.map.unproject(L.point(centerPoint.x - halfWidth, centerPoint.y - halfHeight), targetZoom);
+    const bottomRight = this.map.unproject(L.point(centerPoint.x + halfWidth, centerPoint.y + halfHeight), targetZoom);
+
+    // Zoom-Rahmen - Erweitere um Puffer damit er außerhalb des Viewports liegt
+    const bufferFactor = 1.05; // 5% größer
+    const frameWidth = (bottomRight.lng - topLeft.lng) * bufferFactor;
+    const frameHeight = (topLeft.lat - bottomRight.lat) * bufferFactor;
+
+    // Zoom-Rahmen - Erstelle die finalen Bounds zentriert um die ursprünglichen Bounds
+    const extendedBounds = L.latLngBounds(
+      [centerLat - frameHeight / 2, centerLng - frameWidth / 2],
+      [centerLat + frameHeight / 2, centerLng + frameWidth / 2]
+    );
+
+    // Zoom-Rahmen - Erstelle große Außenfläche (gesamte Weltkarte)
+    const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
+
+    // Zoom-Rahmen - Erstelle Polygon mit Loch (Außenfläche minus Rahmenbereich)
+    const outerRing = [
+      [worldBounds.getNorth(), worldBounds.getWest()],
+      [worldBounds.getNorth(), worldBounds.getEast()],
+      [worldBounds.getSouth(), worldBounds.getEast()],
+      [worldBounds.getSouth(), worldBounds.getWest()],
+      [worldBounds.getNorth(), worldBounds.getWest()]
+    ];
+
+    const innerRing = [
+      [extendedBounds.getNorth(), extendedBounds.getWest()],
+      [extendedBounds.getSouth(), extendedBounds.getWest()],
+      [extendedBounds.getSouth(), extendedBounds.getEast()],
+      [extendedBounds.getNorth(), extendedBounds.getEast()],
+      [extendedBounds.getNorth(), extendedBounds.getWest()]
+    ];
+
+    // Zoom-Rahmen - Erstelle das Overlay mit Loch
+    this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
+      color: 'grey',
+      fillColor: 'grey',
+      fillOpacity: 0.4,
+      opacity: 0,
+      weight: 0,
+      interactive: false,
+      pane: 'overlayPane'
+    }).addTo(this.map);
+
+    // Zoom-Rahmen - Zeige mit Animation
+    setTimeout(() => {
+      if (this.zoomPreviewOverlay) {
+        this.zoomPreviewOverlay.setStyle({ opacity: 0.66 });
+      }
+    }, 50);
+
+    console.log('Zoom-Rahmen mit Overlay und korrekten Browser-Proportionen:', {
+      'Viewport': `${viewportWidth}×${viewportHeight}`,
+      'Viewport Ratio': viewportAspectRatio.toFixed(3),
+      'Target Zoom': targetZoom,
+      'Frame Size (Degrees)': `${frameWidth.toFixed(6)}×${frameHeight.toFixed(6)}`,
+      'Frame Ratio': (frameWidth / frameHeight).toFixed(3),
+      'Soll Browser-Ratio entsprechen': viewportAspectRatio.toFixed(3)
+    });
+  }
+
+  // Zoom-Rahmen - Entfernt den Vorschau-Rahmen
+  removeZoomPreviewFrame() {
+    // Zoom-Rahmen - Entferne Overlay
+    if (this.zoomPreviewOverlay) {
+      this.zoomPreviewOverlay.setStyle({ opacity: 0 });
+
+      setTimeout(() => {
+        if (this.zoomPreviewOverlay && this.map.hasLayer(this.zoomPreviewOverlay)) {
+          this.map.removeLayer(this.zoomPreviewOverlay);
+        }
+        this.zoomPreviewOverlay = null;
+      }, 200);
+
+      console.log('Zoom-Rahmen removed');
+    }
   }
 
   // User Guide Funktionen
