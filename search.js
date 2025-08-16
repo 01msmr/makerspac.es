@@ -328,7 +328,7 @@ class SearchManager {
       this.removeConnectionLine();
       this.cleanupHoverSVG(); // Cleanup ohne Zoom-Rahmen-Entfernung
 
-      // Zoom-Rahmen - Berechne die Bounds und zeige Vorschau-Rahmen
+      // Zoom-Rahmen - Berechne die Bounds
       let bounds;
       if (markersToZoom.length > 1) {
         bounds = L.featureGroup(markersToZoom).getBounds().pad(0.2);
@@ -342,14 +342,60 @@ class SearchManager {
       }
 
       if (bounds) {
-        // Zoom-Rahmen - Zeige Vorschau für 1 Sekunde bevor gezoomt wird
-        this.createZoomPreviewFrame(bounds);
+        // Zoom-Rahmen - Prüfe ob neue Bounds außerhalb des aktuellen Viewports liegen
+        const currentBounds = this.map.getBounds();
+        const isOutsideViewport = !currentBounds.intersects(bounds);
 
-        setTimeout(() => {
-          this.executeZoom(markersToZoom, filteredLocations, bounds);
-        }, 1000);
+        if (isOutsideViewport) {
+          // Zoom-Rahmen - 2-Schritt-Zoom durch direkte Zoom-Calls
+          console.log('Zoom-Rahmen: Ziel außerhalb Viewport - starte 2-Schritt-Zoom');
+          this.executeTwoStepZoomDirect(filteredLocations, bounds, markersToZoom);
+        } else {
+          // Zoom-Rahmen - Normaler 1-Schritt-Zoom mit Rahmen
+          console.log('Zoom-Rahmen: Normaler 1-Schritt-Zoom');
+          this.createZoomPreviewFrame(bounds);
+
+          setTimeout(() => {
+            this.executeZoom(markersToZoom, filteredLocations, bounds);
+          }, 1000);
+        }
       }
     }, 1000);
+  }
+
+  // Zoom-Rahmen - 2-Schritt-Zoom durch direkte Zoom-Calls
+  executeTwoStepZoomDirect(filteredLocations, targetBounds, markersToZoom) {
+    // Zoom-Rahmen - Schritt 1: Zoom zur Startposition (ohne Rahmen)
+    console.log('Zoom-Rahmen: Schritt 1 - Zoom zur Startposition');
+
+    const startZoomPromise = new Promise(resolve => {
+      let zoomEnded = false;
+      let moveEnded = false;
+
+      const checkComplete = () => {
+        if (zoomEnded && moveEnded) resolve();
+      };
+
+      this.map.once('zoomend', () => { zoomEnded = true; checkComplete(); });
+      this.map.once('moveend', () => { moveEnded = true; checkComplete(); });
+
+      // Zoom zur Startposition
+      this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, { duration: 1.2 });
+    });
+
+    // Zoom-Rahmen - Schritt 2: Nach Startposition-Zoom, warte 0.3s und zoome zum Ziel
+    startZoomPromise.then(() => {
+      console.log('Zoom-Rahmen: Schritt 1 beendet, starte Schritt 2 nach 0.3s');
+
+      setTimeout(() => {
+        console.log('Zoom-Rahmen: Schritt 2 - Zeige Rahmen und zoome zum Ziel');
+        this.createZoomPreviewFrame(targetBounds);
+
+        setTimeout(() => {
+          this.executeZoom(markersToZoom, filteredLocations, targetBounds);
+        }, 1000);
+      }, 300); // 0.3s Wartezeit
+    });
   }
 
   executeZoom(markersToZoom, filteredLocations, bounds) {
@@ -521,7 +567,7 @@ class SearchManager {
       }
     }, 50);
 
-    console.log('Zoom-Rahmen mit Overlay und korrekten Browser-Proportionen:', {
+    console.log('Zoom-Rahmen mit korrekten Browser-Proportionen:', {
       'Viewport': `${viewportWidth}×${viewportHeight}`,
       'Viewport Ratio': viewportAspectRatio.toFixed(3),
       'Target Zoom': targetZoom,
@@ -550,9 +596,7 @@ class SearchManager {
 
   // User Guide Funktionen
   closeUserGuideOnInteraction() {
-    if (window.closeUserGuide) {
-      window.closeUserGuide();
-    }
+    // User Guide wird nur per CSS gesteuert, kein JavaScript nötig
   }
 
   // Diese Funktionen verwenden die map.js Implementierung
