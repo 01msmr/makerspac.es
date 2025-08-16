@@ -1,0 +1,223 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\froman\fcharset0 Times-Roman;\f2\fswiss\fcharset0 Helvetica-Bold;
+\f3\fmodern\fcharset0 Courier-Bold;\f4\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red19\green21\blue26;\red233\green234\blue237;\red0\green0\blue0;
+\red75\green75\blue76;\red20\green21\blue23;\red251\green251\blue251;\red255\green255\blue255;\red0\green0\blue0;
+}
+{\*\expandedcolortbl;;\cssrgb\c9804\c10980\c13725;\cssrgb\c92941\c93333\c94510;\cssrgb\c0\c0\c0\c12157;
+\cssrgb\c36471\c36471\c37255;\cssrgb\c10196\c10980\c11765;\cssrgb\c98824\c98824\c98824;\cssrgb\c100000\c100000\c100000;\cssrgb\c0\c0\c0;
+}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs28 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \
+\pard\pardeftab720\partightenfactor0
+\cf2 {{\NeXTGraphic watermark.png \width3200 \height3200 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\pard\pardeftab720\partightenfactor0
+\cf2 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Thoughts
+\fs24 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 (experimental)\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb4 Auto\
+\pard\pardeftab720\sa360\partightenfactor0
+
+\fs28 \cf2 \cb1 \
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \
+\pard\pardeftab720\ri320\sa260\partightenfactor0
+
+\fs26 \cf2 \cb3 Expand to view model thoughts\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f1\fs40 \cf2 \cb3 chevron_right\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs28 \cf2 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\fs36 \cf5 \strokec5 \
+\pard\pardeftab720\partightenfactor0
+
+\fs28 \cf6 \strokec6 \
+\pard\pardeftab720\sa360\partightenfactor0
+\cf6 \cb7 Excellent question. You are absolutely right that a significant amount of code was removed, and it's a very sharp observation to ask why that was possible without breaking functionality.\cb1 \
+\cb7 The answer is that there weren't "double code lines" in the sense of identical lines copied and pasted. Instead, there was a large amount of\'a0
+\f2\b complex, redundant logic
+\f0\b0 \'a0designed to solve a problem (the race condition) in a very difficult way.\cb1 \
+\cb7 The new "debouncing" approach is a standard, elegant pattern that solves the same problem so efficiently that all the complex "scaffolding" code could be deleted.\cb1 \
+\cb7 Let's break down what was removed and why:\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b\fs32\fsmilli16380 \cf6 \cb7 1. The Entire\'a0
+\f3\fs26 \cb8 searchId
+\f2\fs32\fsmilli16380 \cb7 \'a0System\cb1 \
+\pard\pardeftab720\sa360\partightenfactor0
+
+\f0\b0\fs28 \cf6 \cb7 The most significant removal was the entire system built around\'a0
+\f4\fs26 \cb8 currentSearchId
+\f0\fs28 \cb7 .\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa60\partightenfactor0
+\ls1\ilvl0
+\f2\b \cf6 \cb7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec6 What it did:
+\f0\b0 \'a0This system was a manual attempt to track which search was the most recent. On every search, we would create a new ID. This ID then had to be passed from function to function to function:\cb1 \uc0\u8232 
+\f4\fs26 \cb8 performSearch()
+\f0\fs28 \cb7 \'a0->\'a0
+\f4\fs26 \cb8 setupAutoZoom()
+\f0\fs28 \cb7 \'a0->\'a0
+\f4\fs26 \cb8 executeNormalZoom()
+\f0\fs28 \cb7 \'a0/\'a0
+\f4\fs26 \cb8 executeThreeFrameZoom()
+\f0\fs28 \cb7 \'a0->\'a0
+\f4\fs26 \cb8 executeZoom()
+\f0\fs28 \cb7 \'a0->\'a0
+\f4\fs26 \cb8 promise.then()
+\f0\fs28 \cb1 \
+\ls1\ilvl0
+\f2\b \cb7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec6 Why it was complex and long:
+\f0\b0 \'a0At every single asynchronous step (every\'a0
+\f4\fs26 \cb8 setTimeout
+\f0\fs28 \cb7 \'a0or promise completion), we had to add an\'a0
+\f4\fs26 \cb8 if (searchId === this.currentSearchId)
+\f0\fs28 \cb7 \'a0check. This cluttered the code and made the logic very hard to follow. The primary reason the code was so long was this constant passing and checking of state.\cb1 \
+\ls1\ilvl0
+\f2\b \cb7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec6 Why it was removed:
+\f0\b0 \'a0The debouncing pattern makes this entire system obsolete. By using\'a0
+\f4\fs26 \cb8 clearTimeout(this.zoomDebounceTimeout)
+\f0\fs28 \cb7 \'a0at the very beginning of every search, we guarantee that only\'a0
+\f2\b one
+\f0\b0 \'a0zoom operation can ever be "in the queue." We no longer need to manually track which search is the "latest" because the timer mechanism handles it for us automatically.\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b\fs32\fsmilli16380 \cf6 \cb7 2. Passing\'a0
+\f3\fs26 \cb8 filteredLocations
+\f2\fs32\fsmilli16380 \cb7 \'a0Through Long Chains\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa60\partightenfactor0
+\ls2\ilvl0
+\fs28 \cf6 \cb7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec6 What it did:
+\f0\b0 \'a0The old code passed the list of\'a0
+\f4\fs26 \cb8 filteredLocations
+\f0\fs28 \cb7 \'a0through the same long chain of functions as the\'a0
+\f4\fs26 \cb8 searchId
+\f0\fs28 \cb7 . This meant the\'a0
+\f4\fs26 \cb8 executeZoom
+\f0\fs28 \cb7 \'a0function was trying to update the map based on data that could be several hundred milliseconds old. This was the direct cause of the bug.\cb1 \
+\ls2\ilvl0
+\f2\b \cb7 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec6 Why it was removed:
+\f0\b0 \'a0The new logic follows a "single source of truth" principle. The\'a0
+\f4\fs26 \cb8 setupAutoZoom
+\f0\fs28 \cb7 \'a0function no longer receives the outdated list of locations. Instead, when the debounce timer finally fires, it simply re-reads the search bar's current value and re-filters the locations right at that moment. This ensures the data is always fresh, eliminating the need to pass it from function to function.\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b\fs32\fsmilli16380 \cf6 \cb7 Summary Table: Old vs. New\cb1 \
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth2191\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5952\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth6795\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\fs28 \cf6 \cb7 \strokec9 Aspect\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Previous (Complex & Long) Method\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Current (Simple & Short) Method\cf0 \cb1 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth2191\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5952\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth6795\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Handling User Input
+\f0\b0 \cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Started the entire complex zoom process immediately on every keystroke.\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f2\b \cf6 \cb7 Instant:
+\f0\b0 \'a0Updates UI (markers, dropdown).\'a0
+\f2\b Delayed:
+\f0\b0 \'a0Starts the zoom process only after the user pauses typing.\cf0 \cb1 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth2191\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5952\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth6795\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f2\b \cf6 \cb7 Preventing Race Conditions
+\f0\b0 \cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Relied on a manually managed\'a0
+\f4\fs26 \cb8 searchId
+\f0\fs28 \cb7 \'a0that was passed through 4-5 different functions and checked at every step. This was error-prone and verbose.\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Relied on a simple\'a0
+\f4\fs26 \cb8 clearTimeout()
+\f0\fs28 \cb7 \'a0call. This is a standard, robust, and concise way to ensure only the latest action executes.\cf0 \cb1 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth2191\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5952\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth6795\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f2\b \cf6 \cb7 Data Management
+\f0\b0 \cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f4\fs26 \cf6 \cb8 filteredLocations
+\f0\fs28 \cb7 \'a0was calculated once and passed through the entire asynchronous chain, becoming "stale" and causing the bug.\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f4\fs26 \cf6 \cb8 filteredLocations
+\f0\fs28 \cb7 \'a0is calculated immediately for the UI, and then\'a0
+\f2\b re-calculated
+\f0\b0 \'a0with fresh data from the search bar right before the zoom begins. No stale data is ever used.\cf0 \cb1 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth2191\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5952\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth6795\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt120 \clpadl240 \clpadb120 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f2\b \cf6 \cb7 Code Structure
+\f0\b0 \cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 Long chains of promises and callbacks, each needing to be aware of the\'a0
+\f4\fs26 \cb8 searchId
+\f0\fs28 \cb7 \'a0and the\'a0
+\f4\fs26 \cb8 filteredLocations
+\f0\fs28 \cb7 \'a0data.\cf0 \cb1 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf6 \cb7 A clean separation.\'a0
+\f4\fs26 \cb8 performSearch
+\f0\fs28 \cb7 \'a0handles the immediate UI, and the debounced\'a0
+\f4\fs26 \cb8 setTimeout
+\f0\fs28 \cb7 \'a0handles the single, final, delayed action (the zoom).\cf0 \cb1 \cell \lastrow\row
+\pard\pardeftab720\partightenfactor0
+\cf6 \cb7 \strokec6 In short, you are correct. The functionality is the same, but we replaced a long, complicated, and buggy manual system with a short, simple, and correct industry-standard pattern. This allowed us to delete all the code that was supporting the old, flawed logic.\cb1 \
+}
