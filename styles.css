@@ -61,7 +61,8 @@ a#titleurl {
   right: 1.6em;
   bottom: 2.3em;
   border-radius: 20px;
-  padding: 8px;
+  padding: 6px;
+  /* padding-left: 0px; */
   background-color: #ffff00;
   box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.3);
   line-height: 1.5em;
@@ -90,7 +91,7 @@ a#titleurl {
   opacity: 0.66;
 }
 
-.user-guide h3 {
+.user-guide h2 {
   text-align: center;
   margin: 0.5em 0;
   font-size: 1em;
