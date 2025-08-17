@@ -187,11 +187,19 @@ a#titleurl {
 
 .add-makerspace ul li, .add-makerspace ul, .add-makerspace ul li a {
   color: white !important;
+  text-decoration: none;
 }
 
 .add-makerspace li:hover {
   font-weight: bold;
+
 }
+
+.add-makerspace li:hover::before {
+  content: ">>> ";
+
+}
+
 
 
 
