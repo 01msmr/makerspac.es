@@ -1,4 +1,4 @@
-// search.js - Suchfunktionalität als separates Modul
+// search.js - SuchfunktionalitÃ¤t als separates Modul
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -9,9 +9,9 @@ class SearchManager {
     this.zfill = zfill;
     this.zoomDebounceTimeout = null;
     this.connectionLine = null;
-    // Zoom-Rahmen - Element für die Zoom-Vorschau (nur Overlay)
+    // Zoom-Rahmen - Element fÃ¼r die Zoom-Vorschau (nur Overlay)
     this.zoomPreviewOverlay = null;
-    // Zoom-Rahmen - Erinnerung an vorherigen Rahmen für 2-Schritt-Zoom
+    // Zoom-Rahmen - Erinnerung an vorherigen Rahmen fÃ¼r 2-Schritt-Zoom
     this.previousZoomBounds = null;
     // Dropdown-Overlap-Erkennung
     this.overlapCheckInterval = null;
@@ -25,6 +25,10 @@ class SearchManager {
     this.currentDropdownIndex = -1; // -1 = kein Element aktiv
     this.dropdownItems = []; // Array der aktuellen Dropdown-Items
 
+    // *** NEU: SVG Scroll-Tracking ***
+    this.currentHoverSVG = null;
+    this.currentHoverItem = null;
+
     this.initializeEventListeners();
   }
 
@@ -32,7 +36,7 @@ class SearchManager {
     // Focus auf Suchfeld beim Laden
     this.searchBar.focus();
 
-    // *** NEU: Globale Keyboard-Navigation (überall auf der Seite) ***
+    // *** NEU: Globale Keyboard-Navigation (Ã¼berall auf der Seite) ***
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') {
         e.preventDefault();
@@ -52,9 +56,9 @@ class SearchManager {
       }
     });
 
-    // Keyup-Event für die Suche
+    // Keyup-Event fÃ¼r die Suche
     this.searchBar.addEventListener('keyup', (e) => {
-      // Ignoriere Navigation-Tasten für Search
+      // Ignoriere Navigation-Tasten fÃ¼r Search
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.code)) {
         return;
       }
@@ -69,17 +73,41 @@ class SearchManager {
       }
     });
 
-    // Click außerhalb schließt Dropdown
+    // Click auÃŸerhalb schlieÃŸt Dropdown
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) {
         this.closeDropdown();
       }
     });
 
-    // Map-Events für Connection Line Cleanup 
+    // *** NEU: Scroll-Event fÃ¼r Dropdown ***
+    this.suggestionsDropdown.addEventListener('scroll', () => {
+      this.updateHoverSVGPosition();
+    });
+
+    // Map-Events fÃ¼r Connection Line Cleanup 
     this.map.on('zoomstart movestart', () => {
       this.removeConnectionLine();
     });
+  }
+
+  // *** NEU: SVG und Verbindungslinie Position bei Scroll aktualisieren ***
+  updateHoverSVGPosition() {
+    if (this.currentHoverSVG && this.currentHoverItem) {
+      const location = this.getLocationFromDropdownItem(this.currentHoverItem);
+      if (location) {
+        // Entferne alte Verbindungslinie
+        this.removeConnectionLine();
+        // Entferne das alte SVG
+        this.cleanupHoverSVG();
+        // Erstelle SVG und Verbindungslinie neu an der aktuellen Position
+        this.createHoverSVG(this.currentHoverItem, location);
+        const targetMarker = this.findMarkerByLocation(location);
+        if (targetMarker) {
+          this.createConnectionLine(this.currentHoverItem, targetMarker);
+        }
+      }
+    }
   }
 
   // *** NEU: Tabulator-Taste Behandlung ***
@@ -159,7 +187,7 @@ class SearchManager {
     this.clearActiveDropdownItem();
   }
 
-  // *** KORRIGIERT: Implementiert ein Debounce-Muster für die Suche ***
+  // *** KORRIGIERT: Implementiert ein Debounce-Muster fÃ¼r die Suche ***
   performSearch() {
     // *** WICHTIG: Bricht jeden zuvor geplanten Zoom sofort ab ***
     clearTimeout(this.zoomDebounceTimeout);
@@ -167,9 +195,9 @@ class SearchManager {
 
     const searchQuery = this.searchBar.value.trim().toLowerCase();
 
-    // *** Schritt 1: Führt die UI-Updates sofort für ein responsives Gefühl aus ***
+    // *** Schritt 1: FÃ¼hrt die UI-Updates sofort fÃ¼r ein responsives GefÃ¼hl aus ***
     if (searchQuery.length < 1) {
-      // Bei leerer Suche, die UI sofort zurücksetzen
+      // Bei leerer Suche, die UI sofort zurÃ¼cksetzen
       this.suggestionsDropdown.innerHTML = '';
       this.updateDropdownUI(false);
       this.updateSearchCounter(0);
@@ -187,9 +215,9 @@ class SearchManager {
       this.createSuggestionItems(sortedFilteredLocations); // Dropdown sofort erstellen
     }
 
-    // *** Schritt 2: Plant die disruptive Zoom-Aktion mit einer Verzögerung (Debounce) ***
-    // Dies wird nur ausgeführt, wenn der Benutzer mit dem Tippen für 400ms pausiert.
-    const DEBOUNCE_DELAY = 400; // 250ms ist sehr schnell, 400ms fühlt sich natürlicher an
+    // *** Schritt 2: Plant die disruptive Zoom-Aktion mit einer VerzÃ¶gerung (Debounce) ***
+    // Dies wird nur ausgefÃ¼hrt, wenn der Benutzer mit dem Tippen fÃ¼r 400ms pausiert.
+    const DEBOUNCE_DELAY = 400; // 250ms ist sehr schnell, 400ms fÃ¼hlt sich natÃ¼rlicher an
     this.zoomDebounceTimeout = setTimeout(() => {
       const currentQuery = this.searchBar.value.trim().toLowerCase();
       if (currentQuery.length < 1) {
@@ -243,7 +271,7 @@ class SearchManager {
   }
 
   createSuggestionItems(locations) {
-    this.suggestionsDropdown.innerHTML = ''; // Vorherige Ergebnisse löschen
+    this.suggestionsDropdown.innerHTML = ''; // Vorherige Ergebnisse lÃ¶schen
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
 
@@ -279,6 +307,10 @@ class SearchManager {
 
   handleSuggestionMouseEnter(item, location) {
     this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
+
+    // *** NEU: Speichere aktuelles Hover-Item fÃ¼r Scroll-Updates ***
+    this.currentHoverItem = item;
+
     this.createHoverSVG(item, location);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
@@ -288,10 +320,13 @@ class SearchManager {
   }
 
   handleSuggestionMouseLeave(location) {
+    // *** NEU: Entferne Hover-Item Referenz ***
+    this.currentHoverItem = null;
+
     this.cleanupHoverSVG();
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist, bevor das Icon geändert wird
+      // ÃœberprÃ¼fen, ob es noch Teil der gefilterten Ergebnisse ist, bevor das Icon geÃ¤ndert wird
       const currentQuery = this.searchBar.value.trim().toLowerCase();
       const currentFiltered = this.filterLocations(currentQuery);
       if (currentFiltered.some(loc => loc.uniqueId === location.uniqueId)) {
@@ -302,11 +337,11 @@ class SearchManager {
   }
 
   handleSuggestionClick(location) {
-    clearTimeout(this.zoomDebounceTimeout); // Verhindert, dass ein Auto-Zoom den Klick überschreibt
+    clearTimeout(this.zoomDebounceTimeout); // Verhindert, dass ein Auto-Zoom den Klick Ã¼berschreibt
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // Popup nach Abschluss des flyTo öffnen für eine flüssigere Erfahrung
+      // Popup nach Abschluss des flyTo Ã¶ffnen fÃ¼r eine flÃ¼ssigere Erfahrung
       this.map.once('moveend', () => targetMarker.openPopup());
     }
     this.searchBar.value = location.name;
@@ -318,6 +353,9 @@ class SearchManager {
   }
 
   createHoverSVG(item, location) {
+    // *** NEU: Cleanup vorheriges SVG ***
+    this.cleanupHoverSVG();
+
     const itemRect = item.getBoundingClientRect();
     const itemHeight = itemRect.height;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -330,9 +368,17 @@ class SearchManager {
     path.setAttribute('fill', 'blue');
     svg.appendChild(path);
     document.body.appendChild(svg);
+
+    // *** NEU: Speichere SVG Referenz ***
+    this.currentHoverSVG = svg;
   }
 
   cleanupHoverSVG() {
+    if (this.currentHoverSVG) {
+      this.currentHoverSVG.remove();
+      this.currentHoverSVG = null;
+    }
+    // *** FALLBACK: Entferne auch ältere SVGs mit der ID ***
     const svg = document.getElementById('current-connector');
     if (svg) svg.remove();
   }
@@ -437,11 +483,16 @@ class SearchManager {
     this.removeConnectionLine();
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
+    // *** NEU: Cleanup bei Dropdown-SchlieÃŸung ***
+    this.currentHoverItem = null;
+    this.cleanupHoverSVG();
   }
 
   cleanupUI() {
     this.removeConnectionLine();
     this.cleanupHoverSVG();
+    // *** NEU: Reset Hover-Item ***
+    this.currentHoverItem = null;
   }
 
   createZoomPreviewFrame(bounds) {
