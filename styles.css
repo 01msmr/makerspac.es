@@ -309,9 +309,9 @@ a#titleurl {
   z-index: 100 !important;
 }
 
-/* Pin Stabilization */
+/* Pin Stabilization + Hover Animation */
 .leaflet-marker-icon {
-  transition: width .10s ease-in, width .10s ease-in, height .10s ease-in, margin .10s ease-in;
+  transition: width 0.1s ease-out, height 0.1s ease-out, margin 0.1s ease-out !important;
   animation: none !important;
   will-change: auto !important;
   backface-visibility: hidden !important;
@@ -323,12 +323,26 @@ a#titleurl {
   animation: none !important;
 }
 
+/* *** Dropdown-Hover Pin UND direkter Pin-Hover (blauer hoverIcon) *** */
+.leaflet-marker-icon[src*="data:image/svg+xml"] {
+  width: 45px !important;
+  /* 37.5 * 1.2 = 45 */
+  height: 73.8px !important;
+  /* 61.5 * 1.2 = 73.8 */
+  margin-left: -22.5px !important;
+  /* -18.75 * 1.2 = -22.5 */
+  margin-top: -73.8px !important;
+  /* -61.5 * 1.2 = -73.8 */
+  z-index: 1000 !important;
+  /* Nach vorne bringen */
+}
+
+/* Nur während Zoom: Transitions stoppen */
 .leaflet-zoom-animated .leaflet-marker-icon,
 .is-zooming .leaflet-marker-icon,
 .leaflet-marker-icon.leaflet-zoom-hide {
   transition: none !important;
   animation: none !important;
-  transform: none !important;
 }
 
 /* Popup Animations */

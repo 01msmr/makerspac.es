@@ -300,8 +300,67 @@ class SearchManager {
   }
 
   setupSuggestionItemEvents(item, location) {
-    item.addEventListener('mouseenter', () => this.handleSuggestionMouseEnter(item, location));
-    item.addEventListener('mouseleave', () => this.handleSuggestionMouseLeave(location));
+    item.addEventListener('mouseenter', () => {
+      // *** FUNKTIONIERENDE INLINE-VERSION ***
+      console.log('=== DROPDOWN HOVER START:', location.name);
+
+      // Schließe alle offenen Popups sofort
+      this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
+
+      // Setze Dropdown-Hover Flag
+      this.isDropdownHovering = true;
+
+      // Speichere aktuelles Hover-Item für Scroll-Updates
+      this.currentHoverItem = item;
+
+      // Erstelle SVG und Verbindungslinie
+      this.createHoverSVG(item, location);
+      const targetMarker = this.findMarkerByLocation(location);
+      if (targetMarker) {
+        targetMarker.setIcon(this.icons.hoverIcon); // Sofort Icon wechseln
+        this.createConnectionLine(item, targetMarker);
+
+        // Popup nach 0.3s öffnen
+        this.popupTimeout = setTimeout(() => {
+          if (this.isDropdownHovering) {
+            targetMarker.openPopup();
+          }
+        }, 300);
+      }
+    });
+
+    item.addEventListener('mouseleave', () => {
+      // Dropdown-Hover beenden
+      this.isDropdownHovering = false;
+
+      // Popup-Timeout abbrechen
+      if (this.popupTimeout) {
+        clearTimeout(this.popupTimeout);
+        this.popupTimeout = null;
+      }
+
+      // Entferne Hover-Item Referenz
+      this.currentHoverItem = null;
+
+      // Cleanup SVG und Verbindungslinie
+      this.cleanupHoverSVG();
+      this.removeConnectionLine();
+
+      const targetMarker = this.findMarkerByLocation(location);
+      if (targetMarker) {
+        targetMarker.closePopup(); // Popup sofort schließen
+
+        // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist
+        const currentQuery = this.searchBar.value.trim().toLowerCase();
+        const currentFiltered = this.filterLocations(currentQuery);
+        if (currentFiltered.some(loc => loc.uniqueId === location.uniqueId)) {
+          targetMarker.setIcon(this.icons.highlightIcon);
+        } else {
+          targetMarker.setIcon(this.icons.defaultIcon);
+        }
+      }
+    });
+
     item.addEventListener('click', () => this.handleSuggestionClick(location));
   }
 
@@ -524,11 +583,11 @@ class SearchManager {
 
     // *** NEU: Dark Mode Detection für Zoomrahmen-Rand ***
     const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const borderWeight = isDarkMode ? 4 : 0;
+    const borderWeight = isDarkMode ? 2 : 0;
     const borderColor = isDarkMode ? 'silver' : 'black';
 
     this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
-      color: borderColor, fillColor: 'black', fillOpacity: 0, weight: borderWeight, opacity: 0.5, interactive: false,
+      color: borderColor, fillColor: 'black', fillOpacity: 0, weight: borderWeight, opacity: 0.8, interactive: false,
       pane: 'overlayPane', className: 'zoom-preview-overlay'
     }).addTo(this.map);
 

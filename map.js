@@ -288,9 +288,44 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.title').classList.remove('popup-active');
           });
 
-          // Hover-Event für Pins
+          // *** NEU: Hover-Event für Pins mit verzögertem Popup ***
+          let hoverTimeout = null;
+
           marker.on('mouseover', () => {
-            marker.openPopup();
+            marker.setIcon(hoverIcon); // Sofort Icon wechseln
+
+            // Popup nach 0.3s öffnen (nach Pin-Animation)
+            hoverTimeout = setTimeout(() => {
+              marker.openPopup();
+            }, 300);
+          });
+
+          // Mouseleave-Event für Pins  
+          marker.on('mouseout', () => {
+            // Timeout abbrechen falls Pin verlassen wird
+            if (hoverTimeout) {
+              clearTimeout(hoverTimeout);
+              hoverTimeout = null;
+            }
+
+            marker.closePopup(); // Popup sofort schließen
+
+            // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist
+            const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
+            if (searchQuery.length > 0) {
+              const filteredLocations = json.filter(loc =>
+                loc.name.toLowerCase().includes(searchQuery) ||
+                zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
+                loc.loc.city.toLowerCase().includes(searchQuery)
+              );
+              if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
+                marker.setIcon(highlightIcon); // Zurück zum orange highlightIcon
+              } else {
+                marker.setIcon(defaultIcon); // Zurück zum Standard-Icon
+              }
+            } else {
+              marker.setIcon(defaultIcon); // Zurück zum Standard-Icon
+            }
           });
 
           allMarkers.push(marker);
