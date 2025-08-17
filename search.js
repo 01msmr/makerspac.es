@@ -522,8 +522,13 @@ class SearchManager {
       [extendedBounds.getNorth(), extendedBounds.getEast()],
     ];
 
+    // *** NEU: Dark Mode Detection für Zoomrahmen-Rand ***
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const borderWeight = isDarkMode ? 4 : 0;
+    const borderColor = isDarkMode ? 'silver' : 'black';
+
     this.zoomPreviewOverlay = L.polygon([outerRing, innerRing], {
-      color: 'black', fillColor: 'black', fillOpacity: 0, weight: 0, interactive: false,
+      color: borderColor, fillColor: 'black', fillOpacity: 0, weight: borderWeight, opacity: 0.5, interactive: false,
       pane: 'overlayPane', className: 'zoom-preview-overlay'
     }).addTo(this.map);
 

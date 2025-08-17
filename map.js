@@ -1,4 +1,4 @@
-// map.js - Fokus nur auf Map-Funktionalität
+// map.js - Fokus nur auf Map-Funktionalität mit Dark Mode
 
 
 window.addEventListener("keydown", (e) => {
@@ -205,14 +205,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setupMap() {
     map = new L.Map('map');
-    const osmUrl = 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
-    const osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
-    const osmLayer = new L.TileLayer(osmUrl, {
-      minZoom: 2, maxZoom: 19, tileSize: 512,
-      zoomOffset: -1, attribution: osmAttrib
-    });
+
+    // *** NEU: Dark Mode Detection mit Live-Updates ***
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    let currentTileLayer = null;
+
+    function updateMapTiles() {
+      const isDarkMode = darkModeQuery.matches;
+
+      let osmUrl, osmAttrib;
+
+      if (isDarkMode) {
+        // Dark Mode Karte
+        osmUrl = 'https://api.maptiler.com/maps/streets-v2-dark/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
+        osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
+      } else {
+        // Light Mode Karte (Standard)
+        osmUrl = 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=FWYhsr9NFS0ukx1nyaXp';
+        osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
+      }
+
+      // Entferne alte Tile-Layer
+      if (currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+      }
+
+      // Füge neue Tile-Layer hinzu
+      currentTileLayer = new L.TileLayer(osmUrl, {
+        minZoom: 2, maxZoom: 19, tileSize: 512,
+        zoomOffset: -1, attribution: osmAttrib
+      });
+
+      map.addLayer(currentTileLayer);
+    }
+
+    // Initiale Karten-Setup
     map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
-    map.addLayer(osmLayer);
+    updateMapTiles();
+
+    // *** Live-Update bei Dark Mode Änderungen ***
+    darkModeQuery.addEventListener('change', updateMapTiles);
   }
 
   async function loadData() {

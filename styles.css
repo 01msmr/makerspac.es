@@ -1,6 +1,45 @@
-/* styles.css (Enhanced with alternating colors and improved spacing) */
+/* styles.css - Enhanced with Dark Mode support via CSS Variables */
+
+/* *** CSS Variables für Light/Dark Mode *** */
+:root {
+  --bg-color: white;
+  --text-color: black;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --dropdown-bg: white;
+  --dropdown-border: #ddd;
+  --dropdown-alt-bg: #f6f6f6;
+  --dropdown-alt-border: #eee;
+  --search-bg: white;
+  --search-opacity: 0.6;
+  --search-focus-opacity: 0.75;
+  --hover-text-color: #666;
+  --hover-text-color-active: #ccc;
+}
+
+/* *** Dark Mode Variables *** */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --border-color: #444;
+    --shadow-color: rgba(0, 0, 0, 0.7);
+    --dropdown-bg: #2a2a2a;
+    --dropdown-border: #555;
+    --dropdown-alt-bg: #333;
+    --dropdown-alt-border: #444;
+    --search-bg: #2a2a2a;
+    --search-opacity: 0.9;
+    --search-focus-opacity: 1;
+    --hover-text-color: #aaa;
+    --hover-text-color-active: #ddd;
+  }
+}
+
 body {
   margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 #map {
@@ -20,18 +59,16 @@ body {
   padding: .25em .75em .25em .50em;
   border-radius: .6em;
   border: .30em dashed rgba(256, 256, 256, .77);
-  box-shadow: .2em -.1em .6em .35em rgba(0, 0, 0, 0.55);
+  box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
   transition: opacity 0.75s ease-in-out;
 }
 
-
 .title.popup-active {
   opacity: 0.12;
   transition: opacity 0.25s ease-in-out;
 }
-
 
 a#titleurl {
   text-decoration: none;
@@ -44,9 +81,7 @@ a#titleurl {
   right: 1.5em;
   width: 280px;
   overflow: visible;
-  /* Wichtig für geschweifte Elemente */
 }
-
 
 .user-guide {
   z-index: 2000;
@@ -63,9 +98,10 @@ a#titleurl {
   background-color: #ffff00;
   box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.3);
   line-height: 1.5em;
-  /* Verzögertes Schließen */
   transition-delay: 0s;
   opacity: 0.66;
+  color: black;
+  /* Force black text on yellow background */
 }
 
 .user-guide:hover {
@@ -76,13 +112,11 @@ a#titleurl {
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.7);
   line-height: 1.5em;
   transition: all 0.4s ease-out;
-  /* Sofortiges Öffnen */
   transition-delay: 0s;
   cursor: help;
   opacity: 0.90;
 }
 
-/* Verzögertes Schließen beim Verlassen */
 .user-guide:not(:hover) {
   transition-delay: 0.6s;
   opacity: 0.66;
@@ -93,7 +127,6 @@ a#titleurl {
   height: 100%;
   padding: 0;
   background-color: transparent;
-  /* Konsistente Darstellung */
   opacity: 1;
   transform: scale(1);
 }
@@ -102,6 +135,8 @@ a#titleurl {
   text-align: center;
   margin: 0.5em 0;
   font-size: 1em;
+  color: black;
+  /* Force black text */
 }
 
 .user-guide ol {
@@ -113,48 +148,90 @@ a#titleurl {
   margin-bottom: 1.5em;
   font-size: 0.9em;
   line-height: 1.5em;
+  color: black;
+  /* Force black text */
+}
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 #search-bar {
   font-family: 'Lato', sans-serif;
   width: 100%;
   font-size: 1em;
-  padding: .6em 1em;
+  padding: .6em 2.2em .6em 1em;
   border-radius: 20px;
-  border: 1px solid #ccc;
-  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  box-shadow: 0px 2px 8px 1px var(--shadow-color);
   box-sizing: border-box;
   position: relative;
   z-index: 2;
-  /* transition: all 0.5s ease-in-out; */
-  opacity: 0.6;
+  opacity: var(--search-opacity);
+  background-color: var(--search-bg);
+  color: var(--text-color);
 }
 
 #search-bar.has-suggestions {
   box-shadow: none;
-  border: 1px solid black;
+  border: 1px solid var(--text-color);
 }
 
 #search-bar:focus {
   outline: none;
-  border-color: #999;
-  opacity: 0.75;
+  border-color: var(--border-color);
+  opacity: var(--search-focus-opacity);
+}
+
+.search-counter {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: blue;
+  border: 1px solid #0000ff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Lato', sans-serif;
+  font-size: 1.0em;
+  font-weight: bold;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+.search-counter.visible {
+  opacity: 1;
+}
+
+.search-counter.has-results {
+  background-color: var(--dropdown-bg);
+}
+
+.search-counter.no-results {
+  border: none;
+  visibility: hidden;
+  display: none;
 }
 
 #suggestions-dropdown {
-  background-color: white;
+  background-color: var(--dropdown-bg);
+  color: var(--text-color);
   border-radius: 20px;
-  /* border-top-left-radius: 20px;
-  border-top-right-radius: 20px; */
   margin-top: -40px;
   padding-top: 48px;
   position: relative;
   z-index: 1;
-  box-shadow: 0px 4px 8px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 8px 1px var(--shadow-color);
   max-height: 50vh;
   overflow-y: auto;
   overflow-x: visible;
-  /* Wichtig: Damit das geschweifte Element sichtbar ist */
   display: none;
 }
 
@@ -174,13 +251,13 @@ a#titleurl {
   border-bottom-right-radius: 20px;
   cursor: pointer;
   position: relative;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--dropdown-border);
+  color: var(--text-color);
 }
 
-/* Jedes zweite Element mit alternativer Farbe und ohne Border */
 .suggestion-item:nth-child(2n) {
-  background-color: #f6f6f6;
-  border-bottom: 1px solid #eee;
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 1px solid var(--dropdown-alt-border);
 }
 
 .suggestion-item:last-child {
@@ -192,18 +269,14 @@ a#titleurl {
   color: white;
 }
 
-/* geschweifte Form - zurück zur ursprünglichen Größe */
 .suggestion-item::before {
   content: '';
   position: absolute;
   left: -40px;
-  /* Zurück zur ursprünglichen Größe */
   top: 0;
   bottom: 0;
   width: 40px;
-  /* Zurück zur ursprünglichen Größe */
   opacity: 0;
-  /* transition: opacity 0.3s ease-out; */
   z-index: 1000;
   pointer-events: none;
 }
@@ -222,28 +295,27 @@ a#titleurl {
 
 .suggestion-item .item-details {
   font-size: 0.8em;
-  color: #666;
+  color: var(--hover-text-color);
 }
 
 .suggestion-item:hover .item-details {
   font-size: 0.8em;
-  color: #ccc;
+  color: var(--hover-text-color-active);
 }
 
-/* S-Kurven Verbindungslinie Styling */
+/* Connection Line Styling */
 .connection-line {
   pointer-events: none !important;
   z-index: 100 !important;
 }
 
-/* Pin-Stabilisierung, ohne Positionierung zu zerstören */
+/* Pin Stabilization */
 .leaflet-marker-icon {
   transition: width .10s ease-in, width .10s ease-in, height .10s ease-in, margin .10s ease-in;
   animation: none !important;
   will-change: auto !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
-  /* transform: none entfernt - das macht Pins unsichtbar */
 }
 
 .leaflet-marker-icon * {
@@ -251,23 +323,19 @@ a#titleurl {
   animation: none !important;
 }
 
-/* Nur während Zoom: Transforms stoppen */
 .leaflet-zoom-animated .leaflet-marker-icon,
 .is-zooming .leaflet-marker-icon,
 .leaflet-marker-icon.leaflet-zoom-hide {
   transition: none !important;
   animation: none !important;
   transform: none !important;
-  /* Nur hier transform stoppen */
 }
 
-/* Popup mit schnellerer Animation (schneller als im Standard sichtbar) */
+/* Popup Animations */
 .leaflet-popup {
-  /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
   animation: popupFadeIn 0.10s ease-out !important;
 }
 
-/* Popup ausblenden (schneller) */
 .leaflet-popup.leaflet-popup-closing {
   animation: popupFadeOut 0.02s ease-out !important;
 }
@@ -277,16 +345,33 @@ a#titleurl {
   background-color: rgba(188, 255, 222, .83);
 }
 
+/* Dark Mode Popup Styling */
+@media (prefers-color-scheme: dark) {
+
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background-color: rgba(60, 60, 60, 0.95);
+    color: var(--text-color);
+  }
+
+  .leaflet-popup-content h3 {
+    color: var(--text-color) !important;
+  }
+
+  .leaflet-popup-content a {
+    color: #66b3ff !important;
+  }
+
+  .leaflet-popup-content a:hover {
+    color: #4da6ff !important;
+  }
+}
+
 .leaflet-popup-content-wrapper {
   overflow: hidden;
   z-index: 800;
-  /* animation: popupFadeIn 0.2s ease-out 0.05s both !important; */
-  /* Animation entfernen - nur das übergeordnete Element animieren */
 }
 
-
-
-/* Sanfte Animation ohne Scale-Transform */
 @keyframes popupFadeIn {
   0% {
     opacity: 0;
@@ -301,7 +386,6 @@ a#titleurl {
   }
 }
 
-/* Ausblend-Animation (schneller) */
 @keyframes popupFadeOut {
   0% {
     opacity: 1;
@@ -315,9 +399,6 @@ a#titleurl {
     opacity: 0;
   }
 }
-
-
-
 
 .leaflet-popup-fade-animation {
   animation: none !important;
@@ -341,7 +422,7 @@ a#titleurl {
 a#url {
   display: inline-block;
   width: 200%;
-  color: black;
+  color: var(--text-color);
   background: transparent;
   margin-top: 0.5em;
   padding-left: 25%;
@@ -353,7 +434,7 @@ a#url {
 
 a#url:hover {
   color: white;
-  background: black;
+  background: var(--text-color);
   text-decoration: none;
   text-align: left;
   left: -25%;
@@ -393,126 +474,33 @@ hr {
 }
 
 #style:hover {
-  color: black;
+  color: var(--text-color);
   font-weight: 800;
 }
 
-
-
-
-
-
-
-
-
-
-
-.search-container {
-  z-index: 1001;
-  position: absolute;
-  top: 1.2em;
-  right: 1.5em;
-  width: 280px;
-  overflow: visible;
-  /* Wichtig für geschweifte Elemente */
-}
-
-.search-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-#search-bar {
-  font-family: 'Lato', sans-serif;
-  width: 100%;
-  font-size: 1em;
-  padding: .6em 2.2em .6em 1em;
-  /* Angepasstes Padding für den Counter */
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  box-shadow: 0px 2px 8px 1px rgba(0, 0, 0, 0.35);
-  box-sizing: border-box;
-  position: relative;
-  z-index: 2;
-  /* transition: all 0.5s ease-in-out; */
-  opacity: 0.6;
-}
-
-.search-counter {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: blue;
-  border: 1px solid #0000ff;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Lato', sans-serif;
-  font-size: 1.0em;
-  font-weight: bold;
-  z-index: 4;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: none;
-}
-
-.search-counter.visible {
-  opacity: 1;
-}
-
-.search-counter.has-results {
-  background-color: white;
-}
-
-.search-counter.no-results {
-  border: none;
-  visibility: hidden;
-  display: none;
-}
-
-
-
-
-
-
-
-/* Zoomrahmen mit sanfter Transition */
+/* Zoom Frame Transitions */
 .leaflet-overlay-pane svg path {
   transition: opacity 0.4s ease-in-out, fill-opacity 0.4s ease-in-out !important;
 }
 
-/* Spezifisch für Zoomrahmen-Polygone */
 .zoom-preview-overlay {
   transition: opacity 0.4s ease-in-out !important;
 }
 
-/* Verbesserte Transition für alle Polygon-Overlays */
 .leaflet-interactive {
   transition: opacity 0.4s ease-in-out, fill-opacity 0.4s ease-in-out;
 }
 
-
-
-
-
-/* Ergänzung für styles.css - Dropdown-Opacity-Transitions */
-
-/* Dropdown-Opacity-Transitions für Zoomrahmen-Überlappung */
+/* Dropdown Opacity Transitions */
 #suggestions-dropdown {
   transition: opacity 0.3s ease-in-out;
 }
 
-/* Explizite Klasse für reduzierte Opacity auf 0.33 */
 #suggestions-dropdown.overlap-reduced {
   opacity: 0.33 !important;
   transition: opacity 0.3s ease-in-out;
 }
 
-/* Sicherstellen, dass normale Dropdown-Opacity definiert ist */
 #suggestions-dropdown.is-active {
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
