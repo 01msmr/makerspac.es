@@ -1,4 +1,4 @@
-// search.js - SuchfunktionalitÃ¤t als separates Modul
+// search.js - Suchfunktionalität als separates Modul
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -9,9 +9,9 @@ class SearchManager {
     this.zfill = zfill;
     this.zoomDebounceTimeout = null;
     this.connectionLine = null;
-    // Zoom-Rahmen - Element fÃ¼r die Zoom-Vorschau (nur Overlay)
+    // Zoom-Rahmen - Element für die Zoom-Vorschau (nur Overlay)
     this.zoomPreviewOverlay = null;
-    // Zoom-Rahmen - Erinnerung an vorherigen Rahmen fÃ¼r 2-Schritt-Zoom
+    // Zoom-Rahmen - Erinnerung an vorherigen Rahmen für 2-Schritt-Zoom
     this.previousZoomBounds = null;
     // Dropdown-Overlap-Erkennung
     this.overlapCheckInterval = null;
@@ -29,14 +29,23 @@ class SearchManager {
     this.currentHoverSVG = null;
     this.currentHoverItem = null;
 
+    // *** Popup timeout für hover ***
+    this.popupTimeout = null;
+    this.isDropdownHovering = false;
+
     this.initializeEventListeners();
+
+    // *** NEU: SpaceAPI Event-Listener setup ***
+    setTimeout(() => {
+      this.setupSpaceAPIEvents();
+    }, 100); // Kurz warten bis SpaceAPI verfügbar ist
   }
 
   initializeEventListeners() {
     // Focus auf Suchfeld beim Laden
     this.searchBar.focus();
 
-    // *** NEU: Globale Keyboard-Navigation (Ã¼berall auf der Seite) ***
+    // *** NEU: Globale Keyboard-Navigation (überall auf der Seite) ***
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') {
         e.preventDefault();
@@ -56,9 +65,9 @@ class SearchManager {
       }
     });
 
-    // Keyup-Event fÃ¼r die Suche
+    // Keyup-Event für die Suche
     this.searchBar.addEventListener('keyup', (e) => {
-      // Ignoriere Navigation-Tasten fÃ¼r Search
+      // Ignoriere Navigation-Tasten für Search
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.code)) {
         return;
       }
@@ -73,19 +82,19 @@ class SearchManager {
       }
     });
 
-    // Click auÃŸerhalb schlieÃŸt Dropdown
+    // Click außerhalb schließt Dropdown
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) {
         this.closeDropdown();
       }
     });
 
-    // *** NEU: Scroll-Event fÃ¼r Dropdown ***
+    // *** NEU: Scroll-Event für Dropdown ***
     this.suggestionsDropdown.addEventListener('scroll', () => {
       this.updateHoverSVGPosition();
     });
 
-    // Map-Events fÃ¼r Connection Line Cleanup 
+    // Map-Events für Connection Line Cleanup 
     this.map.on('zoomstart movestart', () => {
       this.removeConnectionLine();
     });
@@ -187,7 +196,7 @@ class SearchManager {
     this.clearActiveDropdownItem();
   }
 
-  // *** KORRIGIERT: Implementiert ein Debounce-Muster fÃ¼r die Suche ***
+  // *** KORRIGIERT: Implementiert ein Debounce-Muster für die Suche ***
   performSearch() {
     // *** WICHTIG: Bricht jeden zuvor geplanten Zoom sofort ab ***
     clearTimeout(this.zoomDebounceTimeout);
@@ -195,9 +204,9 @@ class SearchManager {
 
     const searchQuery = this.searchBar.value.trim().toLowerCase();
 
-    // *** Schritt 1: FÃ¼hrt die UI-Updates sofort fÃ¼r ein responsives GefÃ¼hl aus ***
+    // *** Schritt 1: Führt die UI-Updates sofort für ein responsives Gefühl aus ***
     if (searchQuery.length < 1) {
-      // Bei leerer Suche, die UI sofort zurÃ¼cksetzen
+      // Bei leerer Suche, die UI sofort zurücksetzen
       this.suggestionsDropdown.innerHTML = '';
       this.updateDropdownUI(false);
       this.updateSearchCounter(0);
@@ -215,9 +224,9 @@ class SearchManager {
       this.createSuggestionItems(sortedFilteredLocations); // Dropdown sofort erstellen
     }
 
-    // *** Schritt 2: Plant die disruptive Zoom-Aktion mit einer VerzÃ¶gerung (Debounce) ***
-    // Dies wird nur ausgefÃ¼hrt, wenn der Benutzer mit dem Tippen fÃ¼r 400ms pausiert.
-    const DEBOUNCE_DELAY = 400; // 250ms ist sehr schnell, 400ms fÃ¼hlt sich natÃ¼rlicher an
+    // *** Schritt 2: Plant die disruptive Zoom-Aktion mit einer Verzögerung (Debounce) ***
+    // Dies wird nur ausgeführt, wenn der Benutzer mit dem Tippen für 400ms pausiert.
+    const DEBOUNCE_DELAY = 400; // 250ms ist sehr schnell, 400ms fühlt sich natürlicher an
     this.zoomDebounceTimeout = setTimeout(() => {
       const currentQuery = this.searchBar.value.trim().toLowerCase();
       if (currentQuery.length < 1) {
@@ -244,17 +253,92 @@ class SearchManager {
   }
 
   updateMarkers(filteredLocations) {
+    console.log("🔄 updateMarkers called with", filteredLocations.length, "filtered locations");
+
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
     this.allMarkers.forEach(marker => {
+      const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
+
       if (filteredIds.has(marker.uniqueId)) {
-        marker.setIcon(this.icons.highlightIcon);
+        console.log("🎯 Processing filtered marker:", location.name);
+
+        // *** VERBESSERTE SpaceAPI-Status Verwendung ***
+        if (location && window.spaceAPI) {
+          try {
+            console.log("🔍 Getting status icon for:", location.name, "isOpen:", location.isOpen);
+            const statusIcon = window.spaceAPI.getStatusIcon(location, this.icons);
+
+            if (statusIcon && statusIcon.options) {
+              console.log("✅ Setting status icon for:", location.name);
+              marker.setIcon(statusIcon);
+
+              // Debug: Welches Icon wird verwendet?
+              let iconType = 'UNKNOWN';
+              const iconUrl = statusIcon.options.iconUrl;
+              if (iconUrl) {
+                if (iconUrl.includes('green')) {
+                  iconType = '🟢 GRÜN (OFFEN)';
+                } else if (iconUrl.includes('red')) {
+                  iconType = '🔴 ROT (GESCHLOSSEN)';
+                } else if (iconUrl.includes('orange')) {
+                  iconType = '🟠 ORANGE (UNBEKANNT)';
+                } else {
+                  iconType = '🔵 BLAU (DEFAULT)';
+                }
+              }
+
+              console.log("📍", location.name + ":", iconType, "(isOpen=" + location.isOpen + ")");
+            } else {
+              console.log("⚠️ No status icon returned, using highlight icon for:", location.name);
+              marker.setIcon(this.icons.highlightIcon);
+            }
+          } catch (error) {
+            console.error("❌ Error getting status icon for:", location.name, error);
+            marker.setIcon(this.icons.highlightIcon);
+          }
+        } else {
+          console.log("📌 Using highlight icon for:", location.name, "(no SpaceAPI or location)");
+          marker.setIcon(this.icons.highlightIcon);
+        }
         marker.setOpacity(1);
       } else {
         marker.setIcon(this.icons.defaultIcon);
         marker.setOpacity(0.6);
       }
     });
+  }
+
+  // *** NEU: Event-Listener für SpaceAPI-Updates ***
+  setupSpaceAPIEvents() {
+    if (window.spaceAPI) {
+      window.spaceAPI.onStatusUpdate((location) => {
+        console.log("🔄 SpaceAPI Status Update für:", location.name, "isOpen:", location.isOpen);
+
+        // Finde den entsprechenden Marker und update ihn
+        const marker = this.allMarkers.find(m => {
+          const loc = this.json.find(l => l.uniqueId === m.uniqueId);
+          return loc && loc.name === location.name;
+        });
+
+        if (marker) {
+          // Nur updaten wenn Marker gerade gefiltert ist
+          const searchQuery = this.searchBar.value.trim().toLowerCase();
+          const isFiltered = searchQuery.length > 0 &&
+            (location.name.toLowerCase().includes(searchQuery) ||
+              this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery) ||
+              (location.loc.city && location.loc.city.toLowerCase().includes(searchQuery)));
+
+          if (isFiltered) {
+            const statusIcon = window.spaceAPI.getStatusIcon(location, this.icons);
+            if (statusIcon) {
+              marker.setIcon(statusIcon);
+              console.log("✅ Marker für", location.name, "live aktualisiert!");
+            }
+          }
+        }
+      });
+    }
   }
 
   updateDropdownUI(hasResults) {
@@ -271,7 +355,7 @@ class SearchManager {
   }
 
   createSuggestionItems(locations) {
-    this.suggestionsDropdown.innerHTML = ''; // Vorherige Ergebnisse lÃ¶schen
+    this.suggestionsDropdown.innerHTML = ''; // Vorherige Ergebnisse löschen
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
 
@@ -301,7 +385,6 @@ class SearchManager {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
-      // *** FUNKTIONIERENDE INLINE-VERSION ***
       console.log('=== DROPDOWN HOVER START:', location.name);
 
       // Schließe alle offenen Popups sofort
@@ -353,9 +436,17 @@ class SearchManager {
         // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist
         const currentQuery = this.searchBar.value.trim().toLowerCase();
         const currentFiltered = this.filterLocations(currentQuery);
+
         if (currentFiltered.some(loc => loc.uniqueId === location.uniqueId)) {
-          targetMarker.setIcon(this.icons.highlightIcon);
+          // *** SpaceAPI-Status-Icon für gefilterte Ergebnisse ***
+          if (window.spaceAPI) {
+            const statusIcon = window.spaceAPI.getStatusIcon(location, this.icons);
+            targetMarker.setIcon(statusIcon);
+          } else {
+            targetMarker.setIcon(this.icons.highlightIcon);
+          }
         } else {
+          // Standard-Icon für nicht-gefilterte
           targetMarker.setIcon(this.icons.defaultIcon);
         }
       }
@@ -364,43 +455,12 @@ class SearchManager {
     item.addEventListener('click', () => this.handleSuggestionClick(location));
   }
 
-  handleSuggestionMouseEnter(item, location) {
-    this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
-
-    // *** NEU: Speichere aktuelles Hover-Item fÃ¼r Scroll-Updates ***
-    this.currentHoverItem = item;
-
-    this.createHoverSVG(item, location);
-    const targetMarker = this.findMarkerByLocation(location);
-    if (targetMarker) {
-      targetMarker.setIcon(this.icons.hoverIcon);
-      this.createConnectionLine(item, targetMarker);
-    }
-  }
-
-  handleSuggestionMouseLeave(location) {
-    // *** NEU: Entferne Hover-Item Referenz ***
-    this.currentHoverItem = null;
-
-    this.cleanupHoverSVG();
-    const targetMarker = this.findMarkerByLocation(location);
-    if (targetMarker) {
-      // ÃœberprÃ¼fen, ob es noch Teil der gefilterten Ergebnisse ist, bevor das Icon geÃ¤ndert wird
-      const currentQuery = this.searchBar.value.trim().toLowerCase();
-      const currentFiltered = this.filterLocations(currentQuery);
-      if (currentFiltered.some(loc => loc.uniqueId === location.uniqueId)) {
-        targetMarker.setIcon(this.icons.highlightIcon);
-      }
-    }
-    this.removeConnectionLine();
-  }
-
   handleSuggestionClick(location) {
-    clearTimeout(this.zoomDebounceTimeout); // Verhindert, dass ein Auto-Zoom den Klick Ã¼berschreibt
+    clearTimeout(this.zoomDebounceTimeout); // Verhindert, dass ein Auto-Zoom den Klick überschreibt
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // Popup nach Abschluss des flyTo Ã¶ffnen fÃ¼r eine flÃ¼ssigere Erfahrung
+      // Popup nach Abschluss des flyTo öffnen für eine flüssigere Erfahrung
       this.map.once('moveend', () => targetMarker.openPopup());
     }
     this.searchBar.value = location.name;
@@ -542,7 +602,7 @@ class SearchManager {
     this.removeConnectionLine();
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
-    // *** NEU: Cleanup bei Dropdown-SchlieÃŸung ***
+    // *** NEU: Cleanup bei Dropdown-Schließung ***
     this.currentHoverItem = null;
     this.cleanupHoverSVG();
   }

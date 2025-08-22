@@ -46,6 +46,9 @@
       "url": "https://www.toolbox-bodensee.de",
       "text": "toolbox-bodensee.de"
     },
+    "spaceapi": {
+      "endpoint": "https://bodensee.space/spaceapi/toolboxbodensee.json"
+    },
     "dates": {
       "space.init": 20140301,
       "blog.latest": 20250505,
@@ -99,6 +102,8 @@
     "link": {
       "url": "https://www.turmlabor.de",
       "text": "turmlabor.de"
+    },"spaceapi": {
+      "endpoint": "http://www.turmlabor.de/spaces.api"
     },
     "dates": {
       "space.init": 20010000,
@@ -126,6 +131,8 @@
     "link": {
       "url": "https://c3d2.de",
       "text": "c3d2.de"
+    },"spaceapi": {
+      "endpoint": "https://www.c3d2.de/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -415,6 +422,8 @@
     "link": {
       "url": "https://www.c-base.org",
       "text": "c-base.org"
+    },"spaceapi": {
+      "endpoint": "https://www.c-base.org/status.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -1060,6 +1069,35 @@
 
 
   {
+    "name": "CCC Hansestadt Hamburg",
+    "loc": {
+      "lat": 53.5595298,
+      "long": 9.9445682,
+      "plz": 22765,
+      "city": "Hamburg",
+      "street": {
+        "name": "Zeiseweg",
+        "number": 9,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hamburg.ccc.de",
+      "text": "hamburg.ccc.de"
+    },"spaceapi": {
+      "endpoint": "https://spaceapi.hamburg.ccc.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "Attraktor",
     "loc": {
       "lat": 53.5498981,
@@ -1077,6 +1115,8 @@
     "link": {
       "url": "https://makerspace-hamburg.de/attraktor",
       "text": "makerspace-hamburg.de/attraktor"
+    },"spaceapi": {
+      "endpoint": "http://blog.attraktor.org/spaceapi/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -1590,6 +1630,8 @@
     "link": {
       "url": "https://stratum0.org",
       "text": "stratum0.org"
+    },"spaceapi": {
+      "endpoint": "https://status.stratum0.org/status.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -1725,6 +1767,8 @@
     "link": {
       "url": "https://chaosdorf.de",
       "text": "chaosdorf.de"
+    },"spaceapi": {
+      "endpoint": "https://chaosdorf.de/space_api.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -1995,6 +2039,8 @@
     "link": {
       "url": "https://chaospott.de",
       "text": "chaospott.de"
+    },"spaceapi": {
+      "endpoint": "https://status.chaospott.de/status.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -2534,6 +2580,8 @@
     "link": {
       "url": "https://koeln.ccc.de",
       "text": "koeln.ccc.de"
+    },"spaceapi": {
+      "endpoint": "https://api.koeln.ccc.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -2642,6 +2690,8 @@
     "link": {
       "url": "https://aachen.ccc.de",
       "text": "aachen.ccc.de"
+    },"spaceapi": {
+      "endpoint": "https://status.aachen.ccc.de/spaceapi"
     },
     "dates": {
       "space.init": 20020101,
@@ -3209,6 +3259,8 @@
     "link": {
       "url": "https://ccc-ffm.de",
       "text": "c-ffm.de"
+    },"spaceapi": {
+      "endpoint": "https://status.ccc-ffm.de/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -3372,6 +3424,8 @@
     "link": {
       "url": "https://www.chaos-darmstadt.de",
       "text": "chaos-darmstadt.de"
+    },"spaceapi": {
+      "endpoint": "https://api.chaos-darmstadt.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -3544,6 +3598,35 @@
 
 
   {
+    "name": "CCC Mannheim",
+    "loc": {
+      "lat": 49.4636929,
+      "long": 8.4886974,
+      "plz": 68163,
+      "city": "Mannheim",
+      "street": {
+        "name": "Neckarauer Straße",
+        "number": 106,
+        "ext": "-116"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "http://www.ccc-mannheim.de",
+      "text": "ccc-mannheim.de"
+    },"spaceapi": {
+      "endpoint": "https://www.ccc-mannheim.de/spaceapi/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
     "name": "RaumZeitLabor",
     "loc": {
       "lat": 49.5074119,
@@ -3561,6 +3644,8 @@
     "link": {
       "url": "https://raumzeitlabor.de",
       "text": "raumzeitlabor.de"
+    },"spaceapi": {
+      "endpoint": "https://raumzeitlabor.de/api/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -3620,6 +3705,33 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "shackspace",
+    "loc": {
+      "lat": 48.7746559,
+      "long": 9.2390528,
+      "plz": 70327,
+      "city": "Stuttgart-Wangen",
+      "street": {
+        "name": "Ulmer Straße",
+        "number": 300,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.shackspace.de",
+      "text": "shackspace.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250822
     }
   },
 
@@ -4101,6 +4213,8 @@
     "link": {
       "url": "https://entropia.de",
       "text": "entropia.de"
+    },"spaceapi": {
+      "endpoint": "http://club.entropia.de/spaceapi"
     },
     "dates": {
       "space.init": 20010000,
@@ -4209,6 +4323,9 @@
     "link": {
       "url": "https://www.hacknology.de",
       "text": "hacknology.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://www.hacknology.de/spaceapi/status.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -4354,23 +4471,23 @@
 
 
   {
-    "name": "FabLab München e.V.",
+    "name": "FabLab München",
     "loc": {
-      "lat": 48.1371436,
-      "long": 11.5341577,
+      "lat": 48.1374604,
+      "long": 11.5341587,
       "plz": 80339,
       "city": "München",
       "street": {
         "name": "Gollierstraße",
         "number": 70,
-        "ext": ""
+        "ext": ", Eingang E"
       },
       "country": "Germany"
     },
     "style": "for all",
     "link": {
-      "url": "https://freilab.de",
-      "text": "freilab.de"
+      "url": "https://www.fablab-muenchen.de",
+      "text": "fablab-muenchen.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -4965,6 +5082,8 @@
     "link": {
       "url": "https://temporaerhaus.de",
       "text": "temporaerhaus.de"
+    },"spaceapi": {
+      "endpoint": "https://spaceapi.temporaerhaus.de/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -5181,6 +5300,8 @@
     "link": {
       "url": "https://www.binary-kitchen.de",
       "text": "binary-kitchen.de"
+    },"spaceapi": {
+      "endpoint": "https://www.binary-kitchen.de/spaceapi.php"
     },
     "dates": {
       "space.init": 20010000,
@@ -5424,6 +5545,8 @@
     "link": {
       "url": "https://metalab.at",
       "text": "metalab.at"
+    },"spaceapi": {
+      "endpoint": "https://metalab.at/status.json"
     },
     "dates": {
       "space.init": 20010000,

@@ -1,6 +1,5 @@
 // map.js - Fokus nur auf Map-Funktionalität mit Dark Mode
 
-
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
     e.preventDefault();
@@ -13,33 +12,21 @@ window.addEventListener("keydown", (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   let map;
   let allMarkers = [];
-  let json = [];
   let connectionLine = null;
   let searchManager;
 
-  // Icons
-  const defaultIcon = new L.Icon.Default();
-  const highlightIcon = new L.Icon({
-    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
+  // *** WICHTIG: json als globale Variable ***
+  window.json = []; // Macht json überall verfügbar
+  let json = window.json; // Lokale Referenz für Kompatibilität
 
-  const hoverIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-  <path fill="#0000ff" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-  <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-</svg>`),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [37.5, 61.5],
-    iconAnchor: [18.75, 61.5],
-    popupAnchor: [1.5, -51],
-    shadowSize: [61.5, 61.5]
-  });
+  // Icons aus der globalen icons.js verwenden
+  const icons = {
+    defaultIcon: window.MapIcons.defaultIcon,
+    highlightIcon: window.MapIcons.highlightIcon,
+    hoverIcon: window.MapIcons.hoverIcon,
+    redIcon: window.MapIcons.redIcon,
+    greenIcon: window.MapIcons.greenIcon
+  };
 
   // Map Utils für Search Manager
   window.mapUtils = {
@@ -253,17 +240,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
+      // *** ZUERST: SpaceAPI Status abrufen ***
+      const spaceAPI = new SimpleSpaceAPI();
+      window.spaceAPI = spaceAPI;
+      console.log("🔄 Loading SpaceAPI status...");
+      json = await spaceAPI.enrichLocationData(json);
+      console.log("✅ SpaceAPI status loaded");
+
+      // *** DANN: Marker erstellen (immer mit defaultIcon) ***
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
+
+          // Immer defaultIcon beim Laden (Live-Status nur bei Filterung)
           const marker = L.marker([location.loc.lat, location.loc.long], {
-            icon: defaultIcon, opacity: 0.66
+            icon: icons.defaultIcon,
+            opacity: 0.66
           }).addTo(map);
 
           marker.uniqueId = location.uniqueId;
           marker.bindPopup(`<h3 id="style">${location.style}</h3><a id="titleurl" href="${location.link.url}" target="_blank"><h3>${location.name}</h3><br><br></a>${location.loc.street.name} ${location.loc.street.number}<span id="streetext">${location.loc.street.ext}</span><br><b>${zfill(location.loc.plz, location.loc.country)} ${location.loc.city}</b><br>${location.loc.country}<br><a id="url" href="${location.link.url}" target="_blank"><b>${location.link.text}</b></a>`);
 
-          // Popup events für Logo-Transparenz
+          // Popup events
           marker.on('popupopen', () => {
             const popup = marker.getPopup();
             const popupElement = popup._container;
@@ -288,49 +286,56 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.title').classList.remove('popup-active');
           });
 
-          // *** NEU: Hover-Event für Pins mit verzögertem Popup ***
           let hoverTimeout = null;
 
           marker.on('mouseover', () => {
-            marker.setIcon(hoverIcon); // Sofort Icon wechseln
-
-            // Popup nach 0.3s öffnen (nach Pin-Animation)
+            marker.setIcon(icons.hoverIcon);
             hoverTimeout = setTimeout(() => {
               marker.openPopup();
             }, 300);
           });
 
-          // Mouseleave-Event für Pins  
           marker.on('mouseout', () => {
-            // Timeout abbrechen falls Pin verlassen wird
             if (hoverTimeout) {
               clearTimeout(hoverTimeout);
               hoverTimeout = null;
             }
 
-            marker.closePopup(); // Popup sofort schließen
+            marker.closePopup();
 
-            // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist
             const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
+
             if (searchQuery.length > 0) {
+              // NUR wenn gefiltert wird: Live-Status verwenden
               const filteredLocations = json.filter(loc =>
                 loc.name.toLowerCase().includes(searchQuery) ||
                 zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
                 loc.loc.city.toLowerCase().includes(searchQuery)
               );
+
               if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
-                marker.setIcon(highlightIcon); // Zurück zum orange highlightIcon
+                // Für gefilterte Marker: SpaceAPI-Status-Icon verwenden
+                if (window.spaceAPI) {
+                  const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
+                  marker.setIcon(statusIcon);
+                } else {
+                  marker.setIcon(icons.highlightIcon);
+                }
               } else {
-                marker.setIcon(defaultIcon); // Zurück zum Standard-Icon
+                marker.setIcon(icons.defaultIcon);
               }
             } else {
-              marker.setIcon(defaultIcon); // Zurück zum Standard-Icon
+              // Keine Suche aktiv: Immer Standard-Icon (blau)
+              marker.setIcon(icons.defaultIcon);
             }
           });
 
           allMarkers.push(marker);
         }
       });
+
+      console.log("✅ Markers created with SpaceAPI data ready");
+
     } catch (error) {
       console.error("Error fetching or parsing locations.json:", error);
       alert("Failed to load location pins.");
@@ -344,15 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Initialisiere den SearchManager
-    const icons = { defaultIcon, highlightIcon, hoverIcon };
+    // Initialisiere den SearchManager mit korrekten Icons
     searchManager = new SearchManager(map, allMarkers, json, icons, zfill);
 
     // Mache SearchManager global verfügbar für Debugging
     window.searchManager = searchManager;
 
     console.log('SearchManager initialized successfully');
-
   }
 
   // Starte die App
