@@ -1,4 +1,4 @@
-// search.js - Suchfunktionalität als separates Modul
+// search.js - Suchfunktionalität als separates Modul mit Sticky Popup Support
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -41,7 +41,6 @@ class SearchManager {
     }, 100); // Kurz warten bis SpaceAPI verfügbar ist
   }
 
-
   createHoverIcon(color) {
     const iconSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
@@ -59,7 +58,6 @@ class SearchManager {
       shadowSize: [61.5, 61.5]
     });
   }
-
 
   initializeEventListeners() {
     // Focus auf Suchfeld beim Laden
@@ -452,6 +450,11 @@ class SearchManager {
       // Schließe alle offenen Popups sofort
       this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
 
+      // *** NEU: Clear sticky popup when hovering dropdown ***
+      if (window.mapUtils && window.mapUtils.clearStickyPopup) {
+        window.mapUtils.clearStickyPopup();
+      }
+
       // Setze Dropdown-Hover Flag
       this.isDropdownHovering = true;
 
@@ -533,8 +536,14 @@ class SearchManager {
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // Popup nach Abschluss des flyTo öffnen für eine flüssigere Erfahrung
-      this.map.once('moveend', () => targetMarker.openPopup());
+      // *** MODIFIED: Set popup as sticky after flyTo completes ***
+      this.map.once('moveend', () => {
+        targetMarker.openPopup();
+        // Make this popup sticky
+        if (window.mapUtils && window.mapUtils.setStickyPopup) {
+          window.mapUtils.setStickyPopup(targetMarker);
+        }
+      });
     }
     this.searchBar.value = location.name;
     this.closeDropdown();
@@ -669,6 +678,11 @@ class SearchManager {
   }
 
   closeDropdown() {
+    // *** MODIFIED: Clear sticky popup when dropdown closes ***
+    if (window.mapUtils && window.mapUtils.clearStickyPopup) {
+      window.mapUtils.clearStickyPopup();
+    }
+
     this.suggestionsDropdown.classList.remove('is-active');
     this.searchBar.classList.remove('has-suggestions');
     this.removeConnectionLine();

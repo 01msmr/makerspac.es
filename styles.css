@@ -83,10 +83,6 @@ a#titleurl {
   overflow: visible;
 }
 
-
-
-
-
 .user-guide,
 .add-makerspace {
   z-index: 2000;
@@ -129,15 +125,6 @@ a#titleurl {
   opacity: 0.66;
 }
 
-/* .user-guide-text {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  background-color: transparent;
-  opacity: 1;
-  transform: scale(1);
-} */
-
 .user-guide h2,
 .add-makerspace h2 {
   text-align: center;
@@ -162,8 +149,6 @@ a#titleurl {
   /* Force black text */
 }
 
-
-
 .add-makerspace {
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.5) inset !important;
   left: 1.6em;
@@ -185,7 +170,6 @@ a#titleurl {
   opacity: 0.5;
 }
 
-
 .add-makerspace h2 {
   color: white;
   /* Force white text */
@@ -200,16 +184,11 @@ a#titleurl {
 
 .add-makerspace li:hover {
   font-weight: bold;
-
 }
 
 .add-makerspace li:hover::before {
   content: ">>> ";
-
 }
-
-
-
 
 .search-input-wrapper {
   position: relative;
@@ -435,8 +414,15 @@ a#titleurl {
     color: #66b3ff !important;
   }
 
+  /* *** ÄNDERUNG 1: URL-Farbe beim Hover auf schwarz im Dark Mode *** */
   .leaflet-popup-content a:hover {
-    color: #4da6ff !important;
+    color: black !important;
+  }
+
+  /* *** ÄNDERUNG 3: Search-Counter Farbe im Dark Mode auf hellblau *** */
+  .search-counter {
+    color: rgb(102, 179, 255) !important;
+    border: 1px solid rgb(102, 179, 255) !important;
   }
 }
 
@@ -551,7 +537,6 @@ hr {
   font-weight: 800;
 }
 
-
 #style {
   display: block;
   /* Stellt sicher, dass es eine eigene Zeile hat */
@@ -567,7 +552,6 @@ hr {
   color: var(--text-color);
   font-weight: 800;
 }
-
 
 /* Zoom Frame Transitions */
 .leaflet-overlay-pane svg path {
@@ -596,10 +580,6 @@ hr {
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
 }
-
-
-
-
 
 /* *** Door-Icons in Dropdown-Items *** */
 .suggestion-item .fas {
@@ -643,9 +623,6 @@ hr {
   font-weight: 600;
 }
 
-
-
-
 /* === FINALE, VEREINFACHTE REGELN für Hover & Tastatur-Navigation === */
 
 /* 1. Basis-Regel für JEDEN aktiven Zustand (Maus oder Tastatur) */
@@ -664,22 +641,17 @@ hr {
   color: white !important;
 }
 
-
 /* 2. Spezifische Überschreibung der HINTERGRUNDFARBE für offene Spaces */
 .suggestion-item.space-open:hover,
 .suggestion-item.space-open.keyboard-active {
   background-color: #009900 !important;
 }
 
-
 /* 3. Spezifische Überschreibung der HINTERGRUNDFARBE für geschlossene Spaces */
 .suggestion-item.space-closed:hover,
 .suggestion-item.space-closed.keyboard-active {
   background-color: #dd4444 !important;
 }
-
-
-
 
 /* === POPUP NAME HIGHLIGHTING (Open & Closed) === */
 
@@ -697,7 +669,6 @@ a#titleurl h3.space-open .fas {
   margin-right: 0.0em;
 }
 
-
 /* Styling für den Makerspace-Namen, WENN der Space geschlossen ist */
 a#titleurl h3.space-closed {
   background-color: #dd4444 !important;
@@ -706,7 +677,8 @@ a#titleurl h3.space-closed {
 
 /* Stellt sicher, dass das Icon im roten Namen weiß ist und korrekt ausgerichtet ist */
 a#titleurl h3.space-closed .fas {
-  color: white !important;position: relative;
-    bottom: 1px;
-    margin-right: 0.0em;
+  color: white !important;
+  position: relative;
+  bottom: 1px;
+  margin-right: 0.0em;
 }

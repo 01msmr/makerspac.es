@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let allMarkers = [];
   let connectionLine = null;
   let searchManager;
+  let currentStickyMarker = null;
+  let isPopupSticky = false;
 
   // *** WICHTIG: json als globale Variable ***
   window.json = []; // Macht json überall verfügbar
@@ -33,7 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Map Utils für Search Manager
   window.mapUtils = {
     createConnectionLine: createConnectionLine,
-    removeConnectionLine: removeConnectionLine
+    removeConnectionLine: removeConnectionLine,
+  // *** NEU: Sticky Popup Utils ***
+  clearStickyPopup: clearStickyPopup,
+    setStickyPopup: setStickyPopup
   };
 
   // Connection Line Functions
@@ -186,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setupMap();
       await loadData();
       setupSearch();
+      setupMapClickHandler(); // *** NEU: Setup map click handler ***
     } catch (error) {
       console.error("A critical error occurred during app initialization:", error);
       alert("The application could not be started. Please check the developer console.");
@@ -302,6 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Popup events (dieser Teil bleibt für die Logo-Interaktion wichtig)
           marker.on('popupopen', () => {
+            // Set this popup as sticky when it opens
+            setStickyPopup(marker);
+
             const popup = marker.getPopup();
             const popupElement = popup._container;
             const logoElement = document.querySelector('.title');
@@ -323,6 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
           marker.on('popupclose', () => {
             document.querySelector('.title').classList.remove('popup-active');
+            // Only clear sticky if this was the sticky marker
+            if (currentStickyMarker === marker) {
+              currentStickyMarker = null;
+              isPopupSticky = false;
+            }
           });
 
           let hoverTimeout = null;
@@ -330,7 +344,10 @@ document.addEventListener('DOMContentLoaded', () => {
           marker.on('mouseover', () => {
             marker.setIcon(icons.hoverIcon);
             hoverTimeout = setTimeout(() => {
-              marker.openPopup();
+              // *** MODIFIED: Only open popup if no sticky popup is active ***
+              if (!isPopupSticky) {
+                marker.openPopup();
+              }
             }, 300);
           });
 
@@ -340,7 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
               hoverTimeout = null;
             }
 
-            marker.closePopup();
+            // *** MODIFIED: Only close popup if it's not sticky ***
+            if (!isPopupSticky || currentStickyMarker !== marker) {
+              marker.closePopup();
+            }
 
             const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
 
@@ -393,6 +413,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('SearchManager initialized successfully');
   }
+
+  // *** NEU: Sticky Popup Functions ***
+  function clearStickyPopup() {
+    if (currentStickyMarker && isPopupSticky) {
+      currentStickyMarker.closePopup();
+      currentStickyMarker = null;
+      isPopupSticky = false;
+      console.log('Sticky popup cleared');
+    }
+  }
+
+  function setStickyPopup(marker) {
+    // Clear any existing sticky popup first
+    clearStickyPopup();
+
+    currentStickyMarker = marker;
+    isPopupSticky = true;
+    console.log('Sticky popup set for marker');
+  }
+
+
+  // *** NEU: Map click event to clear sticky popup ***
+  function setupMapClickHandler() {
+    map.on('click', (e) => {
+      // Only clear if the click wasn't on a marker
+      if (e.originalEvent && e.originalEvent.target &&
+        !e.originalEvent.target.closest('.leaflet-marker-icon')) {
+        clearStickyPopup();
+      }
+    });
+  }
+
 
   // Starte die App
   initializeApp();
