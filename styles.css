@@ -87,7 +87,8 @@ a#titleurl {
 
 
 
-.user-guide, .add-makerspace {
+.user-guide,
+.add-makerspace {
   z-index: 2000;
   width: 30px;
   height: 30px;
@@ -108,7 +109,8 @@ a#titleurl {
   /* Force black text on yellow background */
 }
 
-.user-guide:hover, .add-makerspace:hover {
+.user-guide:hover,
+.add-makerspace:hover {
   width: 260px;
   height: 40%;
   padding: 12px;
@@ -121,7 +123,8 @@ a#titleurl {
   opacity: 0.90;
 }
 
-.user-guide:not(:hover), .add-makerspace:not(:hover){
+.user-guide:not(:hover),
+.add-makerspace:not(:hover) {
   transition-delay: 0.6s;
   opacity: 0.66;
 }
@@ -135,7 +138,8 @@ a#titleurl {
   transform: scale(1);
 } */
 
-.user-guide h2, .add-makerspace h2 {
+.user-guide h2,
+.add-makerspace h2 {
   text-align: center;
   margin: 0.5em 0;
   font-size: 1em;
@@ -143,12 +147,14 @@ a#titleurl {
   /* Force black text */
 }
 
-.user-guide ol, .add-makerspace ul {
+.user-guide ol,
+.add-makerspace ul {
   margin: 0;
   padding-left: 1.2em;
 }
 
-.user-guide ol li, .add-makerspace ul li {
+.user-guide ol li,
+.add-makerspace ul li {
   margin-bottom: 1.5em;
   font-size: 0.9em;
   line-height: 1.5em;
@@ -185,7 +191,9 @@ a#titleurl {
   /* Force white text */
 }
 
-.add-makerspace ul li, .add-makerspace ul, .add-makerspace ul li a {
+.add-makerspace ul li,
+.add-makerspace ul,
+.add-makerspace ul li a {
   color: white !important;
   text-decoration: none;
 }
@@ -569,4 +577,84 @@ hr {
 #suggestions-dropdown.is-active {
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
+}
+
+
+
+
+
+/* *** Door-Icons in Dropdown-Items *** */
+.suggestion-item .fas {
+  font-size: 0.9em;
+  vertical-align: middle;
+  /* transition: color 0.2s ease; */
+  margin-right: 8px;
+}
+
+.suggestion-item:hover .fas {
+  filter: brightness(1.2);
+}
+
+/* *** Door-Icon Klassen *** */
+.door-icon-open {
+  color: #009900 !important;
+  /* Grün für geöffnet */
+}
+
+.door-icon-closed {
+  color: #dd4444 !important;
+  /* Rot für geschlossen */
+}
+
+.door-icon-unknown {
+  color: #f59e0b !important;
+  /* Orange für unbekannt */
+}
+
+/* *** Space-Status Farben für Namen *** */
+.space-name-open {
+  color: #009900 !important;
+  /* Grüner Name für geöffnete Spaces */
+  font-weight: 600;
+}
+
+.space-name-closed {
+  color: #dd4444 !important;
+  /* Roter Name für geschlossene Spaces */
+  font-weight: 600;
+}
+
+
+
+
+/* === FINALE, VEREINFACHTE REGELN für Hover & Tastatur-Navigation === */
+
+/* 1. Basis-Regel für JEDEN aktiven Zustand (Maus oder Tastatur) */
+/* Diese Regel sorgt für den blauen Hintergrund und macht ALLE Texte weiß. */
+.suggestion-item:hover,
+.suggestion-item.keyboard-active {
+  background-color: blue;
+  color: white !important;
+  /* Setzt die Farbe für Details, etc. */
+}
+
+/* Der Universal-Selektor (*) stellt sicher, dass auch stark definierte
+   Kind-Elemente (wie .space-name-open) im aktiven Zustand weiß werden. */
+.suggestion-item:hover *,
+.suggestion-item.keyboard-active * {
+  color: white !important;
+}
+
+
+/* 2. Spezifische Überschreibung der HINTERGRUNDFARBE für offene Spaces */
+.suggestion-item.space-open:hover,
+.suggestion-item.space-open.keyboard-active {
+  background-color: #009900 !important;
+}
+
+
+/* 3. Spezifische Überschreibung der HINTERGRUNDFARBE für geschlossene Spaces */
+.suggestion-item.space-closed:hover,
+.suggestion-item.space-closed.keyboard-active {
+  background-color: #dd4444 !important;
 }

@@ -96,7 +96,6 @@ class SimpleSpaceAPI {
     console.log("🎨 location.isOpen =", location.isOpen, "(type:", typeof location.isOpen, ")");
     console.log("🎨 Available icons:", Object.keys(icons || {}));
 
-    // *** VERBESSERTER Icon-Check mit Fallbacks ***
     if (!icons) {
       console.error("❌ Icons object is undefined!");
       return null;
@@ -111,8 +110,9 @@ class SimpleSpaceAPI {
       console.log("🔴 Using RED icon for", location.name);
       return icons.redIcon || icons.highlightIcon || icons.defaultIcon;
     } else {
-      console.log("🟠 Using ORANGE icon for", location.name, "(isOpen is", isOpen, ")");
-      return icons.highlightIcon || icons.defaultIcon;
+      console.log("⚪ Using UNKNOWN status icon for", location.name, "(isOpen is", isOpen, ")");
+      // KORRIGIERT: Verwendet jetzt den korrekten neuen Namen "unknownStatusIcon".
+      return icons.unknownStatusIcon || icons.highlightIcon || icons.defaultIcon;
     }
   }
 }

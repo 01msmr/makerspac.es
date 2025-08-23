@@ -41,6 +41,26 @@ class SearchManager {
     }, 100); // Kurz warten bis SpaceAPI verfügbar ist
   }
 
+
+  createHoverIcon(color) {
+    const iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
+        <path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
+        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
+      </svg>
+    `;
+
+    return new L.Icon({
+      iconUrl: 'data:image/svg+xml;base64,' + btoa(iconSvg),
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [37.5, 61.5],
+      iconAnchor: [18.75, 61.5],
+      popupAnchor: [1.5, -51],
+      shadowSize: [61.5, 61.5]
+    });
+  }
+
+
   initializeEventListeners() {
     // Focus auf Suchfeld beim Laden
     this.searchBar.focus();
@@ -105,15 +125,23 @@ class SearchManager {
     if (this.currentHoverSVG && this.currentHoverItem) {
       const location = this.getLocationFromDropdownItem(this.currentHoverItem);
       if (location) {
-        // Entferne alte Verbindungslinie
+        // KORRIGIERT: Farbe für SVG und Linie beim Scrollen neu bestimmen
+        let hoverColor = '#0000ff'; // Standard Blau
+        if (location.spaceapi && location.spaceapi.endpoint) {
+          if (location.isOpen === true) {
+            hoverColor = '#009900'; // Grün für geöffnet
+          } else if (location.isOpen === false) {
+            hoverColor = '#dd4444'; // Rot für geschlossen
+          }
+        }
+
         this.removeConnectionLine();
-        // Entferne das alte SVG
         this.cleanupHoverSVG();
-        // Erstelle SVG und Verbindungslinie neu an der aktuellen Position
-        this.createHoverSVG(this.currentHoverItem, location);
+
+        this.createHoverSVG(this.currentHoverItem, location, hoverColor);
         const targetMarker = this.findMarkerByLocation(location);
         if (targetMarker) {
-          this.createConnectionLine(this.currentHoverItem, targetMarker);
+          this.createConnectionLine(this.currentHoverItem, targetMarker, hoverColor);
         }
       }
     }
@@ -142,26 +170,28 @@ class SearchManager {
     this.scrollToActiveItem();
   }
 
-  // *** NEU: Aktives Dropdown-Item visuell markieren (nutzt vorhandenes CSS) ***
+  // KORRIGIERT & VEREINFACHT: Diese Funktion verwaltet NUR NOCH die CSS-Klasse.
   updateActiveDropdownItem() {
+    // Vorheriges Element "deaktivieren".
     this.clearActiveDropdownItem();
+
+    // Neues Element "aktivieren".
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
       const activeItem = this.dropdownItems[this.currentDropdownIndex];
-      activeItem.style.backgroundColor = 'blue';
-      activeItem.style.color = 'white';
-      activeItem.querySelectorAll('.item-details').forEach(detail => { detail.style.color = '#ccc'; });
+      activeItem.classList.add('keyboard-active');
+      // Löst die Map-Interaktionen (Pin, Linie) aus.
       activeItem.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
     }
   }
 
-  // *** NEU: Hover-Effekte entfernen (nutzt vorhandenes CSS) ***
+  // KORRIGIERT & VEREINFACHT: Sucht nur das aktive Element und entfernt die Klasse.
   clearActiveDropdownItem() {
-    this.dropdownItems.forEach(item => {
-      item.style.backgroundColor = '';
-      item.style.color = '';
-      item.querySelectorAll('.item-details').forEach(detail => { detail.style.color = ''; });
-      item.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true, cancelable: true }));
-    });
+    const activeItem = this.suggestionsDropdown.querySelector('.keyboard-active');
+    if (activeItem) {
+      activeItem.classList.remove('keyboard-active');
+      // Beendet die Map-Interaktionen.
+      activeItem.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true, cancelable: true }));
+    }
   }
 
   // *** NEU: Zum aktiven Element scrollen ***
@@ -253,56 +283,25 @@ class SearchManager {
   }
 
   updateMarkers(filteredLocations) {
-    console.log("🔄 updateMarkers called with", filteredLocations.length, "filtered locations");
-
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
     this.allMarkers.forEach(marker => {
-      const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
-
       if (filteredIds.has(marker.uniqueId)) {
-        console.log("🎯 Processing filtered marker:", location.name);
+        const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
-        // *** VERBESSERTE SpaceAPI-Status Verwendung ***
-        if (location && window.spaceAPI) {
-          try {
-            console.log("🔍 Getting status icon for:", location.name, "isOpen:", location.isOpen);
-            const statusIcon = window.spaceAPI.getStatusIcon(location, this.icons);
-
-            if (statusIcon && statusIcon.options) {
-              console.log("✅ Setting status icon for:", location.name);
-              marker.setIcon(statusIcon);
-
-              // Debug: Welches Icon wird verwendet?
-              let iconType = 'UNKNOWN';
-              const iconUrl = statusIcon.options.iconUrl;
-              if (iconUrl) {
-                if (iconUrl.includes('green')) {
-                  iconType = '🟢 GRÜN (OFFEN)';
-                } else if (iconUrl.includes('red')) {
-                  iconType = '🔴 ROT (GESCHLOSSEN)';
-                } else if (iconUrl.includes('orange')) {
-                  iconType = '🟠 ORANGE (UNBEKANNT)';
-                } else {
-                  iconType = '🔵 BLAU (DEFAULT)';
-                }
-              }
-
-              console.log("📍", location.name + ":", iconType, "(isOpen=" + location.isOpen + ")");
-            } else {
-              console.log("⚠️ No status icon returned, using highlight icon for:", location.name);
-              marker.setIcon(this.icons.highlightIcon);
-            }
-          } catch (error) {
-            console.error("❌ Error getting status icon for:", location.name, error);
-            marker.setIcon(this.icons.highlightIcon);
-          }
-        } else {
-          console.log("📌 Using highlight icon for:", location.name, "(no SpaceAPI or location)");
-          marker.setIcon(this.icons.highlightIcon);
+        // Logik zur Icon-Auswahl für gefilterte Ergebnisse.
+        // KORRIGIERT: Verwendet den neuen, semantischen Namen "unknownStatusIcon".
+        let iconToSet = this.icons.unknownStatusIcon;
+        if (location && location.isOpen === true) {
+          iconToSet = this.icons.greenIcon;
+        } else if (location && location.isOpen === false) {
+          iconToSet = this.icons.redIcon;
         }
+
+        marker.setIcon(iconToSet);
         marker.setOpacity(1);
       } else {
+        // Marker, die nicht im Filter sind, zurücksetzen.
         marker.setIcon(this.icons.defaultIcon);
         marker.setOpacity(0.6);
       }
@@ -335,10 +334,44 @@ class SearchManager {
               marker.setIcon(statusIcon);
               console.log("✅ Marker für", location.name, "live aktualisiert!");
             }
+
+            // *** NEU: Update auch die Dropdown-Icons live ***
+            this.updateDropdownIcons();
           }
         }
       });
     }
+  }
+
+  // *** NEU: Funktion zum Live-Update der Dropdown Door-Icons ***
+  updateDropdownIcons() {
+    const suggestionItems = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
+
+    suggestionItems.forEach(item => {
+      const itemName = item.querySelector('.item-name');
+      if (!itemName) return;
+
+      // Extrahiere den Namen ohne existierende Icons
+      const nameText = itemName.textContent.trim();
+      const location = this.json.find(loc => loc.name === nameText);
+
+      if (location && location.spaceapi && location.spaceapi.endpoint) {
+        let statusIcon = '';
+
+        if (location.isOpen === true) {
+          statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i>';
+        } else if (location.isOpen === false) {
+          statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i>';
+        } else {
+          statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i>';
+        }
+
+        // Update den Namen mit neuem Icon
+        itemName.innerHTML = statusIcon + location.name;
+
+        console.log("🚪 Door-Icon updated für:", location.name, "Status:", location.isOpen);
+      }
+    });
   }
 
   updateDropdownUI(hasResults) {
@@ -372,9 +405,38 @@ class SearchManager {
   createSuggestionItem(location) {
     const item = document.createElement('div');
     item.classList.add('suggestion-item');
+
+    // *** NEU: Status-Icon und Klassen für SpaceAPI-Spaces bestimmen ***
+    let statusIcon = '';
+    let spaceStatusClass = '';
+    let nameClass = '';
+
+    if (location.spaceapi && location.spaceapi.endpoint) {
+      if (location.isOpen === true) {
+        // Grünes Door-Open Icon (geöffnet)
+        statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i>';
+        spaceStatusClass = 'space-open';
+        nameClass = 'space-name-open';
+      } else if (location.isOpen === false) {
+        // Rotes Door-Closed Icon (geschlossen)
+        statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i>';
+        spaceStatusClass = 'space-closed';
+        nameClass = 'space-name-closed';
+      } else {
+        // Orange Question Icon (Status unbekannt) - BLEIBT WIE BISHER
+        statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i>';
+        // Keine speziellen Klassen für unbekannte Status
+      }
+    }
+
+    // Füge die Status-Klasse zum Item hinzu (nur für bekannte Status)
+    if (spaceStatusClass) {
+      item.classList.add(spaceStatusClass);
+    }
+
     item.innerHTML = `
       <div class="item-content">
-        <div class="item-name">${location.name}</div>
+        <div class="item-name"><span class="${nameClass}">${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
         <div class="item-details"><b>${this.zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>
       </div>
@@ -396,12 +458,23 @@ class SearchManager {
       // Speichere aktuelles Hover-Item für Scroll-Updates
       this.currentHoverItem = item;
 
-      // Erstelle SVG und Verbindungslinie
-      this.createHoverSVG(item, location);
+      // Bestimme Hover-Farbe basierend auf Space-Status
+      let hoverColor = '#0000ff'; // Standard Blau
+      if (location.spaceapi && location.spaceapi.endpoint) {
+        if (location.isOpen === true) {
+          hoverColor = '#009900'; // Grün für geöffnet
+        } else if (location.isOpen === false) {
+          hoverColor = '#dd4444'; // Rot für geschlossen
+        }
+      }
+
+      // Erstelle SVG und Verbindungslinie mit angepasster Farbe
+      this.createHoverSVG(item, location, hoverColor);
       const targetMarker = this.findMarkerByLocation(location);
       if (targetMarker) {
-        targetMarker.setIcon(this.icons.hoverIcon); // Sofort Icon wechseln
-        this.createConnectionLine(item, targetMarker);
+        // KORRIGIERT: Erzeuge das Hover-Icon dynamisch mit der richtigen Farbe
+        targetMarker.setIcon(this.createHoverIcon(hoverColor));
+        this.createConnectionLine(item, targetMarker, hoverColor);
 
         // Popup nach 0.3s öffnen
         this.popupTimeout = setTimeout(() => {
@@ -471,8 +544,8 @@ class SearchManager {
     return this.allMarkers.find(m => m.uniqueId === location.uniqueId);
   }
 
-  createHoverSVG(item, location) {
-    // *** NEU: Cleanup vorheriges SVG ***
+  createHoverSVG(item, location, color = 'blue') {
+    // KORRIGIERT: Farbparameter wird nun verwendet
     this.cleanupHoverSVG();
 
     const itemRect = item.getBoundingClientRect();
@@ -484,11 +557,10 @@ class SearchManager {
     svg.setAttribute('preserveAspectRatio', 'none');
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 265.373,508.216 276.615,526.112C287.858,544.008 302.534,560.527 319.618,573.988C336.703,587.45 356.196,597.856 376.225,604.6C396.254,611.345 416.818,614.43 436.232,614.412L632.86,614.412L632.86,6.618Z');
-    path.setAttribute('fill', 'blue');
+    path.setAttribute('fill', color);
     svg.appendChild(path);
     document.body.appendChild(svg);
 
-    // *** NEU: Speichere SVG Referenz ***
     this.currentHoverSVG = svg;
   }
 
@@ -745,9 +817,9 @@ class SearchManager {
     }
   }
 
-  createConnectionLine(item, targetMarker) {
+  createConnectionLine(item, targetMarker, color = '#0000ff') {
     if (window.mapUtils && window.mapUtils.createConnectionLine) {
-      this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker);
+      this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker, color);
     } else {
       console.error('mapUtils.createConnectionLine not available');
     }

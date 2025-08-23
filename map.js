@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     highlightIcon: window.MapIcons.highlightIcon,
     hoverIcon: window.MapIcons.hoverIcon,
     redIcon: window.MapIcons.redIcon,
-    greenIcon: window.MapIcons.greenIcon
+    greenIcon: window.MapIcons.greenIcon,
+    // KORRIGIERT: Hier wird jetzt der korrekte neue Name verwendet.
+    unknownStatusIcon: window.MapIcons.unknownStatusIcon
   };
 
   // Map Utils für Search Manager
@@ -49,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function createConnectionLine(suggestionItem, targetMarker) {
+  function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
     removeConnectionLine();
 
     const suggestionRect = suggestionItem.getBoundingClientRect();
@@ -155,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     connectionLine = L.polyline(curvePoints, {
-      color: 'blue',
+      color: color, // *** NEU: Dynamische Farbe ***
       weight: 5.5,
       opacity: 1,
       interactive: false,
@@ -165,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).addTo(map);
 
     connectionLine.bringToFront();
-    console.log('Enhanced connection line created with', controlPoints.length, 'control points');
+    console.log('Enhanced connection line created with', controlPoints.length, 'control points, color:', color);
 
     return connectionLine;
   }

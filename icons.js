@@ -26,7 +26,7 @@ window.MapIcons = {
     shadowSize: [61.5, 61.5]
   }),
 
-  // Weitere Icons können hier hinzugefügt werden
+  // Status-Icons fÃ¼r SpaceAPI
   redIcon: new L.Icon({
     iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -43,5 +43,22 @@ window.MapIcons = {
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
     shadowSize: [41, 41]
+  }),
+
+  // KORRIGIERT: Dieses Icon passt sich nun automatisch an den Light/Dark Mode an.
+  // Wir benennen es außerdem semantisch von "whiteIcon" zu "unknownStatusIcon".
+  unknownStatusIcon: new L.Icon({
+    // Prüfe, ob das System im Dark Mode ist.
+    // Wenn ja, nimm den kontrastreichen grauen Pin.
+    // Wenn nein (Light Mode), nimm den neuen schwarzen Pin.
+    iconUrl: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-grey.png'
+      : 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-black.png',
+
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   })
-};
+};  
