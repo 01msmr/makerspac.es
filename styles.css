@@ -551,6 +551,32 @@ hr {
   font-weight: 800;
 }
 
+
+#style {
+  display: block;
+  /* Stellt sicher, dass es eine eigene Zeile hat */
+  margin-bottom: 8px;
+  /* Abstand nach unten */
+  font-size: small;
+  text-transform: uppercase;
+  font-style: italic;
+  font-weight: 400;
+}
+
+#style:hover {
+  color: var(--text-color);
+  font-weight: 800;
+}
+
+/* KORRIGIERT: Spezifisches Styling für das Icon INNERHALB von #style */
+#style .fas {
+  margin-right: 6px;
+  /* Abstand zwischen Icon und Text */
+  font-size: 1em;
+  /* Icon-Größe an Text anpassen */
+}
+
+
 /* Zoom Frame Transitions */
 .leaflet-overlay-pane svg path {
   transition: opacity 0.4s ease-in-out, fill-opacity 0.4s ease-in-out !important;

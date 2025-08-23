@@ -254,16 +254,47 @@ document.addEventListener('DOMContentLoaded', () => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
 
-          // Immer defaultIcon beim Laden (Live-Status nur bei Filterung)
           const marker = L.marker([location.loc.lat, location.loc.long], {
             icon: icons.defaultIcon,
             opacity: 0.66
           }).addTo(map);
 
           marker.uniqueId = location.uniqueId;
-          marker.bindPopup(`<h3 id="style">${location.style}</h3><a id="titleurl" href="${location.link.url}" target="_blank"><h3>${location.name}</h3><br><br></a>${location.loc.street.name} ${location.loc.street.number}<span id="streetext">${location.loc.street.ext}</span><br><b>${zfill(location.loc.plz, location.loc.country)} ${location.loc.city}</b><br>${location.loc.country}<br><a id="url" href="${location.link.url}" target="_blank"><b>${location.link.text}</b></a>`);
 
-          // Popup events
+          // KORRIGIERT: Der Popup-Inhalt wird jetzt durch eine Funktion dynamisch
+          // bei jedem Öffnen des Popups neu generiert.
+          marker.bindPopup((layer) => {
+            // Diese Funktion wird jedes Mal ausgeführt, wenn ein Popup geöffnet wird.
+
+            // 1. Hole den top-aktuellen Status für das Icon.
+            let statusIconHtml = '';
+            if (location.isOpen === true) {
+              statusIconHtml = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i> ';
+            } else if (location.isOpen === false) {
+              statusIconHtml = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i> ';
+            }
+
+            // 2. Baue den HTML-Inhalt mit den robusten Fallbacks.
+            const streetName = location.loc?.street?.name || '';
+            const streetNumber = location.loc?.street?.number || '';
+            const streetExt = location.loc?.street?.ext || '';
+            const linkUrl = location.link?.url || '#';
+            const linkText = location.link?.text || linkUrl;
+
+            // 3. Gib den fertigen HTML-String zurück.
+            return `
+              <h3 id="style">${statusIconHtml}${location.style || ''}</h3>
+              <a id="titleurl" href="${linkUrl}" target="_blank">
+                <h3>${location.name || 'Unnamed Space'}</h3><br><br>
+              </a>
+              ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span><br>
+              <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
+              ${location.loc?.country || ''}<br>
+              <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+            `;
+          });
+
+          // Popup events (dieser Teil bleibt für die Logo-Interaktion wichtig)
           marker.on('popupopen', () => {
             const popup = marker.getPopup();
             const popupElement = popup._container;
@@ -308,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
 
             if (searchQuery.length > 0) {
-              // NUR wenn gefiltert wird: Live-Status verwenden
               const filteredLocations = json.filter(loc =>
                 loc.name.toLowerCase().includes(searchQuery) ||
                 zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
@@ -316,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
               );
 
               if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
-                // Für gefilterte Marker: SpaceAPI-Status-Icon verwenden
                 if (window.spaceAPI) {
                   const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
                   marker.setIcon(statusIcon);
@@ -327,7 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 marker.setIcon(icons.defaultIcon);
               }
             } else {
-              // Keine Suche aktiv: Immer Standard-Icon (blau)
               marker.setIcon(icons.defaultIcon);
             }
           });
