@@ -262,19 +262,25 @@ document.addEventListener('DOMContentLoaded', () => {
           marker.uniqueId = location.uniqueId;
 
           // KORRIGIERT: Der Popup-Inhalt wird jetzt durch eine Funktion dynamisch
-          // bei jedem Öffnen des Popups neu generiert.
           marker.bindPopup((layer) => {
             // Diese Funktion wird jedes Mal ausgeführt, wenn ein Popup geöffnet wird.
 
-            // 1. Hole den top-aktuellen Status für das Icon.
+            // 1. Erweitere die Logik, um "offen" UND "geschlossen" zu behandeln.
             let statusIconHtml = '';
-            if (location.isOpen === true) {
-              statusIconHtml = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i> ';
-            } else if (location.isOpen === false) {
-              statusIconHtml = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i> ';
-            }
+            let nameClass = '';
 
-            // 2. Baue den HTML-Inhalt mit den robusten Fallbacks.
+            if (location.isOpen === true) {
+              statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
+              nameClass = 'space-open';
+            }
+            // NEU: Füge den "else if"-Block für den geschlossenen Zustand hinzu.
+            else if (location.isOpen === false) {
+              statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
+              nameClass = 'space-closed'; // Neue Klasse für das CSS
+            }
+            // Wenn der Status weder true noch false ist, bleiben beide Variablen leer.
+
+            // 2. Baue den HTML-Inhalt.
             const streetName = location.loc?.street?.name || '';
             const streetNumber = location.loc?.street?.number || '';
             const streetExt = location.loc?.street?.ext || '';
@@ -283,9 +289,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Gib den fertigen HTML-String zurück.
             return `
-              <h3 id="style">${statusIconHtml}${location.style || ''}</h3>
+              <h3 id="style">${location.style || ''}</h3>
               <a id="titleurl" href="${linkUrl}" target="_blank">
-                <h3>${location.name || 'Unnamed Space'}</h3><br><br>
+                <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
               </a>
               ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span><br>
               <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>

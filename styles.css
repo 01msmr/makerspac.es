@@ -568,14 +568,6 @@ hr {
   font-weight: 800;
 }
 
-/* KORRIGIERT: Spezifisches Styling für das Icon INNERHALB von #style */
-#style .fas {
-  margin-right: 6px;
-  /* Abstand zwischen Icon und Text */
-  font-size: 1em;
-  /* Icon-Größe an Text anpassen */
-}
-
 
 /* Zoom Frame Transitions */
 .leaflet-overlay-pane svg path {
@@ -611,10 +603,11 @@ hr {
 
 /* *** Door-Icons in Dropdown-Items *** */
 .suggestion-item .fas {
-  font-size: 0.9em;
-  vertical-align: middle;
-  /* transition: color 0.2s ease; */
-  margin-right: 8px;
+  vertical-align: baseline !important;
+  position: relative;
+  bottom: 1px;
+  margin-right: 0.25em;
+  font-size: 1.1em;
 }
 
 .suggestion-item:hover .fas {
@@ -683,4 +676,37 @@ hr {
 .suggestion-item.space-closed:hover,
 .suggestion-item.space-closed.keyboard-active {
   background-color: #dd4444 !important;
+}
+
+
+
+
+/* === POPUP NAME HIGHLIGHTING (Open & Closed) === */
+
+/* Styling für den Makerspace-Namen, WENN der Space offen ist */
+a#titleurl h3.space-open {
+  background-color: #009900 !important;
+  /* Grüner Hintergrund */
+}
+
+/* Stellt sicher, dass das Icon im grünen Namen weiß ist und korrekt ausgerichtet ist */
+a#titleurl h3.space-open .fas {
+  color: white !important;
+  position: relative;
+  bottom: 1px;
+  margin-right: 0.0em;
+}
+
+
+/* Styling für den Makerspace-Namen, WENN der Space geschlossen ist */
+a#titleurl h3.space-closed {
+  background-color: #dd4444 !important;
+  /* Roter Hintergrund */
+}
+
+/* Stellt sicher, dass das Icon im roten Namen weiß ist und korrekt ausgerichtet ist */
+a#titleurl h3.space-closed .fas {
+  color: white !important;position: relative;
+    bottom: 1px;
+    margin-right: 0.0em;
 }
