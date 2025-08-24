@@ -94,10 +94,10 @@ class SimpleSpaceAPI {
   getStatusIcon(location, icons) {
     console.log("🎨 getStatusIcon called for:", location.name);
     console.log("🎨 location.isOpen =", location.isOpen, "(type:", typeof location.isOpen, ")");
-    console.log("🎨 Available icons:", Object.keys(icons || {}));
+    console.log("🎨 location.spaceapi =", location.spaceapi);
 
     if (!icons) {
-      console.error("❌ Icons object is undefined!");
+      console.error("⚠ Icons object is undefined!");
       return null;
     }
 
@@ -105,14 +105,18 @@ class SimpleSpaceAPI {
 
     if (isOpen === true) {
       console.log("🟢 Using GREEN icon for", location.name);
-      return icons.greenIcon || icons.highlightIcon || icons.defaultIcon;
+      return icons.greenIcon || icons.defaultIcon;
     } else if (isOpen === false) {
       console.log("🔴 Using RED icon for", location.name);
-      return icons.redIcon || icons.highlightIcon || icons.defaultIcon;
+      return icons.redIcon || icons.defaultIcon;
+    } else if (location.spaceapi && location.spaceapi.endpoint) {
+      // Hat SpaceAPI aber Status unbekannt - ORANGE
+      console.log("🟠 Using ORANGE (unknownStatus) icon for", location.name);
+      return icons.unknownStatusIcon || icons.defaultIcon;
     } else {
-      console.log("⚪ Using UNKNOWN status icon for", location.name, "(isOpen is", isOpen, ")");
-      // KORRIGIERT: Verwendet jetzt den korrekten neuen Namen "unknownStatusIcon".
-      return icons.unknownStatusIcon || icons.highlightIcon || icons.defaultIcon;
+      // Hat KEINE SpaceAPI - SCHWARZ/GRAU
+      console.log("⚫ Using BLACK/GREY (highlight) icon for", location.name);
+      return icons.highlightIcon || icons.defaultIcon;
     }
   }
 }

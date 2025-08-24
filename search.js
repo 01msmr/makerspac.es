@@ -130,6 +130,8 @@ class SearchManager {
             hoverColor = '#009900'; // Grün für geöffnet
           } else if (location.isOpen === false) {
             hoverColor = '#dd4444'; // Rot für geschlossen
+          } else {
+            hoverColor = '#f59e0b'; // Gelb für unbekannten Status
           }
         }
 
@@ -288,12 +290,20 @@ class SearchManager {
         const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
         // Logik zur Icon-Auswahl für gefilterte Ergebnisse.
-        // KORRIGIERT: Verwendet den neuen, semantischen Namen "unknownStatusIcon".
-        let iconToSet = this.icons.unknownStatusIcon;
+        let iconToSet;
+
         if (location && location.isOpen === true) {
+          // Space ist definitiv geöffnet - grünes Icon
           iconToSet = this.icons.greenIcon;
         } else if (location && location.isOpen === false) {
+          // Space ist definitiv geschlossen - rotes Icon
           iconToSet = this.icons.redIcon;
+        } else if (location && location.spaceapi && location.spaceapi.endpoint) {
+          // Hat SpaceAPI aber Status ist null/undefined - gelbes Icon
+          iconToSet = this.icons.unknownStatusIcon;
+        } else {
+          // Hat keine SpaceAPI - schwarzes/graues highlightIcon 
+          iconToSet = this.icons.highlightIcon;
         }
 
         marker.setIcon(iconToSet);
@@ -421,9 +431,10 @@ class SearchManager {
         spaceStatusClass = 'space-closed';
         nameClass = 'space-name-closed';
       } else {
-        // Orange Question Icon (Status unbekannt) - BLEIBT WIE BISHER
+        // Gelbes Question Icon (Status unbekannt)
         statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i>';
-        // Keine speziellen Klassen für unbekannte Status
+        spaceStatusClass = 'space-unknown'; // NEUE Klasse für unbekannten Status
+        nameClass = 'space-name-unknown'; // *** NEU: Gelbe Namensklasse ***
       }
     }
 
@@ -447,39 +458,35 @@ class SearchManager {
     item.addEventListener('mouseenter', () => {
       console.log('=== DROPDOWN HOVER START:', location.name);
 
-      // Schließe alle offenen Popups sofort
+      // Alle offenen Popups schließen
       this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
 
-      // *** NEU: Clear sticky popup when hovering dropdown ***
+      // Clear sticky popup when hovering dropdown
       if (window.mapUtils && window.mapUtils.clearStickyPopup) {
         window.mapUtils.clearStickyPopup();
       }
 
-      // Setze Dropdown-Hover Flag
       this.isDropdownHovering = true;
-
-      // Speichere aktuelles Hover-Item für Scroll-Updates
       this.currentHoverItem = item;
 
-      // Bestimme Hover-Farbe basierend auf Space-Status
+      // KORRIGIERT: Verwende die exakten Farben der PNG-Icons
       let hoverColor = '#0000ff'; // Standard Blau
       if (location.spaceapi && location.spaceapi.endpoint) {
         if (location.isOpen === true) {
-          hoverColor = '#009900'; // Grün für geöffnet
+          hoverColor = '#00AA00'; // Exakte Farbe des grünen PNG-Icons
         } else if (location.isOpen === false) {
-          hoverColor = '#dd4444'; // Rot für geschlossen
+          hoverColor = '#DD0000'; // Exakte Farbe des roten PNG-Icons
+        } else {
+          hoverColor = '#FF8C00'; // Exakte Farbe des orangen PNG-Icons (DarkOrange)
         }
       }
 
-      // Erstelle SVG und Verbindungslinie mit angepasster Farbe
       this.createHoverSVG(item, location, hoverColor);
       const targetMarker = this.findMarkerByLocation(location);
       if (targetMarker) {
-        // KORRIGIERT: Erzeuge das Hover-Icon dynamisch mit der richtigen Farbe
         targetMarker.setIcon(this.createHoverIcon(hoverColor));
         this.createConnectionLine(item, targetMarker, hoverColor);
 
-        // Popup nach 0.3s öffnen
         this.popupTimeout = setTimeout(() => {
           if (this.isDropdownHovering) {
             targetMarker.openPopup();
@@ -507,7 +514,10 @@ class SearchManager {
 
       const targetMarker = this.findMarkerByLocation(location);
       if (targetMarker) {
-        targetMarker.closePopup(); // Popup sofort schließen
+        // *** KORRIGIERT: Popup nur schließen wenn es nicht sticky ist ***
+        if (!this.isStickyMarker(targetMarker)) {
+          targetMarker.closePopup();
+        }
 
         // Überprüfen, ob es noch Teil der gefilterten Ergebnisse ist
         const currentQuery = this.searchBar.value.trim().toLowerCase();
@@ -548,6 +558,17 @@ class SearchManager {
     this.searchBar.value = location.name;
     this.closeDropdown();
   }
+
+
+  // *** NEU: Helper-Funktion, um zu prüfen, ob ein Marker sticky ist ***
+  isStickyMarker(marker) {
+    // Nutze die globalen mapUtils um den sticky Status zu prüfen
+    if (window.mapUtils && window.mapUtils.currentStickyMarker) {
+      return window.mapUtils.currentStickyMarker === marker;
+    }
+    return false;
+  }
+
 
   findMarkerByLocation(location) {
     return this.allMarkers.find(m => m.uniqueId === location.uniqueId);

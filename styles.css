@@ -606,7 +606,7 @@ hr {
 }
 
 .door-icon-unknown {
-  color: #f59e0b !important;
+  color: #FF8C00 !important;
   /* Orange für unbekannt */
 }
 
@@ -620,6 +620,13 @@ hr {
 .space-name-closed {
   color: #dd4444 !important;
   /* Roter Name für geschlossene Spaces */
+  font-weight: 600;
+}
+
+/* *** NEU: Gelber Name für Spaces mit unbekanntem Status *** */
+.space-name-unknown {
+  color: #FF8C00 !important;
+  /* Gelber Name für Spaces mit unbekanntem Status */
   font-weight: 600;
 }
 
@@ -653,6 +660,12 @@ hr {
   background-color: #dd4444 !important;
 }
 
+/* *** NEU: 4. Spezifische Überschreibung der HINTERGRUNDFARBE für unbekannten Status (gelb) *** */
+.suggestion-item.space-unknown:hover,
+.suggestion-item.space-unknown.keyboard-active {
+  background-color: #FF8C00 !important;
+}
+
 /* === POPUP NAME HIGHLIGHTING (Open & Closed) === */
 
 /* Styling für den Makerspace-Namen, WENN der Space offen ist */
@@ -681,4 +694,56 @@ a#titleurl h3.space-closed .fas {
   position: relative;
   bottom: 1px;
   margin-right: 0.0em;
+}
+
+
+
+
+
+
+/* === POPUP NAME HIGHLIGHTING (Unknown Status) === */
+
+/* Styling für den Makerspace-Namen, WENN der Space-Status unbekannt ist */
+a#titleurl h3.space-unknown {
+  background-color: #FF8C00 !important;
+  /* Gelber Hintergrund */
+  border-color: #FF8C00 !important;
+  /* Gelber Rand */
+}
+
+/* Stellt sicher, dass das Icon im gelben Namen weiß ist und korrekt ausgerichtet ist */
+a#titleurl h3.space-unknown .fas {
+  color: white !important;
+  position: relative;
+  bottom: 1px;
+  margin-right: 0.0em;
+}
+
+/* === POPUP NAME HOVER-EFFEKTE === */
+
+/* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
+a#titleurl:hover h3.space-closed {
+  background-color: white !important;
+  color: #dd4444 !important;
+  border-color: #dd4444 !important;
+}
+
+/* Hover-Effekt für unbekannte Spaces: weißer Hintergrund, gelbe Schrift */
+a#titleurl:hover h3.space-unknown {
+  background-color: white !important;
+  color: #FF8C00 !important;
+  border-color: #FF8C00 !important;
+}
+
+/* Icons bei Hover in entsprechender Status-Farbe */
+a#titleurl:hover h3.space-open .fas {
+  color: #009900 !important;
+}
+
+a#titleurl:hover h3.space-closed .fas {
+  color: #dd4444 !important;
+}
+
+a#titleurl:hover h3.space-unknown .fas {
+  color: #FF8C00 !important;
 }

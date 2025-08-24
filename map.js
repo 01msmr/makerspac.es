@@ -36,9 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.mapUtils = {
     createConnectionLine: createConnectionLine,
     removeConnectionLine: removeConnectionLine,
-  // *** NEU: Sticky Popup Utils ***
-  clearStickyPopup: clearStickyPopup,
-    setStickyPopup: setStickyPopup
+    clearStickyPopup: clearStickyPopup,
+    setStickyPopup: setStickyPopup,
+    // *** NEU: Globale Referenz auf currentStickyMarker ***
+    currentStickyMarker: null
   };
 
   // Connection Line Functions
@@ -271,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
           marker.bindPopup((layer) => {
             // Diese Funktion wird jedes Mal ausgeführt, wenn ein Popup geöffnet wird.
 
-            // 1. Erweitere die Logik, um "offen" UND "geschlossen" zu behandeln.
+            // 1. Erweitere die Logik, um "offen", "geschlossen" UND "unbekannt" zu behandeln.
             let statusIconHtml = '';
             let nameClass = '';
 
@@ -282,9 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // NEU: Füge den "else if"-Block für den geschlossenen Zustand hinzu.
             else if (location.isOpen === false) {
               statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
-              nameClass = 'space-closed'; // Neue Klasse für das CSS
+              nameClass = 'space-closed'; // Klasse für geschlossenen Status
             }
-            // Wenn der Status weder true noch false ist, bleiben beide Variablen leer.
+            // *** NEU: Füge den "else"-Block für unbekannten Status hinzu. ***
+            else if (location.spaceapi && location.spaceapi.endpoint) {
+              statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status unbekannt"></i> ';
+              nameClass = 'space-unknown'; // *** NEU: Klasse für unbekannten Status ***
+            }
+            // Wenn kein SpaceAPI endpoint vorhanden ist, bleiben beide Variablen leer.
 
             // 2. Baue den HTML-Inhalt.
             const streetName = location.loc?.street?.name || '';
@@ -357,34 +363,57 @@ document.addEventListener('DOMContentLoaded', () => {
               hoverTimeout = null;
             }
 
-            // *** MODIFIED: Only close popup if it's not sticky ***
+            // Only close popup if it's not sticky
             if (!isPopupSticky || currentStickyMarker !== marker) {
               marker.closePopup();
             }
 
-            const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
+            // Icon-Status korrekt setzen basierend auf Sticky und Search-Status
+            if (currentStickyMarker === marker && isPopupSticky) {
+              // Sticky Marker behält seinen Status-Icon
+              if (window.spaceAPI) {
+                const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
+                marker.setIcon(statusIcon);
+              } else {
+                marker.setIcon(icons.highlightIcon);
+              }
+            } else {
+              // Normales Verhalten für nicht-sticky Marker
+              const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
 
-            if (searchQuery.length > 0) {
-              const filteredLocations = json.filter(loc =>
-                loc.name.toLowerCase().includes(searchQuery) ||
-                zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
-                loc.loc.city.toLowerCase().includes(searchQuery)
-              );
+              if (searchQuery.length > 0) {
+                const filteredLocations = json.filter(loc =>
+                  loc.name.toLowerCase().includes(searchQuery) ||
+                  zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
+                  loc.loc.city.toLowerCase().includes(searchQuery)
+                );
 
-              if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
-                if (window.spaceAPI) {
-                  const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
-                  marker.setIcon(statusIcon);
+                if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
+                  // KORRIGIERT: Verwende die gleiche Logik wie in updateMarkers
+                  let iconToSet;
+
+                  if (location.isOpen === true) {
+                    iconToSet = icons.greenIcon;
+                  } else if (location.isOpen === false) {
+                    iconToSet = icons.redIcon;
+                  } else if (location.spaceapi && location.spaceapi.endpoint) {
+                    // Hat SpaceAPI aber Status unbekannt - orange
+                    iconToSet = icons.unknownStatusIcon;
+                  } else {
+                    // Hat keine SpaceAPI - schwarz/grau
+                    iconToSet = icons.highlightIcon;
+                  }
+
+                  marker.setIcon(iconToSet);
                 } else {
-                  marker.setIcon(icons.highlightIcon);
+                  marker.setIcon(icons.defaultIcon);
                 }
               } else {
                 marker.setIcon(icons.defaultIcon);
               }
-            } else {
-              marker.setIcon(icons.defaultIcon);
             }
           });
+
 
           allMarkers.push(marker);
         }
@@ -420,6 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
       currentStickyMarker.closePopup();
       currentStickyMarker = null;
       isPopupSticky = false;
+      // *** NEU: Aktualisiere globale Referenz ***
+      window.mapUtils.currentStickyMarker = null;
       console.log('Sticky popup cleared');
     }
   }
@@ -430,6 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentStickyMarker = marker;
     isPopupSticky = true;
+    // *** NEU: Aktualisiere globale Referenz ***
+    window.mapUtils.currentStickyMarker = marker;
     console.log('Sticky popup set for marker');
   }
 
