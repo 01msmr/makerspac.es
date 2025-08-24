@@ -362,7 +362,9 @@ a#titleurl {
 }
 
 /* *** Dropdown-Hover Pin UND direkter Pin-Hover (blauer hoverIcon) *** */
-.leaflet-marker-icon[src*="data:image/svg+xml"] {
+
+/* AUF EMPFEHLUNG VON GOOGLE AI STUDIO deaktiviert */
+/* .leaflet-marker-icon[src*="data:image/svg+xml"] {
   width: 45px !important;
   /* 37.5 * 1.2 = 45 */
   height: 73.8px !important;
@@ -373,7 +375,7 @@ a#titleurl {
   /* -61.5 * 1.2 = -73.8 */
   z-index: 1000 !important;
   /* Nach vorne bringen */
-}
+} */
 
 /* Nur während Zoom: Transitions stoppen */
 .leaflet-zoom-animated .leaflet-marker-icon,
