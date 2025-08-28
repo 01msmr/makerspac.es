@@ -361,21 +361,6 @@ a#titleurl {
   animation: none !important;
 }
 
-/* *** Dropdown-Hover Pin UND direkter Pin-Hover (blauer hoverIcon) *** */
-
-/* AUF EMPFEHLUNG VON GOOGLE AI STUDIO deaktiviert */
-/* .leaflet-marker-icon[src*="data:image/svg+xml"] {
-  width: 45px !important;
-  /* 37.5 * 1.2 = 45 */
-  height: 73.8px !important;
-  /* 61.5 * 1.2 = 73.8 */
-  margin-left: -22.5px !important;
-  /* -18.75 * 1.2 = -22.5 */
-  margin-top: -73.8px !important;
-  /* -61.5 * 1.2 = -73.8 */
-  z-index: 1000 !important;
-  /* Nach vorne bringen */
-} */
 
 /* Nur während Zoom: Transitions stoppen */
 .leaflet-zoom-animated .leaflet-marker-icon,
@@ -723,6 +708,13 @@ a#titleurl h3.space-unknown .fas {
 
 /* === POPUP NAME HOVER-EFFEKTE === */
 
+/* Hover-Effekt für offenen Spaces: weißer Hintergrund, grüne Schrift */
+a#titleurl:hover h3.space-open {
+  background-color: white !important;
+  color: #009900 !important;
+  border-color: white !important;
+}
+
 /* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
 a#titleurl:hover h3.space-closed {
   background-color: white !important;
@@ -749,3 +741,68 @@ a#titleurl:hover h3.space-closed .fas {
 a#titleurl:hover h3.space-unknown .fas {
   color: #FF8C00 !important;
 }
+
+/* +++ START: REVISED NAVIGATION ICON STYLES +++ */
+
+.popup-street-line {
+  position: relative;
+  line-height: 1.5;
+  margin-bottom: 2px;
+}
+
+.navigation-icon {
+  position: absolute;
+  top: 50%;
+  right: 0px;
+  font-size: 1.4em;
+  transform: translateY(-50%);
+  text-decoration: none;
+  z-index: 10;
+  display: inline-block;
+}
+
+.navigation-icon i {
+  /* font-size: 1.4em; */
+  /* padding: 2px 4px; */
+  /* border-radius: 4px; */
+  /* display: block; */
+  /* background-color: transparent; */
+  /* transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out; */
+}
+
+.navigation-icon:hover i {
+  color: white !important;
+}
+
+/* Color definitions based on parent status class */
+.popup-street-line.status-open .navigation-icon i {
+  color: #009900;
+}
+
+/* .popup-street-line.status-open .navigation-icon:hover i {
+  background-color: #009900;
+} */
+
+.popup-street-line.status-closed .navigation-icon i {
+  color: #dd4444;
+}
+
+/* .popup-street-line.status-closed .navigation-icon:hover i {
+  background-color: #dd4444;
+} */
+
+.popup-street-line.status-unknown .navigation-icon i {
+  color: #FF8C00;
+}
+
+/* .popup-street-line.status-unknown .navigation-icon:hover i {
+  background-color: #FF8C00;
+} */
+
+.popup-street-line.status-default .navigation-icon i {
+  color: #0000ff;
+}
+
+/* .popup-street-line.status-default .navigation-icon:hover i {
+  background-color: #0000ff;
+} */

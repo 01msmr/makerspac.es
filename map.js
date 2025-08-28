@@ -42,6 +42,93 @@ document.addEventListener('DOMContentLoaded', () => {
     currentStickyMarker: null
   };
 
+  // +++ START: REVISED NAVIGATION LINK FUNCTIONS +++
+
+  function updateNavigationIconAppearance(navLinkElement, location) {
+    const icon = navLinkElement.querySelector('i');
+    const parentContainer = navLinkElement.parentElement; // Das ist .popup-street-line
+    if (!icon || !parentContainer) return;
+
+    // 1. Set the icon class for Apple/Google
+    const savedService = localStorage.getItem('mapService');
+    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+    const ninetySixHours = 96 * 60 * 60 * 1000;
+    let serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours);
+
+    if (serviceExpired) {
+      icon.className = 'fas fa-directions';
+    } else if (savedService === 'google') {
+      icon.className = 'fab fa-google';
+    } else if (savedService === 'apple') {
+      icon.className = 'fab fa-apple';
+    } else {
+      icon.className = 'fas fa-directions';
+    }
+
+    // 2. Determine and set the status class on the parent container for CSS to handle coloring
+    parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default'); // Clear previous status
+
+    if (location.isOpen === true) {
+      parentContainer.classList.add('status-open');
+    } else if (location.isOpen === false) {
+      parentContainer.classList.add('status-closed');
+    } else if (location.spaceapi && location.spaceapi.endpoint) {
+      parentContainer.classList.add('status-unknown');
+    } else {
+      parentContainer.classList.add('status-default');
+    }
+  }
+
+  function handleNavigationClick(event, location) {
+    event.preventDefault();
+    const { lat, long } = location.loc;
+    if (typeof lat !== 'number' || typeof long !== 'number') return;
+
+    let mapService = localStorage.getItem('mapService');
+    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+    const ninetySixHours = 96 * 60 * 60 * 1000;
+
+    // Re-check for expiration on click, but don't prompt on left-click
+    if (mapService && mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours) {
+      localStorage.removeItem('mapService');
+      localStorage.removeItem('mapServiceTimestamp');
+      mapService = null;
+    }
+
+    // Default to Google Maps if no service is set
+    const serviceToUse = mapService || 'google';
+    openMap(serviceToUse, lat, long);
+  }
+
+  function handleNavigationRightClick(event, location, navLinkElement) {
+    event.preventDefault(); // Prevent browser context menu
+
+    let mapService;
+    if (confirm('Google Maps für die Navigation verwenden?\n(OK = Google Maps, Abbrechen = Apple Maps)')) {
+      mapService = 'google';
+    } else {
+      mapService = 'apple';
+    }
+    localStorage.setItem('mapService', mapService);
+    localStorage.setItem('mapServiceTimestamp', String(Date.now()));
+
+    // Immediately update the icon in the current popup to reflect the new choice
+    updateNavigationIconAppearance(navLinkElement, location);
+  }
+
+
+  function openMap(service, lat, long) {
+    let url;
+    if (service === 'google') {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}`;
+    } else { // apple
+      url = `http://maps.apple.com/?daddr=${lat},${long}`;
+    }
+    window.open(url, '_blank');
+  }
+  // +++ END: REVISED NAVIGATION LINK FUNCTIONS +++
+
+
   // Connection Line Functions
   function removeConnectionLine() {
     if (connectionLine) {
@@ -305,7 +392,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <a id="titleurl" href="${linkUrl}" target="_blank">
                 <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
               </a>
-              ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span><br>
+              <div class="popup-street-line">
+                ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
+                <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
+                  <i></i>
+                </a>
+              </div>
               <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
               ${location.loc?.country || ''}<br>
               <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
@@ -313,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           // Popup events (dieser Teil bleibt für die Logo-Interaktion wichtig)
-          marker.on('popupopen', () => {
+          marker.on('popupopen', (e) => {
             // Set this popup as sticky when it opens
             setStickyPopup(marker);
 
@@ -334,6 +426,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 logoElement.classList.add('popup-active');
               }
             }
+
+            // +++ START: REVISED NAVIGATION LINK EVENT LISTENERS +++
+            const navLink = e.popup._container.querySelector('.navigation-icon');
+            if (navLink) {
+              // Set initial icon appearance (class and color)
+              updateNavigationIconAppearance(navLink, location);
+
+              // Left-click handler
+              navLink.addEventListener('click', (event) => {
+                handleNavigationClick(event, location);
+              });
+
+              // Right-click handler
+              navLink.addEventListener('contextmenu', (event) => {
+                handleNavigationRightClick(event, location, navLink);
+              });
+            }
+            // +++ END: REVISED NAVIGATION LINK EVENT LISTENERS +++
           });
 
           marker.on('popupclose', () => {
