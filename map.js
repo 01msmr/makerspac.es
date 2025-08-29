@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </a>
               <div class="popup-street-line">
                 ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-                <a href="${navUrl}" target="_blank" class="navigation-icon" title="&#013;   L:  ⤴️   Get the route to this makerspace   &#013;&#013;   R:  🔀   Switch OSM / Google / Apple Maps   &#013;">
+                <a href="${navUrl}" target="_blank" class="navigation-icon" title="&#013;   L:  ⤴️   Route to this makerspace   &#013;&#013;   R:  🔀   OSM / Google / Apple Maps   &#013;">
                   <i></i>
                 </a>
               </div>
