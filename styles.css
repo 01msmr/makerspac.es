@@ -416,6 +416,15 @@ a#titleurl {
 .leaflet-popup-content-wrapper {
   overflow: hidden;
   z-index: 800;
+
+  /* Erhöht die maximal erlaubte Breite des Popups.
+    Der Standardwert von Leaflet ist 300px. Passen Sie diesen Wert
+    nach Bedarf an. */
+  max-width: 360px !important;
+
+  /* Sorgt dafür, dass die Breite flexibel bleibt und sich dem
+    Inhalt anpasst, bis die max-width erreicht ist. */
+  width: auto !important;
 }
 
 @keyframes popupFadeIn {
@@ -577,9 +586,9 @@ hr {
   font-size: 1.1em;
 }
 
-.suggestion-item:hover .fas {
+/* .suggestion-item:hover .fas {
   filter: brightness(1.2);
-}
+} */
 
 /* *** Door-Icon Klassen *** */
 .door-icon-open {
@@ -712,7 +721,7 @@ a#titleurl h3.space-unknown .fas {
 a#titleurl:hover h3.space-open {
   background-color: white !important;
   color: #009900 !important;
-  border-color: white !important;
+  border-color:#009900 !important;
 }
 
 /* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
@@ -759,6 +768,8 @@ a#titleurl:hover h3.space-unknown .fas {
   text-decoration: none;
   z-index: 10;
   display: inline-block;
+  /* padding-left: 0px;
+  padding-right: 16px; */
 }
 
 .navigation-icon i {
@@ -770,12 +781,17 @@ a#titleurl:hover h3.space-unknown .fas {
   /* transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out; */
 }
 
-.navigation-icon:hover i {
-  color: white !important;
+.navigation-icon:hover {
+  right: -20px;
+}
+
+.navigation-icon:hover::before {
+  content: "⇢";
+  font-weight: bold;
 }
 
 /* Color definitions based on parent status class */
-.popup-street-line.status-open .navigation-icon i {
+.popup-street-line.status-open .navigation-icon {
   color: #009900;
 }
 
@@ -783,7 +799,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background-color: #009900;
 } */
 
-.popup-street-line.status-closed .navigation-icon i {
+.popup-street-line.status-closed .navigation-icon {
   color: #dd4444;
 }
 
@@ -791,7 +807,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background-color: #dd4444;
 } */
 
-.popup-street-line.status-unknown .navigation-icon i {
+.popup-street-line.status-unknown .navigation-icon {
   color: #FF8C00;
 }
 
@@ -799,7 +815,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background-color: #FF8C00;
 } */
 
-.popup-street-line.status-default .navigation-icon i {
+.popup-street-line.status-default .navigation-icon {
   color: #0000ff;
 }
 

@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let searchManager;
   let currentStickyMarker = null;
   let isPopupSticky = false;
+  // +++ NEU: Cache für den Benutzerstandort +++
+  let userLocation = null;
+  let userLocationTimestamp = 0;
 
   // *** WICHTIG: json als globale Variable ***
   window.json = []; // Macht json überall verfügbar
@@ -42,91 +45,138 @@ document.addEventListener('DOMContentLoaded', () => {
     currentStickyMarker: null
   };
 
-  // +++ START: REVISED NAVIGATION LINK FUNCTIONS +++
+  // +++ START: FINAL NAVIGATION LOGIC WITH GEOLOCATION +++
 
+  // Generiert die URL für alle drei Dienste, jetzt mit optionalen Startkoordinaten
+  function getNavigationUrl(service, destLat, destLon, startLat = null, startLon = null) {
+    if (startLat && startLon) {
+      // Vollständige Route von A nach B
+      if (service === 'google') {
+        return `https://www.google.com/maps/dir/${startLat},${startLon}/${destLat},${destLon}`;
+      } else if (service === 'apple') {
+        return `http://maps.apple.com/?saddr=${startLat},${startLon}&daddr=${destLat},${destLon}`;
+      } else { // osm
+        return `https://www.openstreetmap.org/directions?route=${startLat}%2C${startLon}%3B${destLat}%2C${destLon}`;
+      }
+    } else {
+      // Fallback: Route nur zum Ziel
+      if (service === 'google') {
+        return `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLon}`;
+      } else if (service === 'apple') {
+        return `http://maps.apple.com/?daddr=${destLat},${destLon}`;
+      } else { // osm
+        return `https://www.openstreetmap.org/directions?route=;${destLat},${destLon}`;
+      }
+    }
+  }
+
+  // Aktualisiert das Icon und den Tooltip (aber nicht mehr den Link selbst)
   function updateNavigationIconAppearance(navLinkElement, location) {
     const icon = navLinkElement.querySelector('i');
-    const parentContainer = navLinkElement.parentElement; // Das ist .popup-street-line
+    const parentContainer = navLinkElement.parentElement;
     if (!icon || !parentContainer) return;
 
-    // 1. Set the icon class for Apple/Google
-    const savedService = localStorage.getItem('mapService');
+    // 1. Speicherdauer auf 48 Stunden ändern
     const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
-    const ninetySixHours = 96 * 60 * 60 * 1000;
-    let serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours);
+    const fortyEightHours = 48 * 60 * 60 * 1000;
+    let savedService = localStorage.getItem('mapService');
+    const serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > fortyEightHours);
 
-    if (serviceExpired) {
-      icon.className = 'fas fa-directions';
-    } else if (savedService === 'google') {
-      icon.className = 'fab fa-google';
-    } else if (savedService === 'apple') {
-      icon.className = 'fab fa-apple';
-    } else {
-      icon.className = 'fas fa-directions';
-    }
-
-    // 2. Determine and set the status class on the parent container for CSS to handle coloring
-    parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default'); // Clear previous status
-
-    if (location.isOpen === true) {
-      parentContainer.classList.add('status-open');
-    } else if (location.isOpen === false) {
-      parentContainer.classList.add('status-closed');
-    } else if (location.spaceapi && location.spaceapi.endpoint) {
-      parentContainer.classList.add('status-unknown');
-    } else {
-      parentContainer.classList.add('status-default');
-    }
-  }
-
-  function handleNavigationClick(event, location) {
-    event.preventDefault();
-    const { lat, long } = location.loc;
-    if (typeof lat !== 'number' || typeof long !== 'number') return;
-
-    let mapService = localStorage.getItem('mapService');
-    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
-    const ninetySixHours = 96 * 60 * 60 * 1000;
-
-    // Re-check for expiration on click, but don't prompt on left-click
-    if (mapService && mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours) {
+    if (serviceExpired && savedService) {
       localStorage.removeItem('mapService');
       localStorage.removeItem('mapServiceTimestamp');
-      mapService = null;
+      savedService = null;
     }
 
-    // Default to Google Maps if no service is set
-    const serviceToUse = mapService || 'google';
-    openMap(serviceToUse, lat, long);
+    // 2. OSM als Standard festlegen
+    const serviceToUse = savedService || 'osm';
+
+    // 3. Icon-Klasse direkt setzen (kein generisches Icon mehr)
+    if (serviceToUse === 'google') {
+      icon.className = 'fab fa-google';
+    } else if (serviceToUse === 'apple') {
+      icon.className = 'fab fa-apple';
+    } else { // osm
+      icon.className = 'fas fa-map-marked-alt';
+    }
+
+    // 4. Status-Klasse für die Farbgebung im CSS setzen
+    parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
+    if (location.isOpen === true) parentContainer.classList.add('status-open');
+    else if (location.isOpen === false) parentContainer.classList.add('status-closed');
+    else if (location.spaceapi && location.spaceapi.endpoint) parentContainer.classList.add('status-unknown');
+    else parentContainer.classList.add('status-default');
   }
 
-  function handleNavigationRightClick(event, location, navLinkElement) {
-    event.preventDefault(); // Prevent browser context menu
 
-    let mapService;
-    if (confirm('Google Maps für die Navigation verwenden?\n(OK = Google Maps, Abbrechen = Apple Maps)')) {
-      mapService = 'google';
-    } else {
-      mapService = 'apple';
+  // Die Hauptfunktion, die die Navigation startet
+  function handleNavigationClick(event, location, navLinkElement) {
+    event.preventDefault();
+    const icon = navLinkElement.querySelector('i');
+    const originalIconClass = icon.className;
+    icon.className = 'fas fa-spinner fa-spin'; // Lade-Spinner anzeigen
+
+    const openNavigationLink = (startLat = null, startLon = null) => {
+      const savedService = localStorage.getItem('mapService') || 'osm';
+      const url = getNavigationUrl(savedService, location.loc.lat, location.loc.long, startLat, startLon);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      icon.className = originalIconClass; // Icon wiederherstellen
+    };
+
+    // Standort aus dem Cache verwenden, wenn er frisch ist (unter 1 Minute alt)
+    const cacheDuration = 60 * 1000;
+    if (userLocation && (Date.now() - userLocationTimestamp < cacheDuration)) {
+      openNavigationLink(userLocation.latitude, userLocation.longitude);
+      return;
     }
-    localStorage.setItem('mapService', mapService);
+
+    // Neuen Standort abfragen
+    navigator.geolocation.getCurrentPosition(
+      (position) => { // Erfolgsfall
+        userLocation = position.coords;
+        userLocationTimestamp = Date.now();
+        openNavigationLink(userLocation.latitude, userLocation.longitude);
+      },
+      (error) => { // Fehlerfall
+        console.warn("Geolocation Error:", error.message);
+        alert("Standort nicht verfügbar. Navigation ohne Startpunkt.");
+        openNavigationLink(); // Fallback ohne Startkoordinaten
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+
+  // Rechtsklick-Handler bleibt fast gleich, aktualisiert nur das Icon
+  function handleNavigationRightClick(event, location, navLinkElement) {
+    event.preventDefault();
+
+    const currentService = localStorage.getItem('mapService');
+    let newService;
+
+    // Korrigierte Reihenfolge: (null/osm) -> google -> apple -> osm
+    if (currentService === 'google') {
+      newService = 'apple';
+    } else if (currentService === 'apple') {
+      newService = 'osm';
+    } else { // Behandelt 'osm' und den Fall, dass nichts gesetzt ist (null)
+      newService = 'google';
+    }
+
+    localStorage.setItem('mapService', newService);
     localStorage.setItem('mapServiceTimestamp', String(Date.now()));
 
-    // Immediately update the icon in the current popup to reflect the new choice
     updateNavigationIconAppearance(navLinkElement, location);
   }
 
 
-  function openMap(service, lat, long) {
-    let url;
-    if (service === 'google') {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}`;
-    } else { // apple
-      url = `http://maps.apple.com/?daddr=${lat},${long}`;
-    }
-    window.open(url, '_blank');
-  }
-  // +++ END: REVISED NAVIGATION LINK FUNCTIONS +++
+  // +++ END: FINAL NAVIGATION LOGIC WITH GEOLOCATION +++
 
 
   // Connection Line Functions
@@ -367,12 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
               statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
               nameClass = 'space-open';
             }
-            // NEU: Füge den "else if"-Block für den geschlossenen Zustand hinzu.
+            
             else if (location.isOpen === false) {
               statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
               nameClass = 'space-closed'; // Klasse für geschlossenen Status
             }
-            // *** NEU: Füge den "else"-Block für unbekannten Status hinzu. ***
+            
             else if (location.spaceapi && location.spaceapi.endpoint) {
               statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status unbekannt"></i> ';
               nameClass = 'space-unknown'; // *** NEU: Klasse für unbekannten Status ***
@@ -386,7 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const linkUrl = location.link?.url || '#';
             const linkText = location.link?.text || linkUrl;
 
-            // 3. Gib den fertigen HTML-String zurück.
+            // 3. Generate initial navigation URL
+            const initialMapService = localStorage.getItem('mapService') || 'google';
+            const navUrl = getNavigationUrl(initialMapService, location.loc.lat, location.loc.long);
+
+            // 4. Gib den fertigen HTML-String zurück.
             return `
               <h3 id="style">${location.style || ''}</h3>
               <a id="titleurl" href="${linkUrl}" target="_blank">
@@ -394,10 +448,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </a>
               <div class="popup-street-line">
                 ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-                <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
+                <a href="${navUrl}" target="_blank" class="navigation-icon" title="&#013;   L:  ⤴️   Get the route to this makerspace   &#013;&#013;   R:  🔀   Switch OSM / Google / Apple Maps   &#013;">
                   <i></i>
                 </a>
               </div>
+
               <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
               ${location.loc?.country || ''}<br>
               <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
@@ -430,15 +485,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // +++ START: REVISED NAVIGATION LINK EVENT LISTENERS +++
             const navLink = e.popup._container.querySelector('.navigation-icon');
             if (navLink) {
-              // Set initial icon appearance (class and color)
               updateNavigationIconAppearance(navLink, location);
 
-              // Left-click handler
+              // Linksklick startet die Standortabfrage
               navLink.addEventListener('click', (event) => {
-                handleNavigationClick(event, location);
+                handleNavigationClick(event, location, navLink);
               });
 
-              // Right-click handler
+              // Rechtsklick schaltet den Dienst um
               navLink.addEventListener('contextmenu', (event) => {
                 handleNavigationRightClick(event, location, navLink);
               });
