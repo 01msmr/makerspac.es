@@ -237,25 +237,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateBezierControlPoints(startX, startY, endX, endY) {
-    const deltaX = Math.abs(endX - startX);
-    const deltaY = Math.abs(endY - startY);
-
     let cp1X, cp1Y, cp2X, cp2Y;
 
+    // Fall 1: Ziel ist rechts von der Liste (oder nur leicht links davon).
+    // In diesem Fall erzwingen wir eine weiche C-Kurve ohne S-Krümmung.
     if (endX > (startX - 80)) {
-      // Marker ist rechts vom Dropdown - S-Kurve
-      cp1X = startX - 60;
-      cp1Y = startY; // Horizontal zum Startpunkt
-      cp2X = endX - 80;
-      cp2Y = endY; // Horizontal zum Endpunkt
-    } else {
-      // Marker ist links vom Dropdown - sanfte Kurve
-      const horizontalOffset = deltaX * 0.6;
+      // Wir berechnen einen horizontalen Versatz, der die Kurve bauchiger macht,
+      // je größer der vertikale Abstand ist. Das verhindert zu enge Kurven.
+      const offsetX = 100 + Math.abs(startY - endY) / 2;
 
-      cp1X = startX - horizontalOffset;
-      cp1Y = startY; // KORRIGIERT: Horizontal zum Startpunkt
-      cp2X = endX + horizontalOffset;
-      cp2Y = endY; // KORRIGIERT: Horizontal zum Endpunkt
+      // Beide Kontrollpunkte werden nach links verschoben, um die C-Form zu erzeugen.
+      cp1X = startX - offsetX;
+      cp1Y = startY;
+      cp2X = endX - offsetX;
+      cp2Y = endY;
+
+    }
+    // Fall 2: Ziel ist weit links von der Liste.
+    // Hier ist eine S-Kurve die eleganteste und direkteste Verbindung.
+    else {
+      // Der horizontale Versatz wird hier größer, je weiter die Punkte horizontal entfernt sind.
+      const offsetX = 100 + Math.abs(startX - endX) / 4;
+
+      // Der erste Kontrollpunkt zieht nach links, der zweite nach rechts. Das erzeugt die S-Form.
+      cp1X = startX - offsetX;
+      cp1Y = startY;
+      cp2X = endX + offsetX; // Beachten Sie das Pluszeichen hier!
+      cp2Y = endY;
     }
 
     return { cp1X, cp1Y, cp2X, cp2Y };
@@ -277,10 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Berechne Pixel-Koordinaten für SVG
     const startPixel = map.latLngToContainerPoint(startLatLng);
     const endPixel = map.latLngToContainerPoint(endLatLng);
-    const { cp1X, cp1Y, cp2X, cp2Y } = controlPoints;
 
     // Erstelle Bézier-Pfad
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+    // Wir verwenden jetzt IMMER eine einfache und glatte kubische Bézier-Kurve.
+    // Die alte, komplizierte Logik mit "isQuintic" wird entfernt.
+    const { cp1X, cp1Y, cp2X, cp2Y } = controlPoints;
     const pathData = `M ${startPixel.x} ${startPixel.y} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endPixel.x} ${endPixel.y}`;
 
     path.setAttribute('d', pathData);
@@ -293,6 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.appendChild(path);
     return svg;
   }
+
+
 
   // Helper function
   function zfill(plz, country) {
