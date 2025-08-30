@@ -363,6 +363,24 @@ a#titleurl {
 }
 
 
+/* === PERFORMANCE-OPTIMIERUNG für den ZOOM (VERFEINERT) === */
+
+/* 1. Definiert eine weiche Transition auf den Markern und Schatten selbst.
+   Dies sorgt dafür, dass sie sowohl ein- als auch ausblenden (Dauer: 0.2s). */
+.leaflet-marker-pane .leaflet-marker-icon,
+.leaflet-shadow-pane img {
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+/* 2. Die Klasse .map-is-zooming setzt die Deckkraft auf 0 und löst damit
+   die oben definierte Transition (das Ausblenden) aus. */
+#map.map-is-zooming .leaflet-marker-pane .leaflet-marker-icon,
+#map.map-is-zooming .leaflet-shadow-pane img {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+
 /* Nur während Zoom: Transitions stoppen */
 .leaflet-zoom-animated .leaflet-marker-icon,
 .is-zooming .leaflet-marker-icon,
