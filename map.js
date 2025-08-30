@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       (error) => { // Fehlerfall
         console.warn("Geolocation Error:", error.message);
-        alert("Standort nicht verfügbar. Navigation ohne Startpunkt.");
+        // alert("Standort nicht verfügbar. Navigation ohne Startpunkt.");
         openNavigationLink(); // Fallback ohne Startkoordinaten
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -201,118 +201,97 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapContainer = document.getElementById('map');
     const mapRect = mapContainer.getBoundingClientRect();
 
-    const connectionEndX = suggestionRect.left - 50 - mapRect.left;
-    const connectionEndY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
-    const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
+    // Startpunkt der Kurve (rechts vom Dropdown-Item)
+    const startX = suggestionRect.left - 50 - mapRect.left;
+    const startY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
+    const startLatLng = map.containerPointToLatLng([startX, startY]);
 
+    // Endpunkt der Kurve (Marker-Position)
     const endLatLng = targetMarker.getLatLng();
     const markerPixel = map.latLngToContainerPoint(endLatLng);
 
-    const curvePoints = [];
-    const deltaX = Math.abs(markerPixel.x - connectionEndX);
-    const deltaY = Math.abs(markerPixel.y - connectionEndY);
-    const approximateLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const steps = Math.max(100, Math.min(400, Math.round(approximateLength)));
+    // Kontrollpunkte für die Bézier-Kurve berechnen
+    const controlPoints = calculateBezierControlPoints(
+      startX, startY,
+      markerPixel.x, markerPixel.y
+    );
 
-    const controlPoints = [];
-    let mainControlX, mainControlY;
+    // Erstelle SVG-Pfad mit echter Bézier-Kurve
+    const svgElement = createBezierSVG(
+      startLatLng, endLatLng,
+      controlPoints,
+      color,
+      mapContainer
+    );
 
-    if (markerPixel.x > (connectionEndX - 80)) {
-      mainControlX = connectionEndX - 60;
-      mainControlY = connectionEndY;
-    } else {
-      mainControlX = markerPixel.x;
-      mainControlY = connectionEndY;
-    }
-
-    const mainControlLatLng = map.containerPointToLatLng([mainControlX, mainControlY]);
-    controlPoints.push(mainControlLatLng);
-
-    if (markerPixel.x > (connectionEndX - 80)) {
-      const midHeightControlX = markerPixel.x - 240;
-      const midHeightControlY = connectionEndY + (markerPixel.y - connectionEndY) / 2;
-      const midHeightControlLatLng = map.containerPointToLatLng([midHeightControlX, midHeightControlY]);
-      controlPoints.push(midHeightControlLatLng);
-    }
-
-    const horizontalDistance = Math.abs(markerPixel.x - connectionEndX);
-    if (horizontalDistance > 30) {
-      let preMarkerControlX;
-
-      if (markerPixel.x > (connectionEndX - 80)) {
-        preMarkerControlX = markerPixel.x - 80;
-      } else {
-        preMarkerControlX = markerPixel.x + 80;
-      }
-
-      const preMarkerControlY = markerPixel.y;
-      const preMarkerControlLatLng = map.containerPointToLatLng([preMarkerControlX, preMarkerControlY]);
-      controlPoints.push(preMarkerControlLatLng);
-    }
-
-    // Vollständige Bézier curve calculation
-    if (controlPoints.length === 1) {
-      // Einfache quadratische Bézier-Kurve
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const lat = Math.pow(1 - t, 2) * startLatLng.lat +
-          2 * (1 - t) * t * controlPoints[0].lat +
-          Math.pow(t, 2) * endLatLng.lat;
-        const lng = Math.pow(1 - t, 2) * startLatLng.lng +
-          2 * (1 - t) * t * controlPoints[0].lng +
-          Math.pow(t, 2) * endLatLng.lng;
-        curvePoints.push([lat, lng]);
-      }
-    } else if (controlPoints.length === 2) {
-      // Kubische Bézier-Kurve
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const lat = Math.pow(1 - t, 3) * startLatLng.lat +
-          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lat +
-          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lat +
-          Math.pow(t, 3) * endLatLng.lat;
-        const lng = Math.pow(1 - t, 3) * startLatLng.lng +
-          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lng +
-          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lng +
-          Math.pow(t, 3) * endLatLng.lng;
-        curvePoints.push([lat, lng]);
-      }
-    } else if (controlPoints.length === 3) {
-      // Quartische Bézier-Kurve (4 Kontrollpunkte + Start/End)
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const lat = Math.pow(1 - t, 4) * startLatLng.lat +
-          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lat +
-          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lat +
-          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lat +
-          Math.pow(t, 4) * endLatLng.lat;
-        const lng = Math.pow(1 - t, 4) * startLatLng.lng +
-          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lng +
-          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lng +
-          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lng +
-          Math.pow(t, 4) * endLatLng.lng;
-        curvePoints.push([lat, lng]);
-      }
-    } else {
-      // Fallback: Einfache gerade Linie
-      curvePoints.push([startLatLng.lat, startLatLng.lng]);
-      curvePoints.push([endLatLng.lat, endLatLng.lng]);
-    }
-
-    connectionLine = L.polyline(curvePoints, {
-      color: color, // *** NEU: Dynamische Farbe ***
-      weight: 5.5,
-      opacity: 1,
+    // Konvertiere SVG zu Leaflet-Layer für konsistente Behandlung
+    connectionLine = L.svgOverlay(svgElement, map.getBounds(), {
       interactive: false,
-      bubblingMouseEvents: false,
-      smoothFactor: 0,
-      noClip: true
+      bubblingMouseEvents: false
     }).addTo(map);
 
     connectionLine.bringToFront();
-    console.log('Enhanced connection line created with', controlPoints.length, 'control points, color:', color);
+    console.log('Elegante Bézier-Kurve erstellt, Farbe:', color);
 
     return connectionLine;
+  }
+
+  function calculateBezierControlPoints(startX, startY, endX, endY) {
+    const deltaX = Math.abs(endX - startX);
+    const deltaY = Math.abs(endY - startY);
+
+    let cp1X, cp1Y, cp2X, cp2Y;
+
+    if (endX > (startX - 80)) {
+      // Marker ist rechts vom Dropdown - S-Kurve
+      cp1X = startX - 60;
+      cp1Y = startY; // Horizontal zum Startpunkt
+      cp2X = endX - 80;
+      cp2Y = endY; // Horizontal zum Endpunkt
+    } else {
+      // Marker ist links vom Dropdown - sanfte Kurve
+      const horizontalOffset = deltaX * 0.6;
+
+      cp1X = startX - horizontalOffset;
+      cp1Y = startY; // KORRIGIERT: Horizontal zum Startpunkt
+      cp2X = endX + horizontalOffset;
+      cp2Y = endY; // KORRIGIERT: Horizontal zum Endpunkt
+    }
+
+    return { cp1X, cp1Y, cp2X, cp2Y };
+  }
+
+  function createBezierSVG(startLatLng, endLatLng, controlPoints, color, mapContainer) {
+    // Erstelle SVG-Element
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+  `;
+
+    // Berechne Pixel-Koordinaten für SVG
+    const startPixel = map.latLngToContainerPoint(startLatLng);
+    const endPixel = map.latLngToContainerPoint(endLatLng);
+    const { cp1X, cp1Y, cp2X, cp2Y } = controlPoints;
+
+    // Erstelle Bézier-Pfad
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const pathData = `M ${startPixel.x} ${startPixel.y} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endPixel.x} ${endPixel.y}`;
+
+    path.setAttribute('d', pathData);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('opacity', '1');
+
+    svg.appendChild(path);
+    return svg;
   }
 
   // Helper function
