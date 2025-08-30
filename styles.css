@@ -292,6 +292,15 @@ a#titleurl {
   position: relative;
   border-bottom: 1px solid var(--dropdown-border);
   color: var(--text-color);
+
+  scroll-margin-top: 55px;
+}
+
+/* Optional: Für ältere Browser als Fallback */
+@supports not (scroll-margin-top: 55px) {
+  .suggestion-item {
+    /* Fallback für Browser die scroll-margin-top nicht unterstützen */
+  }
 }
 
 .suggestion-item:nth-child(2n) {
