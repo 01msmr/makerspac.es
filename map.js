@@ -93,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Icon-Klasse direkt setzen (kein generisches Icon mehr)
     if (serviceToUse === 'google') {
-      icon.className = 'fab fa-google';
+      icon.className = 'fa-brands fa-google';
     } else if (serviceToUse === 'apple') {
-      icon.className = 'fab fa-apple';
+      icon.className = 'fa-brands fa-apple';
     } else { // osm
-      icon.className = 'fas fa-map-marked-alt';
+      icon.className = 'fa-solid fa-map-location-dot';
     }
 
     // 4. Status-Klasse für die Farbgebung im CSS setzen
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     const icon = navLinkElement.querySelector('i');
     const originalIconClass = icon.className;
-    icon.className = 'fas fa-spinner fa-spin'; // Lade-Spinner anzeigen
+    icon.className = 'fa-solid fa-spinner fa-spin'; // Lade-Spinner anzeigen
 
     const openNavigationLink = (startLat = null, startLon = null) => {
       const savedService = localStorage.getItem('mapService') || 'osm';
@@ -328,49 +328,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  
   function setupMap() {
-    map = new L.Map('map');
+    console.log('🔧 Starting MapLibre setup...');
 
-    // *** NEU: Dark Mode Detection mit Live-Updates ***
+    map = new L.Map('map');
+    console.log('✅ Leaflet map created');
+
     const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    let currentTileLayer = null;
+    let currentMapLibreLayer = null;
 
     function updateMapTiles() {
       const isDarkMode = darkModeQuery.matches;
+      console.log('Dark mode:', isDarkMode);
 
-      let osmUrl, osmAttrib;
+      // Immer Liberty Style verwenden
+      const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
+      console.log('Style URL:', styleUrl);
 
-      if (isDarkMode) {
-        // Dark Mode Karte
-        osmUrl = 'https://api.maptiler.com/maps/streets-v2-dark/{z}/{x}/{y}.png?key=MfoJXkQ2J0VOMKPKK9Df';
-        osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
-      } else {
-        // Light Mode Karte (Standard)
-        osmUrl = 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=MfoJXkQ2J0VOMKPKK9Df';
-        osmAttrib = '\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e';
+      if (currentMapLibreLayer) {
+        map.removeLayer(currentMapLibreLayer);
       }
 
-      // Entferne alte Tile-Layer
-      if (currentTileLayer) {
-        map.removeLayer(currentTileLayer);
+      try {
+        currentMapLibreLayer = L.maplibreGL({
+          style: styleUrl,
+          attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+
+        currentMapLibreLayer.addTo(map);
+
+        // CSS-Klasse für Dark Mode setzen
+        const mapContainer = document.getElementById('map');
+        if (isDarkMode) {
+          mapContainer.classList.add('dark-mode-map');
+        } else {
+          mapContainer.classList.remove('dark-mode-map');
+        }
+
+      } catch (error) {
+        console.error('❌ Error creating MapLibre layer:', error);
+        alert('MapLibre konnte nicht geladen werden.');
       }
-
-      // Füge neue Tile-Layer hinzu
-      currentTileLayer = new L.TileLayer(osmUrl, {
-        minZoom: 2, maxZoom: 19, tileSize: 512,
-        zoomOffset: -1, attribution: osmAttrib
-      });
-
-      map.addLayer(currentTileLayer);
     }
 
-    // Initiale Karten-Setup
     map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
     updateMapTiles();
 
-    // *** Live-Update bei Dark Mode Änderungen ***
     darkModeQuery.addEventListener('change', updateMapTiles);
   }
+
+
+
+
+  // OPTIONAL: Debug-Funktion zum Testen
+  function debugMapLibre() {
+    console.log('=== MAPLIBRE DEBUG ===');
+    console.log('maplibregl:', typeof maplibregl);
+    console.log('L.maplibreGL:', typeof L.maplibreGL);
+    console.log('Map container exists:', !!document.getElementById('map'));
+
+    // Teste OpenFreeMap Verbindung
+    fetch('https://tiles.openfreemap.org/styles/liberty')
+      .then(response => {
+        console.log('OpenFreeMap liberty response:', response.status, response.ok);
+        return response.json();
+      })
+      .then(style => {
+        console.log('OpenFreeMap style loaded successfully:', !!style.sources);
+      })
+      .catch(error => {
+        console.error('OpenFreeMap connection error:', error);
+      });
+  }
+
+
 
   async function loadData() {
     try {
@@ -406,17 +438,17 @@ document.addEventListener('DOMContentLoaded', () => {
             let nameClass = '';
 
             if (location.isOpen === true) {
-              statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
+              statusIconHtml = '<i class="fa-solid fa-door-open" title="space is open"></i> ';
               nameClass = 'space-open';
             }
             
             else if (location.isOpen === false) {
-              statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
+              statusIconHtml = '<i class="fa-solid fa-door-closed" title="space is closed"></i> ';
               nameClass = 'space-closed'; // Klasse für geschlossenen Status
             }
             
             else if (location.spaceapi && location.spaceapi.endpoint) {
-              statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status unbekannt"></i> ';
+              statusIconHtml = '<i class="fa-solid fa-circle-question" title="space-status unknown"></i> ';
               nameClass = 'space-unknown'; // *** NEU: Klasse für unbekannten Status ***
             }
             // Wenn kein SpaceAPI endpoint vorhanden ist, bleiben beide Variablen leer.

@@ -430,7 +430,7 @@ a#titleurl {
   }
 
   /* *** ÄNDERUNG 1: URL-Farbe beim Hover auf schwarz im Dark Mode *** */
-  .leaflet-popup-content a:hover {
+  .leaflet-popup-content a:not(.navigation-icon):hover {
     color: black !important;
   }
 
@@ -439,7 +439,22 @@ a#titleurl {
     color: rgb(102, 179, 255) !important;
     border: 1px solid rgb(102, 179, 255) !important;
   }
+
+
+// nur für NON-VECTOR Tiles 
+  /* .leaflet-tile {
+    filter: invert(1) hue-rotate(180deg);
+  } */
 }
+
+
+
+/* Dark Mode Map Filter */
+#map.dark-mode-map .maplibregl-canvas-container canvas {
+  filter: invert(1) hue-rotate(150deg) brightness(0.55) contrast(.8) saturate(0.75);
+}
+
+
 
 .leaflet-popup-content-wrapper {
   overflow: hidden;

@@ -5,82 +5,72 @@
   <meta charset="UTF-8" />
   <title>map of makerspac.es</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Map of Makerspaces - currently only from Germany, Austria and Switzerland. Curated and Listed by Ulrich Maasmeier. Map from openstreetmap.com, integration with the help of leaflet.js - https://leafletjs.com 
-    
-    served from github.io PAGES">
-  <link rel="stylesheet" href="leaflet/leaflet.css" crossorigin="" />
-  <script src="leaflet/leaflet.js" crossorigin=""></script>
+
+  <!-- Lokale Bibliotheken -->
+  <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
+  <script src="libs/leaflet/leaflet.js"></script>
+
+  <link href="libs/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
+  <script src="libs/maplibre-gl/maplibre-gl.js"></script>
+
+  <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
+
+  <!-- CSS -->
   <link rel="stylesheet" type="text/css" href="styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <!-- <link rel="manifest" href="manifest.webmanifest"> -->
+
+  <!-- Font Awesome lokal -->
+  <link rel="stylesheet" href="libs/fontawesome/css/all.min.css" />
 </head>
 
 <body>
-
-  <!-- div ———— für SEO -->
+  <!-- div für SEO -->
   <div style="position: absolute; left: -9999px;">
     <h1>Makerspaces in Deutschland, Österreich und Schweiz</h1>
     <p>Finde FabLabs, Hackerspaces und Makerspaces in deiner Nähe...</p>
   </div>
 
-
-
   <div id="map"></div>
+
   <a href="./">
-    <div class="title">📍maker<span class="frame"><!-- [&nbsp;&nbsp;&nbsp;&nbsp; --><span class="spac">spac</span><span
-          class="smaller">es</span><!-- ] --></span>
+    <div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">es</span></span>
     </div>
   </a>
 
   <!-- search bar container -->
   <div class="search-container">
     <div class="search-input-wrapper">
-      <input type="text" id="search-bar" placeholder="Filtere nach Name, Stadt, PLZ" autocomplete="off" spellcheck="false">
+      <input type="text" id="search-bar" placeholder="Filtere nach Name, Stadt, PLZ" autocomplete="off"
+        spellcheck="false">
       <div class="search-counter" id="search-counter">0</div>
     </div>
-    <div id="suggestions-dropdown"></div> <!-- This is the new container for results -->
+    <div id="suggestions-dropdown"></div>
   </div>
 
-  <!-- User Guide  -->
+  <!-- User Guide -->
   <div class="user-guide">
     <h2>⁉ User Guide</h2>
-      <ol>
-        <li><strong><!-- ⌨️ -->Shortcut:</strong> <br /> Ctrl-F / Cmd-F / F3 fokussiert Suche</li>
-        <li><strong><!-- 🔍 -->Filtere</strong> <br /> … nach Name, Stadt oder PLZ</li>
-        <li><strong><!-- 📊 -->Anzahl</strong> <br /> … gefilterter Makerspaces</li>
-        <li><strong><!-- 🗺️ -->Auto-Zoom</strong> <br /> … auf gefilterte Pins</li>
-        <li><strong><!-- 🎯 -->Hervorhebung:</strong> <br /> … markierter Elemente</li>
-        <li><strong><!-- ⬇️ -->Liste scrollen</strong> <br /> … per Cursortasten</li>
-      </ol>
-    </h3>
+    <ol>
+      <li><strong>Shortcut:</strong> <br /> Ctrl-F / Cmd-F / F3 fokussiert Suche</li>
+      <li><strong>Filtere</strong> <br /> … nach Name, Stadt oder PLZ</li>
+      <li><strong>Anzahl</strong> <br /> … gefilterter Makerspaces</li>
+      <li><strong>Auto-Zoom</strong> <br /> … auf gefilterte Pins</li>
+      <li><strong>Hervorhebung:</strong> <br /> … markierter Elemente</li>
+      <li><strong>Liste scrollen</strong> <br /> … per Cursortasten</li>
+    </ol>
   </div>
-
 
   <!-- + makerspace -->
   <div class="add-makerspace">
     <h2>+ [add] your makerspace 💛</h2>
     <br />
     <ul>
-      <li>
-        <a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-primary">
-          by Google Forms
-        </a>
-      </li>
-      <li>
-        <a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-secondary">
-          by github pull request
-        </a>
-      </li>
+      <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-primary">by Google Forms</a></li>
+      <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank"
+          class="btn-secondary">by github pull request</a></li>
     </ul>
   </div>
-  
 
-  <!-- JavaScript-Dateien in der richtigen Reihenfolge laden -->
+  <!-- JavaScript-Dateien -->
   <script src="utils.js"></script>
   <script src="icons.js"></script>
   <script src="spaceapi-detect.js"></script>
