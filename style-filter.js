@@ -104,18 +104,36 @@ class StyleFilterManager {
   }
 
   toggleStyleSelection(style, item) {
-    if (this.selectedStyles.has(style)) {
+    const isSelected = this.selectedStyles.has(style);
+
+    if (isSelected) {
       this.selectedStyles.delete(style);
       item.classList.remove('selected');
     } else {
+      // --- NEUE LOGIK FÜR GEGENSEITIGEN AUSSCHLUSS ---
+      // Bevor der neue Filter hinzugefügt wird:
+      if (style === 'open') {
+        // Wenn "open" aktiviert wird, deaktiviere "closed"
+        this.selectedStyles.delete('closed');
+        const closedItem = this.filterContent.querySelector('[data-style="closed"]');
+        if (closedItem) closedItem.classList.remove('selected');
+      } else if (style === 'closed') {
+        // Wenn "closed" aktiviert wird, deaktiviere "open"
+        this.selectedStyles.delete('open');
+        const openItem = this.filterContent.querySelector('[data-style="open"]');
+        if (openItem) openItem.classList.remove('selected');
+      }
+
+      // Füge den geklickten Filter hinzu
       this.selectedStyles.add(style);
       item.classList.add('selected');
     }
+
     this.updateFilterCounter();
     this.updateHeaderState();
     this.applyFilters();
 
-    // KORREKTUR: Schließe das Dropdown nach der Auswahl.
+    // Schließe das Dropdown nach der Auswahl.
     this.closeDropdown();
   }
 
@@ -269,21 +287,52 @@ class StyleFilterManager {
     const searchQuery = this.searchManager.searchBar.value.trim().toLowerCase();
     let searchFiltered = searchQuery.length > 0 ? this.searchManager.filterLocations(searchQuery) : this.json;
 
-    let finalFiltered = searchFiltered;
-    if (this.hasActiveFilters()) {
-      finalFiltered = searchFiltered.filter(location => {
-        const style = location.style || 'unknown';
-        return this.selectedStyles.has(style) ||
-          (this.selectedStyles.has('open') && location.isOpen === true) ||
-          (this.selectedStyles.has('closed') && location.isOpen === false);
-      });
+    // Wenn keine Filter aktiv sind, zeige alle Suchergebnisse
+    if (!this.hasActiveFilters()) {
+      this.updateMarkers(searchFiltered);
+      if (this.searchManager) {
+        this.searchManager.updateSearchResults(searchFiltered);
+      }
+      return;
     }
+
+    // --- NEUE AND-FILTERLOGIK ---
+
+    // 1. Trenne die aktiven Filter in "normale" Styles und "Status"-Filter
+    const selectedNormalStyles = new Set();
+    const selectedStateFilters = new Set();
+    this.selectedStyles.forEach(style => {
+      if (style === 'open' || style === 'closed') {
+        selectedStateFilters.add(style);
+      } else {
+        selectedNormalStyles.add(style);
+      }
+    });
+
+    // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
+    const finalFiltered = searchFiltered.filter(location => {
+      const locationStyle = location.style || 'unknown';
+
+      // Bedingung 1: Muss einem der ausgewählten Styles entsprechen
+      // Diese Bedingung ist erfüllt, wenn KEIN Style-Filter aktiv ist ODER das Element passt.
+      const styleMatch = selectedNormalStyles.size === 0 || selectedNormalStyles.has(locationStyle);
+
+      // Bedingung 2: Muss dem ausgewählten Status entsprechen
+      // Diese Bedingung ist erfüllt, wenn KEIN Status-Filter aktiv ist ODER das Element passt.
+      const stateMatch = selectedStateFilters.size === 0 ||
+        (selectedStateFilters.has('open') && location.isOpen === true) ||
+        (selectedStateFilters.has('closed') && location.isOpen === false);
+
+      // Das Element wird nur angezeigt, wenn BEIDE Bedingungen erfüllt sind
+      return styleMatch && stateMatch;
+    });
 
     this.updateMarkers(finalFiltered);
     if (this.searchManager) {
       this.searchManager.updateSearchResults(finalFiltered);
     }
   }
+  
 
   updateMarkers(filteredLocations) {
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));

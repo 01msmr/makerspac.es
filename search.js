@@ -26,6 +26,9 @@ class SearchManager {
     this.isDropdownHovering = false;
     this.ZOOM_THRESHOLD = 2;
 
+    // NEU: Zeitstempel für den letzten Tastendruck
+    this.lastKeypressTime = 0;
+
     this.initializeEventListeners();
     setTimeout(() => { this.setupSpaceAPIEvents(); }, 100);
   }
@@ -166,6 +169,10 @@ class SearchManager {
   navigateDropdown(direction) {
     this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
     if (this.dropdownItems.length === 0) return;
+
+    // NEU: Zeitstempel bei jeder Navigation per Taste setzen
+    this.lastKeypressTime = Date.now();
+
     if (direction === 'down') {
       this.currentDropdownIndex = (this.currentDropdownIndex + 1) % this.dropdownItems.length;
     } else if (direction === 'up') {
@@ -328,6 +335,10 @@ class SearchManager {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
+      // KORREKTUR: Brechen Sie jeden geplanten Auto-Zoom sofort ab,
+      // sobald die Maus über ein Ergebnis fährt.
+      clearTimeout(this.zoomDebounceTimeout);
+
       this.allMarkers.forEach(marker => {
         if (marker.isPopupOpen()) marker.closePopup();
       });
@@ -371,6 +382,13 @@ class SearchManager {
     });
 
     item.addEventListener('mouseleave', () => {
+      // NEU: Schutz-Bedingung am Anfang des Listeners
+      // Ignoriere dieses Event, wenn es innerhalb von 300ms nach einem
+      // Tastendruck auftritt (wahrscheinlich durch die Scroll-Animation ausgelöst).
+      if (Date.now() - this.lastKeypressTime < 300) {
+        return;
+      }
+      
       this.isDropdownHovering = false;
       if (this.popupTimeout) {
         clearTimeout(this.popupTimeout);
