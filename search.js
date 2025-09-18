@@ -1,4 +1,4 @@
-// search.js - Suchfunktionalität als separates Modul mit Sticky Popup Support
+// search.js - Finale Lösung mit zentralisiertem Marker-State Management und Style-Filter Integration
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -12,6 +12,7 @@ class SearchManager {
     this.previousZoomBounds = null;
     this.overlapCheckInterval = null;
     this.overlapCheckFunction = null;
+    this.styleFilterManager = null;
 
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
@@ -29,6 +30,98 @@ class SearchManager {
     setTimeout(() => { this.setupSpaceAPIEvents(); }, 100);
   }
 
+  setStyleFilterManager(styleFilterManager) {
+    this.styleFilterManager = styleFilterManager;
+  }
+
+  initializeEventListeners() {
+    this.searchBar.focus();
+
+    document.addEventListener('keydown', (e) => {
+      // Tab-Navigation zwischen Suche und Filter
+      if (e.code === 'Tab') {
+        const searchBarHasFocus = document.activeElement === this.searchBar;
+        const filterHeaderHasFocus = document.activeElement === this.styleFilterManager.filterHeader;
+
+        if (searchBarHasFocus && !e.shiftKey) { // Vorwärts von Suche
+          e.preventDefault();
+          this.styleFilterManager.filterHeader.focus();
+        } else if (filterHeaderHasFocus && e.shiftKey) { // Rückwärts von Filter
+          e.preventDefault();
+          this.searchBar.focus();
+        } else if (filterHeaderHasFocus && !e.shiftKey) { // Vorwärts von Filter
+          e.preventDefault();
+          this.searchBar.focus();
+        }
+        return;
+      }
+
+      if (e.code === 'ArrowDown') { e.preventDefault(); this.navigateDropdown('down'); }
+      else if (e.code === 'ArrowUp') { e.preventDefault(); this.navigateDropdown('up'); }
+      else if (e.code === 'Enter') { e.preventDefault(); this.handleEnterKey(); }
+      else if (e.code === 'Escape') { e.preventDefault(); this.handleEscapeKey(); }
+    });
+
+    this.searchBar.addEventListener('keyup', (e) => {
+      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'].includes(e.code)) return;
+      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+    });
+
+    this.searchBar.addEventListener('focus', () => {
+      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-container')) this.closeDropdown();
+    });
+
+    this.suggestionsDropdown.addEventListener('scroll', () => { this.updateHoverSVGPosition(); });
+    this.map.on('zoomstart movestart', () => { this.removeConnectionLine(); });
+  }
+
+
+  updateSearchResults(filteredLocations) {
+    this.updateMarkers(filteredLocations);
+    this.updateSearchCounter(filteredLocations.length);
+    const searchQuery = this.searchBar.value.trim().toLowerCase();
+
+    // NEUE BEDINGUNG: Zeige Dropdown, wenn Suchtext vorhanden ODER Filter aktiv sind
+    const shouldShowDropdown = searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
+
+    if (shouldShowDropdown) {
+      this.createSuggestionItems(filteredLocations);
+      this.updateDropdownUI(filteredLocations.length > 0);
+      this.triggerAutoZoom(filteredLocations);
+    } else {
+      // Leert das Dropdown, wenn weder gesucht noch gefiltert wird
+      this.suggestionsDropdown.innerHTML = '';
+      this.updateDropdownUI(false);
+      this.handleEmptySearch(); // Zoomt auf die Gesamtansicht
+    }
+  }
+
+  // NEUE Methode, die die Zoom-Logik bündelt
+  triggerAutoZoom(locations) {
+    clearTimeout(this.zoomDebounceTimeout);
+    const DEBOUNCE_DELAY = 800;
+    this.zoomDebounceTimeout = setTimeout(() => {
+      if (locations.length > 0) {
+        this.setupAutoZoom(locations);
+      }
+    }, DEBOUNCE_DELAY);
+  }
+
+  filterLocations(searchQuery) {
+    return this.json.filter(location => {
+      if (!location || !location.loc || !location.name || !location.loc.city) return false;
+      const nameMatch = location.name.toLowerCase().includes(searchQuery);
+      const cityMatch = location.loc.city.toLowerCase().includes(searchQuery);
+      const plzMatch = location.loc.plz && this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery);
+      return nameMatch || cityMatch || plzMatch;
+    });
+  }
+
+  // Unveränderter Rest der Datei...
   createHoverIcon(color) {
     const iconSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
@@ -40,29 +133,6 @@ class SearchManager {
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
       iconSize: [37.5, 61.5], iconAnchor: [18.75, 61.5], popupAnchor: [1.5, -51], shadowSize: [61.5, 61.5]
     });
-  }
-
-  initializeEventListeners() {
-    this.searchBar.focus();
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Tab') { e.preventDefault(); this.handleTabKey(); }
-      else if (e.code === 'ArrowDown') { e.preventDefault(); this.navigateDropdown('down'); }
-      else if (e.code === 'ArrowUp') { e.preventDefault(); this.navigateDropdown('up'); }
-      else if (e.code === 'Enter') { e.preventDefault(); this.handleEnterKey(); }
-      else if (e.code === 'Escape') { e.preventDefault(); this.handleEscapeKey(); }
-    });
-    this.searchBar.addEventListener('keyup', (e) => {
-      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.code)) return;
-      this.performSearch();
-    });
-    this.searchBar.addEventListener('focus', () => {
-      if (this.searchBar.value.trim().length > 0) this.performSearch();
-    });
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.search-container')) this.closeDropdown();
-    });
-    this.suggestionsDropdown.addEventListener('scroll', () => { this.updateHoverSVGPosition(); });
-    this.map.on('zoomstart movestart', () => { this.removeConnectionLine(); });
   }
 
   updateHoverSVGPosition() {
@@ -90,7 +160,7 @@ class SearchManager {
     this.searchBar.focus();
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
-    this.performSearch();
+    if (this.styleFilterManager) this.styleFilterManager.applyFilters();
   }
 
   navigateDropdown(direction) {
@@ -152,47 +222,6 @@ class SearchManager {
     this.clearActiveDropdownItem();
   }
 
-  performSearch() {
-    clearTimeout(this.zoomDebounceTimeout);
-    this.cleanupUI();
-    const searchQuery = this.searchBar.value.trim().toLowerCase();
-    if (searchQuery.length < 1) {
-      this.suggestionsDropdown.innerHTML = '';
-      this.updateDropdownUI(false);
-      this.updateSearchCounter(0);
-      this.allMarkers.forEach(marker => {
-        marker.setIcon(this.icons.defaultIcon);
-        marker.setOpacity(0.66);
-      });
-      this.handleEmptySearch();
-    } else {
-      const filteredLocations = this.filterLocations(searchQuery);
-      const sortedFilteredLocations = this.sortLocationsByGeography(filteredLocations);
-      this.updateMarkers(sortedFilteredLocations);
-      this.updateDropdownUI(sortedFilteredLocations.length > 0);
-      this.updateSearchCounter(sortedFilteredLocations.length);
-      this.createSuggestionItems(sortedFilteredLocations);
-      const DEBOUNCE_DELAY = 800;
-      this.zoomDebounceTimeout = setTimeout(() => {
-        const currentQuery = this.searchBar.value.trim().toLowerCase();
-        if (currentQuery.length > 0) {
-          const finalLocations = this.filterLocations(currentQuery);
-          if (finalLocations.length > 0) this.setupAutoZoom(finalLocations);
-        }
-      }, DEBOUNCE_DELAY);
-    }
-  }
-
-  filterLocations(searchQuery) {
-    return this.json.filter(location => {
-      if (!location || !location.loc || !location.name || !location.loc.city) return false;
-      const nameMatch = location.name.toLowerCase().includes(searchQuery);
-      const cityMatch = location.loc.city.toLowerCase().includes(searchQuery);
-      const plzMatch = location.loc.plz && this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery);
-      return nameMatch || cityMatch || plzMatch;
-    });
-  }
-
   sortLocationsByGeography(locations) {
     return locations.sort((a, b) => b.loc.lat - a.loc.lat);
   }
@@ -219,21 +248,8 @@ class SearchManager {
   setupSpaceAPIEvents() {
     if (window.spaceAPI) {
       window.spaceAPI.onStatusUpdate((location) => {
-        const marker = this.allMarkers.find(m => {
-          const loc = this.json.find(l => l.uniqueId === m.uniqueId);
-          return loc && loc.name === location.name;
-        });
-        if (marker) {
-          const searchQuery = this.searchBar.value.trim().toLowerCase();
-          const isFiltered = searchQuery.length > 0 &&
-            (location.name.toLowerCase().includes(searchQuery) ||
-              this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery) ||
-              (location.loc.city && location.loc.city.toLowerCase().includes(searchQuery)));
-          if (isFiltered) {
-            const statusIcon = window.spaceAPI.getStatusIcon(location, this.icons);
-            if (statusIcon) { marker.setIcon(statusIcon); }
-            this.updateDropdownIcons();
-          }
+        if (this.styleFilterManager) {
+          this.styleFilterManager.applyFilters();
         }
       });
     }
@@ -263,7 +279,7 @@ class SearchManager {
 
   updateSearchCounter(count) {
     this.searchCounter.textContent = count;
-    const isSearching = this.searchBar.value.length > 0;
+    const isSearching = this.searchBar.value.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
     this.searchCounter.classList.toggle('visible', isSearching);
     this.searchCounter.classList.toggle('has-results', count > 0);
     this.searchCounter.classList.toggle('no-results', isSearching && count === 0);
@@ -274,7 +290,8 @@ class SearchManager {
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
     const fragment = document.createDocumentFragment();
-    locations.forEach(location => {
+    const sortedLocations = this.sortLocationsByGeography(locations);
+    sortedLocations.forEach(location => {
       const item = this.createSuggestionItem(location);
       fragment.appendChild(item);
     });
@@ -303,7 +320,7 @@ class SearchManager {
       <div class="item-content">
         <div class="item-name"><span class="${nameClass}">${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
-        <div class="item-details"><b>${this.zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>
+        <div class.item-details"><b>${this.zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>
       </div>`;
     this.setupSuggestionItemEvents(item, location);
     return item;
@@ -311,45 +328,83 @@ class SearchManager {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
-      this.allMarkers.forEach(marker => { if (marker.isPopupOpen()) marker.closePopup(); });
-      if (window.mapUtils && window.mapUtils.clearStickyPopup) { window.mapUtils.clearStickyPopup(); }
+      this.allMarkers.forEach(marker => {
+        if (marker.isPopupOpen()) marker.closePopup();
+      });
+      if (window.mapUtils && window.mapUtils.clearStickyPopup) {
+        window.mapUtils.clearStickyPopup();
+      }
+
       this.isDropdownHovering = true;
       this.currentHoverItem = item;
+
       let hoverColor = '#0000ff';
       if (location.spaceapi && location.spaceapi.endpoint) {
         if (location.isOpen === true) { hoverColor = '#00AA00'; }
         else if (location.isOpen === false) { hoverColor = '#DD0000'; }
         else { hoverColor = '#FF8C00'; }
       }
+
       this.createHoverSVG(item, location, hoverColor);
       const targetMarker = this.findMarkerByLocation(location);
+
       if (targetMarker) {
+        if (window.markerStateManager) {
+          window.markerStateManager.setState(targetMarker.uniqueId, {
+            isDropdownHovering: true
+          });
+        }
+
+        if (window.mapUtils && window.mapUtils.setMarkerDropdownHover) {
+          window.mapUtils.setMarkerDropdownHover(targetMarker, true);
+        }
+
         targetMarker.setIcon(this.createHoverIcon(hoverColor));
         this.createConnectionLine(item, targetMarker, hoverColor);
+
         this.popupTimeout = setTimeout(() => {
-          if (this.isDropdownHovering) { targetMarker.openPopup(); }
+          if (this.isDropdownHovering) {
+            targetMarker.openPopup();
+          }
         }, 300);
       }
     });
+
     item.addEventListener('mouseleave', () => {
       this.isDropdownHovering = false;
-      if (this.popupTimeout) { clearTimeout(this.popupTimeout); }
+      if (this.popupTimeout) {
+        clearTimeout(this.popupTimeout);
+        this.popupTimeout = null;
+      }
+
       this.currentHoverItem = null;
       this.cleanupHoverSVG();
       this.removeConnectionLine();
+
       const targetMarker = this.findMarkerByLocation(location);
       if (targetMarker) {
-        if (!this.isStickyMarker(targetMarker)) { targetMarker.closePopup(); }
-        const currentQuery = this.searchBar.value.trim().toLowerCase();
-        const currentFiltered = this.filterLocations(currentQuery);
-        if (currentFiltered.some(loc => loc.uniqueId === location.uniqueId)) {
-          if (window.spaceAPI) { targetMarker.setIcon(window.spaceAPI.getStatusIcon(location, this.icons)); }
-          else { targetMarker.setIcon(this.icons.highlightIcon); }
-        } else {
-          targetMarker.setIcon(this.icons.defaultIcon);
+        if (window.markerStateManager) {
+          window.markerStateManager.setState(targetMarker.uniqueId, {
+            isDropdownHovering: false
+          });
         }
+
+        if (window.mapUtils && window.mapUtils.clearMarkerDropdownHover) {
+          window.mapUtils.clearMarkerDropdownHover(targetMarker);
+        }
+
+        if (!this.isStickyMarker(targetMarker)) {
+          targetMarker.closePopup();
+        }
+
+        setTimeout(() => {
+          if (window.markerStateManager && !window.markerStateManager.isAnyHoverActive(targetMarker.uniqueId)) {
+            if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+          }
+        }, 100);
       }
     });
+
     item.addEventListener('click', () => this.handleSuggestionClick(location));
   }
 
@@ -456,7 +511,6 @@ class SearchManager {
     this.executeZoom(markersToZoom, false, frameInfo.layer);
   }
 
-  // In executeThreeFrameZoom - stoppe früher
   async executeThreeFrameZoom(firstBounds, secondBounds, markersToZoom) {
     const DURATION_PART_1 = 0.85;
     const DURATION_PART_2 = 1.0;
@@ -467,7 +521,7 @@ class SearchManager {
     const mapContainer = document.getElementById('map');
 
     mapContainer.classList.add('map-is-zooming');
-    this.stopDropdownOverlapDetection(); // Bereits hier stoppen
+    this.stopDropdownOverlapDetection();
 
     const firstFrameInfo = this.createZoomPreviewFrame(firstBounds);
     let secondFrameInfo = null;
@@ -487,7 +541,6 @@ class SearchManager {
     this.removeZoomPreviewFrame(firstFrameInfo.layer);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // VOR dem finalen Zoom stoppen
     this.stopDropdownOverlapDetection();
 
     await new Promise(resolve => {
@@ -502,15 +555,12 @@ class SearchManager {
     this.suggestionsDropdown.classList.remove('is-zooming');
     mapContainer.classList.remove('map-is-zooming');
 
-    // Cleanup ohne weitere Detection-Stopps
     setTimeout(() => {
       this.removeZoomPreviewFrame(secondFrameInfo.layer);
     }, 800);
   }
 
-  // In executeZoom - stoppe Detection SOFORT wenn Zoom startet
   executeZoom(markersToZoom, keepFrame = false, frameToRemove = null) {
-    // SOFORT stoppen um Flickering zu vermeiden
     this.stopDropdownOverlapDetection();
 
     const zoomOptions = { duration: 1.0 };
@@ -527,7 +577,6 @@ class SearchManager {
       this.suggestionsDropdown.classList.remove('is-zooming');
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);
-        // Detection bereits gestoppt - nicht nochmal aufrufen
       }
     });
   }
@@ -555,8 +604,6 @@ class SearchManager {
   }
 
   shouldActivateTransparency(bounds) {
-    console.log('=== shouldActivateTransparency AUFGERUFEN ===');
-
     const mapSize = this.map.getSize();
     if (mapSize.x === 0 || mapSize.y === 0) return false;
 
@@ -568,17 +615,7 @@ class SearchManager {
     const frameArea = frameWidth * frameHeight;
     const AREA_THRESHOLD = 0.50;
 
-    const result = (frameArea / mapArea) < AREA_THRESHOLD; // __von der KI FALSCH__ KORRIGIERT: > statt <
-
-    console.log('shouldActivateTransparency Details:', {
-      mapArea: mapArea,
-      frameArea: frameArea,
-      ratio: (frameArea / mapArea).toFixed(3),
-      threshold: AREA_THRESHOLD,
-      result: result
-    });
-
-    return result;
+    return (frameArea / mapArea) < AREA_THRESHOLD;
   }
 
   createZoomPreviewFrame(bounds) {
@@ -639,14 +676,9 @@ class SearchManager {
   }
 
   startDropdownOverlapDetection(zoomFrameBounds) {
-    console.log('=== startDropdownOverlapDetection AUFGERUFEN ==='); // HINZUFÜGEN
-    console.log('Bounds:', zoomFrameBounds); // HINZUFÜGEN
-
     this.stopDropdownOverlapDetection();
 
-    // WICHTIG: 200ms Verzögerung für korrekte Frame-Positionierung
     setTimeout(() => {
-      console.log('🔍 Starting overlap check with 200ms delay');
       this.overlapCheckFunction = () => this.checkDropdownZoomFrameOverlap(zoomFrameBounds);
       this.overlapCheckInterval = setInterval(this.overlapCheckFunction, 100);
       this.checkDropdownZoomFrameOverlap(zoomFrameBounds);
@@ -654,8 +686,6 @@ class SearchManager {
   }
 
   checkDropdownZoomFrameOverlap(zoomFrameBounds) {
-    console.log('=== checkDropdownZoomFrameOverlap WIRD AUSGEFÜHRT ===');
-
     const dropdown = this.suggestionsDropdown;
     if (!dropdown || !dropdown.classList.contains('is-active')) {
       this.resetDropdownOpacity();
@@ -663,7 +693,6 @@ class SearchManager {
     }
 
     if (!zoomFrameBounds || !zoomFrameBounds.getNorthWest || !zoomFrameBounds.getSouthEast) {
-      console.error('Invalid zoomFrameBounds:', zoomFrameBounds);
       this.resetDropdownOpacity();
       return;
     }
@@ -671,19 +700,16 @@ class SearchManager {
     const mapContainer = document.getElementById('map');
     const mapRect = mapContainer.getBoundingClientRect();
 
-    // Dropdown Position
     const dropdownBoundingRect = dropdown.getBoundingClientRect();
     const dropdownLeft = dropdownBoundingRect.left - mapRect.left;
     const dropdownRight = dropdownBoundingRect.right - mapRect.left;
     const dropdownWidth = dropdownRight - dropdownLeft;
 
-    // Frame Position
     const frameTopLeft = this.map.latLngToContainerPoint(zoomFrameBounds.getNorthWest());
     const frameBottomRight = this.map.latLngToContainerPoint(zoomFrameBounds.getSouthEast());
 
     if (!frameTopLeft || !frameBottomRight ||
       isNaN(frameTopLeft.x) || isNaN(frameBottomRight.x)) {
-      console.error('Invalid frame coordinates');
       this.resetDropdownOpacity();
       return;
     }
@@ -693,43 +719,17 @@ class SearchManager {
     const frameWidth = frameRight - frameLeft;
 
     if (frameWidth <= 0) {
-      console.warn('Frame has invalid width:', frameWidth);
       this.resetDropdownOpacity();
       return;
     }
 
-    console.log('=== KOORDINATEN-ANALYSE ===');
-    console.log('Dropdown relativ zur Map:', { left: dropdownLeft, right: dropdownRight, width: dropdownWidth });
-    console.log('Frame absolut (pixels):', { left: frameLeft, right: frameRight, width: frameWidth });
-
-    // KORRIGIERTE Visuelle Darstellung ohne negative repeat-Werte
-    const mapWidth = mapRect.width;
-    const dropdownStartPos = Math.max(0, Math.round((dropdownLeft / mapWidth) * 50));
-    const dropdownBarLength = Math.max(0, Math.round((dropdownWidth / mapWidth) * 50));
-    const frameStartPos = Math.max(0, Math.round((frameLeft / mapWidth) * 50));
-    const frameBarLength = Math.max(0, Math.round((frameWidth / mapWidth) * 50));
-
-    console.log('Visuelle Darstellung (50 char breit):');
-    console.log('Map:     |' + '-'.repeat(50) + '|');
-    console.log('Dropdown:|' + ' '.repeat(dropdownStartPos) + '█'.repeat(dropdownBarLength) + ' '.repeat(Math.max(0, 50 - dropdownStartPos - dropdownBarLength)) + '|');
-    console.log('Frame:   |' + ' '.repeat(frameStartPos) + '▓'.repeat(frameBarLength) + ' '.repeat(Math.max(0, 50 - frameStartPos - frameBarLength)) + '|');
-
-    // Überlappung berechnen
     const overlapLeft = Math.max(dropdownLeft, frameLeft);
     const overlapRight = Math.min(dropdownRight, frameRight);
     const overlapWidth = Math.max(0, overlapRight - overlapLeft);
     const overlapPercentage = overlapWidth / frameWidth;
 
-    console.log('Überlappung:', {
-      overlapWidth: overlapWidth,
-      frameWidth: frameWidth,
-      percentage: (overlapPercentage * 100).toFixed(1) + '%'
-    });
-
     const OVERLAP_THRESHOLD = 0.30;
     const shouldReduce = overlapPercentage >= OVERLAP_THRESHOLD;
-
-    console.log(`ENTSCHEIDUNG: ${shouldReduce ? 'REDUZIEREN' : 'ZURÜCKSETZEN'} (${(overlapPercentage * 100).toFixed(1)}% >= 30%)`);
 
     if (shouldReduce) {
       this.reduceDropdownOpacity();
@@ -738,59 +738,29 @@ class SearchManager {
     }
   }
 
-
-  // Verbesserte reduceDropdownOpacity mit mehr Debugging
   reduceDropdownOpacity() {
     const dropdown = this.suggestionsDropdown;
-    console.log('🔻 REDUCING opacity - element exists:', !!dropdown);
-
     if (dropdown && !dropdown.classList.contains('overlap-reduced')) {
-      console.log('🔻 Adding overlap-reduced class and setting style');
-
-      // Force the style with !important
       dropdown.style.setProperty('transition', 'opacity 0.3s ease-in-out', 'important');
       dropdown.style.setProperty('opacity', '0.33', 'important');
       dropdown.classList.add('overlap-reduced');
-
-      console.log('🔻 Style applied:', {
-        opacity: dropdown.style.opacity,
-        transition: dropdown.style.transition,
-        classList: Array.from(dropdown.classList)
-      });
-    } else {
-      console.log('🔻 Already has overlap-reduced class or dropdown missing');
     }
   }
 
-  // Verbesserte resetDropdownOpacity mit mehr Debugging  
   resetDropdownOpacity() {
     const dropdown = this.suggestionsDropdown;
-    console.log('🔺 RESETTING opacity - element exists:', !!dropdown);
-
     if (dropdown && dropdown.classList.contains('overlap-reduced')) {
-      console.log('🔺 Removing overlap-reduced class and resetting style');
-
       dropdown.style.setProperty('transition', 'opacity 0.3s ease-in-out', 'important');
       dropdown.style.setProperty('opacity', '1', 'important');
       dropdown.classList.remove('overlap-reduced');
-
-      console.log('🔺 Style reset:', {
-        opacity: dropdown.style.opacity,
-        transition: dropdown.style.transition,
-        classList: Array.from(dropdown.classList)
-      });
-    } else {
-      console.log('🔺 No overlap-reduced class found or dropdown missing');
     }
   }
 
-  // Vereinfachte stopDropdownOverlapDetection ohne verzögertes Reset
   stopDropdownOverlapDetection() {
     if (this.overlapCheckInterval) {
       clearInterval(this.overlapCheckInterval);
       this.overlapCheckInterval = null;
     }
-    // Sofortiges Reset ohne Verzögerung
     this.resetDropdownOpacity();
   }
 

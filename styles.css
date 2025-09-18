@@ -93,8 +93,8 @@ a#titleurl {
   overflow-y: scroll;
   font-family: 'Lato', sans-serif;
   position: absolute;
-  right: 1.6em;
-  bottom: 2.3em;
+  right: 1.5em;
+  bottom: 1.5em;
   border-radius: 20px;
   padding: 6px;
   background-color: #ffff00;
@@ -152,8 +152,7 @@ a#titleurl {
 
 .add-makerspace {
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.5) inset !important;
-  left: 1.6em;
-  bottom: 1.4em;
+  left: 1.5em;
   background-color: #0000ff;
   opacity: 0.5;
   color: white;
@@ -357,19 +356,15 @@ a#titleurl {
   z-index: 100 !important;
 }
 
-/* Pin Stabilization + Hover Animation */
+/* Pin Stabilization (ohne Hover-Animation im CSS) */
 .leaflet-marker-icon {
-  transition: width 0.1s ease-out, height 0.1s ease-out, margin 0.1s ease-out !important;
-  animation: none !important;
-  will-change: auto !important;
+  transition: transform 0.2s ease-out !important;
+  will-change: transform !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
 }
 
-.leaflet-marker-icon * {
-  transition: none !important;
-  animation: none !important;
-}
+/* Entferne CSS-Hover da es mit Leaflet kollidiert */
 
 
 /* === PERFORMANCE-OPTIMIERUNG für den ZOOM (VERFEINERT) === */
@@ -440,11 +435,6 @@ a#titleurl {
     border: 1px solid rgb(102, 179, 255) !important;
   }
 
-
-// nur für NON-VECTOR Tiles 
-  /* .leaflet-tile {
-    filter: invert(1) hue-rotate(180deg);
-  } */
 }
 
 
@@ -764,7 +754,7 @@ a#titleurl h3.space-unknown .fas {
 a#titleurl:hover h3.space-open {
   background-color: white !important;
   color: #009900 !important;
-  border-color:#009900 !important;
+  border-color: #009900 !important;
 }
 
 /* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
@@ -815,17 +805,19 @@ a#titleurl:hover h3.space-unknown .fas {
   padding-right: 16px; */
 }
 
-.navigation-icon i {
-  /* font-size: 1.4em; */
-  /* padding: 2px 4px; */
-  /* border-radius: 4px; */
-  /* display: block; */
-  /* background-color: transparent; */
-  /* transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out; */
+.navigation-icon {
+  /* font-size: 1.4em; 
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: block;
+  background-color: transparent;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out; */
+  transition: all ease-in 0.025s;
 }
 
 .navigation-icon:hover {
   right: -20px;
+  transition: all ease-in-out 0.25s;
 }
 
 .navigation-icon:hover::before {
@@ -865,3 +857,297 @@ a#titleurl:hover h3.space-unknown .fas {
 /* .popup-street-line.status-default .navigation-icon:hover i {
   background-color: #0000ff;
 } */
+
+
+
+
+
+
+
+/* Style Filter Container - Kleinerer Kreis passend zur Suchleiste */
+.style-filter-container {
+  z-index: 1000;
+  position: absolute;
+  top: 1.2em;
+  right: 315px;
+  /* Links von der 280px breiten Suchleiste */
+  width: auto;
+  font-family: 'Lato', sans-serif;
+}
+
+.style-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--search-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 38px;
+  /* Angepasst an Suchleisten-Höhe */
+  height: 38px;
+  /* Angepasst an Suchleisten-Höhe */
+  box-shadow: 0px 2px 8px 1px var(--shadow-color);
+  cursor: pointer;
+  opacity: var(--search-opacity);
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  z-index: 2;
+}
+
+.style-filter-header:hover,
+.style-filter-header:focus {
+  opacity: var(--search-focus-opacity);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.style-filter-header.has-filters {
+  border-color: blue;
+  background-color: blue;
+  color: white;
+}
+
+.filter-icon {
+  color: blue;
+  font-size: 1em;
+  transition: color 0.3s ease-in-out;
+}
+
+.style-filter-header.has-filters .filter-icon {
+  color: white;
+}
+
+.filter-title {
+  display: none;
+}
+
+.filter-counter {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  color: white;
+  background-color: #ff4444;
+  border: 2px solid var(--search-bg);
+  border-radius: 50%;
+  width: 18px;
+  /* Proportional kleiner */
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.filter-counter.visible {
+  opacity: 1;
+}
+
+/* Style Filter Dropdown */
+.style-filter-dropdown {
+  background-color: var(--dropdown-bg);
+  color: var(--text-color);
+  border-radius: 12px;
+  margin-top: 8px;
+  position: absolute;
+  z-index: 1;
+  box-shadow: 0px 4px 12px 2px var(--shadow-color);
+  max-height: 60vh;
+  min-width: 280px;
+  overflow-y: auto;
+  display: none;
+  right: 0;
+}
+
+.style-filter-dropdown.is-active {
+  display: block;
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.style-filter-content {
+  padding: 0;
+}
+
+.style-filter-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--dropdown-border);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: var(--dropdown-bg);
+  color: var(--text-color);
+}
+
+.style-filter-item:nth-child(2n) {
+  background-color: var(--dropdown-alt-bg);
+}
+
+.style-filter-item:hover {
+  background-color: rgba(0, 0, 255, 0.1);
+}
+
+.style-filter-item:last-child {
+  border-bottom: none;
+}
+
+.filter-item-icon {
+  margin-right: 0.75em;
+  width: 20px;
+  /* Gibt den Icons einen festen Platz */
+  text-align: center;
+}
+
+/* HINTERGRUNDFARBEN für Open/Closed Filter */
+.style-filter-item[data-style="open"].selected {
+  background-color: #009900;
+  color: white;
+}
+
+.style-filter-item[data-style="closed"].selected {
+  background-color: #dd4444;
+  color: white;
+}
+
+/* Dunklerer Hover-Effekt für die aktiven Zustände */
+/* .style-filter-item[data-style="open"].selected:hover {
+  background-color: #007a00 !important;
+}
+
+.style-filter-item[data-style="closed"].selected:hover {
+  background-color: #b03636 !important;
+} */
+
+.style-filter-item[data-style="open"] .style-count,
+.style-filter-item[data-style="closed"] .style-count {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* .style-filter-item[data-style="open"]:hover {
+  background-color: #007a00;
+}
+
+.style-filter-item[data-style="closed"]:hover {
+  background-color: #b03636;
+} */
+
+.style-filter-item.selected {
+  background-color: blue !important;
+  color: white !important;
+}
+
+.style-filter-item.selected:hover {
+  background-color: #0000cc !important;
+}
+
+.style-filter-item[data-style="open"].selected {
+  background-color: green !important;
+}
+
+.style-filter-item[data-style="open"].selected:hover {
+  background-color: #006600 !important;
+}
+
+.style-filter-item[data-style="closed"].selected {
+  background-color: red !important;
+}
+
+.style-filter-item[data-style="closed"].selected:hover {
+  background-color: #cc0000 !important;
+}
+
+/* Visuelles Feedback für Tastaturnavigation in Filtern */
+.style-filter-item.keyboard-active,
+.filter-btn.keyboard-active {
+  outline: 2px solid blue;
+  outline-offset: -2px;
+}
+
+.style-label {
+  flex-grow: 1;
+  font-size: 0.95em;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.style-count {
+  color: var(--hover-text-color);
+  font-size: 0.8em;
+  font-weight: bold;
+  background-color: var(--dropdown-alt-bg);
+  padding: 3px 8px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.style-filter-item.selected .style-count {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.filter-actions {
+  padding: 0;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  /* 2/3 der normalen Höhe von 12px */
+  border: none;
+  border-top: 1px solid var(--dropdown-border);
+  border-radius: 0;
+  background-color: var(--dropdown-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+  justify-content: center;
+}
+
+.filter-btn:hover {
+  background-color: rgba(0, 0, 255, 0.1);
+  color: var(--text-color);
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .filter-icon {
+    color: rgb(102, 179, 255);
+  }
+
+  .style-filter-header.has-filters {
+    background-color: blue;
+    border-color: blue;
+  }
+
+  .style-filter-item.selected {
+    background-color: blue !important;
+  }
+
+  .style-filter-item.selected:hover {
+    background-color: #0000cc !important;
+  }
+}

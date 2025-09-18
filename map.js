@@ -1,4 +1,4 @@
-// map.js - Fokus nur auf Map-Funktionalität mit Dark Mode
+// map.js - Finale Anti-Flacker Version mit zentralisiertem Marker-State Management
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -13,16 +13,52 @@ document.addEventListener('DOMContentLoaded', () => {
   let map;
   let allMarkers = [];
   let connectionLine = null;
+  let styleFilterManager;
   let searchManager;
   let currentStickyMarker = null;
   let isPopupSticky = false;
-  // +++ NEU: Cache für den Benutzerstandort +++
-  let userLocation = null;
-  let userLocationTimestamp = 0;
 
   // *** WICHTIG: json als globale Variable ***
-  window.json = []; // Macht json überall verfügbar
-  let json = window.json; // Lokale Referenz für Kompatibilität
+  window.json = [];
+  let json = window.json;
+
+  // ZENTRALISIERTES MARKER-STATE MANAGEMENT
+  window.markerStateManager = {
+    states: new Map(),
+
+    setState(markerId, state) {
+      this.states.set(markerId, { ...this.getState(markerId), ...state });
+    },
+
+    getState(markerId) {
+      return this.states.get(markerId) || {
+        isHovering: false,
+        isDropdownHovering: false,
+        isScaling: false,
+        currentScale: 1,
+        hoverTimeout: null,
+        debounceTimeout: null
+      };
+    },
+
+    isAnyHoverActive(markerId) {
+      const state = this.getState(markerId);
+      return state.isHovering || state.isDropdownHovering;
+    },
+
+    clearTimeouts(markerId) {
+      const state = this.getState(markerId);
+      if (state.hoverTimeout) {
+        clearTimeout(state.hoverTimeout);
+        state.hoverTimeout = null;
+      }
+      if (state.debounceTimeout) {
+        clearTimeout(state.debounceTimeout);
+        state.debounceTimeout = null;
+      }
+      this.setState(markerId, state);
+    }
+  };
 
   // Icons aus der globalen icons.js verwenden
   const icons = {
@@ -31,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     hoverIcon: window.MapIcons.hoverIcon,
     redIcon: window.MapIcons.redIcon,
     greenIcon: window.MapIcons.greenIcon,
-    // KORRIGIERT: Hier wird jetzt der korrekte neue Name verwendet.
     unknownStatusIcon: window.MapIcons.unknownStatusIcon
   };
 
@@ -41,143 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
     removeConnectionLine: removeConnectionLine,
     clearStickyPopup: clearStickyPopup,
     setStickyPopup: setStickyPopup,
-    // *** NEU: Globale Referenz auf currentStickyMarker ***
-    currentStickyMarker: null
+    setMarkerDropdownHover: setMarkerDropdownHover,
+    clearMarkerDropdownHover: clearMarkerDropdownHover
   };
 
-  // +++ START: FINAL NAVIGATION LOGIC WITH GEOLOCATION +++
+  // DROPDOWN HOVER MANAGEMENT
+  function setMarkerDropdownHover(marker, isHovering) {
+    const state = window.markerStateManager.getState(marker.uniqueId);
+    window.markerStateManager.setState(marker.uniqueId, { isDropdownHovering: isHovering });
 
-  // Generiert die URL für alle drei Dienste, jetzt mit optionalen Startkoordinaten
-  function getNavigationUrl(service, destLat, destLon, startLat = null, startLon = null) {
-    if (startLat && startLon) {
-      // Vollständige Route von A nach B
-      if (service === 'google') {
-        return `https://www.google.com/maps/dir/${startLat},${startLon}/${destLat},${destLon}`;
-      } else if (service === 'apple') {
-        return `http://maps.apple.com/?saddr=${startLat},${startLon}&daddr=${destLat},${destLon}`;
-      } else { // osm
-        return `https://www.openstreetmap.org/directions?route=${startLat}%2C${startLon}%3B${destLat}%2C${destLon}`;
-      }
-    } else {
-      // Fallback: Route nur zum Ziel
-      if (service === 'google') {
-        return `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLon}`;
-      } else if (service === 'apple') {
-        return `http://maps.apple.com/?daddr=${destLat},${destLon}`;
-      } else { // osm
-        return `https://www.openstreetmap.org/directions?route=;${destLat},${destLon}`;
-      }
+    if (isHovering) {
+      applyMarkerScale(marker, 1.15);
+    } else if (!state.isHovering) {
+      applyMarkerScale(marker, 1);
     }
   }
 
-  // Aktualisiert das Icon und den Tooltip (aber nicht mehr den Link selbst)
-  function updateNavigationIconAppearance(navLinkElement, location) {
-    const icon = navLinkElement.querySelector('i');
-    const parentContainer = navLinkElement.parentElement;
-    if (!icon || !parentContainer) return;
-
-    // 1. Speicherdauer auf 48 Stunden ändern
-    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
-    const fortyEightHours = 48 * 60 * 60 * 1000;
-    let savedService = localStorage.getItem('mapService');
-    const serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > fortyEightHours);
-
-    if (serviceExpired && savedService) {
-      localStorage.removeItem('mapService');
-      localStorage.removeItem('mapServiceTimestamp');
-      savedService = null;
-    }
-
-    // 2. OSM als Standard festlegen
-    const serviceToUse = savedService || 'osm';
-
-    // 3. Icon-Klasse direkt setzen (kein generisches Icon mehr)
-    if (serviceToUse === 'google') {
-      icon.className = 'fa-brands fa-google';
-    } else if (serviceToUse === 'apple') {
-      icon.className = 'fa-brands fa-apple';
-    } else { // osm
-      icon.className = 'fa-solid fa-map-location-dot';
-    }
-
-    // 4. Status-Klasse für die Farbgebung im CSS setzen
-    parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
-    if (location.isOpen === true) parentContainer.classList.add('status-open');
-    else if (location.isOpen === false) parentContainer.classList.add('status-closed');
-    else if (location.spaceapi && location.spaceapi.endpoint) parentContainer.classList.add('status-unknown');
-    else parentContainer.classList.add('status-default');
+  function clearMarkerDropdownHover(marker) {
+    setMarkerDropdownHover(marker, false);
   }
-
-
-  // Die Hauptfunktion, die die Navigation startet
-  function handleNavigationClick(event, location, navLinkElement) {
-    event.preventDefault();
-    const icon = navLinkElement.querySelector('i');
-    const originalIconClass = icon.className;
-    icon.className = 'fa-solid fa-spinner fa-spin'; // Lade-Spinner anzeigen
-
-    const openNavigationLink = (startLat = null, startLon = null) => {
-      const savedService = localStorage.getItem('mapService') || 'osm';
-      const url = getNavigationUrl(savedService, location.loc.lat, location.loc.long, startLat, startLon);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      icon.className = originalIconClass; // Icon wiederherstellen
-    };
-
-    // Standort aus dem Cache verwenden, wenn er frisch ist (unter 1 Minute alt)
-    const cacheDuration = 60 * 1000;
-    if (userLocation && (Date.now() - userLocationTimestamp < cacheDuration)) {
-      openNavigationLink(userLocation.latitude, userLocation.longitude);
-      return;
-    }
-
-    // Neuen Standort abfragen
-    navigator.geolocation.getCurrentPosition(
-      (position) => { // Erfolgsfall
-        userLocation = position.coords;
-        userLocationTimestamp = Date.now();
-        openNavigationLink(userLocation.latitude, userLocation.longitude);
-      },
-      (error) => { // Fehlerfall
-        console.warn("Geolocation Error:", error.message);
-        // alert("Standort nicht verfügbar. Navigation ohne Startpunkt.");
-        openNavigationLink(); // Fallback ohne Startkoordinaten
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  }
-
-  // Rechtsklick-Handler bleibt fast gleich, aktualisiert nur das Icon
-  function handleNavigationRightClick(event, location, navLinkElement) {
-    event.preventDefault();
-
-    const currentService = localStorage.getItem('mapService');
-    let newService;
-
-    // Korrigierte Reihenfolge: (null/osm) -> google -> apple -> osm
-    if (currentService === 'google') {
-      newService = 'apple';
-    } else if (currentService === 'apple') {
-      newService = 'osm';
-    } else { // Behandelt 'osm' und den Fall, dass nichts gesetzt ist (null)
-      newService = 'google';
-    }
-
-    localStorage.setItem('mapService', newService);
-    localStorage.setItem('mapServiceTimestamp', String(Date.now()));
-
-    updateNavigationIconAppearance(navLinkElement, location);
-  }
-
-
-  // +++ END: FINAL NAVIGATION LOGIC WITH GEOLOCATION +++
-
 
   // Connection Line Functions
   function removeConnectionLine() {
@@ -190,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Error removing line:', e);
       }
       connectionLine = null;
-      console.log('Connection line removed');
     }
   }
 
@@ -201,111 +117,194 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapContainer = document.getElementById('map');
     const mapRect = mapContainer.getBoundingClientRect();
 
-    // Startpunkt der Kurve (rechts vom Dropdown-Item)
-    const startX = suggestionRect.left - 50 - mapRect.left;
-    const startY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
-    const startLatLng = map.containerPointToLatLng([startX, startY]);
+    const connectionEndX = suggestionRect.left - 50 - mapRect.left;
+    const connectionEndY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
+    const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
-    // Endpunkt der Kurve (Marker-Position)
     const endLatLng = targetMarker.getLatLng();
     const markerPixel = map.latLngToContainerPoint(endLatLng);
 
-    // Kontrollpunkte für die Bézier-Kurve berechnen
-    const controlPoints = calculateBezierControlPoints(
-      startX, startY,
-      markerPixel.x, markerPixel.y
-    );
+    const curvePoints = [];
+    const deltaX = Math.abs(markerPixel.x - connectionEndX);
+    const deltaY = Math.abs(markerPixel.y - connectionEndY);
+    const approximateLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const steps = Math.max(100, Math.min(400, Math.round(approximateLength)));
 
-    // Erstelle SVG-Pfad mit echter Bézier-Kurve
-    const svgElement = createBezierSVG(
-      startLatLng, endLatLng,
-      controlPoints,
-      color,
-      mapContainer
-    );
+    const controlPoints = [];
+    let mainControlX, mainControlY;
 
-    // Konvertiere SVG zu Leaflet-Layer für konsistente Behandlung
-    connectionLine = L.svgOverlay(svgElement, map.getBounds(), {
+    if (markerPixel.x > (connectionEndX - 80)) {
+      mainControlX = connectionEndX - 60;
+      mainControlY = connectionEndY;
+    } else {
+      mainControlX = markerPixel.x;
+      mainControlY = connectionEndY;
+    }
+
+    const mainControlLatLng = map.containerPointToLatLng([mainControlX, mainControlY]);
+    controlPoints.push(mainControlLatLng);
+
+    if (markerPixel.x > (connectionEndX - 80)) {
+      const midHeightControlX = markerPixel.x - 240;
+      const midHeightControlY = connectionEndY + (markerPixel.y - connectionEndY) / 2;
+      const midHeightControlLatLng = map.containerPointToLatLng([midHeightControlX, midHeightControlY]);
+      controlPoints.push(midHeightControlLatLng);
+    }
+
+    const horizontalDistance = Math.abs(markerPixel.x - connectionEndX);
+    if (horizontalDistance > 30) {
+      let preMarkerControlX;
+
+      if (markerPixel.x > (connectionEndX - 80)) {
+        preMarkerControlX = markerPixel.x - 80;
+      } else {
+        preMarkerControlX = markerPixel.x + 80;
+      }
+
+      const preMarkerControlY = markerPixel.y;
+      const preMarkerControlLatLng = map.containerPointToLatLng([preMarkerControlX, preMarkerControlY]);
+      controlPoints.push(preMarkerControlLatLng);
+    }
+
+    // Vollständige Bézier curve calculation
+    if (controlPoints.length === 1) {
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 2) * startLatLng.lat +
+          2 * (1 - t) * t * controlPoints[0].lat +
+          Math.pow(t, 2) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 2) * startLatLng.lng +
+          2 * (1 - t) * t * controlPoints[0].lng +
+          Math.pow(t, 2) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    } else if (controlPoints.length === 2) {
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 3) * startLatLng.lat +
+          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lat +
+          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lat +
+          Math.pow(t, 3) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 3) * startLatLng.lng +
+          3 * Math.pow(1 - t, 2) * t * controlPoints[0].lng +
+          3 * (1 - t) * Math.pow(t, 2) * controlPoints[1].lng +
+          Math.pow(t, 3) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    } else if (controlPoints.length === 3) {
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = Math.pow(1 - t, 4) * startLatLng.lat +
+          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lat +
+          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lat +
+          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lat +
+          Math.pow(t, 4) * endLatLng.lat;
+        const lng = Math.pow(1 - t, 4) * startLatLng.lng +
+          4 * Math.pow(1 - t, 3) * t * controlPoints[0].lng +
+          6 * Math.pow(1 - t, 2) * Math.pow(t, 2) * controlPoints[1].lng +
+          4 * (1 - t) * Math.pow(t, 3) * controlPoints[2].lng +
+          Math.pow(t, 4) * endLatLng.lng;
+        curvePoints.push([lat, lng]);
+      }
+    } else {
+      curvePoints.push([startLatLng.lat, startLatLng.lng]);
+      curvePoints.push([endLatLng.lat, endLatLng.lng]);
+    }
+
+    connectionLine = L.polyline(curvePoints, {
+      color: color,
+      weight: 5.5,
+      opacity: 1,
       interactive: false,
-      bubblingMouseEvents: false
+      bubblingMouseEvents: false,
+      smoothFactor: 0,
+      noClip: true
     }).addTo(map);
 
     connectionLine.bringToFront();
-    console.log('Elegante Bézier-Kurve erstellt, Farbe:', color);
 
     return connectionLine;
   }
 
-  function calculateBezierControlPoints(startX, startY, endX, endY) {
-    let cp1X, cp1Y, cp2X, cp2Y;
+  // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
+  function applyMarkerScale(marker, targetScale) {
+    const state = window.markerStateManager.getState(marker.uniqueId);
 
-    // Fall 1: Ziel ist rechts von der Liste (oder nur leicht links davon).
-    // In diesem Fall erzwingen wir eine weiche C-Kurve ohne S-Krümmung.
-    if (endX > (startX - 80)) {
-      // Wir berechnen einen horizontalen Versatz, der die Kurve bauchiger macht,
-      // je größer der vertikale Abstand ist. Das verhindert zu enge Kurven.
-      const offsetX = 100 + Math.abs(startY - endY) / 2;
+    // Verhindere redundante Operationen
+    if (state.currentScale === targetScale || state.isScaling) return;
 
-      // Beide Kontrollpunkte werden nach links verschoben, um die C-Form zu erzeugen.
-      cp1X = startX - offsetX;
-      cp1Y = startY;
-      cp2X = endX - offsetX;
-      cp2Y = endY;
+    window.markerStateManager.setState(marker.uniqueId, {
+      isScaling: true,
+      currentScale: targetScale
+    });
 
+    if (marker._icon) {
+      // CSS-Animation für flüssige Skalierung
+      marker._icon.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+      marker._icon.style.transform = `scale(${targetScale})`;
+      marker._icon.style.zIndex = targetScale > 1 ? '1000' : '';
+
+      // Animationsende-Event
+      const onTransitionEnd = () => {
+        window.markerStateManager.setState(marker.uniqueId, { isScaling: false });
+        marker._icon.removeEventListener('transitionend', onTransitionEnd);
+      };
+
+      marker._icon.addEventListener('transitionend', onTransitionEnd);
+
+      // Fallback für den Fall, dass das transitionend-Event nicht feuert
+      setTimeout(() => {
+        window.markerStateManager.setState(marker.uniqueId, { isScaling: false });
+      }, 200);
     }
-    // Fall 2: Ziel ist weit links von der Liste.
-    // Hier ist eine S-Kurve die eleganteste und direkteste Verbindung.
-    else {
-      // Der horizontale Versatz wird hier größer, je weiter die Punkte horizontal entfernt sind.
-      const offsetX = 100 + Math.abs(startX - endX) / 4;
-
-      // Der erste Kontrollpunkt zieht nach links, der zweite nach rechts. Das erzeugt die S-Form.
-      cp1X = startX - offsetX;
-      cp1Y = startY;
-      cp2X = endX + offsetX; // Beachten Sie das Pluszeichen hier!
-      cp2Y = endY;
-    }
-
-    return { cp1X, cp1Y, cp2X, cp2Y };
   }
 
-  function createBezierSVG(startLatLng, endLatLng, controlPoints, color, mapContainer) {
-    // Erstelle SVG-Element
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.style.cssText = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 100;
-  `;
+  // Helper function zum konsistenten Icon-Update
+  function updateMarkerIcon(marker, location) {
+    const state = window.markerStateManager.getState(marker.uniqueId);
 
-    // Berechne Pixel-Koordinaten für SVG
-    const startPixel = map.latLngToContainerPoint(startLatLng);
-    const endPixel = map.latLngToContainerPoint(endLatLng);
+    // Verhindere Icon-Updates während aktiver Hover-Zustände
+    if (state.isHovering || state.isDropdownHovering) return;
 
-    // Erstelle Bézier-Pfad
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    if (currentStickyMarker === marker && isPopupSticky) {
+      if (window.spaceAPI) {
+        const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
+        marker.setIcon(statusIcon);
+      } else {
+        marker.setIcon(icons.highlightIcon);
+      }
+    } else {
+      const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
 
-    // Wir verwenden jetzt IMMER eine einfache und glatte kubische Bézier-Kurve.
-    // Die alte, komplizierte Logik mit "isQuintic" wird entfernt.
-    const { cp1X, cp1Y, cp2X, cp2Y } = controlPoints;
-    const pathData = `M ${startPixel.x} ${startPixel.y} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endPixel.x} ${endPixel.y}`;
+      if (searchQuery.length > 0) {
+        const filteredLocations = json.filter(loc =>
+          loc.name.toLowerCase().includes(searchQuery) ||
+          zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
+          loc.loc.city.toLowerCase().includes(searchQuery)
+        );
 
-    path.setAttribute('d', pathData);
-    path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '5.5');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('opacity', '1');
+        if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
+          let iconToSet;
 
-    svg.appendChild(path);
-    return svg;
+          if (location.isOpen === true) {
+            iconToSet = icons.greenIcon;
+          } else if (location.isOpen === false) {
+            iconToSet = icons.redIcon;
+          } else if (location.spaceapi && location.spaceapi.endpoint) {
+            iconToSet = icons.unknownStatusIcon;
+          } else {
+            iconToSet = icons.highlightIcon;
+          }
+
+          marker.setIcon(iconToSet);
+        } else {
+          marker.setIcon(icons.defaultIcon);
+        }
+      } else {
+        marker.setIcon(icons.defaultIcon);
+      }
+    }
   }
-
-
 
   // Helper function
   function zfill(plz, country) {
@@ -321,14 +320,14 @@ document.addEventListener('DOMContentLoaded', () => {
       setupMap();
       await loadData();
       setupSearch();
-      setupMapClickHandler(); // *** NEU: Setup map click handler ***
+      setupStyleFilter(); 
+      setupMapClickHandler();
     } catch (error) {
       console.error("A critical error occurred during app initialization:", error);
       alert("The application could not be started. Please check the developer console.");
     }
   }
 
-  
   function setupMap() {
     console.log('🔧 Starting MapLibre setup...');
 
@@ -342,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const isDarkMode = darkModeQuery.matches;
       console.log('Dark mode:', isDarkMode);
 
-      // Immer Liberty Style verwenden
       const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
       console.log('Style URL:', styleUrl);
 
@@ -358,7 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentMapLibreLayer.addTo(map);
 
-        // CSS-Klasse für Dark Mode setzen
         const mapContainer = document.getElementById('map');
         if (isDarkMode) {
           mapContainer.classList.add('dark-mode-map');
@@ -367,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
       } catch (error) {
-        console.error('❌ Error creating MapLibre layer:', error);
+        console.error('⛔ Error creating MapLibre layer:', error);
         alert('MapLibre konnte nicht geladen werden.');
       }
     }
@@ -378,46 +375,18 @@ document.addEventListener('DOMContentLoaded', () => {
     darkModeQuery.addEventListener('change', updateMapTiles);
   }
 
-
-
-
-  // OPTIONAL: Debug-Funktion zum Testen
-  function debugMapLibre() {
-    console.log('=== MAPLIBRE DEBUG ===');
-    console.log('maplibregl:', typeof maplibregl);
-    console.log('L.maplibreGL:', typeof L.maplibreGL);
-    console.log('Map container exists:', !!document.getElementById('map'));
-
-    // Teste OpenFreeMap Verbindung
-    fetch('https://tiles.openfreemap.org/styles/liberty')
-      .then(response => {
-        console.log('OpenFreeMap liberty response:', response.status, response.ok);
-        return response.json();
-      })
-      .then(style => {
-        console.log('OpenFreeMap style loaded successfully:', !!style.sources);
-      })
-      .catch(error => {
-        console.error('OpenFreeMap connection error:', error);
-      });
-  }
-
-
-
   async function loadData() {
     try {
       const response = await fetch("./locations.json");
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
-      // *** ZUERST: SpaceAPI Status abrufen ***
       const spaceAPI = new SimpleSpaceAPI();
       window.spaceAPI = spaceAPI;
-      console.log("🔄 Loading SpaceAPI status...");
+      console.log("📄 Loading SpaceAPI status...");
       json = await spaceAPI.enrichLocationData(json);
       console.log("✅ SpaceAPI status loaded");
 
-      // *** DANN: Marker erstellen (immer mit defaultIcon) ***
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
@@ -429,64 +398,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
           marker.uniqueId = location.uniqueId;
 
-          // KORRIGIERT: Der Popup-Inhalt wird jetzt durch eine Funktion dynamisch
           marker.bindPopup((layer) => {
-            // Diese Funktion wird jedes Mal ausgeführt, wenn ein Popup geöffnet wird.
-
-            // 1. Erweitere die Logik, um "offen", "geschlossen" UND "unbekannt" zu behandeln.
             let statusIconHtml = '';
             let nameClass = '';
 
             if (location.isOpen === true) {
-              statusIconHtml = '<i class="fa-solid fa-door-open" title="space is open"></i> ';
+              statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
               nameClass = 'space-open';
             }
-            
             else if (location.isOpen === false) {
-              statusIconHtml = '<i class="fa-solid fa-door-closed" title="space is closed"></i> ';
-              nameClass = 'space-closed'; // Klasse für geschlossenen Status
+              statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
+              nameClass = 'space-closed';
             }
-            
             else if (location.spaceapi && location.spaceapi.endpoint) {
-              statusIconHtml = '<i class="fa-solid fa-circle-question" title="space-status unknown"></i> ';
-              nameClass = 'space-unknown'; // *** NEU: Klasse für unbekannten Status ***
+              statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status unbekannt"></i> ';
+              nameClass = 'space-unknown';
             }
-            // Wenn kein SpaceAPI endpoint vorhanden ist, bleiben beide Variablen leer.
 
-            // 2. Baue den HTML-Inhalt.
             const streetName = location.loc?.street?.name || '';
             const streetNumber = location.loc?.street?.number || '';
             const streetExt = location.loc?.street?.ext || '';
             const linkUrl = location.link?.url || '#';
             const linkText = location.link?.text || linkUrl;
 
-            // 3. Generate initial navigation URL
-            const initialMapService = localStorage.getItem('mapService') || 'google';
-            const navUrl = getNavigationUrl(initialMapService, location.loc.lat, location.loc.long);
-
-            // 4. Gib den fertigen HTML-String zurück.
             return `
               <h3 id="style">${location.style || ''}</h3>
               <a id="titleurl" href="${linkUrl}" target="_blank">
                 <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
               </a>
-              <div class="popup-street-line">
-                ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-                <a href="${navUrl}" target="_blank" class="navigation-icon" title="&#013;   L:  ⤴️   Route to this makerspace   &#013;&#013;   R:  🔀   OSM / Google / Apple Maps   &#013;   ">
-                  <i></i>
-                </a>
-              </div>
-
+              ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span><br>
               <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
               ${location.loc?.country || ''}<br>
               <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
             `;
           });
 
-          // Popup events (dieser Teil bleibt für die Logo-Interaktion wichtig)
+          // === VEREINFACHTES, ROBUSTES EVENT SYSTEM ===
+
+          // Popup Events
           marker.on('popupopen', (e) => {
-            // Set this popup as sticky when it opens
-            setStickyPopup(marker);
+            if (!marker._openedByHover) {
+              setStickyPopup(marker);
+            }
+            marker._openedByHover = false;
 
             const popup = marker.getPopup();
             const popupElement = popup._container;
@@ -505,103 +459,76 @@ document.addEventListener('DOMContentLoaded', () => {
                 logoElement.classList.add('popup-active');
               }
             }
-
-            // +++ START: REVISED NAVIGATION LINK EVENT LISTENERS +++
-            const navLink = e.popup._container.querySelector('.navigation-icon');
-            if (navLink) {
-              updateNavigationIconAppearance(navLink, location);
-
-              // Linksklick startet die Standortabfrage
-              navLink.addEventListener('click', (event) => {
-                handleNavigationClick(event, location, navLink);
-              });
-
-              // Rechtsklick schaltet den Dienst um
-              navLink.addEventListener('contextmenu', (event) => {
-                handleNavigationRightClick(event, location, navLink);
-              });
-            }
-            // +++ END: REVISED NAVIGATION LINK EVENT LISTENERS +++
           });
 
           marker.on('popupclose', () => {
             document.querySelector('.title').classList.remove('popup-active');
-            // Only clear sticky if this was the sticky marker
             if (currentStickyMarker === marker) {
               currentStickyMarker = null;
               isPopupSticky = false;
             }
           });
 
-          let hoverTimeout = null;
+          // HOVER EVENTS mit zentralisiertem State Management
+          marker.on('mouseover', (e) => {
+            const state = window.markerStateManager.getState(marker.uniqueId);
 
-          marker.on('mouseover', () => {
-            marker.setIcon(icons.hoverIcon);
-            hoverTimeout = setTimeout(() => {
-              // *** MODIFIED: Only open popup if no sticky popup is active ***
-              if (!isPopupSticky) {
+            // Verhindere doppelte Hover-Events
+            if (state.isHovering) return;
+
+            window.markerStateManager.setState(marker.uniqueId, { isHovering: true });
+
+            // Sofortige Skalierung ohne Debounce für bessere UX
+            applyMarkerScale(marker, 1.15);
+
+            // Verzögerter Popup-Öffnung
+            const hoverTimeout = setTimeout(() => {
+              const currentState = window.markerStateManager.getState(marker.uniqueId);
+              if (currentState.isHovering && !isPopupSticky) {
+                marker._openedByHover = true;
                 marker.openPopup();
               }
-            }, 300);
+            }, 400);
+
+            window.markerStateManager.setState(marker.uniqueId, { hoverTimeout });
           });
 
-          marker.on('mouseout', () => {
-            if (hoverTimeout) {
-              clearTimeout(hoverTimeout);
-              hoverTimeout = null;
+          marker.on('mouseout', (e) => {
+            const state = window.markerStateManager.getState(marker.uniqueId);
+
+            window.markerStateManager.setState(marker.uniqueId, { isHovering: false });
+            window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+            // Skalierung zurücksetzen nur wenn kein Dropdown-Hover aktiv
+            if (!state.isDropdownHovering) {
+              applyMarkerScale(marker, 1);
             }
 
-            // Only close popup if it's not sticky
             if (!isPopupSticky || currentStickyMarker !== marker) {
               marker.closePopup();
             }
 
-            // Icon-Status korrekt setzen basierend auf Sticky und Search-Status
-            if (currentStickyMarker === marker && isPopupSticky) {
-              // Sticky Marker behält seinen Status-Icon
-              if (window.spaceAPI) {
-                const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
-                marker.setIcon(statusIcon);
-              } else {
-                marker.setIcon(icons.highlightIcon);
-              }
-            } else {
-              // Normales Verhalten für nicht-sticky Marker
-              const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
-
-              if (searchQuery.length > 0) {
-                const filteredLocations = json.filter(loc =>
-                  loc.name.toLowerCase().includes(searchQuery) ||
-                  zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
-                  loc.loc.city.toLowerCase().includes(searchQuery)
-                );
-
-                if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
-                  // KORRIGIERT: Verwende die gleiche Logik wie in updateMarkers
-                  let iconToSet;
-
-                  if (location.isOpen === true) {
-                    iconToSet = icons.greenIcon;
-                  } else if (location.isOpen === false) {
-                    iconToSet = icons.redIcon;
-                  } else if (location.spaceapi && location.spaceapi.endpoint) {
-                    // Hat SpaceAPI aber Status unbekannt - orange
-                    iconToSet = icons.unknownStatusIcon;
-                  } else {
-                    // Hat keine SpaceAPI - schwarz/grau
-                    iconToSet = icons.highlightIcon;
-                  }
-
-                  marker.setIcon(iconToSet);
-                } else {
-                  marker.setIcon(icons.defaultIcon);
-                }
-              } else {
-                marker.setIcon(icons.defaultIcon);
-              }
+            // Icon-Update nur wenn kein Hover-Zustand mehr aktiv
+            if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
+              updateMarkerIcon(marker, location);
             }
           });
 
+          marker.on('click', (e) => {
+            e.originalEvent?.stopPropagation();
+            marker._openedByHover = false;
+
+            // Alle Hover-States zurücksetzen
+            window.markerStateManager.setState(marker.uniqueId, {
+              isHovering: false,
+              isDropdownHovering: false
+            });
+            window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+            if (!marker.isPopupOpen()) {
+              marker.openPopup();
+            }
+          });
 
           allMarkers.push(marker);
         }
@@ -615,50 +542,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+
+  // Style Filter Setup
+  function setupStyleFilter() {
+    if (!window.StyleFilterManager) {
+      console.error('StyleFilterManager not available');
+      return;
+    }
+
+    styleFilterManager = new StyleFilterManager(json, allMarkers, icons, searchManager);
+    window.styleFilterManager = styleFilterManager;
+
+    // Integration: SearchManager über StyleFilter informieren
+    if (searchManager) {
+      searchManager.setStyleFilterManager(styleFilterManager);
+    }
+
+    console.log('StyleFilterManager initialized successfully');
+  }
+
+
   function setupSearch() {
-    // Stelle sicher, dass mapUtils verfügbar ist
     if (!window.mapUtils) {
       console.error('mapUtils not available when setting up search');
       return;
     }
 
-    // Initialisiere den SearchManager mit korrekten Icons
     searchManager = new SearchManager(map, allMarkers, json, icons, zfill);
-
-    // Mache SearchManager global verfügbar für Debugging
     window.searchManager = searchManager;
-
     console.log('SearchManager initialized successfully');
   }
 
-  // *** NEU: Sticky Popup Functions ***
   function clearStickyPopup() {
     if (currentStickyMarker && isPopupSticky) {
       currentStickyMarker.closePopup();
       currentStickyMarker = null;
       isPopupSticky = false;
-      // *** NEU: Aktualisiere globale Referenz ***
-      window.mapUtils.currentStickyMarker = null;
       console.log('Sticky popup cleared');
     }
   }
 
   function setStickyPopup(marker) {
-    // Clear any existing sticky popup first
     clearStickyPopup();
-
     currentStickyMarker = marker;
     isPopupSticky = true;
-    // *** NEU: Aktualisiere globale Referenz ***
-    window.mapUtils.currentStickyMarker = marker;
     console.log('Sticky popup set for marker');
   }
 
-
-  // *** NEU: Map click event to clear sticky popup ***
   function setupMapClickHandler() {
     map.on('click', (e) => {
-      // Only clear if the click wasn't on a marker
       if (e.originalEvent && e.originalEvent.target &&
         !e.originalEvent.target.closest('.leaflet-marker-icon')) {
         clearStickyPopup();
@@ -666,7 +598,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-
-  // Starte die App
   initializeApp();
 });
