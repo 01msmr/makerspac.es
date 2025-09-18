@@ -76,13 +76,12 @@ class StyleFilterManager {
     item.dataset.style = style;
 
     const iconMap = {
+      'for all': 'fas fa-people-group',
       'open': 'fas fa-door-open',
       'closed': 'fas fa-door-closed',
       'for students': 'fas fa-graduation-cap',
-      'for students & youth': 'fas fa-graduation-cap',
       'for youth': 'fas fa-child',
       'commercial': 'fas fa-money-bill-wave',
-      'for students // commercial': 'fas fa-money-bill-wave'
     };
 
     const iconClass = iconMap[style.toLowerCase()] || '';
