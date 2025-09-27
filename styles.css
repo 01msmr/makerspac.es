@@ -1,4 +1,4 @@
-/* styles.css - Enhanced with Dark Mode support via CSS Variables */
+/* styles.css - Enhanced with Dark Mode support via CSS Variables and CSS-based Navigation */
 
 /* *** CSS Variables für Light/Dark Mode *** */
 :root {
@@ -784,7 +784,7 @@ a#titleurl:hover h3.space-unknown .fas {
   color: #FF8C00 !important;
 }
 
-/* +++ START: REVISED NAVIGATION ICON STYLES +++ */
+/* +++ START: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
 
 .popup-street-line {
   position: relative;
@@ -792,6 +792,7 @@ a#titleurl:hover h3.space-unknown .fas {
   margin-bottom: 2px;
 }
 
+/* Navigation Icon Base Styling */
 .navigation-icon {
   position: absolute;
   top: 50%;
@@ -801,20 +802,10 @@ a#titleurl:hover h3.space-unknown .fas {
   text-decoration: none;
   z-index: 10;
   display: inline-block;
-  /* padding-left: 0px;
-  padding-right: 16px; */
-}
-
-.navigation-icon {
-  /* font-size: 1.4em; 
-  padding: 2px 4px;
-  border-radius: 4px;
-  display: block;
-  background-color: transparent;
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out; */
   transition: all ease-in 0.025s;
 }
 
+/* Navigation Icon Hover Effect */
 .navigation-icon:hover {
   right: -20px;
   transition: all ease-in-out 0.25s;
@@ -825,44 +816,172 @@ a#titleurl:hover h3.space-unknown .fas {
   font-weight: bold;
 }
 
-/* Color definitions based on parent status class */
+/* Icon Selection Based on Service Data Attribute */
+.navigation-icon[data-service="google"] i::before {
+  content: "\f1a0";
+  /* fab fa-google */
+  font-family: "Font Awesome 5 Brands";
+}
+
+.navigation-icon[data-service="apple"] i::before {
+  content: "\f179";
+  /* fab fa-apple */
+  font-family: "Font Awesome 5 Brands";
+}
+
+.navigation-icon[data-service="osm"] i::before {
+  content: "\f279";
+  /* fas fa-map */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+.navigation-icon[data-service="default"] i::before,
+.navigation-icon:not([data-service]) i::before {
+  content: "\f5eb";
+  /* fas fa-directions */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+
+
+
+/* Visual indicator for cycling through services */
+.navigation-icon:active {
+  transform: translateY(-50%) scale(1.1);
+  transition: transform 0.1s ease-in-out;
+}
+
+/* Right-click visual feedback */
+/* .navigation-icon[data-service="default"]:hover::after {
+  content: " (Rechtsklick zum Wechseln)";
+  font-size: 0.6em;
+  opacity: 0.7;
+  margin-left: 0.3em;
+  white-space: nowrap;
+} */
+
+
+
+
+/* Color Definitions Based on Parent Status Class */
 .popup-street-line.status-open .navigation-icon {
   color: #009900;
 }
-
-/* .popup-street-line.status-open .navigation-icon:hover i {
-  background-color: #009900;
-} */
 
 .popup-street-line.status-closed .navigation-icon {
   color: #dd4444;
 }
 
-/* .popup-street-line.status-closed .navigation-icon:hover i {
-  background-color: #dd4444;
-} */
-
 .popup-street-line.status-unknown .navigation-icon {
   color: #FF8C00;
 }
-
-/* .popup-street-line.status-unknown .navigation-icon:hover i {
-  background-color: #FF8C00;
-} */
 
 .popup-street-line.status-default .navigation-icon {
   color: #0000ff;
 }
 
-/* .popup-street-line.status-default .navigation-icon:hover i {
-  background-color: #0000ff;
-} */
+/* Hover Effects for Navigation Icons */
+.popup-street-line.status-open .navigation-icon:hover {
+  color: #007700;
+}
+
+.popup-street-line.status-closed .navigation-icon:hover {
+  color: #bb2222;
+}
+
+.popup-street-line.status-unknown .navigation-icon:hover {
+  color: #e6760e;
+}
+
+.popup-street-line.status-default .navigation-icon:hover {
+  color: #0000cc;
+}
+
+/* Service-specific Icon Styling with Pseudo-elements */
+.navigation-icon i {
+  position: relative;
+}
+
+/* Reset default icon content */
+.navigation-icon i::before {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
 
 
+/* Responsive Navigation Icon for Mobile */
+@media (max-width: 768px) {
+  .navigation-icon {
+    font-size: 1.2em;
+    right: 0px;
+  }
 
+  .navigation-icon:hover {
+    right: -15px;
+  }
 
+  .navigation-icon:hover::after {
+    display: none;
+    /* Hide service labels on mobile */
+  }
+}
 
+/* Dark Mode Navigation Adjustments */
+@media (prefers-color-scheme: dark) {
+  .popup-street-line.status-open .navigation-icon {
+    color: #00bb00;
+  }
 
+  .popup-street-line.status-closed .navigation-icon {
+    color: #ff5555;
+  }
+
+  .popup-street-line.status-unknown .navigation-icon {
+    color: #ffaa00;
+  }
+
+  .popup-street-line.status-default .navigation-icon {
+    color: #66b3ff;
+  }
+}
+
+/* Animation for Icon Switching */
+.navigation-icon i {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Accessibility: Focus States */
+.navigation-icon:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .popup-street-line.status-open .navigation-icon {
+    color: #008800;
+  }
+
+  .popup-street-line.status-closed .navigation-icon {
+    color: #cc0000;
+  }
+
+  .popup-street-line.status-unknown .navigation-icon {
+    color: #ff6600;
+  }
+
+  .popup-street-line.status-default .navigation-icon {
+    color: #0000dd;
+  }
+}
+
+/* +++ END: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
 
 /* Style Filter Container - Kleinerer Kreis passend zur Suchleiste */
 .style-filter-container {

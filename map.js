@@ -1,4 +1,4 @@
-// map.js - Finale Anti-Flacker Version mit zentralisiertem Marker-State Management
+// map.js - Finale Anti-Flacker Version mit zentralisiertem Marker-State Management und Navigation
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -79,6 +79,96 @@ document.addEventListener('DOMContentLoaded', () => {
     setMarkerDropdownHover: setMarkerDropdownHover,
     clearMarkerDropdownHover: clearMarkerDropdownHover
   };
+
+  // +++ START: NAVIGATION LINK FUNCTIONS +++
+  function updateNavigationIconAppearance(navLinkElement, location) {
+    const icon = navLinkElement.querySelector('i');
+    const parentContainer = navLinkElement.parentElement; // Das ist .popup-street-line
+    if (!icon || !parentContainer) return;
+
+    // 1. Set service data attribute for CSS to handle icon selection
+    const savedService = localStorage.getItem('mapService');
+    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+    const ninetySixHours = 96 * 60 * 60 * 1000;
+    let serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours);
+
+    const serviceToUse = serviceExpired ? 'default' : savedService;
+    navLinkElement.setAttribute('data-service', serviceToUse);
+
+    // 2. Set status data attribute for CSS to handle coloring
+    parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
+
+    let statusClass = 'status-default';
+    if (location.isOpen === true) {
+      statusClass = 'status-open';
+    } else if (location.isOpen === false) {
+      statusClass = 'status-closed';
+    } else if (location.spaceapi && location.spaceapi.endpoint) {
+      statusClass = 'status-unknown';
+    }
+
+    parentContainer.classList.add(statusClass);
+    navLinkElement.setAttribute('data-status', statusClass.replace('status-', ''));
+  }
+
+  function handleNavigationClick(event, location) {
+    event.preventDefault();
+    const { lat, long } = location.loc;
+    if (typeof lat !== 'number' || typeof long !== 'number') return;
+
+    let mapService = localStorage.getItem('mapService');
+    const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+    const ninetySixHours = 96 * 60 * 60 * 1000;
+
+    // Re-check for expiration on click, but don't prompt on left-click
+    if (mapService && mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours) {
+      localStorage.removeItem('mapService');
+      localStorage.removeItem('mapServiceTimestamp');
+      mapService = null;
+    }
+
+    // Default to Google Maps if no service is set
+    const serviceToUse = mapService || 'google';
+    openMap(serviceToUse, lat, long);
+  }
+
+  function handleNavigationRightClick(event, location, navLinkElement) {
+    event.preventDefault(); // Prevent browser context menu
+
+    // Cycle through services without popup
+    const savedService = localStorage.getItem('mapService');
+    let nextService;
+
+    if (!savedService || savedService === 'google') {
+      nextService = 'apple';
+    } else if (savedService === 'apple') {
+      nextService = 'osm';
+    } else {
+      nextService = 'google';
+    }
+
+    localStorage.setItem('mapService', nextService);
+    localStorage.setItem('mapServiceTimestamp', String(Date.now()));
+
+    // Immediately update the icon
+    updateNavigationIconAppearance(navLinkElement, location);
+  }
+
+  function openMap(service, lat, long) {
+    let url;
+    if (service === 'google') {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}`;
+    } else if (service === 'apple') {
+      url = `http://maps.apple.com/?daddr=${lat},${long}`;
+    } else if (service === 'osm') {
+      url = `https://www.openstreetmap.org/directions?to=${lat},${long}`;
+    } else {
+      // Fallback to Google
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${long}`;
+    }
+    window.open(url, '_blank');
+  }
+  // +++ END: NAVIGATION LINK FUNCTIONS +++
 
   // DROPDOWN HOVER MANAGEMENT
   function setMarkerDropdownHover(marker, isHovering) {
@@ -320,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setupMap();
       await loadData();
       setupSearch();
-      setupStyleFilter(); 
+      setupStyleFilter();
       setupMapClickHandler();
     } catch (error) {
       console.error("A critical error occurred during app initialization:", error);
@@ -426,7 +516,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <a id="titleurl" href="${linkUrl}" target="_blank">
                 <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
               </a>
-              ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span><br>
+              <div class="popup-street-line">
+                ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
+                <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
+                  <i></i>
+                </a>
+              </div>
               <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
               ${location.loc?.country || ''}<br>
               <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
@@ -459,6 +554,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 logoElement.classList.add('popup-active');
               }
             }
+
+            // +++ START: NAVIGATION LINK EVENT LISTENERS +++
+            const navLink = e.popup._container.querySelector('.navigation-icon');
+            if (navLink) {
+              // Set initial icon appearance (class and color)
+              updateNavigationIconAppearance(navLink, location);
+
+              // Left-click handler
+              navLink.addEventListener('click', (event) => {
+                handleNavigationClick(event, location);
+              });
+
+              // Right-click handler
+              navLink.addEventListener('contextmenu', (event) => {
+                handleNavigationRightClick(event, location, navLink);
+              });
+            }
+            // +++ END: NAVIGATION LINK EVENT LISTENERS +++
           });
 
           marker.on('popupclose', () => {
@@ -481,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sofortige Skalierung ohne Debounce für bessere UX
             applyMarkerScale(marker, 1.15);
 
-            // Verzögerter Popup-Öffnung
+            // Verzögerte Popup-Öffnung
             const hoverTimeout = setTimeout(() => {
               const currentState = window.markerStateManager.getState(marker.uniqueId);
               if (currentState.isHovering && !isPopupSticky) {
