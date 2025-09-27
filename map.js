@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     clearMarkerDropdownHover: clearMarkerDropdownHover
   };
 
+  let clusterGroup = null;
+
   // +++ START: NAVIGATION LINK FUNCTIONS +++
   function updateNavigationIconAppearance(navLinkElement, location) {
     const icon = navLinkElement.querySelector('i');
@@ -408,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function initializeApp() {
     try {
       setupMap();
+      initializeClustering(); // NEU
       await loadData();
       setupSearch();
       setupStyleFilter();
@@ -421,7 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function setupMap() {
     console.log('🔧 Starting MapLibre setup...');
 
-    map = new L.Map('map');
+    map = new L.Map('map', {
+      maxZoom: 18
+    });
     console.log('✅ Leaflet map created');
 
     const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -459,11 +464,55 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+
     map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
     updateMapTiles();
 
     darkModeQuery.addEventListener('change', updateMapTiles);
   }
+
+
+  function initializeClustering() {
+    clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: function (zoom) {
+        if (zoom >= 11) return 30;
+        if (zoom >= 9) return 45;
+        return 60;
+      },
+      disableClusteringAtZoom: 12,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: true,
+
+      // Optional: Polygon-Styling anpassen
+      polygonOptions: {
+        fillColor: '#0000ff',
+        color: '#0000ff',
+        weight: 3,
+        opacity: 0.8,
+        fillOpacity: 0.2
+      },
+
+      iconCreateFunction: function (cluster) {
+        const count = cluster.getChildCount();
+        let className = 'marker-cluster-small';
+
+        if (count > 20) className = 'marker-cluster-large';
+        else if (count > 10) className = 'marker-cluster-medium';
+
+        // KORREKTUR: Verwende new L.DivIcon() statt L.divIcon()
+        return new L.DivIcon({
+          html: '<div>' + count + '</div>',
+          className: 'marker-cluster ' + className,
+          iconSize: new L.Point(40, 40)
+        });
+      }
+    });
+
+    map.addLayer(clusterGroup);
+    window.clusterGroup = clusterGroup;
+  }
+
+
 
   async function loadData() {
     try {
@@ -484,7 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const marker = L.marker([location.loc.lat, location.loc.long], {
             icon: icons.defaultIcon,
             opacity: 0.66
-          }).addTo(map);
+          });
+          clusterGroup.addLayer(marker); // GEÄNDERT
 
           marker.uniqueId = location.uniqueId;
 
@@ -644,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           allMarkers.push(marker);
+          // let clusterGroup = null;
         }
       });
 

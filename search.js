@@ -234,9 +234,18 @@ class SearchManager {
   }
 
   updateMarkers(filteredLocations) {
+    const clusterGroup = window.clusterGroup;
+    if (!clusterGroup) return; // Fallback falls Clustering nicht initialisiert
+
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+
     this.allMarkers.forEach(marker => {
       if (filteredIds.has(marker.uniqueId)) {
+        // Marker soll angezeigt werden
+        if (!clusterGroup.hasLayer(marker)) {
+          clusterGroup.addLayer(marker);
+        }
+
         const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
         let iconToSet;
         if (location && location.isOpen === true) { iconToSet = this.icons.greenIcon; }
@@ -244,10 +253,12 @@ class SearchManager {
         else if (location && location.spaceapi && location.spaceapi.endpoint) { iconToSet = this.icons.unknownStatusIcon; }
         else { iconToSet = this.icons.highlightIcon; }
         marker.setIcon(iconToSet);
-        marker.setOpacity(1);
+
       } else {
-        marker.setIcon(this.icons.defaultIcon);
-        marker.setOpacity(0.6);
+        // Marker soll versteckt werden  
+        if (clusterGroup.hasLayer(marker)) {
+          clusterGroup.removeLayer(marker);
+        }
       }
     });
   }
