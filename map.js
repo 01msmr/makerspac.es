@@ -318,11 +318,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return connectionLine;
   }
 
+  
+
+
   // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
   function applyMarkerScale(marker, targetScale) {
     const state = window.markerStateManager.getState(marker.uniqueId);
 
-    // Verhindere redundante Operationen
     if (state.currentScale === targetScale || state.isScaling) return;
 
     window.markerStateManager.setState(marker.uniqueId, {
@@ -331,25 +333,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (marker._icon) {
-      // CSS-Animation für flüssige Skalierung
-      marker._icon.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
-      marker._icon.style.transform = `scale(${targetScale})`;
+      // Nur z-index ändern, keine Skalierung
       marker._icon.style.zIndex = targetScale > 1 ? '1000' : '';
 
-      // Animationsende-Event
-      const onTransitionEnd = () => {
-        window.markerStateManager.setState(marker.uniqueId, { isScaling: false });
-        marker._icon.removeEventListener('transitionend', onTransitionEnd);
-      };
-
-      marker._icon.addEventListener('transitionend', onTransitionEnd);
-
-      // Fallback für den Fall, dass das transitionend-Event nicht feuert
       setTimeout(() => {
         window.markerStateManager.setState(marker.uniqueId, { isScaling: false });
       }, 200);
     }
   }
+
+
+
+
 
   // Helper function zum konsistenten Icon-Update
   function updateMarkerIcon(marker, location) {

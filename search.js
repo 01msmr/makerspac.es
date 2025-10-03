@@ -38,21 +38,27 @@ class SearchManager {
   }
 
   initializeEventListeners() {
+
     this.searchBar.focus();
 
     document.addEventListener('keydown', (e) => {
-      // Tab-Navigation zwischen Suche und Filter
-      if (e.code === 'Tab') {
+      // Tab-Navigation zwischen Suche und Filter - NUR wenn nicht getippt wird
+      if (e.code === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
         const searchBarHasFocus = document.activeElement === this.searchBar;
-        const filterHeaderHasFocus = document.activeElement === this.styleFilterManager.filterHeader;
+        const filterHeaderHasFocus = document.activeElement === this.styleFilterManager?.filterHeader;
 
-        if (searchBarHasFocus && !e.shiftKey) { // Vorwärts von Suche
+        if (searchBarHasFocus && !e.shiftKey) {
+          // Vorwärts von Suche zum Filter
           e.preventDefault();
-          this.styleFilterManager.filterHeader.focus();
-        } else if (filterHeaderHasFocus && e.shiftKey) { // Rückwärts von Filter
+          if (this.styleFilterManager?.filterHeader) {
+            this.styleFilterManager.filterHeader.focus();
+          }
+        } else if (filterHeaderHasFocus && e.shiftKey) {
+          // Rückwärts von Filter zur Suche
           e.preventDefault();
           this.searchBar.focus();
-        } else if (filterHeaderHasFocus && !e.shiftKey) { // Vorwärts von Filter
+        } else if (filterHeaderHasFocus && !e.shiftKey) {
+          // Vorwärts von Filter zur Suche
           e.preventDefault();
           this.searchBar.focus();
         }
@@ -142,11 +148,13 @@ class SearchManager {
     if (this.currentHoverSVG && this.currentHoverItem) {
       const location = this.getLocationFromDropdownItem(this.currentHoverItem);
       if (location) {
-        let hoverColor = '#0000ff';
+        let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
         if (location.spaceapi && location.spaceapi.endpoint) {
-          if (location.isOpen === true) { hoverColor = '#009900'; }
-          else if (location.isOpen === false) { hoverColor = '#dd4444'; }
-          else { hoverColor = '#f59e0b'; }
+          if (location.isOpen === true) {
+            hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-open').trim();
+          } else if (location.isOpen === false) {
+            hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
+          }
         }
         this.removeConnectionLine();
         this.cleanupHoverSVG();
@@ -159,6 +167,94 @@ class SearchManager {
     }
   }
 
+
+
+  applyHoverEffects(item, location) {
+
+    // Entferne vorherige js-hover Klassen
+    this.suggestionsDropdown.querySelectorAll('.js-hover').forEach(el => {
+      el.classList.remove('js-hover');
+    });
+
+    // Füge neue js-hover Klasse hinzu
+    item.classList.add('js-hover');
+
+    this.isDropdownHovering = true;
+    this.currentHoverItem = item;
+
+    let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-hover').trim();
+
+    if (location.spaceapi && location.spaceapi.endpoint) {
+      hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
+      if (location.isOpen === true) {
+        hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-open').trim();
+      } else if (location.isOpen === false) {
+        hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
+      }
+    }
+
+    this.createHoverSVG(item, location, hoverColor);
+    const targetMarker = this.findMarkerByLocation(location);
+
+    if (targetMarker) {
+      if (window.markerStateManager) {
+        window.markerStateManager.setState(targetMarker.uniqueId, { isDropdownHovering: true });
+      }
+      if (window.mapUtils && window.mapUtils.setMarkerDropdownHover) {
+        window.mapUtils.setMarkerDropdownHover(targetMarker, true);
+      }
+
+      targetMarker.setIcon(this.createHoverIcon(hoverColor));
+      this.createConnectionLine(item, targetMarker, hoverColor);
+
+      this.popupTimeout = setTimeout(() => {
+        if (this.isDropdownHovering) {
+          targetMarker.openPopup();
+        }
+      }, 300);
+    }
+  }
+
+  removeHoverEffects(location) {
+
+    // Entferne js-hover Klasse
+    if (this.currentHoverItem) {
+      this.currentHoverItem.classList.remove('js-hover');
+    }
+
+    this.isDropdownHovering = false;
+    this.currentHoverItem = null;
+    this.cleanupHoverSVG();
+    this.removeConnectionLine();
+
+    if (this.popupTimeout) {
+      clearTimeout(this.popupTimeout);
+      this.popupTimeout = null;
+    }
+
+    const targetMarker = this.findMarkerByLocation(location);
+    if (targetMarker) {
+      if (window.markerStateManager) {
+        window.markerStateManager.setState(targetMarker.uniqueId, { isDropdownHovering: false });
+      }
+      if (window.mapUtils && window.mapUtils.clearMarkerDropdownHover) {
+        window.mapUtils.clearMarkerDropdownHover(targetMarker);
+      }
+
+      if (!this.isStickyMarker(targetMarker)) {
+        targetMarker.closePopup();
+      }
+
+      // setTimeout(() => {
+      //   if (window.markerStateManager && !window.markerStateManager.isAnyHoverActive(targetMarker.uniqueId)) {
+      //     if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+      //   }
+      // }, 100);
+    }
+  }
+
+
+
   handleTabKey() {
     this.searchBar.focus();
     this.currentDropdownIndex = -1;
@@ -167,7 +263,7 @@ class SearchManager {
   }
 
   navigateDropdown(direction) {
-    this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
+    // this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
     if (this.dropdownItems.length === 0) return;
 
     // NEU: Zeitstempel bei jeder Navigation per Taste setzen
@@ -183,11 +279,30 @@ class SearchManager {
   }
 
   updateActiveDropdownItem() {
-    this.clearActiveDropdownItem();
+    const previousIndex = this.currentDropdownIndex;
+
+    // Entferne nur die CSS-Klasse, NICHT die Hover-Effekte
+    const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
+    if (previousActive) {
+      previousActive.classList.remove('keyboard-active');
+    }
+
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
       const activeItem = this.dropdownItems[this.currentDropdownIndex];
       activeItem.classList.add('keyboard-active');
-      activeItem.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
+
+      const location = this.getLocationFromDropdownItem(activeItem);
+      if (location) {
+        // Cleanup vom VORHERIGEN Item nur wenn es ein anderes war
+        if (previousActive && previousActive !== activeItem) {
+          const prevLocation = this.getLocationFromDropdownItem(previousActive);
+          if (prevLocation) {
+            this.removeHoverEffects(prevLocation);
+          }
+        }
+
+        this.applyHoverEffects(activeItem, location);
+      }
     }
   }
 
@@ -195,7 +310,11 @@ class SearchManager {
     const activeItem = this.suggestionsDropdown.querySelector('.keyboard-active');
     if (activeItem) {
       activeItem.classList.remove('keyboard-active');
-      activeItem.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true, cancelable: true }));
+
+      const location = this.getLocationFromDropdownItem(activeItem);
+      if (location) {
+        this.removeHoverEffects(location);
+      }
     }
   }
 
@@ -346,9 +465,18 @@ class SearchManager {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
-      // KORREKTUR: Brechen Sie jeden geplanten Auto-Zoom sofort ab,
-      // sobald die Maus über ein Ergebnis fährt.
-      clearTimeout(this.zoomDebounceTimeout);
+      // Reset Tastatur-Navigation wenn Maus verwendet wird
+      this.currentDropdownIndex = -1;
+
+      // Entferne vorherige Hover-Effekte
+      const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
+      if (previousActive) {
+        const prevLocation = this.getLocationFromDropdownItem(previousActive);
+        if (prevLocation) {
+          this.removeHoverEffects(prevLocation);
+        }
+        previousActive.classList.remove('keyboard-active');
+      }
 
       this.allMarkers.forEach(marker => {
         if (marker.isPopupOpen()) marker.closePopup();
@@ -357,81 +485,16 @@ class SearchManager {
         window.mapUtils.clearStickyPopup();
       }
 
-      this.isDropdownHovering = true;
-      this.currentHoverItem = item;
-
-      let hoverColor = '#0000ff';
-      if (location.spaceapi && location.spaceapi.endpoint) {
-        if (location.isOpen === true) { hoverColor = '#00AA00'; }
-        else if (location.isOpen === false) { hoverColor = '#DD0000'; }
-        else { hoverColor = '#FF8C00'; }
-      }
-
-      this.createHoverSVG(item, location, hoverColor);
-      const targetMarker = this.findMarkerByLocation(location);
-
-      if (targetMarker) {
-        if (window.markerStateManager) {
-          window.markerStateManager.setState(targetMarker.uniqueId, {
-            isDropdownHovering: true
-          });
-        }
-
-        if (window.mapUtils && window.mapUtils.setMarkerDropdownHover) {
-          window.mapUtils.setMarkerDropdownHover(targetMarker, true);
-        }
-
-        targetMarker.setIcon(this.createHoverIcon(hoverColor));
-        this.createConnectionLine(item, targetMarker, hoverColor);
-
-        this.popupTimeout = setTimeout(() => {
-          if (this.isDropdownHovering) {
-            targetMarker.openPopup();
-          }
-        }, 300);
-      }
+      this.applyHoverEffects(item, location);
     });
 
-    item.addEventListener('mouseleave', () => {
-      // NEU: Schutz-Bedingung am Anfang des Listeners
-      // Ignoriere dieses Event, wenn es innerhalb von 300ms nach einem
-      // Tastendruck auftritt (wahrscheinlich durch die Scroll-Animation ausgelöst).
-      if (Date.now() - this.lastKeypressTime < 300) {
+    // DIESER LISTENER FEHLTE:
+    item.addEventListener('mouseleave', (e) => {
+      if (e.relatedTarget && e.relatedTarget.closest('.suggestion-item')) {
         return;
       }
-      
-      this.isDropdownHovering = false;
-      if (this.popupTimeout) {
-        clearTimeout(this.popupTimeout);
-        this.popupTimeout = null;
-      }
 
-      this.currentHoverItem = null;
-      this.cleanupHoverSVG();
-      this.removeConnectionLine();
-
-      const targetMarker = this.findMarkerByLocation(location);
-      if (targetMarker) {
-        if (window.markerStateManager) {
-          window.markerStateManager.setState(targetMarker.uniqueId, {
-            isDropdownHovering: false
-          });
-        }
-
-        if (window.mapUtils && window.mapUtils.clearMarkerDropdownHover) {
-          window.mapUtils.clearMarkerDropdownHover(targetMarker);
-        }
-
-        if (!this.isStickyMarker(targetMarker)) {
-          targetMarker.closePopup();
-        }
-
-        setTimeout(() => {
-          if (window.markerStateManager && !window.markerStateManager.isAnyHoverActive(targetMarker.uniqueId)) {
-            if (this.styleFilterManager) this.styleFilterManager.applyFilters();
-          }
-        }, 100);
-      }
+      this.removeHoverEffects(location);
     });
 
     item.addEventListener('click', () => this.handleSuggestionClick(location));

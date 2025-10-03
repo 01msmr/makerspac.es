@@ -55,15 +55,18 @@ class SimpleSpaceAPI {
     const cached = this.statusCache.get(apiEndpoint);
 
     if (cached && (Date.now() - cached.timestamp) < this.cacheDuration) {
-      console.log("💾 Using cached result for", apiEndpoint, ":", cached.data);
+      console.log('💾 Using cached result for', apiEndpoint, ':', cached.data);
       return cached.data;
     }
 
     try {
+      // CORS-Proxy für alle blockierten APIs
+      const url = `https://corsproxy.io/?${encodeURIComponent(apiEndpoint)}`;
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
 
-      const response = await fetch(apiEndpoint, {
+      const response = await fetch(url, {
         signal: controller.signal,
         headers: { 'Accept': 'application/json' }
       });
@@ -73,10 +76,10 @@ class SimpleSpaceAPI {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
-      console.log("🌐 Raw SpaceAPI response for", apiEndpoint, ":", data);
+      console.log('🌐 Raw SpaceAPI response for', apiEndpoint, ':', data);
 
       const isOpen = data.state?.open;
-      console.log("🎯 Extracted isOpen:", isOpen, "(type:", typeof isOpen, ")");
+      console.log('🎯 Extracted isOpen:', isOpen, '(type:', typeof isOpen, ')');
 
       this.statusCache.set(apiEndpoint, {
         data: isOpen,
@@ -86,7 +89,7 @@ class SimpleSpaceAPI {
       return isOpen;
 
     } catch (error) {
-      console.log("🚫 Fetch error for", apiEndpoint, ":", error.message);
+      console.log('🚫 Fetch error for', apiEndpoint, ':', error.message);
       return null;
     }
   }

@@ -11,10 +11,15 @@
   --dropdown-alt-bg: #f6f6f6;
   --dropdown-alt-border: #eee;
   --search-bg: white;
-  --search-opacity: 0.6;
-  --search-focus-opacity: 0.75;
+  --search-opacity: 0.3;
+  --search-focus-opacity: 0.9;
   --hover-text-color: #666;
-  --hover-text-color-active: #ccc;
+  --hover-text-color-active: #ccc;/* Space Status Farben */
+
+  --space-hover: #0000ff;
+  --space-open: #00AA00;
+  --space-closed: #DD0000;
+  --space-unknown: #FF8C00;
 }
 
 /* *** Dark Mode Variables *** */
@@ -311,8 +316,8 @@ a#titleurl {
   border-bottom: none;
 }
 
-.suggestion-item:hover {
-  background-color: blue;
+.suggestion-item.js-hover {
+  background-color: var(--space-hover);
   color: white;
 }
 
@@ -358,10 +363,12 @@ a#titleurl {
 
 /* Pin Stabilization (ohne Hover-Animation im CSS) */
 .leaflet-marker-icon {
+  /* --marker-scale: 1;   Neue Zeile */
   transition: transform 0.2s ease-out !important;
   will-change: transform !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
+  /* transform: scale(var(--marker-scale)) !important; */
 }
 
 /* Entferne CSS-Hover da es mit Leaflet kollidiert */
@@ -378,20 +385,28 @@ a#titleurl {
 
 /* 2. Die Klasse .map-is-zooming setzt die Deckkraft auf 0 und löst damit
    die oben definierte Transition (das Ausblenden) aus. */
-#map.map-is-zooming .leaflet-marker-pane .leaflet-marker-icon,
+/* #map.map-is-zooming .leaflet-marker-pane .leaflet-marker-icon,
 #map.map-is-zooming .leaflet-shadow-pane img {
   opacity: 0 !important;
   pointer-events: none !important;
+} */
+
+
+/* Während Zoom: NUR Leaflets Zoom-Animation blockieren, NICHT unsere Scale-Transition */
+.leaflet-zoom-animated .leaflet-marker-icon {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-
-/* Nur während Zoom: Transitions stoppen */
-.leaflet-zoom-animated .leaflet-marker-icon,
-.is-zooming .leaflet-marker-icon,
+/* Nur wenn Marker versteckt wird */
 .leaflet-marker-icon.leaflet-zoom-hide {
   transition: none !important;
   animation: none !important;
 }
+
+/* Map-weites Zooming - hier komplett ohne Transition */
+/* #map.map-is-zooming .leaflet-marker-icon {
+  transition: none !important;
+} */
 
 /* Popup Animations */
 .leaflet-popup {

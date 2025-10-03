@@ -23,7 +23,7 @@ class StyleFilterManager {
     this.setupEventListeners();
 
     // Mache den Header für die Tab-Navigation fokussierbar
-    this.filterHeader.setAttribute('tabindex', '0');
+    this.filterHeader.setAttribute('tabindex', '-1');
 
     console.log('StyleFilterManager initialized with', this.styleStats.size, 'unique styles');
   }
@@ -203,7 +203,10 @@ class StyleFilterManager {
         return;
       }
 
-      const items = this.filterContent.querySelectorAll('.style-filter-item, .filter-btn');
+      const items = [
+        ...this.filterContent.querySelectorAll('.style-filter-item'),
+        this.clearAllBtn
+      ];
       if (items.length === 0) return;
 
       let newIndex = this.currentFilterIndex;
@@ -275,7 +278,9 @@ class StyleFilterManager {
 
   closeDropdown() {
     this.filterDropdown.classList.remove('is-active');
-    this.filterHeader.focus();
+    if (document.activeElement === this.filterDropdown) {
+      this.filterHeader.focus();
+    }
   }
 
   isDropdownOpen() {
