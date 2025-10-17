@@ -148,12 +148,15 @@ class SearchManager {
     if (this.currentHoverSVG && this.currentHoverItem) {
       const location = this.getLocationFromDropdownItem(this.currentHoverItem);
       if (location) {
-        let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
+        let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-hover').trim();
         if (location.spaceapi && location.spaceapi.endpoint) {
           if (location.isOpen === true) {
             hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-open').trim();
           } else if (location.isOpen === false) {
             hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
+          } else {
+            // Nur für Spaces mit API aber unbekanntem Status
+            hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
           }
         }
         this.removeConnectionLine();
