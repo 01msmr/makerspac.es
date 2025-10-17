@@ -46,7 +46,7 @@
       "text": "toolbox-bodensee.de"
     },
     "spaceapi": {
-      "endpoint": "https://bodensee.space/spaceapi/toolboxbodensee.json"
+      "endpoint": "https://toolbox-bodensee.de/toolboxbodensee.json"
     },
     "dates": {
       "space.init": 20140301,
@@ -402,8 +402,38 @@
     },
     "style": "for all",
     "link": {
-      "url": "https://lichtwerkstatt-jena.de/",
+      "url": "https://lichtwerkstatt-jena.de",
       "text": "lichtwerkstatt-jena.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Chaostreff Chemnitz",
+    "loc": {
+      "lat": 50.8306387,
+      "long": 12.9397299,
+      "plz": 9126,
+      "city": "Chemnitz",
+      "street": {
+        "name": "Augustusburger Straße",
+        "number": 102,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://chaoschemnitz.de",
+      "text": "chaoschemnitz.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://chaoschemnitz.de/chch.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -464,6 +494,36 @@
     },
     "dates": {
       "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Afra Berlin (Abteilung-für-Redundanz-Abteilung)",
+    "loc": {
+      "lat": 52.5081971,
+      "long": 13.4962224,
+      "plz": 10317,
+      "city": "Berlin",
+      "street": {
+        "name": "Margaretenstraße",
+        "number": 30,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://afra-berlin.de",
+      "text": "afra-berlin.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.afra-berlin.de/v1/status.json"
+    },
+    "dates": {
+      "space.init": 20130629,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
@@ -1286,6 +1346,39 @@
   },
 
 
+  },
+
+
+  {
+    "name": "CCC Flensburg",
+    "loc": {
+      "lat": 54.3416710,
+      "long": 10.1250908,
+      "plz": 24939,
+      "city": "Flensburg",
+      "street": {
+        "name": "Apenrader Straße",
+        "number": 49,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://fablab.sh",
+      "text": "fablab.sh"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.chaostreff-flensburg.de"
+    },
+    "dates": {
+      "space.init": 20150213,
+      "blog.latest": 20250630,
+      "datacheck.latest": 20251015
+    }
+  },
+
+
   {
     "name": "FabLab Bremen",
     "loc": {
@@ -1587,6 +1680,36 @@
 
 
   {
+    "name": "ACME Labs e.V.",
+    "loc": {
+      "lat": 52.0204391,
+      "long": 8.5465210,
+      "plz": 33607,
+      "city": "Bielefeld",
+      "street": {
+        "name": "Mühlenstraße",
+        "number": 5,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.acmelabs.space",
+      "text": "acmelabs.space"
+    },
+    "spaceapi": {
+      "endpoint": ""
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251015
+    }
+ },
+
+
+  {
     "name": "Hackerspace Bielefeld",
     "loc": {
       "lat": 52.0369989,
@@ -1605,10 +1728,13 @@
       "url": "https://hackerspace-bielefeld.de",
       "text": "hackerspace-bielefeld.de"
     },
+    "spaceapi": {
+      "endpoint": "https://hackerspace-bielefeld.de/status.json"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "datacheck.latest": 20251015
     }
  },
 
@@ -1631,6 +1757,9 @@
     "link": {
       "url": "https://flipdot.org",
       "text": "flipdot.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.flipdot.org"
     },
     "dates": {
       "space.init": 20010000,
@@ -2043,6 +2172,9 @@
       "url": "https://www.fnordeingang.de",
       "text": "fnordeingang.de"
     },
+    "spaceapi": {
+      "endpoint": "https://status.fnordeingang.de/spaceapi.json"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
@@ -2069,6 +2201,9 @@
     "link": {
       "url": "https://www.devtal.de",
       "text": "devtal.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://devtal.de/api"
     },
     "dates": {
       "space.init": 20010000,
@@ -2155,6 +2290,33 @@
       "space.init": 20200101,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Chaostreff Dortmund",
+    "loc": {
+      "lat": 51.5277368,
+      "long": 7.4649990,
+      "plz": 44145,
+      "city": "Dortmund",
+      "street": {
+        "name": "Braunschweiger Straße",
+        "number": 22,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.chaostreff-dortmund.de",
+      "text": "chaostreff-dortmund.de"
+    },
+    "dates": {
+      "space.init": 20090101,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251015
     }
  },
 
@@ -3711,6 +3873,9 @@
     "spaceapi": {
       "endpoint": "https://spaceapi.hacksaar.de"
     },
+    "spaceapi": {
+      "endpoint": "http://spaceapi.hacksaar.de/status.json"
+    },
     "dates": {
       "space.init": 20110201,
       "blog.latest": 20010000,
@@ -4013,6 +4178,36 @@
     "link": {
       "url": "https://aerospace-lab.de",
       "text": "aerospace-lab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Chaostreff Backnang",
+    "loc": {
+      "lat": 48.9486703,
+      "long": 9.4296153,
+      "plz": 71522,
+      "city": "Backnang",
+      "street": {
+        "name": "Willy-Brandt-Platz",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for youth",
+    "link": {
+      "url": "https://chaostreff-backnang.de",
+      "text": "chaostreff-backnang.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.ctbk.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -4643,6 +4838,33 @@
     },
     "dates": {
       "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Werkstatt am Seerhein",
+    "loc": {
+      "lat": 47.9930954,
+      "long": 7.8405817,
+      "plz": 79098,
+      "city": "Freiburg",
+      "street": {
+        "name": "Adlerstraße",
+        "number": 12,
+        "ext": "a"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://cccfr.de",
+      "text": "cccfr.de"
+    },
+    "dates": {
+      "space.init": 20100306,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
@@ -5751,13 +5973,16 @@
     },
     "style": "for all",
     "link": {
-      "url": "https://old.makerspace-erfurt.de",
-      "text": "old.makerspace-erfurt.de"
+      "url": "https://technikkultur-erfurt.de",
+      "text": "technikkultur-erfurt.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.bytespeicher.org/status.json"
     },
     "dates": {
-      "space.init": 20010000,
-      "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "space.init": 20131101,
+      "blog.latest": 20250804,
+      "datacheck.latest": 20251015
     }
  },
 
@@ -5891,6 +6116,9 @@
     "link": {
       "url": "https://www.usrspace.at",
       "text": "usrspace.at"
+    },
+    "spaceapi": {
+      "endpoint": "https://www.usrspace.at/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
@@ -6090,6 +6318,36 @@
 
 
   {
+    "name": "Chaostreff Bern",
+    "loc": {
+      "lat": 47.3874368,
+      "long": 8.5204040,
+      "plz": 3007,
+      "city": "Bern",
+      "street": {
+        "name": "Zwyssigstrasse",
+        "number": 45,
+        "ext": ""
+      },
+      "country": "Switzerland"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://chaosbern.ch",
+      "text": "chaosbern.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://www.chaosbern.ch/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20200701,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251015
+    }
+ },
+
+
+  {
     "name": "Bitwäscherei",
     "loc": {
       "lat": 47.3874368,
@@ -6107,6 +6365,36 @@
     "link": {
       "url": "https://bitwaescherei.ch",
       "text": "bitwaescherei.ch"
+    },
+    "dates": {
+      "space.init": 20200701,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250926
+    }
+ },
+
+
+  {
+    "name": "Bastli ",
+    "loc": {
+      "lat": 47.3786246,
+      "long": 8.5492348,
+      "plz": 8092,
+      "city": "Zürich",
+      "street": {
+        "name": "Universitätsstraße",
+        "number": 6,
+        "ext": ""
+      },
+      "country": "Switzerland"
+    },
+    "style": "for students",
+    "link": {
+      "url": "https://bastli.ch",
+      "text": "bastli.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://bastli.ch/hackspace_api.php"
     },
     "dates": {
       "space.init": 20200701,
