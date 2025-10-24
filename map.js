@@ -401,6 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return plzStr.padStart(expectedLength, "0");
   }
 
+  // Füge updateMarkerIcon zu mapUtils hinzu
+  window.mapUtils.updateMarkerIcon = updateMarkerIcon;
+
   // Main initialization
   async function initializeApp() {
     try {

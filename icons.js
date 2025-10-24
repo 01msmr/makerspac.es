@@ -1,11 +1,11 @@
 // icons.js - Alle Icon-Definitionen als SVG
 
 window.MapIcons = {
-  // Standard blaues Icon (Leaflet Default nachgebaut)
+  // Standard dunkelgraues/schwarzes Icon (ersetzt das alte blaue defaultIcon)
   defaultIcon: new L.Icon({
     iconUrl: 'data:image/svg+xml;base64,' + btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="#3388ff" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
+        <path fill="${window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#666666' : '#2c2c2c'}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
         <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
       </svg>
     `),

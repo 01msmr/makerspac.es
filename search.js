@@ -248,6 +248,11 @@ class SearchManager {
         targetMarker.closePopup();
       }
 
+      // FIX: Icon explizit zurücksetzen, um Skalierung zu entfernen
+      if (window.mapUtils && window.mapUtils.updateMarkerIcon) {
+        window.mapUtils.updateMarkerIcon(targetMarker, location);
+      }
+
       // setTimeout(() => {
       //   if (window.markerStateManager && !window.markerStateManager.isAnyHoverActive(targetMarker.uniqueId)) {
       //     if (this.styleFilterManager) this.styleFilterManager.applyFilters();
@@ -471,7 +476,15 @@ class SearchManager {
       // Reset Tastatur-Navigation wenn Maus verwendet wird
       this.currentDropdownIndex = -1;
 
-      // Entferne vorherige Hover-Effekte
+      // Reset des vorherigen Maus-Hovvers, falls vorhanden (FIX für direktes Wechseln von Item A auf Item B)
+      if (this.currentHoverItem && this.currentHoverItem !== item) {
+        const prevLocation = this.getLocationFromDropdownItem(this.currentHoverItem);
+        if (prevLocation) {
+          this.removeHoverEffects(prevLocation);
+        }
+      }
+
+      // Entferne vorherige Hover-Effekte (für Tastaturnavigation)
       const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
       if (previousActive) {
         const prevLocation = this.getLocationFromDropdownItem(previousActive);

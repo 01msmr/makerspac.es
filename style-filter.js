@@ -35,31 +35,60 @@ class StyleFilterManager {
       'STYLE_STYLE',
       'for students & youth',
       'for students // commercial'
-
     ];
+
+    // Definiere die fixe Reihenfolge
+    const fixedOrder = [
+      'for all',
+      'for youth',
+      'for students',
+      'commercial',
+      'open',
+      'closed'
+    ];
+
+    // Temporäre Map für die Zählung
+    const tempStats = new Map();
 
     this.json.forEach(location => {
       const style = location.style || 'unknown';
       if (ignoredStyles.includes(style)) {
         return;
       }
-      if (!this.styleStats.has(style)) {
-        this.styleStats.set(style, 0);
+      if (!tempStats.has(style)) {
+        tempStats.set(style, 0);
       }
-      this.styleStats.set(style, this.styleStats.get(style) + 1);
+      tempStats.set(style, tempStats.get(style) + 1);
     });
 
     const openCount = this.json.filter(loc => loc.isOpen === true).length;
     const closedCount = this.json.filter(loc => loc.isOpen === false).length;
 
     if (openCount > 0) {
-      this.styleStats.set('open', openCount);
+      tempStats.set('open', openCount);
     }
     if (closedCount > 0) {
-      this.styleStats.set('closed', closedCount);
+      tempStats.set('closed', closedCount);
     }
 
-    this.styleStats = new Map([...this.styleStats.entries()].sort((a, b) => b[1] - a[1]));
+    // Erstelle die finale Map in der gewünschten Reihenfolge
+    this.styleStats = new Map();
+
+    // Füge zuerst die Einträge in der fixen Reihenfolge hinzu
+    fixedOrder.forEach(style => {
+      if (tempStats.has(style)) {
+        this.styleStats.set(style, tempStats.get(style));
+      }
+    });
+
+    // Füge dann alle anderen Styles hinzu (falls vorhanden), sortiert nach Anzahl
+    const remainingStyles = [...tempStats.entries()]
+      .filter(([style]) => !fixedOrder.includes(style))
+      .sort((a, b) => b[1] - a[1]);
+
+    remainingStyles.forEach(([style, count]) => {
+      this.styleStats.set(style, count);
+    });
   }
 
   createFilterItems() {
