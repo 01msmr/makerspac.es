@@ -4,7 +4,7 @@ class SimpleSpaceAPI {
   constructor() {
     this.statusCache = new Map();
     this.cacheDuration = 5 * 60 * 1000;
-    this.requestTimeout = 3000;
+    this.requestTimeout = 15000; // 3 Sekunden auf APIs warten
     this.listeners = []; // Event-Listener für Status-Updates
   }
 
@@ -25,6 +25,11 @@ class SimpleSpaceAPI {
   }
 
   async enrichLocationData(locations) {
+    console.log('🔍 Starting enrichLocationData for', locations.length, 'locations');
+
+    const locationsWithAPI = locations.filter(loc => loc.spaceapi?.endpoint);
+    console.log('📡 Found', locationsWithAPI.length, 'locations with SpaceAPI');
+
     const promises = locations.map(async (location) => {
       if (location.spaceapi?.endpoint) {
         try {
@@ -42,13 +47,31 @@ class SimpleSpaceAPI {
           location.isOpen = null;
           this.fireStatusUpdate(location); // Auch bei Fehler Event feuern
         }
-      } else {
-        location.isOpen = null;
       }
+      // WICHTIG: Setze isOpen NICHT für Locations ohne SpaceAPI
+      // So bleibt es undefined und wir können unterscheiden zwischen:
+      // - undefined: keine SpaceAPI
+      // - null: SpaceAPI vorhanden, aber Status konnte nicht abgerufen werden
+      // - true/false: SpaceAPI vorhanden und Status bekannt
+
       return location;
     });
 
-    return Promise.all(promises);
+    const results = await Promise.all(promises);
+
+    // WICHTIG: Nach dem Laden alle Werte loggen
+    const trueCount = results.filter(loc => loc.isOpen === true).length;
+    const falseCount = results.filter(loc => loc.isOpen === false).length;
+    const nullCount = results.filter(loc => loc.isOpen === null).length;
+    const undefinedCount = results.filter(loc => loc.isOpen === undefined).length;
+
+    console.log('✅ enrichLocationData COMPLETE:');
+    console.log(`   🟢 isOpen === true: ${trueCount}`);
+    console.log(`   🔴 isOpen === false: ${falseCount}`);
+    console.log(`   🟠 isOpen === null (error): ${nullCount}`);
+    console.log(`   ⚪ isOpen === undefined (no API): ${undefinedCount}`);
+
+    return results;
   }
 
   async fetchSpaceStatus(apiEndpoint) {
@@ -59,12 +82,68 @@ class SimpleSpaceAPI {
       return cached.data;
     }
 
-    try {
-      // CORS-Proxy für alle blockierten APIs
-      const url = `https://corsproxy.io/?${encodeURIComponent(apiEndpoint)}`;
+    // STRATEGIE: Erst direkt versuchen, bei CORS-Fehler dann mit Proxy
+    let isOpen = await this.tryDirectFetch(apiEndpoint);
 
+    if (isOpen === undefined) {
+      // Direkter Zugriff hat nicht funktioniert, versuche mit Proxy
+      console.log('🔄 Trying with CORS proxy for', apiEndpoint);
+      isOpen = await this.tryProxyFetch(apiEndpoint);
+    }
+
+    if (isOpen !== null && isOpen !== undefined) {
+      this.statusCache.set(apiEndpoint, {
+        data: isOpen,
+        timestamp: Date.now()
+      });
+    }
+
+    return isOpen;
+  }
+
+  async tryDirectFetch(apiEndpoint) {
+    try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+
+      const response = await fetch(apiEndpoint, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.log('❌ Direct fetch failed:', response.status, 'for', apiEndpoint);
+        return undefined; // Zeigt an: Mit Proxy versuchen
+      }
+
+      const data = await response.json();
+      console.log('✅ Direct fetch SUCCESS for', apiEndpoint);
+      console.log('🌐 Raw SpaceAPI response:', data);
+
+      const isOpen = data.state?.open;
+      console.log('🎯 Extracted isOpen:', isOpen, '(type:', typeof isOpen, ')');
+
+      return isOpen;
+
+    } catch (error) {
+      // CORS-Fehler oder Netzwerkfehler = undefined zurückgeben
+      console.log('⚠️ Direct fetch error (will try proxy):', error.message);
+      return undefined;
+    }
+  }
+
+  async tryProxyFetch(apiEndpoint) {
+    try {
+      // Verwende allorigins als Fallback
+      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiEndpoint)}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout * 2); // Doppelter Timeout für Proxy
 
       const response = await fetch(url, {
         signal: controller.signal,
@@ -73,23 +152,21 @@ class SimpleSpaceAPI {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        console.log('❌ Proxy fetch failed:', response.status);
+        return null;
+      }
 
       const data = await response.json();
-      console.log('🌐 Raw SpaceAPI response for', apiEndpoint, ':', data);
+      console.log('✅ Proxy fetch SUCCESS for', apiEndpoint);
 
       const isOpen = data.state?.open;
       console.log('🎯 Extracted isOpen:', isOpen, '(type:', typeof isOpen, ')');
 
-      this.statusCache.set(apiEndpoint, {
-        data: isOpen,
-        timestamp: Date.now()
-      });
-
       return isOpen;
 
     } catch (error) {
-      console.log('🚫 Fetch error for', apiEndpoint, ':', error.message);
+      console.log('🚫 Proxy fetch error for', apiEndpoint, ':', error.message);
       return null;
     }
   }

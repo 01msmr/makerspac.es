@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return connectionLine;
   }
 
-  
+
 
 
   // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
@@ -520,9 +520,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const spaceAPI = new SimpleSpaceAPI();
       window.spaceAPI = spaceAPI;
-      console.log("📄 Loading SpaceAPI status...");
+
+      console.log("📄 Loading SpaceAPI status for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
+
+      // Warte darauf, dass ALLE SpaceAPI-Daten geladen sind
       json = await spaceAPI.enrichLocationData(json);
-      console.log("✅ SpaceAPI status loaded");
+
+      // Debug: Zähle die Ergebnisse
+      const openCount = json.filter(loc => loc.isOpen === true).length;
+      const closedCount = json.filter(loc => loc.isOpen === false).length;
+      const nullCount = json.filter(loc => loc.isOpen === null).length;
+      const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
+
+      console.log("✅ SpaceAPI status loaded:");
+      console.log(`   - ✅ Open: ${openCount}`);
+      console.log(`   - ❌ Closed: ${closedCount}`);
+      console.log(`   - ⚠️  Null: ${nullCount}`);
+      console.log(`   - ❓ Undefined: ${undefinedCount}`);
 
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
@@ -721,6 +735,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('StyleFilterManager initialized successfully');
+
+    // Debug: Zeige die aktuellen Counts
+    console.log('📊 Filter initialized with:');
+    console.log('   - Open spaces:', json.filter(loc => loc.isOpen === true).length);
+    console.log('   - Closed spaces:', json.filter(loc => loc.isOpen === false).length);
+    console.log('   - Unknown/null:', json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length);
   }
 
 
