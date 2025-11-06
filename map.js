@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return connectionLine;
   }
 
-
+  
 
 
   // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
@@ -518,203 +518,329 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
-      const spaceAPI = new SimpleSpaceAPI();
-      window.spaceAPI = spaceAPI;
+      // ✨ PHASE 0: Lade cached SpaceAPI-Status aus LocalStorage (INSTANT!)
+      const cachedStatus = loadCachedSpaceAPIStatus();
+      if (cachedStatus) {
+        console.log("💾 Found cached SpaceAPI status, applying immediately...");
+        applyCachedStatus(json, cachedStatus);
+        console.log(`✅ Applied ${Object.keys(cachedStatus).length} cached statuses`);
+      }
 
-      console.log("📄 Loading SpaceAPI status for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
-
-      // Warte darauf, dass ALLE SpaceAPI-Daten geladen sind
-      json = await spaceAPI.enrichLocationData(json);
-
-      // Debug: Zähle die Ergebnisse
-      const openCount = json.filter(loc => loc.isOpen === true).length;
-      const closedCount = json.filter(loc => loc.isOpen === false).length;
-      const nullCount = json.filter(loc => loc.isOpen === null).length;
-      const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
-
-      console.log("✅ SpaceAPI status loaded:");
-      console.log(`   - ✅ Open: ${openCount}`);
-      console.log(`   - ❌ Closed: ${closedCount}`);
-      console.log(`   - ⚠️  Null: ${nullCount}`);
-      console.log(`   - ❓ Undefined: ${undefinedCount}`);
-
+      // ✨ PHASE 1: Zeige Marker SOFORT
+      console.log("📍 Creating markers immediately...");
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
           location.uniqueId = 'loc-' + index;
-
-          const marker = L.marker([location.loc.lat, location.loc.long], {
-            icon: icons.defaultIcon,
-            opacity: 0.66
-          });
-          clusterGroup.addLayer(marker); // GEÄNDERT
-
-          marker.uniqueId = location.uniqueId;
-
-          marker.bindPopup((layer) => {
-            let statusIconHtml = '';
-            let nameClass = '';
-
-            if (location.isOpen === true) {
-              statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
-              nameClass = 'space-open';
-            }
-            else if (location.isOpen === false) {
-              statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
-              nameClass = 'space-closed';
-            }
-            else if (location.spaceapi && location.spaceapi.endpoint) {
-              statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status unbekannt"></i> ';
-              nameClass = 'space-unknown';
-            }
-
-            const streetName = location.loc?.street?.name || '';
-            const streetNumber = location.loc?.street?.number || '';
-            const streetExt = location.loc?.street?.ext || '';
-            const linkUrl = location.link?.url || '#';
-            const linkText = location.link?.text || linkUrl;
-
-            return `
-              <h3 id="style">${location.style || ''}</h3>
-              <a id="titleurl" href="${linkUrl}" target="_blank">
-                <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
-              </a>
-              <div class="popup-street-line">
-                ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-                <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
-                  <i></i>
-                </a>
-              </div>
-              <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
-              ${location.loc?.country || ''}<br>
-              <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
-            `;
-          });
-
-          // === VEREINFACHTES, ROBUSTES EVENT SYSTEM ===
-
-          // Popup Events
-          marker.on('popupopen', (e) => {
-            if (!marker._openedByHover) {
-              setStickyPopup(marker);
-            }
-            marker._openedByHover = false;
-
-            const popup = marker.getPopup();
-            const popupElement = popup._container;
-            const logoElement = document.querySelector('.title');
-
-            if (popupElement && logoElement) {
-              const popupRect = popupElement.getBoundingClientRect();
-              const logoRect = logoElement.getBoundingClientRect();
-
-              const isOverlapping = !(popupRect.right < logoRect.left ||
-                popupRect.left > logoRect.right ||
-                popupRect.bottom < logoRect.top ||
-                popupRect.top > logoRect.bottom);
-
-              if (isOverlapping) {
-                logoElement.classList.add('popup-active');
-              }
-            }
-
-            // +++ START: NAVIGATION LINK EVENT LISTENERS +++
-            const navLink = e.popup._container.querySelector('.navigation-icon');
-            if (navLink) {
-              // Set initial icon appearance (class and color)
-              updateNavigationIconAppearance(navLink, location);
-
-              // Left-click handler
-              navLink.addEventListener('click', (event) => {
-                handleNavigationClick(event, location);
-              });
-
-              // Right-click handler
-              navLink.addEventListener('contextmenu', (event) => {
-                handleNavigationRightClick(event, location, navLink);
-              });
-            }
-            // +++ END: NAVIGATION LINK EVENT LISTENERS +++
-          });
-
-          marker.on('popupclose', () => {
-            document.querySelector('.title').classList.remove('popup-active');
-            if (currentStickyMarker === marker) {
-              currentStickyMarker = null;
-              isPopupSticky = false;
-            }
-          });
-
-          // HOVER EVENTS mit zentralisiertem State Management
-          marker.on('mouseover', (e) => {
-            const state = window.markerStateManager.getState(marker.uniqueId);
-
-            // Verhindere doppelte Hover-Events
-            if (state.isHovering) return;
-
-            window.markerStateManager.setState(marker.uniqueId, { isHovering: true });
-
-            // Sofortige Skalierung ohne Debounce für bessere UX
-            applyMarkerScale(marker, 1.15);
-
-            // Verzögerte Popup-Öffnung
-            const hoverTimeout = setTimeout(() => {
-              const currentState = window.markerStateManager.getState(marker.uniqueId);
-              if (currentState.isHovering && !isPopupSticky) {
-                marker._openedByHover = true;
-                marker.openPopup();
-              }
-            }, 400);
-
-            window.markerStateManager.setState(marker.uniqueId, { hoverTimeout });
-          });
-
-          marker.on('mouseout', (e) => {
-            const state = window.markerStateManager.getState(marker.uniqueId);
-
-            window.markerStateManager.setState(marker.uniqueId, { isHovering: false });
-            window.markerStateManager.clearTimeouts(marker.uniqueId);
-
-            // Skalierung zurücksetzen nur wenn kein Dropdown-Hover aktiv
-            if (!state.isDropdownHovering) {
-              applyMarkerScale(marker, 1);
-            }
-
-            if (!isPopupSticky || currentStickyMarker !== marker) {
-              marker.closePopup();
-            }
-
-            // Icon-Update nur wenn kein Hover-Zustand mehr aktiv
-            if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
-              updateMarkerIcon(marker, location);
-            }
-          });
-
-          marker.on('click', (e) => {
-            e.originalEvent?.stopPropagation();
-            marker._openedByHover = false;
-
-            // Alle Hover-States zurücksetzen
-            window.markerStateManager.setState(marker.uniqueId, {
-              isHovering: false,
-              isDropdownHovering: false
-            });
-            window.markerStateManager.clearTimeouts(marker.uniqueId);
-
-            if (!marker.isPopupOpen()) {
-              marker.openPopup();
-            }
-          });
-
-          allMarkers.push(marker);
-          // let clusterGroup = null;
+          createMarkerForLocation(location);
         }
       });
 
-      console.log("✅ Markers created with SpaceAPI data ready");
+      console.log("✅ All markers created immediately!");
+
+      // 🔄 PHASE 2: Lade SpaceAPI-Status im Hintergrund (auch wenn cached)
+      const spaceAPI = new SimpleSpaceAPI();
+      window.spaceAPI = spaceAPI;
+      
+      console.log("📄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
+      
+      // Lausche auf Status-Updates und aktualisiere Marker live
+      spaceAPI.onStatusUpdate((location) => {
+        updateMarkerIconForLocation(location);
+      });
+      
+      // Starte asynchrones Laden (ohne await = blockiert nicht!)
+      spaceAPI.enrichLocationData(json).then(() => {
+        // Speichere neue Status in LocalStorage
+        saveCachedSpaceAPIStatus(json);
+        
+        // Debug: Zähle die Ergebnisse
+        const openCount = json.filter(loc => loc.isOpen === true).length;
+        const closedCount = json.filter(loc => loc.isOpen === false).length;
+        const nullCount = json.filter(loc => loc.isOpen === null).length;
+        const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
+        
+        console.log("✅ SpaceAPI status loading complete:");
+        console.log(`   - ✅ Open: ${openCount}`);
+        console.log(`   - ❌ Closed: ${closedCount}`);
+        console.log(`   - ⚠️  Null: ${nullCount}`);
+        console.log(`   - ❓ Undefined: ${undefinedCount}`);
+
+        // Aktualisiere Filter nach Abschluss
+        if (window.styleFilterManager) {
+          window.styleFilterManager.refreshStyleStats();
+        }
+      });
 
     } catch (error) {
       console.error("Error fetching or parsing locations.json:", error);
       alert("Failed to load location pins.");
+    }
+  }
+
+  // 💾 NEUE HILFSFUNKTION: Lade gecachte SpaceAPI-Status aus LocalStorage
+  function loadCachedSpaceAPIStatus() {
+    try {
+      const cached = localStorage.getItem('spaceapi-status-cache');
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      
+      // Prüfe Alter des Cache
+      const age = Date.now() - data.timestamp;
+      const maxAge = 30 * 60 * 1000; // 30 Minuten
+      
+      if (age > maxAge) {
+        console.log(`🗑️ Cache expired (${Math.round(age/1000/60)} minutes old), will fetch fresh data`);
+        return null;
+      }
+      
+      console.log(`💾 Using cache from ${Math.round(age/1000/60)} minutes ago`);
+      return data.statuses;
+      
+    } catch (error) {
+      console.error("Error loading cached status:", error);
+      return null;
+    }
+  }
+
+  // 💾 NEUE HILFSFUNKTION: Wende gecachte Status auf Locations an
+  function applyCachedStatus(locations, cachedStatus) {
+    let applied = 0;
+    
+    locations.forEach(location => {
+      if (location.spaceapi?.endpoint && cachedStatus[location.spaceapi.endpoint] !== undefined) {
+        location.isOpen = cachedStatus[location.spaceapi.endpoint];
+        applied++;
+      }
+    });
+    
+    return applied;
+  }
+
+  // 💾 NEUE HILFSFUNKTION: Speichere SpaceAPI-Status in LocalStorage
+  function saveCachedSpaceAPIStatus(locations) {
+    try {
+      const statuses = {};
+      
+      locations.forEach(location => {
+        if (location.spaceapi?.endpoint && location.isOpen !== undefined) {
+          statuses[location.spaceapi.endpoint] = location.isOpen;
+        }
+      });
+      
+      const cacheData = {
+        timestamp: Date.now(),
+        statuses: statuses
+      };
+      
+      localStorage.setItem('spaceapi-status-cache', JSON.stringify(cacheData));
+      console.log(`💾 Saved ${Object.keys(statuses).length} statuses to cache`);
+      
+    } catch (error) {
+      console.error("Error saving status cache:", error);
+      // LocalStorage voll? Lösche alten Cache
+      if (error.name === 'QuotaExceededError') {
+        localStorage.removeItem('spaceapi-status-cache');
+        console.log('🗑️ Cleared old cache due to quota');
+      }
+    }
+  }
+
+  // ✨ NEUE HILFSFUNKTION: Erstelle Marker für eine Location
+  function createMarkerForLocation(location) {
+    const marker = L.marker([location.loc.lat, location.loc.long], {
+      icon: icons.defaultIcon,
+      opacity: 0.66
+    });
+    
+    clusterGroup.addLayer(marker);
+    marker.uniqueId = location.uniqueId;
+
+    marker.bindPopup((layer) => {
+      let statusIconHtml = '';
+      let nameClass = '';
+
+      if (location.isOpen === true) {
+        statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
+        nameClass = 'space-open';
+      }
+      else if (location.isOpen === false) {
+        statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
+        nameClass = 'space-closed';
+      }
+      else if (location.spaceapi && location.spaceapi.endpoint) {
+        statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status wird geladen..."></i> ';
+        nameClass = 'space-unknown';
+      }
+
+      const streetName = location.loc?.street?.name || '';
+      const streetNumber = location.loc?.street?.number || '';
+      const streetExt = location.loc?.street?.ext || '';
+      const linkUrl = location.link?.url || '#';
+      const linkText = location.link?.text || linkUrl;
+
+      return `
+        <h3 id="style">${location.style || ''}</h3>
+        <a id="titleurl" href="${linkUrl}" target="_blank">
+          <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
+        </a>
+        <div class="popup-street-line">
+          ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
+          <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
+            <i></i>
+          </a>
+        </div>
+        <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
+        ${location.loc?.country || ''}<br>
+        <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+      `;
+    });
+
+    // === VEREINFACHTES, ROBUSTES EVENT SYSTEM ===
+
+    // Popup Events
+    marker.on('popupopen', (e) => {
+      if (!marker._openedByHover) {
+        setStickyPopup(marker);
+      }
+      marker._openedByHover = false;
+
+      const popup = marker.getPopup();
+      const popupElement = popup._container;
+      const logoElement = document.querySelector('.title');
+
+      if (popupElement && logoElement) {
+        const popupRect = popupElement.getBoundingClientRect();
+        const logoRect = logoElement.getBoundingClientRect();
+
+        const isOverlapping = !(popupRect.right < logoRect.left ||
+          popupRect.left > logoRect.right ||
+          popupRect.bottom < logoRect.top ||
+          popupRect.top > logoRect.bottom);
+
+        if (isOverlapping) {
+          logoElement.classList.add('popup-active');
+        }
+      }
+
+      // +++ START: NAVIGATION LINK EVENT LISTENERS +++
+      const navLink = e.popup._container.querySelector('.navigation-icon');
+      if (navLink) {
+        // Set initial icon appearance (class and color)
+        updateNavigationIconAppearance(navLink, location);
+
+        // Left-click handler
+        navLink.addEventListener('click', (event) => {
+          handleNavigationClick(event, location);
+        });
+
+        // Right-click handler
+        navLink.addEventListener('contextmenu', (event) => {
+          handleNavigationRightClick(event, location, navLink);
+        });
+      }
+      // +++ END: NAVIGATION LINK EVENT LISTENERS +++
+    });
+
+    marker.on('popupclose', () => {
+      document.querySelector('.title').classList.remove('popup-active');
+      if (currentStickyMarker === marker) {
+        currentStickyMarker = null;
+        isPopupSticky = false;
+      }
+    });
+
+    // HOVER EVENTS mit zentralisiertem State Management
+    marker.on('mouseover', (e) => {
+      const state = window.markerStateManager.getState(marker.uniqueId);
+
+      // Verhindere doppelte Hover-Events
+      if (state.isHovering) return;
+
+      window.markerStateManager.setState(marker.uniqueId, { isHovering: true });
+
+      // Sofortige Skalierung ohne Debounce für bessere UX
+      applyMarkerScale(marker, 1.15);
+
+      // Verzögerte Popup-Öffnung
+      const hoverTimeout = setTimeout(() => {
+        const currentState = window.markerStateManager.getState(marker.uniqueId);
+        if (currentState.isHovering && !isPopupSticky) {
+          marker._openedByHover = true;
+          marker.openPopup();
+        }
+      }, 400);
+
+      window.markerStateManager.setState(marker.uniqueId, { hoverTimeout });
+    });
+
+    marker.on('mouseout', (e) => {
+      const state = window.markerStateManager.getState(marker.uniqueId);
+
+      window.markerStateManager.setState(marker.uniqueId, { isHovering: false });
+      window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+      // Skalierung zurücksetzen nur wenn kein Dropdown-Hover aktiv
+      if (!state.isDropdownHovering) {
+        applyMarkerScale(marker, 1);
+      }
+
+      if (!isPopupSticky || currentStickyMarker !== marker) {
+        marker.closePopup();
+      }
+
+      // Icon-Update nur wenn kein Hover-Zustand mehr aktiv
+      if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
+        updateMarkerIcon(marker, location);
+      }
+    });
+
+    marker.on('click', (e) => {
+      e.originalEvent?.stopPropagation();
+      marker._openedByHover = false;
+
+      // Alle Hover-States zurücksetzen
+      window.markerStateManager.setState(marker.uniqueId, {
+        isHovering: false,
+        isDropdownHovering: false
+      });
+      window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+      if (!marker.isPopupOpen()) {
+        marker.openPopup();
+      }
+    });
+
+    allMarkers.push(marker);
+  }
+
+  // ✨ NEUE HILFSFUNKTION: Aktualisiere Marker-Icon für eine Location
+  function updateMarkerIconForLocation(location) {
+    const marker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+    if (!marker) return;
+
+    // Bestimme das richtige Icon
+    let newIcon;
+    if (location.isOpen === true) {
+      newIcon = icons.greenIcon;
+      console.log(`🟢 Updated marker for ${location.name} to OPEN`);
+    } else if (location.isOpen === false) {
+      newIcon = icons.redIcon;
+      console.log(`🔴 Updated marker for ${location.name} to CLOSED`);
+    } else if (location.spaceapi && location.spaceapi.endpoint) {
+      newIcon = icons.unknownStatusIcon;
+      console.log(`🟠 Updated marker for ${location.name} to UNKNOWN`);
+    } else {
+      newIcon = icons.highlightIcon;
+    }
+
+    // Setze das neue Icon
+    marker.setIcon(newIcon);
+
+    // Wenn Popup offen ist, aktualisiere auch den Inhalt
+    if (marker.isPopupOpen()) {
+      marker.closePopup();
+      marker.openPopup();
     }
   }
 
@@ -735,12 +861,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('StyleFilterManager initialized successfully');
-
+    
     // Debug: Zeige die aktuellen Counts
+    const openCount = json.filter(loc => loc.isOpen === true).length;
+    const closedCount = json.filter(loc => loc.isOpen === false).length;
+    const unknownCount = json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length;
+    
     console.log('📊 Filter initialized with:');
-    console.log('   - Open spaces:', json.filter(loc => loc.isOpen === true).length);
-    console.log('   - Closed spaces:', json.filter(loc => loc.isOpen === false).length);
-    console.log('   - Unknown/null:', json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length);
+    console.log(`   - Open spaces: ${openCount}`);
+    console.log(`   - Closed spaces: ${closedCount}`);
+    console.log(`   - Unknown/loading: ${unknownCount}`);
+    
+    if (openCount === 0 && closedCount === 0) {
+      console.log('⏳ SpaceAPI status is still loading in background...');
+      console.log('   Filter will be updated automatically when data arrives');
+    }
   }
 
 

@@ -3,9 +3,12 @@
 class SimpleSpaceAPI {
   constructor() {
     this.statusCache = new Map();
-    this.cacheDuration = 5 * 60 * 1000;
-    this.requestTimeout = 15000; // 3 Sekunden auf APIs warten
+    this.cacheDuration = 5 * 60 * 1000; // 🔄 Cache-Dauer: 5 Minuten
+    this.requestTimeout = 5000; // ⚡ 5 Sekunden (schneller Timeout)
     this.listeners = []; // Event-Listener für Status-Updates
+
+    console.log('🗄️ SpaceAPI Cache initialized with', this.cacheDuration / 1000 / 60, 'minutes cache duration');
+    console.log('⏱️ Request timeout:', this.requestTimeout / 1000, 'seconds');
   }
 
   // Event-Listener hinzufügen
@@ -30,40 +33,45 @@ class SimpleSpaceAPI {
     const locationsWithAPI = locations.filter(loc => loc.spaceapi?.endpoint);
     console.log('📡 Found', locationsWithAPI.length, 'locations with SpaceAPI');
 
-    const promises = locations.map(async (location) => {
-      if (location.spaceapi?.endpoint) {
+    // ⚡ BATCH PROCESSING: Lade APIs in Gruppen für bessere Performance
+    const batchSize = 10; // 10 APIs gleichzeitig
+    let completed = 0;
+
+    for (let i = 0; i < locationsWithAPI.length; i += batchSize) {
+      const batch = locationsWithAPI.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+      const totalBatches = Math.ceil(locationsWithAPI.length / batchSize);
+
+      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} APIs)...`);
+
+      // Lade diese Batch parallel
+      await Promise.all(batch.map(async (location) => {
         try {
-          console.log("🔍 Fetching SpaceAPI for:", location.name, "from", location.spaceapi.endpoint);
           const isOpen = await this.fetchSpaceStatus(location.spaceapi.endpoint);
           location.isOpen = isOpen;
 
-          console.log("📊 SpaceAPI Result:", location.name, "isOpen =", isOpen, "(type:", typeof isOpen, ")");
-
-          // *** FEUER EVENT wenn Status geladen ist ***
+          // Feuer Event für Live-Update
           this.fireStatusUpdate(location);
+
+          completed++;
+          console.log(`📊 Progress: ${completed}/${locationsWithAPI.length} (${Math.round(completed / locationsWithAPI.length * 100)}%)`);
 
         } catch (error) {
           console.log("❌ SpaceAPI Error for", location.name, ":", error.message);
           location.isOpen = null;
-          this.fireStatusUpdate(location); // Auch bei Fehler Event feuern
+          this.fireStatusUpdate(location);
+          completed++;
         }
-      }
-      // WICHTIG: Setze isOpen NICHT für Locations ohne SpaceAPI
-      // So bleibt es undefined und wir können unterscheiden zwischen:
-      // - undefined: keine SpaceAPI
-      // - null: SpaceAPI vorhanden, aber Status konnte nicht abgerufen werden
-      // - true/false: SpaceAPI vorhanden und Status bekannt
+      }));
 
-      return location;
-    });
-
-    const results = await Promise.all(promises);
+      console.log(`✅ Batch ${batchNumber}/${totalBatches} complete!`);
+    }
 
     // WICHTIG: Nach dem Laden alle Werte loggen
-    const trueCount = results.filter(loc => loc.isOpen === true).length;
-    const falseCount = results.filter(loc => loc.isOpen === false).length;
-    const nullCount = results.filter(loc => loc.isOpen === null).length;
-    const undefinedCount = results.filter(loc => loc.isOpen === undefined).length;
+    const trueCount = locations.filter(loc => loc.isOpen === true).length;
+    const falseCount = locations.filter(loc => loc.isOpen === false).length;
+    const nullCount = locations.filter(loc => loc.isOpen === null).length;
+    const undefinedCount = locations.filter(loc => loc.isOpen === undefined).length;
 
     console.log('✅ enrichLocationData COMPLETE:');
     console.log(`   🟢 isOpen === true: ${trueCount}`);
@@ -71,23 +79,29 @@ class SimpleSpaceAPI {
     console.log(`   🟠 isOpen === null (error): ${nullCount}`);
     console.log(`   ⚪ isOpen === undefined (no API): ${undefinedCount}`);
 
-    return results;
+    return locations;
   }
 
   async fetchSpaceStatus(apiEndpoint) {
     const cached = this.statusCache.get(apiEndpoint);
 
     if (cached && (Date.now() - cached.timestamp) < this.cacheDuration) {
-      console.log('💾 Using cached result for', apiEndpoint, ':', cached.data);
+      const ageMinutes = Math.round((Date.now() - cached.timestamp) / 1000 / 60);
+      console.log(`💾 Using cached result for ${apiEndpoint} (age: ${ageMinutes}min):`, cached.data);
       return cached.data;
     }
 
-    // STRATEGIE: Erst direkt versuchen, bei CORS-Fehler dann mit Proxy
+    if (cached) {
+      const ageMinutes = Math.round((Date.now() - cached.timestamp) / 1000 / 60);
+      console.log(`🗑️ Cache expired for ${apiEndpoint} (age: ${ageMinutes}min), fetching fresh data...`);
+    }
+
+    // STRATEGIE: Erst direkt versuchen, dann mehrere Proxies
     let isOpen = await this.tryDirectFetch(apiEndpoint);
 
     if (isOpen === undefined) {
-      // Direkter Zugriff hat nicht funktioniert, versuche mit Proxy
-      console.log('🔄 Trying with CORS proxy for', apiEndpoint);
+      // Direkter Zugriff hat nicht funktioniert, versuche Proxy
+      console.log('🔄 Direct fetch failed, trying proxy for', apiEndpoint);
       isOpen = await this.tryProxyFetch(apiEndpoint);
     }
 
@@ -96,6 +110,7 @@ class SimpleSpaceAPI {
         data: isOpen,
         timestamp: Date.now()
       });
+      console.log(`💾 Cached result for ${apiEndpoint}:`, isOpen);
     }
 
     return isOpen;
@@ -139,11 +154,11 @@ class SimpleSpaceAPI {
 
   async tryProxyFetch(apiEndpoint) {
     try {
-      // Verwende allorigins als Fallback
-      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiEndpoint)}`;
+      // Versuche corsproxy.io
+      const url = `https://corsproxy.io/?${encodeURIComponent(apiEndpoint)}`;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout * 2); // Doppelter Timeout für Proxy
+      const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
 
       const response = await fetch(url, {
         signal: controller.signal,
@@ -198,6 +213,80 @@ class SimpleSpaceAPI {
       console.log("⚫ Using BLACK/GREY (highlight) icon for", location.name);
       return icons.highlightIcon || icons.defaultIcon;
     }
+  }
+
+  // 🆕 NEUE HILFSFUNKTIONEN FÜR CACHE-MANAGEMENT
+
+  // Zeige Cache-Statistiken
+  getCacheStats() {
+    const stats = {
+      total: this.statusCache.size,
+      valid: 0,
+      expired: 0,
+      entries: []
+    };
+
+    this.statusCache.forEach((cached, endpoint) => {
+      const age = Date.now() - cached.timestamp;
+      const ageMinutes = Math.round(age / 1000 / 60);
+      const isExpired = age >= this.cacheDuration;
+
+      if (isExpired) {
+        stats.expired++;
+      } else {
+        stats.valid++;
+      }
+
+      stats.entries.push({
+        endpoint,
+        isOpen: cached.data,
+        ageMinutes,
+        isExpired
+      });
+    });
+
+    return stats;
+  }
+
+  // Zeige Cache-Info in Console
+  logCacheInfo() {
+    const stats = this.getCacheStats();
+    console.log('📊 Cache Statistics:');
+    console.log(`   Total entries: ${stats.total}`);
+    console.log(`   Valid: ${stats.valid}`);
+    console.log(`   Expired: ${stats.expired}`);
+    console.log(`   Cache duration: ${this.cacheDuration / 1000 / 60} minutes`);
+
+    if (stats.entries.length > 0) {
+      console.log('\n📋 Cache Entries:');
+      stats.entries.forEach(entry => {
+        const status = entry.isExpired ? '🗑️ EXPIRED' : '✅ VALID';
+        const openStatus = entry.isOpen === true ? '🟢 OPEN' :
+          entry.isOpen === false ? '🔴 CLOSED' : '🟠 UNKNOWN';
+        console.log(`   ${status} ${openStatus} ${entry.endpoint} (${entry.ageMinutes}min old)`);
+      });
+    }
+  }
+
+  // Lösche abgelaufene Cache-Einträge
+  cleanExpiredCache() {
+    let cleaned = 0;
+    this.statusCache.forEach((cached, endpoint) => {
+      if (Date.now() - cached.timestamp >= this.cacheDuration) {
+        this.statusCache.delete(endpoint);
+        cleaned++;
+      }
+    });
+    console.log(`🧹 Cleaned ${cleaned} expired cache entries`);
+    return cleaned;
+  }
+
+  // Lösche den gesamten Cache
+  clearCache() {
+    const size = this.statusCache.size;
+    this.statusCache.clear();
+    console.log(`🗑️ Cleared entire cache (${size} entries)`);
+    return size;
   }
 }
 
