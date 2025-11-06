@@ -277,38 +277,47 @@ class SearchManager {
     // NEU: Zeitstempel bei jeder Navigation per Taste setzen
     this.lastKeypressTime = Date.now();
 
+    let newIndex = this.currentDropdownIndex; // NEU: Benutze newIndex
+
     if (direction === 'down') {
-      this.currentDropdownIndex = (this.currentDropdownIndex + 1) % this.dropdownItems.length;
+      newIndex = (this.currentDropdownIndex + 1) % this.dropdownItems.length;
     } else if (direction === 'up') {
-      this.currentDropdownIndex = (this.currentDropdownIndex - 1 + this.dropdownItems.length) % this.dropdownItems.length;
+      // KORREKTUR: Wenn currentDropdownIndex -1 ist, gehe zum letzten Element (length - 1)
+      if (this.currentDropdownIndex === -1) {
+        newIndex = this.dropdownItems.length - 1;
+      } else {
+        newIndex = (this.currentDropdownIndex - 1 + this.dropdownItems.length) % this.dropdownItems.length;
+      }
     }
+
+    // Setze den korrigierten Index
+    this.currentDropdownIndex = newIndex;
+
     this.updateActiveDropdownItem();
     this.scrollToActiveItem();
   }
 
   updateActiveDropdownItem() {
-    const previousIndex = this.currentDropdownIndex;
-
-    // Entferne nur die CSS-Klasse, NICHT die Hover-Effekte
     const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
+
+    // 1. Hover-Effekte vom ZUVOR AKTIVEN/GEHOVERERTEN Element entfernen
     if (previousActive) {
       previousActive.classList.remove('keyboard-active');
+      const prevLocation = this.getLocationFromDropdownItem(previousActive);
+      if (prevLocation) {
+        // Explizites Entfernen der Hover-Effekte, da Tastaturnavigation
+        this.removeHoverEffects(prevLocation);
+      }
     }
 
+    // 2. Setze neues aktives Element und wende Hover-Effekte an
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
       const activeItem = this.dropdownItems[this.currentDropdownIndex];
       activeItem.classList.add('keyboard-active');
 
       const location = this.getLocationFromDropdownItem(activeItem);
       if (location) {
-        // Cleanup vom VORHERIGEN Item nur wenn es ein anderes war
-        if (previousActive && previousActive !== activeItem) {
-          const prevLocation = this.getLocationFromDropdownItem(previousActive);
-          if (prevLocation) {
-            this.removeHoverEffects(prevLocation);
-          }
-        }
-
+        // Wende Hover-Effekte auf das neue, aktive Element an
         this.applyHoverEffects(activeItem, location);
       }
     }
@@ -333,7 +342,19 @@ class SearchManager {
   }
 
   getLocationFromDropdownItem(dropdownItem) {
-    const itemName = dropdownItem.querySelector('.item-name')?.textContent;
+    // Finde die ID des Eintrags
+    const uniqueId = dropdownItem.dataset.uniqueId;
+
+    // Wenn die ID verfügbar ist, verwende diese.
+    if (uniqueId) {
+      return this.json.find(location => location.uniqueId === uniqueId) || null;
+    }
+
+    // Fallback: Name abfragen und Icons/Styles im Namen ignorieren
+    // Die Regex entfernt Space-Icons/Style-Icons am Anfang des Namens
+    const itemNameSpan = dropdownItem.querySelector('.item-name span');
+    const itemName = itemNameSpan ? itemNameSpan.textContent.replace(/^(?:[^\w\s]*\s*){1,2}/, '').trim() : '';
+
     return this.json.find(location => location.name === itemName) || null;
   }
 
@@ -401,20 +422,7 @@ class SearchManager {
   }
 
   updateDropdownIcons() {
-    const suggestionItems = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
-    suggestionItems.forEach(item => {
-      const itemName = item.querySelector('.item-name');
-      if (!itemName) return;
-      const nameText = itemName.textContent.trim();
-      const location = this.json.find(loc => loc.name === nameText);
-      if (location && location.spaceapi && location.spaceapi.endpoint) {
-        let statusIcon = '';
-        if (location.isOpen === true) { statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i>'; }
-        else if (location.isOpen === false) { statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i>'; }
-        else { statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i>'; }
-        itemName.innerHTML = statusIcon + location.name;
-      }
-    });
+    // Diese Methode wird nicht mehr benötigt, da das Icon direkt in createSuggestionItem gesetzt wird.
   }
 
   updateDropdownUI(hasResults) {
@@ -447,23 +455,43 @@ class SearchManager {
   createSuggestionItem(location) {
     const item = document.createElement('div');
     item.classList.add('suggestion-item');
+    // NEUE ZEILE: Speichere die uniqueId im data-Attribut
+    item.dataset.uniqueId = location.uniqueId; 
     let statusIcon = '', spaceStatusClass = '', nameClass = '';
+
+    // --- NEU: Style Icon Logik (Wie besprochen) ---
+    let styleIconHtml = '';
+    const styleIconMap = {
+      // 'for all': 'fas fa-people-group',
+      'for students': 'fas fa-graduation-cap',
+      'for youth': 'fas fa-child',
+      'commercial': 'fas fa-money-bill-wave',
+    };
+
+    const locationStyle = location.style ? location.style.toLowerCase() : '';
+
+    if (locationStyle && styleIconMap[locationStyle]) {
+      // style-icon Klasse für separates Styling
+      styleIconHtml = `<i class="${styleIconMap[locationStyle]} style-icon" title="${location.style}"></i> `;
+    }
+    // ----------------------------
+
     if (location.spaceapi && location.spaceapi.endpoint) {
       if (location.isOpen === true) {
-        statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i>';
+        statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i> ';
         spaceStatusClass = 'space-open'; nameClass = 'space-name-open';
       } else if (location.isOpen === false) {
-        statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i>';
+        statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i> ';
         spaceStatusClass = 'space-closed'; nameClass = 'space-name-closed';
       } else {
-        statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i>';
+        statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i> ';
         spaceStatusClass = 'space-unknown'; nameClass = 'space-name-unknown';
       }
     }
     if (spaceStatusClass) { item.classList.add(spaceStatusClass); }
     item.innerHTML = `
       <div class="item-content">
-        <div class="item-name"><span class="${nameClass}">${statusIcon}${location.name}</span></div>
+        <div class="item-name"><span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
         <div class.item-details"><b>${this.zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>
       </div>`;

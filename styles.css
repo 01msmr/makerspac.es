@@ -14,7 +14,8 @@
   --search-opacity: 0.3;
   --search-focus-opacity: 0.9;
   --hover-text-color: #666;
-  --hover-text-color-active: #ccc;/* Space Status Farben */
+  --hover-text-color-active: #ccc;
+  /* Space Status Farben */
 
   --space-hover: #0000ff;
   --space-open: #00AA00;
@@ -633,6 +634,22 @@ hr {
   margin-right: 0.25em;
   font-size: 1.1em;
 }
+
+/* *** NEU: Style-Icons in Dropdown-Items *** */
+.suggestion-item .style-icon {
+  color: var(--text-color);
+  /* Standard-Farbe des Textes */
+  font-size: 0.9em;
+  margin-right: 0.25em;
+  opacity: 0.8;
+}
+
+/* *** NEU: Style-Icons im Hover/Active Zustand (sollten weiß werden) *** */
+.suggestion-item:hover .style-icon,
+.suggestion-item.keyboard-active .style-icon {
+  color: white !important;
+}
+
 
 /* .suggestion-item:hover .fas {
   filter: brightness(1.2);
