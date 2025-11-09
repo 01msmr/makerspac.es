@@ -538,7 +538,8 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log("✅ All markers created immediately!");
 
       // 🔄 PHASE 2: Lade SpaceAPI-Status im Hintergrund (auch wenn cached)
-      const spaceAPI = new SimpleSpaceAPI();
+      // const spaceAPI = new SimpleSpaceAPI();
+      const spaceAPI = new StaticSpaceAPI();
       window.spaceAPI = spaceAPI;
       
       console.log("📄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
