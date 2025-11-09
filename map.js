@@ -512,17 +512,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  async loadData() {
+  async function loadData() {
     try {
       const response = await fetch("./locations.json");
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
       // ✨ PHASE 0: Lade cached SpaceAPI-Status aus LocalStorage (INSTANT!)
-      const cachedStatus = this.loadCachedSpaceAPIStatus();
+      const cachedStatus = loadCachedSpaceAPIStatus();
       if (cachedStatus) {
         console.log("💾 Found cached SpaceAPI status, applying immediately...");
-        this.applyCachedStatus(json, cachedStatus);
+        applyCachedStatus(json, cachedStatus);
         console.log(`✅ Applied ${Object.keys(cachedStatus).length} cached statuses`);
       }
 
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Starte asynchrones Laden (ohne await = blockiert nicht!)
       spaceAPI.enrichLocationData(json).then(() => {
         // Speichere neue Status in LocalStorage
-        this.saveCachedSpaceAPIStatus(json);
+        saveCachedSpaceAPIStatus(json);
 
         // Debug: Zähle die Ergebnisse
         const openCount = json.filter(loc => loc.isOpen === true).length;
