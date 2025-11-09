@@ -36,7 +36,7 @@ jobs:
       
       # 3. Fetch SpaceAPI Status
       - name: Fetch SpaceAPI Status
-        run: node scripts/fetch-spaceapi-status.js
+        run: node fetch-spaceapi-status.js
       
       # 4. Commit & Push
       - name: Commit changes
