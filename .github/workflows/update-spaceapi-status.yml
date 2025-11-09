@@ -1,0 +1,41 @@
+name: Update SpaceAPI Status
+
+on:
+  # Alle 15 Minuten
+  schedule:
+    - cron: '*/15 * * * *'
+  
+  # Manuell triggern
+  workflow_dispatch:
+  
+  # Bei Push (zum Testen)
+  push:
+    branches: [ main ]
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout Repository
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      # 3. Fetch SpaceAPI Status
+      - name: Fetch SpaceAPI Status
+        run: node fetch-spaceapi-status.js
+      
+      # 4. Commit & Push (nur wenn sich was geändert hat)
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add status.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Update SpaceAPI status [skip ci]"
+          git push
