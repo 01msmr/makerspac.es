@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return connectionLine;
   }
 
-  
+
 
 
   // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
@@ -512,17 +512,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  async function loadData() {
+  async loadData() {
     try {
       const response = await fetch("./locations.json");
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
       // ✨ PHASE 0: Lade cached SpaceAPI-Status aus LocalStorage (INSTANT!)
-      const cachedStatus = loadCachedSpaceAPIStatus();
+      const cachedStatus = this.loadCachedSpaceAPIStatus();
       if (cachedStatus) {
         console.log("💾 Found cached SpaceAPI status, applying immediately...");
-        applyCachedStatus(json, cachedStatus);
+        this.applyCachedStatus(json, cachedStatus);
         console.log(`✅ Applied ${Object.keys(cachedStatus).length} cached statuses`);
       }
 
@@ -541,25 +541,25 @@ document.addEventListener('DOMContentLoaded', () => {
       // const spaceAPI = new SimpleSpaceAPI();
       const spaceAPI = new StaticSpaceAPI();
       window.spaceAPI = spaceAPI;
-      
+
       console.log("📄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
-      
+
       // Lausche auf Status-Updates und aktualisiere Marker live
       spaceAPI.onStatusUpdate((location) => {
         updateMarkerIconForLocation(location);
       });
-      
+
       // Starte asynchrones Laden (ohne await = blockiert nicht!)
       spaceAPI.enrichLocationData(json).then(() => {
         // Speichere neue Status in LocalStorage
-        saveCachedSpaceAPIStatus(json);
-        
+        this.saveCachedSpaceAPIStatus(json);
+
         // Debug: Zähle die Ergebnisse
         const openCount = json.filter(loc => loc.isOpen === true).length;
         const closedCount = json.filter(loc => loc.isOpen === false).length;
         const nullCount = json.filter(loc => loc.isOpen === null).length;
         const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
-        
+
         console.log("✅ SpaceAPI status loading complete:");
         console.log(`   - ✅ Open: ${openCount}`);
         console.log(`   - ❌ Closed: ${closedCount}`);
@@ -567,8 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`   - ❓ Undefined: ${undefinedCount}`);
 
         // Aktualisiere Filter nach Abschluss
-        if (window.styleFilterManager) {
+        if (window.styleFilterManager && typeof window.styleFilterManager.refreshStyleStats === 'function') {
           window.styleFilterManager.refreshStyleStats();
+        } else {
+          console.log('⚠️ styleFilterManager.refreshStyleStats not available, skipping filter update');
         }
       });
 
@@ -583,21 +585,21 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const cached = localStorage.getItem('spaceapi-status-cache');
       if (!cached) return null;
-      
+
       const data = JSON.parse(cached);
-      
+
       // Prüfe Alter des Cache
       const age = Date.now() - data.timestamp;
       const maxAge = 30 * 60 * 1000; // 30 Minuten
-      
+
       if (age > maxAge) {
-        console.log(`🗑️ Cache expired (${Math.round(age/1000/60)} minutes old), will fetch fresh data`);
+        console.log(`🗑️ Cache expired (${Math.round(age / 1000 / 60)} minutes old), will fetch fresh data`);
         return null;
       }
-      
-      console.log(`💾 Using cache from ${Math.round(age/1000/60)} minutes ago`);
+
+      console.log(`💾 Using cache from ${Math.round(age / 1000 / 60)} minutes ago`);
       return data.statuses;
-      
+
     } catch (error) {
       console.error("Error loading cached status:", error);
       return null;
@@ -607,14 +609,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // 💾 NEUE HILFSFUNKTION: Wende gecachte Status auf Locations an
   function applyCachedStatus(locations, cachedStatus) {
     let applied = 0;
-    
+
     locations.forEach(location => {
       if (location.spaceapi?.endpoint && cachedStatus[location.spaceapi.endpoint] !== undefined) {
         location.isOpen = cachedStatus[location.spaceapi.endpoint];
         applied++;
       }
     });
-    
+
     return applied;
   }
 
@@ -622,21 +624,21 @@ document.addEventListener('DOMContentLoaded', () => {
   function saveCachedSpaceAPIStatus(locations) {
     try {
       const statuses = {};
-      
+
       locations.forEach(location => {
         if (location.spaceapi?.endpoint && location.isOpen !== undefined) {
           statuses[location.spaceapi.endpoint] = location.isOpen;
         }
       });
-      
+
       const cacheData = {
         timestamp: Date.now(),
         statuses: statuses
       };
-      
+
       localStorage.setItem('spaceapi-status-cache', JSON.stringify(cacheData));
       console.log(`💾 Saved ${Object.keys(statuses).length} statuses to cache`);
-      
+
     } catch (error) {
       console.error("Error saving status cache:", error);
       // LocalStorage voll? Lösche alten Cache
@@ -649,11 +651,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ✨ NEUE HILFSFUNKTION: Erstelle Marker für eine Location
   function createMarkerForLocation(location) {
-    const marker = L.marker([location.loc.lat, location.loc.long], {
+    // Validiere Koordinaten (verhindere null/undefined)
+    const lat = location.loc?.lat;
+    const lng = location.loc?.long;
+
+    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+      console.warn('⚠️ Invalid coordinates for location:', location.name, 'lat:', lat, 'lng:', lng);
+      return null; // Skip this marker
+    }
+
+    const marker = L.marker([lat, lng], {
       icon: icons.defaultIcon,
       opacity: 0.66
     });
-    
+
     clusterGroup.addLayer(marker);
     marker.uniqueId = location.uniqueId;
 
@@ -862,17 +873,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('StyleFilterManager initialized successfully');
-    
+
     // Debug: Zeige die aktuellen Counts
     const openCount = json.filter(loc => loc.isOpen === true).length;
     const closedCount = json.filter(loc => loc.isOpen === false).length;
     const unknownCount = json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length;
-    
+
     console.log('📊 Filter initialized with:');
     console.log(`   - Open spaces: ${openCount}`);
     console.log(`   - Closed spaces: ${closedCount}`);
     console.log(`   - Unknown/loading: ${unknownCount}`);
-    
+
     if (openCount === 0 && closedCount === 0) {
       console.log('⏳ SpaceAPI status is still loading in background...');
       console.log('   Filter will be updated automatically when data arrives');
