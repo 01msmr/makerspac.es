@@ -1,9 +1,9 @@
 name: Update SpaceAPI Status
 
 on:
-  # Alle 15 Minuten
+  # Alle 5 Minuten
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/5 * * * *'
   
   # Manuell triggern
   workflow_dispatch:
@@ -11,6 +11,10 @@ on:
   # Bei Push (zum Testen)
   push:
     branches: [ main ]
+
+# ✨ NEU: Permissions hinzufügen!
+permissions:
+  contents: write
 
 jobs:
   update-status:
@@ -20,6 +24,9 @@ jobs:
       # 1. Checkout Repository
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          # ✨ NEU: Token mit Schreibrechten
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       # 2. Setup Node.js
       - name: Setup Node.js
@@ -29,13 +36,19 @@ jobs:
       
       # 3. Fetch SpaceAPI Status
       - name: Fetch SpaceAPI Status
-        run: node fetch-spaceapi-status.js
+        run: node scripts/fetch-spaceapi-status.js
       
-      # 4. Commit & Push (nur wenn sich was geändert hat)
+      # 4. Commit & Push
       - name: Commit changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add status.json
           git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Update SpaceAPI status [skip ci]"
-          git push
+      
+      # ✨ NEU: Push mit GitHub Token
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
