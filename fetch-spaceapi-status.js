@@ -39,8 +39,8 @@ const SPACE_APIS = [
   { name: 'Bastli', endpoint: 'https://bastli.ch/hackspace_api.php' }
 ];
 
-// ✨ OPTIMIERUNG 1: Länger Timeout (30 Sekunden)
-const TIMEOUT_MS = 30000; // 30 Sekunden
+// ✨ OPTIMIERUNG 1: Noch längerer Timeout (45 Sekunden)
+const TIMEOUT_MS = 45000; // 45 Sekunden
 
 // ✨ OPTIMIERUNG 2: Retry-Konfiguration
 const MAX_RETRIES = 3; // 3 Versuche
