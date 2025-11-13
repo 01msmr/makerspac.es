@@ -6,7 +6,7 @@ const path = require('path');
 // SpaceAPI Endpoints werden direkt aus locations.json gelesen
 
 // Konfiguration
-const TIMEOUT_MS = 30000; // 30 Sekunden
+const TIMEOUT_MS = 45000; // 45 Sekunden
 const MAX_RETRIES = 3; // 3 Versuche
 const RETRY_DELAY_MS = 5000; // 5 Sekunden zwischen Versuchen
 
