@@ -94,7 +94,7 @@ async function fetchSpaceStatus(space) {
 function loadSpaceAPIsFromLocations() {
   try {
     // Lade locations.json (vom Script-Verzeichnis aus gesehen)
-    const locationsPath = path.join(__dirname, '../locations.json');
+    const locationsPath = path.join(__dirname, 'locations.json');
 
     if (!fs.existsSync(locationsPath)) {
       console.error('❌ Error: locations.json not found at:', locationsPath);
@@ -171,7 +171,7 @@ async function main() {
   };
 
   // Schreibe JSON File
-  const outputPath = path.join(__dirname, '../status.json');
+  const outputPath = path.join(__dirname, 'status.json');
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
 
   // Detaillierte Statistiken
