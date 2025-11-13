@@ -1,48 +1,12 @@
-// scripts/fetch-spaceapi-status.js - OPTIMIERTE VERSION mit Retry
+// scripts/fetch-spaceapi-status.js - OPTIMIERT + liest aus locations.json
 const fs = require('fs');
+const path = require('path');
 
-// Liste aller SpaceAPI Endpoints
-const SPACE_APIS = [
-  { name: 'Toolbox Bodensee', endpoint: 'https://toolbox-bodensee.de/toolboxbodensee.json' },
-  { name: 'c3d2', endpoint: 'https://www.c3d2.de/spaceapi.json' },
-  { name: 'c-base', endpoint: 'https://www.c-base.org/status.json' },
-  { name: 'Metalab', endpoint: 'https://metalab.at/status.json' },
-  { name: 'CCC Hamburg', endpoint: 'https://spaceapi.hamburg.ccc.de' },
-  { name: 'Stratum 0', endpoint: 'https://status.stratum0.org/status.json' },
-  { name: 'Chaosdorf', endpoint: 'https://chaosdorf.de/space_api.json' },
-  { name: 'Chaospott', endpoint: 'https://status.chaospott.de/status.json' },
-  { name: 'CCC Frankfurt', endpoint: 'https://status.ccc-ffm.de/spaceapi.json' },
-  { name: 'RaumZeitLabor', endpoint: 'https://raumzeitlabor.de/api/spaceapi.json' },
-  { name: 'Entropia', endpoint: 'http://club.entropia.de/spaceapi' },
-  { name: 'Binary Kitchen', endpoint: 'https://www.binary-kitchen.de/spaceapi.php' },
-  { name: 'hacKNology', endpoint: 'https://www.hacknology.de/spaceapi/status.json' },
-  { name: 'CCC Mannheim', endpoint: 'https://www.ccc-mannheim.de/spaceapi/spaceapi.json' },
-  { name: 'Temporärhaus', endpoint: 'https://spaceapi.temporaerhaus.de/spaceapi.json' },
-  { name: 'Bytespeicher', endpoint: 'https://status.bytespeicher.org/status.json' },
-  { name: 'Chaostreff Backnang', endpoint: 'https://spaceapi.ctbk.de' },
-  { name: 'flipdot', endpoint: 'https://api.flipdot.org' },
-  { name: 'Hackerspace Bielefeld', endpoint: 'https://hackerspace-bielefeld.de/status.json' },
-  { name: 'Makerspace Gütersloh', endpoint: 'https://makerspace-gt.de/space-api/space-api.json' },
-  { name: '/dev/tal', endpoint: 'https://devtal.de/api' },
-  { name: 'fnordeingang', endpoint: 'https://status.fnordeingang.de/spaceapi.json' },
-  { name: 'CCC Cologne', endpoint: 'https://api.koeln.ccc.de' },
-  { name: 'CCC Aachen', endpoint: 'https://status.aachen.ccc.de/spaceapi' },
-  { name: 'CCC Darmstadt', endpoint: 'https://api.chaos-darmstadt.de' },
-  { name: 'Attraktor', endpoint: 'http://blog.attraktor.org/spaceapi/spaceapi.json' },
-  { name: 'CCC Flensburg', endpoint: 'https://api.chaostreff-flensburg.de' },
-  { name: 'Afra Berlin', endpoint: 'https://spaceapi.afra-berlin.de/v1/status.json' },
-  { name: 'Chaostreff Chemnitz', endpoint: 'https://chaoschemnitz.de/chch.json' },
-  { name: 'Turmlabor', endpoint: 'http://www.turmlabor.de/spaces.api' },
-  { name: 'hacksaar', endpoint: 'http://spaceapi.hacksaar.de/status.json' },
-  { name: '/usr/space', endpoint: 'https://www.usrspace.at/spaceapi.json' },
-  { name: 'Chaostreff Bern', endpoint: 'https://www.chaosbern.ch/spaceapi.json' },
-  { name: 'Bastli', endpoint: 'https://bastli.ch/hackspace_api.php' }
-];
+// ✨ KEINE DOPPELTE PFLEGE MEHR!
+// SpaceAPI Endpoints werden direkt aus locations.json gelesen
 
-// ✨ OPTIMIERUNG 1: Noch längerer Timeout (45 Sekunden)
-const TIMEOUT_MS = 45000; // 45 Sekunden
-
-// ✨ OPTIMIERUNG 2: Retry-Konfiguration
+// Konfiguration
+const TIMEOUT_MS = 30000; // 30 Sekunden
 const MAX_RETRIES = 3; // 3 Versuche
 const RETRY_DELAY_MS = 5000; // 5 Sekunden zwischen Versuchen
 
@@ -61,7 +25,7 @@ function fetchWithTimeout(url, timeout = TIMEOUT_MS) {
   ]);
 }
 
-// ✨ NEU: Fetch mit Retry-Logik
+// Fetch mit Retry-Logik
 async function fetchWithRetry(url, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -85,25 +49,30 @@ async function fetchSpaceStatus(space) {
   try {
     console.log(`📡 Fetching: ${space.name}`);
 
-    // ✨ Verwende Retry-Logik
     const response = await fetchWithRetry(space.endpoint);
 
     if (!response.ok) {
       console.log(`❌ ${space.name}: HTTP ${response.status}`);
-      return { ...space, status: null, error: `HTTP ${response.status}` };
+      return {
+        name: space.name,
+        endpoint: space.endpoint,
+        status: null,
+        error: `HTTP ${response.status}`,
+        lastUpdate: new Date().toISOString()
+      };
     }
 
     const data = await response.json();
     const isOpen = data.state?.open;
 
-    // ✨ OPTIMIERUNG 3: Besseres Logging
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
       isOpen === false ? '🔴 CLOSED' :
         '🟠 UNKNOWN';
     console.log(`✅ ${space.name}: ${statusEmoji}`);
 
     return {
-      ...space,
+      name: space.name,
+      endpoint: space.endpoint,
       status: isOpen,
       lastUpdate: new Date().toISOString(),
       error: null
@@ -112,7 +81,8 @@ async function fetchSpaceStatus(space) {
   } catch (error) {
     console.log(`❌ ${space.name}: ${error.message}`);
     return {
-      ...space,
+      name: space.name,
+      endpoint: space.endpoint,
       status: null,
       error: error.message,
       lastUpdate: new Date().toISOString()
@@ -120,10 +90,60 @@ async function fetchSpaceStatus(space) {
   }
 }
 
+// ✨ NEU: Lade SpaceAPI Endpoints aus locations.json
+function loadSpaceAPIsFromLocations() {
+  try {
+    // Lade locations.json (vom Script-Verzeichnis aus gesehen)
+    const locationsPath = path.join(__dirname, '../locations.json');
+
+    if (!fs.existsSync(locationsPath)) {
+      console.error('❌ Error: locations.json not found at:', locationsPath);
+      console.error('💡 Make sure locations.json exists in the root directory');
+      process.exit(1);
+    }
+
+    const locationsData = fs.readFileSync(locationsPath, 'utf8');
+    const locations = JSON.parse(locationsData);
+
+    // Extrahiere alle Locations mit SpaceAPI UND nicht-leerem Endpoint
+    const spacesWithAPI = locations.filter(loc =>
+      loc.spaceapi &&
+      loc.spaceapi.endpoint &&
+      loc.spaceapi.endpoint.trim() !== '' // ✨ Filtere auch leere Strings!
+    );
+
+    console.log(`📂 Loaded locations.json: ${locations.length} total locations`);
+    console.log(`🔌 Found ${spacesWithAPI.length} locations with SpaceAPI\n`);
+
+    if (spacesWithAPI.length === 0) {
+      console.warn('⚠️ Warning: No spaces with SpaceAPI found in locations.json');
+    }
+
+    // Mappe auf unser Format
+    return spacesWithAPI.map(loc => ({
+      name: loc.name,
+      endpoint: loc.spaceapi.endpoint
+    }));
+
+  } catch (error) {
+    console.error('❌ Error loading locations.json:', error.message);
+    if (error.code === 'ENOENT') {
+      console.error('💡 Make sure locations.json exists in the root directory');
+    } else if (error instanceof SyntaxError) {
+      console.error('💡 locations.json contains invalid JSON');
+    }
+    process.exit(1);
+  }
+}
+
 // Main Function
 async function main() {
   console.log('🚀 Starting SpaceAPI status fetch...');
-  console.log(`⚙️ Config: Timeout=${TIMEOUT_MS / 1000}s, Retries=${MAX_RETRIES}\n`);
+  console.log(`⚙️ Config: Timeout=${TIMEOUT_MS / 1000}s, Retries=${MAX_RETRIES}`);
+  console.log('='.repeat(50) + '\n');
+
+  // ✨ Lade Endpoints aus locations.json
+  const SPACE_APIS = loadSpaceAPIsFromLocations();
 
   const startTime = Date.now();
 
@@ -151,9 +171,10 @@ async function main() {
   };
 
   // Schreibe JSON File
-  fs.writeFileSync('status.json', JSON.stringify(output, null, 2));
+  const outputPath = path.join(__dirname, '../status.json');
+  fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
 
-  // ✨ OPTIMIERUNG 4: Detaillierte Statistiken
+  // Detaillierte Statistiken
   console.log('\n' + '='.repeat(50));
   console.log('📊 FINAL STATISTICS');
   console.log('='.repeat(50));
@@ -164,7 +185,7 @@ async function main() {
   console.log(`   ⏱️ Duration: ${duration}s`);
   console.log(`   ✅ Success Rate: ${((stats.open + stats.closed) / stats.total * 100).toFixed(1)}%`);
 
-  // ✨ NEU: Liste der fehlgeschlagenen APIs
+  // Liste der fehlgeschlagenen APIs
   const failed = results.filter(r => r.status === null);
   if (failed.length > 0) {
     console.log('\n❌ Failed APIs:');
@@ -173,7 +194,7 @@ async function main() {
     });
   }
 
-  console.log('\n✅ status.json created!');
+  console.log('\n✅ status.json created at:', outputPath);
 }
 
 // Run
