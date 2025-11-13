@@ -801,6 +801,36 @@
 
 
   {
+    "name": "machBar",
+    "loc": {
+      "lat": 52.3894436,
+      "long": 13.0785543,
+      "plz": 14473,
+      "city": "Potsdam",
+      "street": {
+        "name": "Friedrich-Engels-Straße",
+        "number": 22,
+        "ext": ", Haus 5"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://machbar-potsdam.de",
+      "text": "machbar-potsdam.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.ccc-p.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "STUDIO 114",
     "loc": {
       "lat": 52.3893456,
@@ -2423,6 +2453,9 @@
     "link": {
       "url": "https://www.c3re.de",
       "text": "c3re.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.c3re.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -6258,6 +6291,36 @@
 
 
   {
+    "name": "CCC Salzburg",
+    "loc": {
+      "lat": 47.7940083,
+      "long": 13.0565329,
+      "plz": 5020,
+      "city": "Salzburg",
+      "street": {
+        "name": "Ulrike-Gschwandtner-Straße",
+        "number": 5,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://cccsbg.at",
+      "text": "cccsbg.at"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.sbg.chaostreff.at/status/json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
     "name": "IT-Syndikat",
     "loc": {
       "lat": 47.2578210,
@@ -6360,10 +6423,13 @@
       "url": "https://bitwaescherei.ch",
       "text": "bitwaescherei.ch"
     },
+    "spaceapi": {
+      "endpoint": "https://api.ccczh.space/api/v13"
+    },
     "dates": {
       "space.init": 20200701,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250926
+      "datacheck.latest": 20251115
     }
  },
 
