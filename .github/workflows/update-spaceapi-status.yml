@@ -19,6 +19,7 @@ permissions:
 jobs:
   update-status:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # ✨ NEU: 10 Minuten Timeout
     
     steps:
       # 1. Checkout Repository
