@@ -3,7 +3,7 @@ name: Update SpaceAPI Status
 on:
   # Alle 5 Minuten
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
   
   # Manuell triggern
   workflow_dispatch:
