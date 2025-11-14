@@ -333,6 +333,36 @@
 
 
   {
+    "name": "Eigenbaukombinat Halle",
+    "loc": {
+      "lat": 51.4799004,
+      "long": 11.9922494,
+      "plz": 6112,
+      "city": "Halle (Saale)",
+      "street": {
+        "name": "Landsberger Straße",
+        "number": 30,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://eigenbaukombinat.de",
+      "text": "eigenbaukombinat.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.eigenbaukombinat.de/status_chaoszone.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "Werkstatt auf Gut Ziegenberg",
     "loc": {
       "lat": 51.7212248,
@@ -4587,6 +4617,9 @@
       "url": "https://c-hack.de",
       "text": "c-hack.de"
     },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.c-hack.de"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
@@ -6514,6 +6547,36 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Coredump",
+    "loc": {
+      "lat": 47.2251119,
+      "long": 8.8339446,
+      "plz": 8645,
+      "city": "Jona",
+      "street": {
+        "name": "Eichwiesstrasse",
+        "number": 4,
+        "ext": ""
+      },
+      "country": "Switzerland"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.coredump.ch",
+      "text": "coredump.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.crdmp.ch"
+    },
+    "dates": {
+      "space.init": 20130826,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
     }
  },
 
