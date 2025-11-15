@@ -126,6 +126,9 @@ class SearchManager {
       const nameMatch = location.name.toLowerCase().includes(searchQuery);
       const cityMatch = location.loc.city.toLowerCase().includes(searchQuery);
       const plzMatch = location.loc.plz && this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery);
+      const countryMatch = location.loc.country &&
+        location.loc.country.toLowerCase().includes(searchQuery);
+
       return nameMatch || cityMatch || plzMatch;
     });
   }
