@@ -408,8 +408,11 @@
     },
     "style": "for all",
     "link": {
-      "url": "https://krautspace.de",
-      "text": "krautspace.de"
+      "url": "https://kraut.space",
+      "text": "kraut.space"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.kraut.space/api"
     },
     "dates": {
       "space.init": 20010000,
@@ -1107,6 +1110,36 @@
 
 
   {
+    "name": "Hacklabor",
+    "loc": {
+      "lat": 53.6011623,
+      "long": 11.4182198,
+      "plz": 19061,
+      "city": "Schwerin",
+      "street": {
+        "name": "Hagenower Straße",
+        "number": 73,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://hacklabor.de",
+      "text": "hacklabor.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://hacklabor.de/api/space/v1"
+    },
+    "dates": {
+      "space.init": 20160226,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "TüftelLab Hamburg",
     "loc": {
       "lat": 53.5552490,
@@ -1542,6 +1575,9 @@
       "url": "https://leinelab.org",
       "text": "leinelab.org"
     },
+    "spaceapi": {
+      "endpoint": "https://leinelab.org/api/spaceapi.json"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
@@ -1573,6 +1609,36 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "Leitstelle 511",
+    "loc": {
+      "lat": 52.3881262,
+      "long": 9.7179175,
+      "plz": 30167,
+      "city": "Hannover",
+      "street": {
+        "name": "Klaus-Müller-Kilian-Weg",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hannover.ccc.de",
+      "text": "hannover.ccc.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://hannover.ccc.de/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
     }
   },
 
@@ -3570,6 +3636,36 @@
 
 
   {
+    "name": "haxko",
+    "loc": {
+      "lat": 50.4345202,
+      "long": 7.4045055,
+      "plz": 56626,
+      "city": "Andernach",
+      "street": {
+        "name": "Kurfürstendamm",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://haxko.space",
+      "text": "haxko.space"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.haxko.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "Fab Lab Siegen",
     "loc": {
       "lat": 50.8760889,
@@ -3614,6 +3710,9 @@
     "link": {
       "url": "https://ha.si",
       "text": "ha.si"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.ha.si"
     },
     "dates": {
       "space.init": 20010000,
@@ -5721,13 +5820,16 @@
     },
     "style": "for all",
     "link": {
-      "url": "hthttps://k4cg.org",
+      "url": "https://k4cg.org",
       "text": "k4cg.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.k4cg.org/spaceapi.json"
     },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "datacheck.latest": 20251115
     }
  },
 
@@ -6471,6 +6573,9 @@
       "url": "https://it-syndikat.org",
       "text": "it-syndikat.org"
     },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.it-syndikat.org/api/status.php"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
@@ -6502,6 +6607,36 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Ko-Lab Hackerspace",
+    "loc": {
+      "lat": 51.0751501,
+      "long": 3.7260859,
+      "plz": 2800,
+      "city": "Mechelen",
+      "street": {
+        "name": "Hoveniersstraat",
+        "number": 14,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://ko-lab.space",
+      "text": "ko-lab.space"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.ko-lab.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
     }
  },
 
@@ -7013,6 +7148,36 @@
     },
     "spaceapi": {
       "endpoint": "https://hack42.nl/spacestate/json.php"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hacklab",
+    "loc": {
+      "lat": 51.8374357,
+      "long": 5.8444158,
+      "plz": 2000,
+      "city": "Kyiv",
+      "street": {
+        "name": "Novokostiantynivska St.",
+        "number": 1,
+        "ext": "B"
+      },
+      "country": "Ukraine"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hacklab.kyiv.ua",
+      "text": "hacklab.kyiv.ua"
+    },
+    "spaceapi": {
+      "endpoint": "https://hacklab.kiev.ua/files/spaceapi.json"
     },
     "dates": {
       "init": 20010000,

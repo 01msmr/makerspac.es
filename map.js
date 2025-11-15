@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Helper function
   function zfill(plz, country) {
-    const expectedLengths = { Germany: 5, Austria: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4 };
+    const expectedLengths = { Germany: 5, Austria: 4, Belgium: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4, Ukraine: 5};
     let plzStr = String(plz);
     let expectedLength = expectedLengths[country] || plzStr.length;
     return plzStr.padStart(expectedLength, "0");
