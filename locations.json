@@ -297,10 +297,13 @@
       "url": "https://dezentrale.space",
       "text": "dezentrale.space"
     },
+    "spaceapi": {
+      "endpoint": "https://api.dezentrale.cloud/spaceapi/v14"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "datacheck.latest": 20251115
     }
  },
 
@@ -1437,6 +1440,33 @@
 
 
   {
+    "name": "KreativKellerei",
+    "loc": {
+      "lat": 54.3416710,
+      "long": 10.1250908,
+      "plz": 26382,
+      "city": "Wilhelmshaven",
+      "street": {
+        "name": "Admiral-Klatt-Straße",
+        "number": 50,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://fablab.sh",
+      "text": "fablab.sh"
+    },
+    "dates": {
+      "space.init": 20220525,
+      "blog.latest": 20250316,
+      "datacheck.latest": 20251115
+    }
+  },
+
+
+  {
     "name": "FabLab Bremen",
     "loc": {
       "lat": 53.0811707,
@@ -1481,6 +1511,9 @@
     "link": {
       "url": "https://www.hackerspace-bremen.de",
       "text": "hackerspace-bremen.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://spacemanager.hackerspace-bremen.de/api/v1/spaceapi"
     },
     "dates": {
       "space.init": 20010000,
@@ -1589,6 +1622,9 @@
     "link": {
       "url": "https://blog.freieslabor.org",
       "text": "freieslabor.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://freieslabor.org/api/info"
     },
     "dates": {
       "space.init": 20010000,
@@ -3283,6 +3319,36 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Datenburg",
+    "loc": {
+      "lat": 50.7388750,
+      "long": 7.0943817,
+      "plz": 53111,
+      "city": "Bonn",
+      "street": {
+        "name": "Bornheimer Straße",
+        "number": 25,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://datenburg.org",
+      "text": "datenburg.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://datenburg.org/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
     }
  },
 
@@ -6264,10 +6330,13 @@
       "url": "https://devlol.org",
       "text": "devlol.org"
     },
+    "spaceapi": {
+      "endpoint": "https://devlol.org/status/hackerspaceapi"
+    },
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "datacheck.latest": 20251115
     }
  },
 
@@ -6433,6 +6502,66 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
+    }
+ },
+
+
+  {
+    "name": "Hackerspace Gent",
+    "loc": {
+      "lat": 51.0751501,
+      "long": 3.7260859,
+      "plz": 9000,
+      "city": "Gent",
+      "street": {
+        "name": "Wiedauwkaai",
+        "number": 51,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackerspace.gent",
+      "text": "hackerspace.gent"
+    },
+    "spaceapi": {
+      "endpoint": "https://windowserver.0x20.be/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
+    "name": "FIXME Hackerspace",
+    "loc": {
+      "lat": 46.5321969,
+      "long": 6.5914047,
+      "plz": 1020,
+      "city": "Renens",
+      "street": {
+        "name": "Chemin du Closel",
+        "number": 3,
+        "ext": "Etage 1"
+      },
+      "country": "Switzerland"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://fixme.ch",
+      "text": "fixme.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://fixme.ch/cgi-bin/spaceapi.py"
+    },
+    "dates": {
+      "space.init": 20101003,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
     }
  },
 
@@ -6639,30 +6768,57 @@
 
 
   {
-    "name": "NOI Makerspace",
+    "name": "Hal9k",
     "loc": {
-      "lat": 46.4786013,
-      "long": 11.3325925,
-      "plz": 39100,
-      "city": "Bolzano-Bozen",
+      "lat": 57.0187230,
+      "long": 9.8821367,
+      "plz": 9200,
+      "city": "Aalborg",
       "street": {
-        "name": "Via Volta",
-        "number": 13,
-        "ext": "a"
+        "name": "Sofiendalsvej",
+        "number": 80,
+        "ext": ""
       },
-      "country": "Italy"
+      "country": "Denmark"
     },
-    "style": "commercial",
+    "style": "for all",
     "link": {
-      "url": "https://makerspace.noi.bz.it",
-      "text": "makerspace.noi.bz.it"
+      "url": "https://www.hal9k.dk",
+      "text": "hal9k.dk"
     },
     "dates": {
-      "space.init": 20010000,
+      "init": 20080523,
       "blog.latest": 20010000,
-      "datacheck.latest": 20250726
+      "space.edited.latest": 20251115
     }
  },
+
+
+{
+  "name": "NOI Makerspace",
+  "loc": {
+    "lat": 46.4786013,
+    "long": 11.3325925,
+    "plz": 39100,
+    "city": "Bolzano-Bozen",
+    "street": {
+      "name": "Via Volta",
+      "number": 13,
+      "ext": "a"
+    },
+    "country": "Italy"
+  },
+  "style": "commercial",
+  "link": {
+    "url": "https://makerspace.noi.bz.it",
+    "text": "makerspace.noi.bz.it"
+  },
+  "dates": {
+    "space.init": 20010000,
+    "blog.latest": 20010000,
+    "datacheck.latest": 20250726
+  }
+},
 
 
   {
@@ -6742,6 +6898,126 @@
       "init": 20010000,
       "blog.latest": 20010000,
       "space.edited.latest": 20250726
+    }
+  },
+
+
+  {
+    "name": "HermitHive",
+    "loc": {
+      "lat": 52.0293447,
+      "long": 5.0830369,
+      "plz": 3431,
+      "city": "HN Nieuwegein",
+      "street": {
+        "name": "Bankstede",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hermithive.nl",
+      "text": "hermithive.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hermithive.nl/state.json"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hackalot",
+    "loc": {
+      "lat": 51.4843364,
+      "long": 5.4495034,
+      "plz": 5627,
+      "city": "JP Eindhoven",
+      "street": {
+        "name": "Fransebaan",
+        "number": 93,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackalot.nl",
+      "text": "hackalot.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hackalot.nl/statejson"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hackerspace Nijmegen",
+    "loc": {
+      "lat": 51.8374345,
+      "long": 5.8444145,
+      "plz": 6542,
+      "city": "JP Nijmegen",
+      "street": {
+        "name": "Villanovastraat",
+        "number": 4,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackerspacenijmegen.nl",
+      "text": "hackerspacenijmegen.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://state.hackerspacenijmegen.nl/state.json"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hack42",
+    "loc": {
+      "lat": 51.9771387,
+      "long": 5.9402584,
+      "plz": 6827,
+      "city": "BL Arnhem",
+      "street": {
+        "name": "Cruquiusweg",
+        "number": 3,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hack42.nl",
+      "text": "hack42.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hack42.nl/spacestate/json.php"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
     }
   }
 ]
