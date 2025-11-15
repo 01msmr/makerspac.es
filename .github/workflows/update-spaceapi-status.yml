@@ -1,18 +1,18 @@
 name: Update SpaceAPI Status
 
 on:
-  # Alle 5 Minuten
+  # update every 10 minutes
   schedule:
     - cron: '*/10 * * * *'
   
-  # Manuell triggern
+  # trigger manually
   workflow_dispatch:
   
-  # Bei Push (zum Testen)
+  # on push (for testing)
   push:
     branches: [ main ]
 
-# ✨ NEU: Permissions hinzufügen!
+# ✨ (with permissions)
 permissions:
   contents: write
 
@@ -46,7 +46,7 @@ jobs:
           git add status.json
           git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Update SpaceAPI status [skip ci]"
       
-      # ✨ NEU: Push mit GitHub Token
+      # ✨ push with gitHub token
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
