@@ -248,11 +248,70 @@ a#titleurl {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   pointer-events: none;
+  
+  /* NEU, aber OHNE Funktion?? */
+  /* transition: all 0.2s ease;
+  z-index: 2; */
+
+  /* position: relative; */
+  cursor: default;
 }
 
+/*  für Clear-Icon  */
 .search-counter.visible {
   opacity: 1;
+  pointer-events: auto;
 }
+
+
+
+
+
+/* ✨ Wenn clearable - Cursor wird pointer */
+.search-counter.is-clearable {
+  cursor: pointer;
+}
+
+/* ✨ NEU: Pseudo-Element für das Kreuz (standardmäßig versteckt) */
+.search-counter::after {
+  content: '×';
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 45px;
+  font-weight: 200;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+/* ✨ NEU: Hover-Effekt - nur wenn clearable */
+.search-counter.is-clearable:hover {
+  background: var(--primary-color, #0066cc);
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* ✨ NEU: Zeige Kreuz beim Hover - nur wenn clearable */
+.search-counter.is-clearable:hover::after {
+  opacity: 1;
+}
+
+/* ✨ NEU: Verstecke Zahl beim Hover - nur wenn clearable */
+.search-counter.is-clearable:hover {
+  color: transparent;
+}
+
+/* ✨ NEU: Active/Click-Effekt */
+.search-counter.is-clearable:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+
+
+
 
 .search-counter.has-results {
   background-color: var(--dropdown-bg);

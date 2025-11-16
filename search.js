@@ -86,6 +86,14 @@ class SearchManager {
 
     this.suggestionsDropdown.addEventListener('scroll', () => { this.updateHoverSVGPosition(); });
     this.map.on('zoomstart movestart', () => { this.removeConnectionLine(); });
+
+    // ✨ Click-Event für Search Counter (Clear-Funktion)
+    this.searchCounter.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.searchBar.value.length > 0) {
+        this.clearSearch();
+      }
+    });
   }
 
 
@@ -444,10 +452,24 @@ updateMarkers(filteredLocations) {
 
   updateSearchCounter(count) {
     this.searchCounter.textContent = count;
-    const isSearching = this.searchBar.value.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
+    const isSearching = this.searchBar.value.length > 0 ||
+      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
     this.searchCounter.classList.toggle('visible', isSearching);
     this.searchCounter.classList.toggle('has-results', count > 0);
     this.searchCounter.classList.toggle('no-results', isSearching && count === 0);
+    // ✨ NEU: Zeige Clear-Icon, wenn Suchtext vorhanden
+    const hasSearchText = this.searchBar.value.length > 0;
+    this.searchCounter.classList.toggle('is-clearable', hasSearchText);
+  }
+
+  clearSearch() {
+    this.searchBar.value = '';
+    this.searchBar.focus();
+
+    // Triggere die Filter-Aktualisierung
+    if (this.styleFilterManager) {
+      this.styleFilterManager.applyFilters();
+    }
   }
 
   createSuggestionItems(locations) {
