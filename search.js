@@ -129,7 +129,7 @@ class SearchManager {
       const countryMatch = location.loc.country &&
         location.loc.country.toLowerCase().includes(searchQuery);
 
-      return nameMatch || cityMatch || plzMatch;
+      return nameMatch || cityMatch || plzMatch || countryMatch;
     });
   }
 
@@ -384,35 +384,44 @@ class SearchManager {
     return locations.sort((a, b) => b.loc.lat - a.loc.lat);
   }
 
-  updateMarkers(filteredLocations) {
-    const clusterGroup = window.clusterGroup;
-    if (!clusterGroup) return; // Fallback falls Clustering nicht initialisiert
+updateMarkers(filteredLocations) {
+  const clusterGroup = window.clusterGroup;
+  if (!clusterGroup) return;
 
-    const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+  const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
-    this.allMarkers.forEach(marker => {
-      if (filteredIds.has(marker.uniqueId)) {
-        // Marker soll angezeigt werden
-        if (!clusterGroup.hasLayer(marker)) {
-          clusterGroup.addLayer(marker);
-        }
-
-        const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
-        let iconToSet;
-        if (location && location.isOpen === true) { iconToSet = this.icons.greenIcon; }
-        else if (location && location.isOpen === false) { iconToSet = this.icons.redIcon; }
-        else if (location && location.spaceapi && location.spaceapi.endpoint) { iconToSet = this.icons.unknownStatusIcon; }
-        else { iconToSet = this.icons.highlightIcon; }
-        marker.setIcon(iconToSet);
-
-      } else {
-        // Marker soll versteckt werden  
-        if (clusterGroup.hasLayer(marker)) {
-          clusterGroup.removeLayer(marker);
-        }
+  this.allMarkers.forEach(marker => {
+    const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
+    
+    if (filteredIds.has(marker.uniqueId)) {
+      // Marker soll angezeigt werden
+      if (!clusterGroup.hasLayer(marker)) {
+        clusterGroup.addLayer(marker);
       }
-    });
-  }
+
+      // ✨ FIX: Setze das richtige Icon basierend auf Status
+      let iconToSet;
+      
+      if (location && location.isOpen === true) {
+        iconToSet = this.icons.greenIcon;  // ✅ Grün!
+      } else if (location && location.isOpen === false) {
+        iconToSet = this.icons.redIcon;    // ✅ Rot!
+      } else if (location && location.spaceapi && location.spaceapi.endpoint) {
+        iconToSet = this.icons.unknownStatusIcon; // ✅ Gelb/Unknown!
+      } else {
+        iconToSet = this.icons.highlightIcon; // Standard
+      }
+      
+      marker.setIcon(iconToSet);
+
+    } else {
+      // Marker soll versteckt werden
+      if (clusterGroup.hasLayer(marker)) {
+        clusterGroup.removeLayer(marker);
+      }
+    }
+  });
+}
 
   setupSpaceAPIEvents() {
     if (window.spaceAPI) {

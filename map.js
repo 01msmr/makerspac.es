@@ -351,8 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = window.markerStateManager.getState(marker.uniqueId);
 
     // Verhindere Icon-Updates während aktiver Hover-Zustände
-    if (state.isHovering || state.isDropdownHovering) return;
+    if (state.isHovering || state.isDropdownHovering) {
+      return;
+    }
 
+    // Sticky Marker haben Priorität
     if (currentStickyMarker === marker && isPopupSticky) {
       if (window.spaceAPI) {
         const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
@@ -360,35 +363,53 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         marker.setIcon(icons.highlightIcon);
       }
-    } else {
-      const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
+      return;
+    }
 
-      if (searchQuery.length > 0) {
-        const filteredLocations = json.filter(loc =>
-          loc.name.toLowerCase().includes(searchQuery) ||
-          zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
-          loc.loc.city.toLowerCase().includes(searchQuery)
-        );
+    const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
 
-        if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
-          let iconToSet;
+    // ✨ FIX: Prüfe auch ob Style-Filter aktiv sind
+    const hasActiveFilters = window.styleFilterManager &&
+      window.styleFilterManager.hasActiveFilters();
 
-          if (location.isOpen === true) {
-            iconToSet = icons.greenIcon;
-          } else if (location.isOpen === false) {
-            iconToSet = icons.redIcon;
-          } else if (location.spaceapi && location.spaceapi.endpoint) {
-            iconToSet = icons.unknownStatusIcon;
-          } else {
-            iconToSet = icons.highlightIcon;
-          }
+    if (searchQuery.length > 0 || hasActiveFilters) {
+      // Marker ist gefiltert/gesucht - zeige Status-basiertes Icon
+      const filteredLocations = json.filter(loc =>
+        loc.name.toLowerCase().includes(searchQuery) ||
+        zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
+        loc.loc.city.toLowerCase().includes(searchQuery)
+      );
 
-          marker.setIcon(iconToSet);
+      if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
+        // ✨ KRITISCHER FIX: Zeige immer den korrekten Status!
+        let iconToSet;
+
+        if (location.isOpen === true) {
+          iconToSet = icons.greenIcon;  // ✅ Grün bleibt grün!
+        } else if (location.isOpen === false) {
+          iconToSet = icons.redIcon;    // ✅ Rot bleibt rot!
+        } else if (location.spaceapi && location.spaceapi.endpoint) {
+          iconToSet = icons.unknownStatusIcon; // ✅ Unknown bleibt unknown!
         } else {
-          marker.setIcon(icons.defaultIcon);
+          iconToSet = icons.highlightIcon; // Standard-Highlight
         }
+
+        marker.setIcon(iconToSet);
       } else {
+        // Marker ist nicht im Filter - graues Default-Icon
         marker.setIcon(icons.defaultIcon);
+      }
+    } else {
+      // Spaces mit bekanntem Status sollen ihre Farbe behalten!
+
+      if (location.isOpen === true) {
+        marker.setIcon(icons.greenIcon);  // ✅ Offene Spaces bleiben grün!
+      } else if (location.isOpen === false) {
+        marker.setIcon(icons.redIcon);    // ✅ Geschlossene Spaces bleiben rot!
+      } else if (location.spaceapi && location.spaceapi.endpoint) {
+        marker.setIcon(icons.unknownStatusIcon); // ✅ Unknown bleibt gelb!
+      } else {
+        marker.setIcon(icons.defaultIcon); // Normale Spaces grau
       }
     }
   }
@@ -802,9 +823,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Icon-Update nur wenn kein Hover-Zustand mehr aktiv
-      if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
-        updateMarkerIcon(marker, location);
-      }
+      setTimeout(() => {
+        if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
+          // ✨ WICHTIG: Verwende updateMarkerIcon statt direkt setIcon!
+          updateMarkerIcon(marker, location);
+        }
+      }, 50);
     });
 
     marker.on('click', (e) => {
@@ -831,7 +855,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const marker = allMarkers.find(m => m.uniqueId === location.uniqueId);
     if (!marker) return;
 
-    // Bestimme das richtige Icon
+    // ✨ WICHTIG: Nur aktualisieren wenn KEIN Hover aktiv ist
+    const state = window.markerStateManager.getState(marker.uniqueId);
+    if (state.isHovering || state.isDropdownHovering) {
+      console.log('⏸️ Skipping icon update during hover:', location.name);
+      return;
+    }
+
+    // Bestimme das richtige Icon basierend auf Status
     let newIcon;
     if (location.isOpen === true) {
       newIcon = icons.greenIcon;
@@ -841,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log(`🔴 Updated marker for ${location.name} to CLOSED`);
     } else if (location.spaceapi && location.spaceapi.endpoint) {
       newIcon = icons.unknownStatusIcon;
-      console.log(`🟠 Updated marker for ${location.name} to UNKNOWN`);
+      console.log(`🟡 Updated marker for ${location.name} to UNKNOWN`);
     } else {
       newIcon = icons.highlightIcon;
     }
@@ -855,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
       marker.openPopup();
     }
   }
+
 
 
   // Style Filter Setup

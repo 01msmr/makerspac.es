@@ -369,7 +369,7 @@ class StyleFilterManager {
 
   updateMarkers(filteredLocations) {
     const clusterGroup = window.clusterGroup;
-    if (!clusterGroup) return; // Fallback falls Clustering nicht initialisiert
+    if (!clusterGroup) return;
 
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
@@ -382,12 +382,19 @@ class StyleFilterManager {
           clusterGroup.addLayer(marker);
         }
 
-        // Icon-Update basierend auf Status
+        // ✨ FIX: Icon-Update basierend auf Status
         let iconToSet;
-        if (location && location.isOpen === true) iconToSet = this.icons.greenIcon;
-        else if (location && location.isOpen === false) iconToSet = this.icons.redIcon;
-        else if (location && location.spaceapi && location.spaceapi.endpoint) iconToSet = this.icons.unknownStatusIcon;
-        else iconToSet = this.icons.highlightIcon;
+
+        if (location && location.isOpen === true) {
+          iconToSet = this.icons.greenIcon;  // ✅ Grün!
+        } else if (location && location.isOpen === false) {
+          iconToSet = this.icons.redIcon;    // ✅ Rot!
+        } else if (location && location.spaceapi && location.spaceapi.endpoint) {
+          iconToSet = this.icons.unknownStatusIcon; // ✅ Gelb/Unknown!
+        } else {
+          iconToSet = this.icons.highlightIcon;
+        }
+
         marker.setIcon(iconToSet);
 
       } else {
@@ -398,6 +405,7 @@ class StyleFilterManager {
       }
     });
   }
+
 
 
   getSelectedStyles() {
