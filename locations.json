@@ -1473,6 +1473,36 @@
 
 
   {
+    "name": "Mainframe",
+    "loc": {
+      "lat": 53.1438763,
+      "long": 8.2208066,
+      "plz": 26122,
+      "city": "Oldenburg",
+      "street": {
+        "name": "Bahnhofsplatz",
+        "number": 10,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.mainframe.io",
+      "text": "mainframe.io"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.mainframe.io/api/spaceInfo"
+    },
+    "dates": {
+      "space.init": 20110701,
+      "blog.latest": 20250630,
+      "datacheck.latest": 20251115
+    }
+  },
+
+
+  {
     "name": "KreativKellerei",
     "loc": {
       "lat": 54.3416710,
@@ -4137,6 +4167,36 @@
 
 
   {
+    "name": "Linux User Group Saar",
+    "loc": {
+      "lat": 49.3132809,
+      "long": 6.7469811,
+      "plz": 66740,
+      "city": "Saarlouis",
+      "street": {
+        "name": "Luxemburger Ring",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://lugsaar.de",
+      "text": "lugsaar.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://lugsaar.de/spaceapi/api.json"
+    },
+    "dates": {
+      "space.init": 19991201,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "Ideenw3rk Ludwigshafen",
     "loc": {
       "lat": 49.4808814,
@@ -6732,6 +6792,36 @@
 
 
   {
+    "name": "Luxeria",
+    "loc": {
+      "lat": 47.0360672,
+      "long": 8.2799066,
+      "plz": 6010,
+      "city": "Kriens",
+      "street": {
+        "name": "Degenstrasse",
+        "number": 3,
+        "ext": ""
+      },
+      "country": "Switzerland"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://luxeria.ch",
+      "text": "luxeria.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://luxeria.ch/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20100224,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "Bitwäscherei",
     "loc": {
       "lat": 47.3874368,
@@ -6866,6 +6956,36 @@
     },
     "spaceapi": {
       "endpoint": "https://status.crdmp.ch"
+    },
+    "dates": {
+      "space.init": 20130826,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
+    "name": "Makers im Zigerschlitz",
+    "loc": {
+      "lat": 47.0987434,
+      "long": 9.0699091,
+      "plz": 8752,
+      "city": "Näfels",
+      "street": {
+        "name": "Bahnhofstrasse",
+        "number": 34,
+        "ext": ""
+      },
+      "country": "Switzerland"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://zigerschlitzmakers.ch",
+      "text": "zigerschlitzmakers.ch"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.zigerschlitzmakers.ch/space-api.json"
     },
     "dates": {
       "space.init": 20130826,
@@ -7148,6 +7268,36 @@
     },
     "spaceapi": {
       "endpoint": "https://hack42.nl/spacestate/json.php"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hack42",
+    "loc": {
+      "lat": 51.9771387,
+      "long": 5.9402584,
+      "plz": 9713,
+      "city": "BT Groningen",
+      "street": {
+        "name": "Struisvogelstraat",
+        "number": 15,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://maakplek.nl",
+      "text": "maakplek.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://maakplek.nl/api"
     },
     "dates": {
       "init": 20010000,

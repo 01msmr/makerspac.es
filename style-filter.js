@@ -16,7 +16,8 @@ class StyleFilterManager {
 
     this.selectedStyles = new Set();
     this.styleStats = new Map();
-    this.closeDropdownTimeout = null;
+    // Timeout Variable wird nicht mehr benötigt für das Schließen
+    // this.closeDropdownTimeout = null; 
 
     this.initializeStyleStats();
     this.createFilterItems();
@@ -138,21 +139,17 @@ class StyleFilterManager {
       this.selectedStyles.delete(style);
       item.classList.remove('selected');
     } else {
-      // --- NEUE LOGIK FÜR GEGENSEITIGEN AUSSCHLUSS ---
-      // Bevor der neue Filter hinzugefügt wird:
+      // Gegenseitiger Ausschluss open/closed
       if (style === 'open') {
-        // Wenn "open" aktiviert wird, deaktiviere "closed"
         this.selectedStyles.delete('closed');
         const closedItem = this.filterContent.querySelector('[data-style="closed"]');
         if (closedItem) closedItem.classList.remove('selected');
       } else if (style === 'closed') {
-        // Wenn "closed" aktiviert wird, deaktiviere "open"
         this.selectedStyles.delete('open');
         const openItem = this.filterContent.querySelector('[data-style="open"]');
         if (openItem) openItem.classList.remove('selected');
       }
 
-      // Füge den geklickten Filter hinzu
       this.selectedStyles.add(style);
       item.classList.add('selected');
     }
@@ -160,36 +157,29 @@ class StyleFilterManager {
     this.updateFilterCounter();
     this.updateHeaderState();
     this.applyFilters();
-
-    // Schließe das Dropdown nach der Auswahl.
-    this.closeDropdown();
   }
-
-
-
 
   setupEventListeners() {
     const isDesktop = !window.matchMedia("(any-hover: none)").matches;
+
     if (isDesktop) {
+      // ✨ OPTIMIERUNG: Direktes Öffnen/Schließen ohne Verzögerung
       this.filterContainer.addEventListener('mouseenter', () => {
-        clearTimeout(this.closeDropdownTimeout);
         this.openDropdown();
       });
+
       this.filterContainer.addEventListener('mouseleave', () => {
-        this.closeDropdownTimeout = setTimeout(() => this.closeDropdown(), 3000);
+        // Keine Verzögerung mehr (kein setTimeout 3000ms)
+        this.closeDropdown();
       });
     }
 
-    // KORREKTUR: Die Logik wurde überarbeitet, um den Fokus zuverlässig zu setzen.
     const handleActivation = (e) => {
       e.preventDefault();
       e.stopPropagation();
 
       this.toggleDropdown();
 
-      // Prüfe den ZUSTAND NACH DEM TOGGLE:
-      // Wenn das Dropdown jetzt offen ist (egal ob es vorher schon offen war),
-      // setze den Fokus und resette die Tastaturnavigation.
       if (this.isDropdownOpen()) {
         this.currentFilterIndex = -1;
         this.updateActiveFilterItem();
@@ -197,12 +187,23 @@ class StyleFilterManager {
       }
     };
 
-    // Events, die die Aktivierungsfunktion aufrufen
     this.filterHeader.addEventListener('click', handleActivation);
     this.filterHeader.addEventListener('touchstart', handleActivation);
+
     this.filterHeader.addEventListener('keydown', (e) => {
+      // ENTER/SPACE öffnet/schließt das Dropdown
       if (e.code === 'Enter' || e.code === 'Space') {
         handleActivation(e);
+        return;
+      }
+
+      // ✨ ESC schließt das Dropdown
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        if (this.isDropdownOpen()) {
+          this.closeDropdown();
+        }
+        return;
       }
     });
 
@@ -210,22 +211,27 @@ class StyleFilterManager {
       e.stopPropagation();
       this.clearAllStyles();
     });
+
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.style-filter-container')) this.closeDropdown();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape' && this.isDropdownOpen()) {
-        e.preventDefault(); // Verhindert ggf. andere ESC-Aktionen im Browser
+      if (!e.target.closest('.style-filter-container')) {
         this.closeDropdown();
       }
     });
 
     this.currentFilterIndex = -1;
 
-    // Event Listener für die Tastaturnavigation INNERHALB des Dropdowns
+    // Tastaturnavigation INNERHALB des Filter-Dropdowns
     this.filterDropdown.addEventListener('keydown', (e) => {
       e.stopPropagation();
 
+      // ✨ ESC schließt das Dropdown
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        this.closeDropdown();
+        return;
+      }
+
+      // UP/DOWN/ENTER Navigation
       if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.code)) {
         e.preventDefault();
       } else {
@@ -257,10 +263,6 @@ class StyleFilterManager {
     });
   }
 
-
-
-
-
   // NEUE Methode zum Verwalten des "keyboard-active" Zustands
   updateActiveFilterItem(items) {
     items = items || this.filterContent.querySelectorAll('.style-filter-item, .filter-btn');
@@ -272,7 +274,6 @@ class StyleFilterManager {
         item.classList.remove('keyboard-active');
       }
     });
-  
   }
 
   clearAllStyles() {
@@ -283,9 +284,6 @@ class StyleFilterManager {
     this.updateFilterCounter();
     this.updateHeaderState();
     this.applyFilters();
-
-    // Schließe das Dropdown auch nach dem Leeren.
-    this.closeDropdown();
   }
 
   updateFilterCounter() {
@@ -365,7 +363,6 @@ class StyleFilterManager {
       this.searchManager.updateSearchResults(finalFiltered);
     }
   }
-  
 
   updateMarkers(filteredLocations) {
     const clusterGroup = window.clusterGroup;
@@ -405,8 +402,6 @@ class StyleFilterManager {
       }
     });
   }
-
-
 
   getSelectedStyles() {
     return Array.from(this.selectedStyles);

@@ -1,4 +1,4 @@
-// search.js - Finale Lösung mit zentralisiertem Marker-State Management und Style-Filter Integration
+// scripts/search.js - Fix: SVG-Objekt wird wieder korrekt in den DOM eingefügt
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -26,7 +26,6 @@ class SearchManager {
     this.isDropdownHovering = false;
     this.ZOOM_THRESHOLD = 2;
 
-    // NEU: Zeitstempel für den letzten Tastendruck
     this.lastKeypressTime = 0;
 
     this.initializeEventListeners();
@@ -38,41 +37,89 @@ class SearchManager {
   }
 
   initializeEventListeners() {
-
     this.searchBar.focus();
 
+    // ✨ NEUE GLOBALE TASTATUR-NAVIGATION
     document.addEventListener('keydown', (e) => {
-      // Tab-Navigation zwischen Suche und Filter - NUR wenn nicht getippt wird
-      if (e.code === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        const searchBarHasFocus = document.activeElement === this.searchBar;
-        const filterHeaderHasFocus = document.activeElement === this.styleFilterManager?.filterHeader;
+      const searchBarHasFocus = document.activeElement === this.searchBar;
+      const filterHeaderHasFocus = document.activeElement === this.styleFilterManager?.filterHeader;
+      const filterDropdownHasFocus = document.activeElement === this.styleFilterManager?.filterDropdown;
 
-        if (searchBarHasFocus && !e.shiftKey) {
-          // Vorwärts von Suche zum Filter
-          e.preventDefault();
-          if (this.styleFilterManager?.filterHeader) {
-            this.styleFilterManager.filterHeader.focus();
-          }
-        } else if (filterHeaderHasFocus && e.shiftKey) {
-          // Rückwärts von Filter zur Suche
-          e.preventDefault();
-          this.searchBar.focus();
-        } else if (filterHeaderHasFocus && !e.shiftKey) {
-          // Vorwärts von Filter zur Suche
-          e.preventDefault();
-          this.searchBar.focus();
+      // ESC - Schließt Dropdown überall
+      if (e.code === 'Escape') {
+        e.preventDefault();
+
+        if (this.searchBar.value.length > 0) {
+          this.clearSearch();
+        } else if (this.styleFilterManager?.isDropdownOpen()) {
+          this.styleFilterManager.closeDropdown();
+        } else {
+          this.handleEscapeKey();
         }
         return;
       }
 
-      if (e.code === 'ArrowDown') { e.preventDefault(); this.navigateDropdown('down'); }
-      else if (e.code === 'ArrowUp') { e.preventDefault(); this.navigateDropdown('up'); }
-      else if (e.code === 'Enter') { e.preventDefault(); this.handleEnterKey(); }
-      else if (e.code === 'Escape') { e.preventDefault(); this.handleEscapeKey(); }
+      // ✨ NEU: LINKS/RECHTS-Pfeile für Navigation zwischen Filter und Suche
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        const inDropdownNavigation = this.suggestionsDropdown.classList.contains('is-active') ||
+          (filterDropdownHasFocus && this.styleFilterManager?.isDropdownOpen());
+
+        if (!inDropdownNavigation) {
+          e.preventDefault();
+
+          if (e.code === 'ArrowRight') {
+            if (filterHeaderHasFocus || filterDropdownHasFocus) {
+              this.styleFilterManager.closeDropdown();
+              this.searchBar.focus();
+              this.searchBar.select();
+            }
+          } else if (e.code === 'ArrowLeft') {
+            if (searchBarHasFocus) {
+              this.closeDropdown();
+              if (this.styleFilterManager?.filterHeader) {
+                this.styleFilterManager.filterHeader.focus();
+              }
+            }
+          }
+          return;
+        }
+      }
+
+      // TAB-Navigation
+      if (e.code === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (searchBarHasFocus && !e.shiftKey) {
+          e.preventDefault();
+          this.closeDropdown(); // Schließe Suggestions beim Tabben aus der Suche
+          if (this.styleFilterManager?.filterHeader) {
+            this.styleFilterManager.filterHeader.focus();
+          }
+        } else if (filterHeaderHasFocus && e.shiftKey) {
+          e.preventDefault();
+          this.styleFilterManager.closeDropdown(); // Schließe Filter beim Zurück-Tabben
+          this.searchBar.focus();
+        }
+        // ✨ TAB im Filter deaktiviert (kein clear)
+        return;
+      }
+
+      // UP/DOWN Navigation - NUR im Such-Dropdown
+      if (searchBarHasFocus && (e.code === 'ArrowDown' || e.code === 'ArrowUp')) {
+        e.preventDefault();
+        if (e.code === 'ArrowDown') this.navigateDropdown('down');
+        else if (e.code === 'ArrowUp') this.navigateDropdown('up');
+        return;
+      }
+
+      // ENTER - NUR im Such-Kontext
+      if (searchBarHasFocus && e.code === 'Enter') {
+        e.preventDefault();
+        this.handleEnterKey();
+        return;
+      }
     });
 
     this.searchBar.addEventListener('keyup', (e) => {
-      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'].includes(e.code)) return;
+      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return;
       if (this.styleFilterManager) this.styleFilterManager.applyFilters();
     });
 
@@ -84,10 +131,14 @@ class SearchManager {
       if (!e.target.closest('.search-container')) this.closeDropdown();
     });
 
-    this.suggestionsDropdown.addEventListener('scroll', () => { this.updateHoverSVGPosition(); });
-    this.map.on('zoomstart movestart', () => { this.removeConnectionLine(); });
+    this.suggestionsDropdown.addEventListener('scroll', () => {
+      this.updateHoverSVGPosition();
+    });
 
-    // ✨ Click-Event für Search Counter (Clear-Funktion)
+    this.map.on('zoomstart movestart', () => {
+      this.removeConnectionLine();
+    });
+
     this.searchCounter.addEventListener('click', (e) => {
       e.stopPropagation();
       if (this.searchBar.value.length > 0) {
@@ -96,13 +147,11 @@ class SearchManager {
     });
   }
 
-
   updateSearchResults(filteredLocations) {
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
     const searchQuery = this.searchBar.value.trim().toLowerCase();
 
-    // NEUE BEDINGUNG: Zeige Dropdown, wenn Suchtext vorhanden ODER Filter aktiv sind
     const shouldShowDropdown = searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
 
     if (shouldShowDropdown) {
@@ -110,14 +159,12 @@ class SearchManager {
       this.updateDropdownUI(filteredLocations.length > 0);
       this.triggerAutoZoom(filteredLocations);
     } else {
-      // Leert das Dropdown, wenn weder gesucht noch gefiltert wird
       this.suggestionsDropdown.innerHTML = '';
       this.updateDropdownUI(false);
-      this.handleEmptySearch(); // Zoomt auf die Gesamtansicht
+      this.handleEmptySearch();
     }
   }
 
-  // NEUE Methode, die die Zoom-Logik bündelt
   triggerAutoZoom(locations) {
     clearTimeout(this.zoomDebounceTimeout);
     const DEBOUNCE_DELAY = 800;
@@ -141,7 +188,6 @@ class SearchManager {
     });
   }
 
-  // Unveränderter Rest der Datei...
   createHoverIcon(color) {
     const iconSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
@@ -166,7 +212,6 @@ class SearchManager {
           } else if (location.isOpen === false) {
             hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
           } else {
-            // Nur für Spaces mit API aber unbekanntem Status
             hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
           }
         }
@@ -181,16 +226,11 @@ class SearchManager {
     }
   }
 
-
-
   applyHoverEffects(item, location) {
-
-    // Entferne vorherige js-hover Klassen
     this.suggestionsDropdown.querySelectorAll('.js-hover').forEach(el => {
       el.classList.remove('js-hover');
     });
 
-    // Füge neue js-hover Klasse hinzu
     item.classList.add('js-hover');
 
     this.isDropdownHovering = true;
@@ -230,8 +270,6 @@ class SearchManager {
   }
 
   removeHoverEffects(location) {
-
-    // Entferne js-hover Klasse
     if (this.currentHoverItem) {
       this.currentHoverItem.classList.remove('js-hover');
     }
@@ -259,20 +297,11 @@ class SearchManager {
         targetMarker.closePopup();
       }
 
-      // FIX: Icon explizit zurücksetzen, um Skalierung zu entfernen
       if (window.mapUtils && window.mapUtils.updateMarkerIcon) {
         window.mapUtils.updateMarkerIcon(targetMarker, location);
       }
-
-      // setTimeout(() => {
-      //   if (window.markerStateManager && !window.markerStateManager.isAnyHoverActive(targetMarker.uniqueId)) {
-      //     if (this.styleFilterManager) this.styleFilterManager.applyFilters();
-      //   }
-      // }, 100);
     }
   }
-
-
 
   handleTabKey() {
     this.searchBar.focus();
@@ -282,18 +311,15 @@ class SearchManager {
   }
 
   navigateDropdown(direction) {
-    // this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
     if (this.dropdownItems.length === 0) return;
 
-    // NEU: Zeitstempel bei jeder Navigation per Taste setzen
     this.lastKeypressTime = Date.now();
 
-    let newIndex = this.currentDropdownIndex; // NEU: Benutze newIndex
+    let newIndex = this.currentDropdownIndex;
 
     if (direction === 'down') {
       newIndex = (this.currentDropdownIndex + 1) % this.dropdownItems.length;
     } else if (direction === 'up') {
-      // KORREKTUR: Wenn currentDropdownIndex -1 ist, gehe zum letzten Element (length - 1)
       if (this.currentDropdownIndex === -1) {
         newIndex = this.dropdownItems.length - 1;
       } else {
@@ -301,9 +327,7 @@ class SearchManager {
       }
     }
 
-    // Setze den korrigierten Index
     this.currentDropdownIndex = newIndex;
-
     this.updateActiveDropdownItem();
     this.scrollToActiveItem();
   }
@@ -311,24 +335,20 @@ class SearchManager {
   updateActiveDropdownItem() {
     const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
 
-    // 1. Hover-Effekte vom ZUVOR AKTIVEN/GEHOVERERTEN Element entfernen
     if (previousActive) {
       previousActive.classList.remove('keyboard-active');
       const prevLocation = this.getLocationFromDropdownItem(previousActive);
       if (prevLocation) {
-        // Explizites Entfernen der Hover-Effekte, da Tastaturnavigation
         this.removeHoverEffects(prevLocation);
       }
     }
 
-    // 2. Setze neues aktives Element und wende Hover-Effekte an
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
       const activeItem = this.dropdownItems[this.currentDropdownIndex];
       activeItem.classList.add('keyboard-active');
 
       const location = this.getLocationFromDropdownItem(activeItem);
       if (location) {
-        // Wende Hover-Effekte auf das neue, aktive Element an
         this.applyHoverEffects(activeItem, location);
       }
     }
@@ -353,16 +373,12 @@ class SearchManager {
   }
 
   getLocationFromDropdownItem(dropdownItem) {
-    // Finde die ID des Eintrags
     const uniqueId = dropdownItem.dataset.uniqueId;
 
-    // Wenn die ID verfügbar ist, verwende diese.
     if (uniqueId) {
       return this.json.find(location => location.uniqueId === uniqueId) || null;
     }
 
-    // Fallback: Name abfragen und Icons/Styles im Namen ignorieren
-    // Die Regex entfernt Space-Icons/Style-Icons am Anfang des Namens
     const itemNameSpan = dropdownItem.querySelector('.item-name span');
     const itemName = itemNameSpan ? itemNameSpan.textContent.replace(/^(?:[^\w\s]*\s*){1,2}/, '').trim() : '';
 
@@ -392,44 +408,41 @@ class SearchManager {
     return locations.sort((a, b) => b.loc.lat - a.loc.lat);
   }
 
-updateMarkers(filteredLocations) {
-  const clusterGroup = window.clusterGroup;
-  if (!clusterGroup) return;
+  updateMarkers(filteredLocations) {
+    const clusterGroup = window.clusterGroup;
+    if (!clusterGroup) return;
 
-  const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+    const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
-  this.allMarkers.forEach(marker => {
-    const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
-    
-    if (filteredIds.has(marker.uniqueId)) {
-      // Marker soll angezeigt werden
-      if (!clusterGroup.hasLayer(marker)) {
-        clusterGroup.addLayer(marker);
-      }
+    this.allMarkers.forEach(marker => {
+      const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
-      // ✨ FIX: Setze das richtige Icon basierend auf Status
-      let iconToSet;
-      
-      if (location && location.isOpen === true) {
-        iconToSet = this.icons.greenIcon;  // ✅ Grün!
-      } else if (location && location.isOpen === false) {
-        iconToSet = this.icons.redIcon;    // ✅ Rot!
-      } else if (location && location.spaceapi && location.spaceapi.endpoint) {
-        iconToSet = this.icons.unknownStatusIcon; // ✅ Gelb/Unknown!
+      if (filteredIds.has(marker.uniqueId)) {
+        if (!clusterGroup.hasLayer(marker)) {
+          clusterGroup.addLayer(marker);
+        }
+
+        let iconToSet;
+
+        if (location && location.isOpen === true) {
+          iconToSet = this.icons.greenIcon;
+        } else if (location && location.isOpen === false) {
+          iconToSet = this.icons.redIcon;
+        } else if (location && location.spaceapi && location.spaceapi.endpoint) {
+          iconToSet = this.icons.unknownStatusIcon;
+        } else {
+          iconToSet = this.icons.highlightIcon;
+        }
+
+        marker.setIcon(iconToSet);
+
       } else {
-        iconToSet = this.icons.highlightIcon; // Standard
+        if (clusterGroup.hasLayer(marker)) {
+          clusterGroup.removeLayer(marker);
+        }
       }
-      
-      marker.setIcon(iconToSet);
-
-    } else {
-      // Marker soll versteckt werden
-      if (clusterGroup.hasLayer(marker)) {
-        clusterGroup.removeLayer(marker);
-      }
-    }
-  });
-}
+    });
+  }
 
   setupSpaceAPIEvents() {
     if (window.spaceAPI) {
@@ -441,9 +454,7 @@ updateMarkers(filteredLocations) {
     }
   }
 
-  updateDropdownIcons() {
-    // Diese Methode wird nicht mehr benötigt, da das Icon direkt in createSuggestionItem gesetzt wird.
-  }
+  updateDropdownIcons() { }
 
   updateDropdownUI(hasResults) {
     this.suggestionsDropdown.classList.toggle('is-active', hasResults);
@@ -457,7 +468,6 @@ updateMarkers(filteredLocations) {
     this.searchCounter.classList.toggle('visible', isSearching);
     this.searchCounter.classList.toggle('has-results', count > 0);
     this.searchCounter.classList.toggle('no-results', isSearching && count === 0);
-    // ✨ NEU: Zeige Clear-Icon, wenn Suchtext vorhanden
     const hasSearchText = this.searchBar.value.length > 0;
     this.searchCounter.classList.toggle('is-clearable', hasSearchText);
   }
@@ -466,7 +476,6 @@ updateMarkers(filteredLocations) {
     this.searchBar.value = '';
     this.searchBar.focus();
 
-    // Triggere die Filter-Aktualisierung
     if (this.styleFilterManager) {
       this.styleFilterManager.applyFilters();
     }
@@ -489,14 +498,11 @@ updateMarkers(filteredLocations) {
   createSuggestionItem(location) {
     const item = document.createElement('div');
     item.classList.add('suggestion-item');
-    // NEUE ZEILE: Speichere die uniqueId im data-Attribut
-    item.dataset.uniqueId = location.uniqueId; 
+    item.dataset.uniqueId = location.uniqueId;
     let statusIcon = '', spaceStatusClass = '', nameClass = '';
 
-    // --- NEU: Style Icon Logik (Wie besprochen) ---
     let styleIconHtml = '';
     const styleIconMap = {
-      // 'for all': 'fas fa-people-group',
       'for students': 'fas fa-graduation-cap',
       'for youth': 'fas fa-child',
       'commercial': 'fas fa-money-bill-wave',
@@ -505,10 +511,8 @@ updateMarkers(filteredLocations) {
     const locationStyle = location.style ? location.style.toLowerCase() : '';
 
     if (locationStyle && styleIconMap[locationStyle]) {
-      // style-icon Klasse für separates Styling
       styleIconHtml = `<i class="${styleIconMap[locationStyle]} style-icon" title="${location.style}"></i> `;
     }
-    // ----------------------------
 
     if (location.spaceapi && location.spaceapi.endpoint) {
       if (location.isOpen === true) {
@@ -535,10 +539,8 @@ updateMarkers(filteredLocations) {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
-      // Reset Tastatur-Navigation wenn Maus verwendet wird
       this.currentDropdownIndex = -1;
 
-      // Reset des vorherigen Maus-Hovvers, falls vorhanden (FIX für direktes Wechseln von Item A auf Item B)
       if (this.currentHoverItem && this.currentHoverItem !== item) {
         const prevLocation = this.getLocationFromDropdownItem(this.currentHoverItem);
         if (prevLocation) {
@@ -546,7 +548,6 @@ updateMarkers(filteredLocations) {
         }
       }
 
-      // Entferne vorherige Hover-Effekte (für Tastaturnavigation)
       const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
       if (previousActive) {
         const prevLocation = this.getLocationFromDropdownItem(previousActive);
@@ -566,12 +567,10 @@ updateMarkers(filteredLocations) {
       this.applyHoverEffects(item, location);
     });
 
-    // DIESER LISTENER FEHLTE:
     item.addEventListener('mouseleave', (e) => {
       if (e.relatedTarget && e.relatedTarget.closest('.suggestion-item')) {
         return;
       }
-
       this.removeHoverEffects(location);
     });
 
@@ -614,7 +613,7 @@ updateMarkers(filteredLocations) {
     path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 265.373,508.216 276.615,526.112C287.858,544.008 302.534,560.527 319.618,573.988C336.703,587.45 356.196,597.856 376.225,604.6C396.254,611.345 416.818,614.43 436.232,614.412L632.86,614.412L632.86,6.618Z');
     path.setAttribute('fill', color);
     svg.appendChild(path);
-    document.body.appendChild(svg);
+    document.body.appendChild(svg); // ✨ WIEDER EINGEFÜGT!
     this.currentHoverSVG = svg;
   }
 
@@ -873,7 +872,6 @@ updateMarkers(filteredLocations) {
     const dropdownBoundingRect = dropdown.getBoundingClientRect();
     const dropdownLeft = dropdownBoundingRect.left - mapRect.left;
     const dropdownRight = dropdownBoundingRect.right - mapRect.left;
-    const dropdownWidth = dropdownRight - dropdownLeft;
 
     const frameTopLeft = this.map.latLngToContainerPoint(zoomFrameBounds.getNorthWest());
     const frameBottomRight = this.map.latLngToContainerPoint(zoomFrameBounds.getSouthEast());
