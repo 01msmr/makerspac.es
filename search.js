@@ -61,6 +61,7 @@ class SearchManager {
 
       // ✨ NEU: LINKS/RECHTS-Pfeile für Navigation zwischen Filter und Suche
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        // Nur wenn NICHT in einer Dropdown-Liste navigiert wird
         const inDropdownNavigation = this.suggestionsDropdown.classList.contains('is-active') ||
           (filterDropdownHasFocus && this.styleFilterManager?.isDropdownOpen());
 
@@ -68,16 +69,24 @@ class SearchManager {
           e.preventDefault();
 
           if (e.code === 'ArrowRight') {
+            // Nach rechts: Filter → Suche
             if (filterHeaderHasFocus || filterDropdownHasFocus) {
               this.styleFilterManager.closeDropdown();
               this.searchBar.focus();
               this.searchBar.select();
+              // ✨ Öffne Such-Dropdown direkt beim Betreten
+              if (this.styleFilterManager) this.styleFilterManager.applyFilters();
             }
           } else if (e.code === 'ArrowLeft') {
+            // Nach links: Suche → Filter
             if (searchBarHasFocus) {
+              // Schließe Suggestions-Dropdown
               this.closeDropdown();
+
               if (this.styleFilterManager?.filterHeader) {
                 this.styleFilterManager.filterHeader.focus();
+                // ✨ Öffne Filter-Dropdown direkt beim Betreten
+                this.styleFilterManager.openDropdown();
               }
             }
           }
@@ -85,20 +94,31 @@ class SearchManager {
         }
       }
 
-      // TAB-Navigation
+      // TAB-Navigation (wie bisher, aber mit verbesserter Dropdown-Logik)
       if (e.code === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
         if (searchBarHasFocus && !e.shiftKey) {
           e.preventDefault();
-          this.closeDropdown(); // Schließe Suggestions beim Tabben aus der Suche
+          this.closeDropdown(); // ✨ Schließe Suggestions
           if (this.styleFilterManager?.filterHeader) {
             this.styleFilterManager.filterHeader.focus();
+            // ✨ Öffne Filter-Dropdown direkt beim Betreten
+            this.styleFilterManager.openDropdown();
           }
         } else if (filterHeaderHasFocus && e.shiftKey) {
           e.preventDefault();
-          this.styleFilterManager.closeDropdown(); // Schließe Filter beim Zurück-Tabben
+          this.styleFilterManager.closeDropdown(); // ✨ Schließe Filter
           this.searchBar.focus();
+          this.searchBar.select();
+          // ✨ Öffne Such-Dropdown direkt beim Betreten
+          if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+        } else if ((filterHeaderHasFocus || filterDropdownHasFocus) && !e.shiftKey) {
+          e.preventDefault();
+          this.styleFilterManager.closeDropdown(); // ✨ Schließe Filter
+          this.searchBar.focus();
+          this.searchBar.select();
+          // ✨ Öffne Such-Dropdown direkt beim Betreten
+          if (this.styleFilterManager) this.styleFilterManager.applyFilters();
         }
-        // ✨ TAB im Filter deaktiviert (kein clear)
         return;
       }
 
@@ -118,6 +138,7 @@ class SearchManager {
       }
     });
 
+    // Bestehende Event Listener (unverändert)
     this.searchBar.addEventListener('keyup', (e) => {
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return;
       if (this.styleFilterManager) this.styleFilterManager.applyFilters();
@@ -139,6 +160,7 @@ class SearchManager {
       this.removeConnectionLine();
     });
 
+    // ✨ NEU: Click-Event für Search Counter
     this.searchCounter.addEventListener('click', (e) => {
       e.stopPropagation();
       if (this.searchBar.value.length > 0) {
@@ -146,6 +168,7 @@ class SearchManager {
       }
     });
   }
+
 
   updateSearchResults(filteredLocations) {
     this.updateMarkers(filteredLocations);

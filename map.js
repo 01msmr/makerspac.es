@@ -493,16 +493,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initializeClustering() {
     clusterGroup = L.markerClusterGroup({
+      // ✨ Dynamischer Radius basierend auf Zoom
       maxClusterRadius: function (zoom) {
-        if (zoom >= 11) return 30;
-        if (zoom >= 9) return 45;
-        return 60;
-      },
-      disableClusteringAtZoom: 12,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: true,
+        // Zoom 0-7: Viele Marker, viel Clustering
+        // if (zoom <= 7) return 80;
 
-      // Optional: Polygon-Styling anpassen
+        // Zoom 8-9: Standard Clustering
+        if (zoom <= 9) return 60;
+
+        // Zoom 10-11: Reduziertes Clustering
+        if (zoom <= 11) return 40;
+
+        // Zoom 12-13: Minimales Clustering
+        if (zoom <= 13) return 25;
+
+        // Zoom 14+: Fast kein Clustering
+        // if (zoom <= 14) return 15;
+
+        // Zoom 15+: Kein Clustering
+        return 0;
+      },
+
+      // ✨ Clustering wird ab Zoom 14 komplett deaktiviert
+      disableClusteringAtZoom: 14,
+
+      // ✨ Spiderfy bei maximaler Zoom
+      spiderfyOnMaxZoom: true,
+      spiderfyDistanceMultiplier: 2,
+
+      // ✨ Zeige Polygon beim Hover
+      showCoverageOnHover: true,
+      zoomToBoundsOnClick: true,
+
+      // ✨ Animation
+      animate: true,
+      animateAddingMarkers: false,
+
+      // ✨ Chunk-Delay für bessere Performance
+      chunkedLoading: true,
+      chunkInterval: 200,
+      chunkDelay: 50,
+
       polygonOptions: {
         fillColor: '#0000ff',
         color: '#0000ff',
@@ -514,15 +545,21 @@ document.addEventListener('DOMContentLoaded', () => {
       iconCreateFunction: function (cluster) {
         const count = cluster.getChildCount();
         let className = 'marker-cluster-small';
+        let size = 40;
 
-        if (count > 20) className = 'marker-cluster-large';
-        else if (count > 10) className = 'marker-cluster-medium';
+        // ✨ Größe basierend auf Anzahl
+        if (count > 20) {
+          className = 'marker-cluster-large';
+          size = 50;
+        } else if (count > 10) {
+          className = 'marker-cluster-medium';
+          size = 45;
+        }
 
-        // KORREKTUR: Verwende new L.DivIcon() statt L.divIcon()
         return new L.DivIcon({
           html: '<div>' + count + '</div>',
           className: 'marker-cluster ' + className,
-          iconSize: new L.Point(40, 40)
+          iconSize: new L.Point(size, size)
         });
       }
     });
@@ -539,15 +576,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
       json = await response.json();
 
-      // ✨ PHASE 0: Lade cached SpaceAPI-Status aus LocalStorage (INSTANT!)
-      const cachedStatus = loadCachedSpaceAPIStatus();
-      if (cachedStatus) {
-        console.log("💾 Found cached SpaceAPI status, applying immediately...");
-        applyCachedStatus(json, cachedStatus);
-        console.log(`✅ Applied ${Object.keys(cachedStatus).length} cached statuses`);
-      }
+      // // ✨ PHASE 0: Lade cached SpaceAPI-Status aus LocalStorage (INSTANT!)
+      // const cachedStatus = loadCachedSpaceAPIStatus();
+      // if (cachedStatus) {
+      //   console.log("💾 Found cached SpaceAPI status, applying immediately...");
+      //   applyCachedStatus(json, cachedStatus);
+      //   console.log(`✅ Applied ${Object.keys(cachedStatus).length} cached statuses`);
+      // }
 
-      // ✨ PHASE 1: Zeige Marker SOFORT
+      // // ✨ PHASE 1: Zeige Marker SOFORT
       console.log("📍 Creating markers immediately...");
       json.forEach((location, index) => {
         if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
@@ -573,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Starte asynchrones Laden (ohne await = blockiert nicht!)
       spaceAPI.enrichLocationData(json).then(() => {
         // Speichere neue Status in LocalStorage
-        saveCachedSpaceAPIStatus(json);
+        // saveCachedSpaceAPIStatus(json);
 
         // Debug: Zähle die Ergebnisse
         const openCount = json.filter(loc => loc.isOpen === true).length;
@@ -601,74 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 💾 NEUE HILFSFUNKTION: Lade gecachte SpaceAPI-Status aus LocalStorage
-  function loadCachedSpaceAPIStatus() {
-    try {
-      const cached = localStorage.getItem('spaceapi-status-cache');
-      if (!cached) return null;
 
-      const data = JSON.parse(cached);
-
-      // Prüfe Alter des Cache
-      const age = Date.now() - data.timestamp;
-      const maxAge = 30 * 60 * 1000; // 30 Minuten
-
-      if (age > maxAge) {
-        console.log(`🗑️ Cache expired (${Math.round(age / 1000 / 60)} minutes old), will fetch fresh data`);
-        return null;
-      }
-
-      console.log(`💾 Using cache from ${Math.round(age / 1000 / 60)} minutes ago`);
-      return data.statuses;
-
-    } catch (error) {
-      console.error("Error loading cached status:", error);
-      return null;
-    }
-  }
-
-  // 💾 NEUE HILFSFUNKTION: Wende gecachte Status auf Locations an
-  function applyCachedStatus(locations, cachedStatus) {
-    let applied = 0;
-
-    locations.forEach(location => {
-      if (location.spaceapi?.endpoint && cachedStatus[location.spaceapi.endpoint] !== undefined) {
-        location.isOpen = cachedStatus[location.spaceapi.endpoint];
-        applied++;
-      }
-    });
-
-    return applied;
-  }
-
-  // 💾 NEUE HILFSFUNKTION: Speichere SpaceAPI-Status in LocalStorage
-  function saveCachedSpaceAPIStatus(locations) {
-    try {
-      const statuses = {};
-
-      locations.forEach(location => {
-        if (location.spaceapi?.endpoint && location.isOpen !== undefined) {
-          statuses[location.spaceapi.endpoint] = location.isOpen;
-        }
-      });
-
-      const cacheData = {
-        timestamp: Date.now(),
-        statuses: statuses
-      };
-
-      localStorage.setItem('spaceapi-status-cache', JSON.stringify(cacheData));
-      console.log(`💾 Saved ${Object.keys(statuses).length} statuses to cache`);
-
-    } catch (error) {
-      console.error("Error saving status cache:", error);
-      // LocalStorage voll? Lösche alten Cache
-      if (error.name === 'QuotaExceededError') {
-        localStorage.removeItem('spaceapi-status-cache');
-        console.log('🗑️ Cleared old cache due to quota');
-      }
-    }
-  }
 
   // ✨ NEUE HILFSFUNKTION: Erstelle Marker für eine Location
   function createMarkerForLocation(location) {

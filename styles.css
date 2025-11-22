@@ -1100,7 +1100,7 @@ a#titleurl:hover h3.space-unknown .fas {
   box-shadow: 0px 2px 8px 1px var(--shadow-color);
   cursor: pointer;
   opacity: var(--search-opacity);
-  transition: all 0.3s ease-in-out;
+  /* transition: all 0.3s ease-in-out; */
   position: relative;
   z-index: 2;
 }
@@ -1149,7 +1149,7 @@ a#titleurl:hover h3.space-unknown .fas {
   font-size: 0.7em;
   font-weight: bold;
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  /* transition: opacity 0.3s ease-in-out; */
 }
 
 .filter-counter.visible {
@@ -1168,13 +1168,17 @@ a#titleurl:hover h3.space-unknown .fas {
   max-height: 60vh;
   min-width: 280px;
   overflow-y: auto;
-  display: none;
   right: 0;
+
+  opacity: 0;
+  pointer-events: none;
+  animation: dropdownSlideOut 0.12s ease-in;
 }
 
 .style-filter-dropdown.is-active {
-  display: block;
-  animation: dropdownSlideIn 0.2s ease-out;
+  opacity: 1;
+  pointer-events: auto;
+  animation: dropdownSlideIn 0.18s ease-out;
 }
 
 @keyframes dropdownSlideIn {
@@ -1186,6 +1190,19 @@ a#titleurl:hover h3.space-unknown .fas {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+      
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
   }
 }
 
@@ -1369,12 +1386,12 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Cluster Styling */
 .marker-cluster-small {
-  background-color: rgba(0, 120, 255, 0.3);
-  border: 2px solid rgba(0, 120, 255, 0.6);
+  background-color: rgba(153, 161, 104, 0.4);
+  border: 2px solid rgba(153, 161, 104, 0.8);
 }
 
 .marker-cluster-small div {
-  background-color: rgba(0, 120, 255, 0.3);
+  background-color: rgba(153, 161, 104, 0.4);
   color: white;
   font-weight: bold;
   font-size: 12px;

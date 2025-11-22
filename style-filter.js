@@ -160,19 +160,18 @@ class StyleFilterManager {
   }
 
   setupEventListeners() {
-    const isDesktop = !window.matchMedia("(any-hover: none)").matches;
-
-    if (isDesktop) {
-      // ✨ OPTIMIERUNG: Direktes Öffnen/Schließen ohne Verzögerung
-      this.filterContainer.addEventListener('mouseenter', () => {
-        this.openDropdown();
-      });
-
-      this.filterContainer.addEventListener('mouseleave', () => {
-        // Keine Verzögerung mehr (kein setTimeout 3000ms)
-        this.closeDropdown();
-      });
-    }
+    // ✨ DEAKTIVIERT: Mouse-Hover zum Öffnen des Dropdowns
+    // const isDesktop = !window.matchMedia("(any-hover: none)").matches;
+    // 
+    // if (isDesktop) {
+    //   this.filterContainer.addEventListener('mouseenter', () => {
+    //     clearTimeout(this.closeDropdownTimeout);
+    //     this.openDropdown();
+    //   });
+    //   this.filterContainer.addEventListener('mouseleave', () => {
+    //     this.closeDropdownTimeout = setTimeout(() => this.closeDropdown(), 3000);
+    //   });
+    // }
 
     const handleActivation = (e) => {
       e.preventDefault();
@@ -231,6 +230,14 @@ class StyleFilterManager {
         return;
       }
 
+      // ✨ TAB schließt das Dropdown und fokussiert den Header
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        this.closeDropdown();
+        this.filterHeader.focus();
+        return;
+      }
+
       // UP/DOWN/ENTER Navigation
       if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.code)) {
         e.preventDefault();
@@ -239,8 +246,8 @@ class StyleFilterManager {
       }
 
       const items = [
-        ...this.filterContent.querySelectorAll('.style-filter-item'),
-        this.clearAllBtn
+        ...this.filterContent.querySelectorAll('.style-filter-item:not(.filter-separator)')
+        // ✨ ENTFERNT: clearAllBtn ist nicht mehr in der Navigation
       ];
       if (items.length === 0) return;
 
@@ -262,6 +269,7 @@ class StyleFilterManager {
       }
     });
   }
+
 
   // NEUE Methode zum Verwalten des "keyboard-active" Zustands
   updateActiveFilterItem(items) {
