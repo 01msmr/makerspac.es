@@ -65,12 +65,16 @@ class StyleFilterManager {
     const openCount = this.json.filter(loc => loc.isOpen === true).length;
     const closedCount = this.json.filter(loc => loc.isOpen === false).length;
 
-    if (openCount > 0) {
-      tempStats.set('open', openCount);
-    }
-    if (closedCount > 0) {
-      tempStats.set('closed', closedCount);
-    }
+    // if (openCount > 0) {
+    //   tempStats.set('open', openCount);
+    // }
+    // if (closedCount > 0) {
+    //   tempStats.set('closed', closedCount);
+    // }
+    
+    tempStats.set('open', openCount);
+    tempStats.set('closed', closedCount);
+    
 
     // Erstelle die finale Map in der gewünschten Reihenfolge
     this.styleStats = new Map();
@@ -91,6 +95,23 @@ class StyleFilterManager {
       this.styleStats.set(style, count);
     });
   }
+
+
+  // ✨ NEU: Öffentliche Funktion zum Neuberechnen
+  refreshStyleStats() {
+    console.log('🔄 Refreshing filter statistics...');
+    this.initializeStyleStats();
+
+    // Lösche alte Filter-Items
+    this.filterContent.innerHTML = '';
+
+    // Erstelle neue Filter-Items
+    this.createFilterItems();
+
+    console.log('✅ Filter refreshed with', this.styleStats.size, 'items');
+  }
+
+
 
   createFilterItems() {
     const fragment = document.createDocumentFragment();

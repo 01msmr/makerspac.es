@@ -1420,3 +1420,28 @@ a#titleurl:hover h3.space-unknown .fas {
   font-weight: bold;
   font-size: 14px;
 }
+
+
+
+/* Zoom-Level Anzeige */
+#zoom-indicator {
+  position: fixed;
+  width: 26px;
+  height: 26px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 26px;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(50%, 50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-family: monospace;
+  user-select: none;
+}

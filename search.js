@@ -26,6 +26,9 @@ class SearchManager {
     this.isDropdownHovering = false;
     this.ZOOM_THRESHOLD = 2;
 
+    this.zoomIndicator = null;
+    this.zoomIndicatorActive = false;
+
     this.lastKeypressTime = 0;
 
     this.initializeEventListeners();
@@ -138,6 +141,19 @@ class SearchManager {
       }
     });
 
+
+    // Lausche auf Suchfeld-Änderungen
+    this.searchBar.addEventListener('input', (e) => {
+      const value = e.target.value.trim().toLowerCase();
+
+      if (value.startsWith('xcr')) {
+        this.activateZoomIndicator();
+      } else {
+        this.deactivateZoomIndicator();
+      }
+    });
+
+
     // Bestehende Event Listener (unverändert)
     this.searchBar.addEventListener('keyup', (e) => {
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return;
@@ -171,9 +187,30 @@ class SearchManager {
 
 
   updateSearchResults(filteredLocations) {
+    let searchQuery = this.searchBar.value.trim().toLowerCase();
+
+
+   // ✨ WENN "xcr" am Anfang steht: Entferne es und suche mit dem Rest
+    if (searchQuery === 'xcr') {
+      // Nur "xcr" ohne weiteren Text: Zeige nichts an (nur Zoom-Indikator)
+      // this.updateMarkers([]); // Verstecke alle Marker
+      this.updateSearchCounter(0); // Zeige 0 Ergebnisse
+      this.suggestionsDropdown.innerHTML = '';
+      this.updateDropdownUI(false);
+      return; // Verlasse die Funktion früh
+      
+    } else if (searchQuery.startsWith('xcr ')) {
+      // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
+      searchQuery = searchQuery.substring(4); // Entferne "xcr " (4 Zeichen)
+      filteredLocations = this.filterLocations(searchQuery);
+    } else if (searchQuery.startsWith('xcr')) {
+      // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
+      searchQuery = searchQuery.substring(3); // Entferne "xcr" (3 Zeichen)
+      filteredLocations = this.filterLocations(searchQuery);
+    } 
+    
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
-    const searchQuery = this.searchBar.value.trim().toLowerCase();
 
     const shouldShowDropdown = searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
 
@@ -199,6 +236,11 @@ class SearchManager {
   }
 
   filterLocations(searchQuery) {
+    // ✨ IGNORIERE "xcr" in der Suche
+    if (searchQuery === 'xcr') {
+      return this.json; // Zeige alle Locations
+    }
+
     return this.json.filter(location => {
       if (!location || !location.loc || !location.name || !location.loc.city) return false;
       const nameMatch = location.name.toLowerCase().includes(searchQuery);
@@ -966,6 +1008,74 @@ class SearchManager {
       window.mapUtils.removeConnectionLine();
       this.connectionLine = null;
     }
+  }
+
+
+
+
+
+
+  activateZoomIndicator() {
+    if (this.zoomIndicatorActive) return;
+
+    console.log('🎯 Zoom indicator activated');
+    this.zoomIndicatorActive = true;
+
+    // Erstelle Zoom-Anzeige
+    this.createZoomIndicator();
+
+    // Zeige Anzeige
+    // document.getElementById('map').style.cursor = 'none';
+    this.zoomIndicator.style.display = 'block';
+
+    // Update bei Zoom-Änderungen
+    this.map.on('zoomend', this.updateZoomIndicator, this);
+
+    // Update bei Mausbewegung
+    document.addEventListener('mousemove', this.moveZoomIndicator);
+  }
+
+  deactivateZoomIndicator() {
+    if (!this.zoomIndicatorActive) return;
+
+    console.log('🎯 Zoom indicator deactivated');
+    this.zoomIndicatorActive = false;
+
+    // Verstecke Anzeige
+    if (this.zoomIndicator) {
+      this.zoomIndicator.style.display = 'none';
+    }
+    // document.getElementById('map').style.cursor = '';
+
+    // Entferne Event-Listener
+    this.map.off('zoomend', this.updateZoomIndicator, this);
+    document.removeEventListener('mousemove', this.moveZoomIndicator);
+  }
+
+  createZoomIndicator() {
+    if (this.zoomIndicator) return; // Bereits erstellt
+
+    // Erstelle HTML-Element
+    this.zoomIndicator = document.createElement('div');
+    this.zoomIndicator.id = 'zoom-indicator';
+    this.zoomIndicator.innerHTML = this.map.getZoom();
+
+    document.body.appendChild(this.zoomIndicator);
+
+    // Update-Funktion als Arrow Function für korrektes 'this'
+    this.moveZoomIndicator = (e) => {
+      if (!this.zoomIndicator) return;
+
+      // Folge dem Cursor
+      const offset = -3; // Abstand vom Cursor
+      this.zoomIndicator.style.left = (e.clientX + offset) + 'px';
+      this.zoomIndicator.style.top = (e.clientY + offset) + 'px';
+    };
+
+    this.updateZoomIndicator = () => {
+      if (!this.zoomIndicator) return;
+      this.zoomIndicator.innerHTML = Math.round(this.map.getZoom());
+    };
   }
 }
 

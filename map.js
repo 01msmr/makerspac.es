@@ -609,9 +609,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Starte asynchrones Laden (ohne await = blockiert nicht!)
       spaceAPI.enrichLocationData(json).then(() => {
-        // Speichere neue Status in LocalStorage
-        // saveCachedSpaceAPIStatus(json);
-
         // Debug: Zähle die Ergebnisse
         const openCount = json.filter(loc => loc.isOpen === true).length;
         const closedCount = json.filter(loc => loc.isOpen === false).length;
@@ -624,11 +621,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`   - ⚠️  Null: ${nullCount}`);
         console.log(`   - ❓ Undefined: ${undefinedCount}`);
 
-        // Aktualisiere Filter nach Abschluss
+        // ✨ NEU: Aktualisiere Filter NACH dem Laden!
         if (window.styleFilterManager && typeof window.styleFilterManager.refreshStyleStats === 'function') {
           window.styleFilterManager.refreshStyleStats();
         } else {
-          console.log('⚠️ styleFilterManager.refreshStyleStats not available, skipping filter update');
+          console.log('⚠️ styleFilterManager.refreshStyleStats not available');
         }
       });
 
