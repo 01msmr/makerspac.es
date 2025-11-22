@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function initializeApp() {
     try {
       setupMap();
-      initializeClustering(); // NEU
+      initializeClustering();
       await loadData();
       setupSearch();
       setupStyleFilter();
@@ -507,10 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Zoom 12-13: Minimales Clustering
         if (zoom <= 13) return 25;
 
-        // Zoom 14+: Fast kein Clustering
-        // if (zoom <= 14) return 15;
-
-        // Zoom 15+: Kein Clustering
+        // Zoom 14+: Kein Clustering
         return 0;
       },
 
@@ -550,10 +547,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // ✨ Größe basierend auf Anzahl
         if (count > 20) {
           className = 'marker-cluster-large';
-          size = 50;
+          size = 40;
         } else if (count > 10) {
           className = 'marker-cluster-medium';
-          size = 45;
+          size = 40;
         }
 
         return new L.DivIcon({
@@ -686,12 +683,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </a>
         <div class="popup-street-line">
           ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-          <a href="#" class="navigation-icon" title="Navigation starten (Rechtsklick zum Ändern)">
+          <a href="#" class="navigation-icon" title="&#013;    L:   START     route to makerspace    &#013;&#013;    R:   SWITCH  map routing service &#013;">
             <i></i>
-          </a>
-        </div>
-        <b>${zfill(location.loc?.plz || '', location.loc?.country || '')} ${location.loc?.city || ''}</b><br>
-        ${location.loc?.country || ''}<br>
+          </a><br>
+        ${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</b><br>
+        ${location.loc?.country || ''}</div><br>
         <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
       `;
     });

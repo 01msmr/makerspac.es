@@ -596,7 +596,7 @@ class SearchManager {
       <div class="item-content">
         <div class="item-name"><span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
-        <div class.item-details"><b>${this.zfill(location.loc.plz, location.loc.country)}</b> ${location.loc.city}</div>
+        <div class.item-details">${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
       </div>`;
     this.setupSuggestionItemEvents(item, location);
     return item;

@@ -68,7 +68,12 @@ body {
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
-  transition: opacity 0.75s ease-in-out;
+  transition: 0.75s ease-in-out;
+}
+
+.title:hover {
+  box-shadow: none;
+  opacity: 0.6;
 }
 
 .title.popup-active {
@@ -881,6 +886,7 @@ a#titleurl:hover h3.space-unknown .fas {
   position: relative;
   line-height: 1.5;
   margin-bottom: 2px;
+  font-size:  1.1em;
 }
 
 /* Navigation Icon Base Styling */
@@ -1406,7 +1412,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background-color: rgba(255, 140, 0, 0.4);
   color: white;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .marker-cluster-large {
@@ -1418,7 +1424,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background-color: rgba(255, 80, 80, 0.4);
   color: white;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 
