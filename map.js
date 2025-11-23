@@ -670,6 +670,22 @@ document.addEventListener('DOMContentLoaded', () => {
         nameClass = 'space-unknown';
       }
 
+      // ✨ NEU: Style-Icons hinzufügen
+      let styleIconHtml = '';
+      const styleIconMap = {
+        'for all': 'far fa-circle',
+        'for students': 'fas fa-graduation-cap',
+        'for youth': 'fas fa-child',
+        'for students & youth': 'fas fa-graduation-cap',
+        'commercial': 'fas fa-money-bill-wave',
+      };
+
+      const locationStyle = location.style ? location.style.toLowerCase() : '';
+
+      if (locationStyle && styleIconMap[locationStyle]) {
+        styleIconHtml = `<i class="${styleIconMap[locationStyle]}" title="${location.style}"></i> `;
+      }
+
       const streetName = location.loc?.street?.name || '';
       const streetNumber = location.loc?.street?.number || '';
       const streetExt = location.loc?.street?.ext || '';
@@ -677,18 +693,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const linkText = location.link?.text || linkUrl;
 
       return `
-        <h3 id="style">${location.style || ''}</h3>
-        <a id="titleurl" href="${linkUrl}" target="_blank">
-          <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
-        </a>
-        <div class="popup-street-line">
-          ${streetName} ${streetNumber}<span id="streetext">${streetExt}</span>
-          <a href="#" class="navigation-icon" title="&#013;    L:   START     route to makerspace    &#013;&#013;    R:   SWITCH  map routing service &#013;">
-            <i></i>
-          </a><br>
-        ${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</b><br>
-        ${location.loc?.country || ''}</div><br>
-        <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+        <h3 id = "style" > ${ styleIconHtml }${ location.style || '' }</h3 >
+          <a id="titleurl" href="${linkUrl}" target="_blank">
+            <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
+            </a>
+              <div class="popup-street-line">
+                <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
+                <a href="#" class="navigation-icon" title="&#013;    L:   START     route to makerspace    &#013;&#013;    R:   SWITCH  map routing service &#013;">
+                  <i></i>
+                </a>
+              </div>
+              <span class="city">${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</span><br>
+                <span class="country">${location.loc?.country || ''}</span><br>
+                  <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
       `;
     });
 

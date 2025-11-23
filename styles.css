@@ -68,12 +68,16 @@ body {
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
-  transition: 0.75s ease-in-out;
+  transition: 0.75s ease-out;
+  /* transition: opacity; */
 }
 
 .title:hover {
   box-shadow: none;
-  opacity: 0.6;
+  opacity: 0.8;
+  transition: 0.25s ease-out;
+  /* filter: invert(1) hue-rotate(180deg) brightness(0.55) contrast(.8) saturate(0.75); */
+  outline: 1px solid #666666;
 }
 
 .title.popup-active {
@@ -887,6 +891,25 @@ a#titleurl:hover h3.space-unknown .fas {
   line-height: 1.5;
   margin-bottom: 2px;
   font-size:  1.1em;
+}
+
+.street {
+  font-size: 0.9em;
+  color: #666666;
+}
+
+.city {
+  font-size: 1.3em;
+  font-weight: light;
+}
+
+.city b {
+  font-size: 1.1em;
+}
+
+.country {
+  color: #666666;
+  font-weight: normal;
 }
 
 /* Navigation Icon Base Styling */
