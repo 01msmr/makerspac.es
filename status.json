@@ -1,95 +1,95 @@
 {
   "stats": {
     "total": 68,
-    "open": 10,
-    "closed": 46,
-    "unknown": 10,
-    "lastUpdate": "2025-11-26T11:58:31.941Z",
-    "duration": "25.9s"
+    "open": 11,
+    "closed": 44,
+    "unknown": 11,
+    "lastUpdate": "2025-11-26T13:01:30.177Z",
+    "duration": "40.1s"
   },
   "spaces": [
     {
       "name": "Toolbox Bodensee",
       "endpoint": "https://toolbox-bodensee.de/toolboxbodensee.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:07.072Z",
+      "lastUpdate": "2025-11-26T13:00:50.703Z",
       "error": null
     },
     {
       "name": "Turmlabor, TU Dresden",
       "endpoint": "http://www.turmlabor.de/spaces.api",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:28.295Z",
+      "lastUpdate": "2025-11-26T13:01:06.936Z",
       "error": null
     },
     {
       "name": "c3d2",
       "endpoint": "https://www.c3d2.de/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:29.144Z",
+      "lastUpdate": "2025-11-26T13:01:06.942Z",
       "error": null
     },
     {
       "name": "dezentrale e.V.",
       "endpoint": "https://api.dezentrale.cloud/spaceapi/v14",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:07.698Z",
+      "lastUpdate": "2025-11-26T13:00:51.283Z",
       "error": null
     },
     {
       "name": "Eigenbaukombinat Halle",
       "endpoint": "https://spaceapi.eigenbaukombinat.de/status_chaoszone.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:07.881Z",
+      "lastUpdate": "2025-11-26T13:00:51.588Z",
       "error": null
     },
     {
       "name": "Krautspace Jena",
       "endpoint": "https://status.kraut.space/api",
-      "status": true,
-      "lastUpdate": "2025-11-26T11:58:07.881Z",
-      "error": null
+      "status": null,
+      "error": "fetch failed",
+      "lastUpdate": "2025-11-26T13:01:30.177Z"
     },
     {
       "name": "Chaostreff Chemnitz",
       "endpoint": "https://chaoschemnitz.de/chch.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:08.549Z",
+      "lastUpdate": "2025-11-26T13:00:51.756Z",
       "error": null
     },
     {
       "name": "c-base",
       "endpoint": "https://www.c-base.org/status.json",
       "status": null,
-      "lastUpdate": "2025-11-26T11:58:09.014Z",
+      "lastUpdate": "2025-11-26T13:00:51.855Z",
       "error": null
     },
     {
       "name": "Afra Berlin (Abteilung-für-Redundanz-Abteilung)",
       "endpoint": "https://spaceapi.afra-berlin.de/v1/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:09.996Z",
+      "lastUpdate": "2025-11-26T13:00:56.280Z",
       "error": null
     },
     {
       "name": "machBar",
       "endpoint": "https://spaceapi.ccc-p.org",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:10.368Z",
+      "lastUpdate": "2025-11-26T13:00:52.537Z",
       "error": null
     },
     {
       "name": "Hacklabor",
       "endpoint": "https://hacklabor.de/api/space/v1",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:29.240Z",
+      "lastUpdate": "2025-11-26T13:01:08.507Z",
       "error": null
     },
     {
       "name": "CCC Hansestadt Hamburg",
       "endpoint": "https://spaceapi.hamburg.ccc.de",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:11.307Z",
+      "lastUpdate": "2025-11-26T13:00:53.011Z",
       "error": null
     },
     {
@@ -97,33 +97,33 @@
       "endpoint": "http://blog.attraktor.org/spaceapi/spaceapi.json",
       "status": null,
       "error": "HTTP 500",
-      "lastUpdate": "2025-11-26T11:58:11.176Z"
+      "lastUpdate": "2025-11-26T13:00:53.111Z"
     },
     {
       "name": "CCC Flensburg",
       "endpoint": "https://api.chaostreff-flensburg.de",
-      "lastUpdate": "2025-11-26T11:58:11.641Z",
+      "lastUpdate": "2025-11-26T13:00:53.550Z",
       "error": null
     },
     {
       "name": "Mainframe",
       "endpoint": "https://status.mainframe.io/api/spaceInfo",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:11.825Z",
+      "lastUpdate": "2025-11-26T13:00:54.034Z",
       "error": null
     },
     {
       "name": "Hackerspace Bremen",
       "endpoint": "https://spacemanager.hackerspace-bremen.de/api/v1/spaceapi",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:11.926Z",
+      "lastUpdate": "2025-11-26T13:00:54.195Z",
       "error": null
     },
     {
       "name": "LeineLab",
       "endpoint": "https://leinelab.org/api/spaceapi.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:12.097Z",
+      "lastUpdate": "2025-11-26T13:00:54.628Z",
       "error": null
     },
     {
@@ -131,153 +131,153 @@
       "endpoint": "https://hannover.ccc.de/spaceapi.json",
       "status": null,
       "error": "HTTP 503",
-      "lastUpdate": "2025-11-26T11:58:12.908Z"
+      "lastUpdate": "2025-11-26T13:00:55.276Z"
     },
     {
       "name": "Freies Labor Hildesheim",
       "endpoint": "https://freieslabor.org/api/info",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:12.581Z",
+      "lastUpdate": "2025-11-26T13:00:55.638Z",
       "error": null
     },
     {
       "name": "Makerspace Gütersloh",
       "endpoint": "https://makerspace-gt.de/space-api/space-api.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:12.912Z",
+      "lastUpdate": "2025-11-26T13:00:55.729Z",
       "error": null
     },
     {
       "name": "Hackerspace Bielefeld",
       "endpoint": "https://hackerspace-bielefeld.de/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:13.146Z",
+      "lastUpdate": "2025-11-26T13:00:55.935Z",
       "error": null
     },
     {
       "name": "flipdot Hackspace",
       "endpoint": "https://api.flipdot.org",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:13.153Z",
+      "lastUpdate": "2025-11-26T13:00:56.195Z",
       "error": null
     },
     {
       "name": "Stratum 0",
       "endpoint": "https://status.stratum0.org/status.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:13.341Z",
+      "lastUpdate": "2025-11-26T13:00:56.532Z",
       "error": null
     },
     {
       "name": "CCC / Chaosdorf e.V.",
       "endpoint": "https://chaosdorf.de/space_api.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:13.733Z",
+      "lastUpdate": "2025-11-26T13:00:56.487Z",
       "error": null
     },
     {
       "name": "fnordeingang",
       "endpoint": "https://status.fnordeingang.de/spaceapi.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:13.575Z",
+      "lastUpdate": "2025-11-26T13:00:56.704Z",
       "error": null
     },
     {
       "name": "/dev/tal e.V.",
       "endpoint": "https://devtal.de/api",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:31.941Z",
+      "lastUpdate": "2025-11-26T13:01:05.056Z",
       "error": null
     },
     {
       "name": "LABOR e.V.",
       "endpoint": "https://das-labor.org/status/api",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:14.456Z",
+      "lastUpdate": "2025-11-26T13:00:57.288Z",
       "error": null
     },
     {
       "name": "Chaospott",
       "endpoint": "https://status.chaospott.de/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:14.440Z",
+      "lastUpdate": "2025-11-26T13:00:57.168Z",
       "error": null
     },
     {
       "name": "c3RE",
       "endpoint": "https://spaceapi.c3re.de",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:14.729Z",
+      "lastUpdate": "2025-11-26T13:00:57.596Z",
       "error": null
     },
     {
       "name": "CCC Cologne e.V.",
       "endpoint": "https://api.koeln.ccc.de",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:14.703Z",
+      "lastUpdate": "2025-11-26T13:00:57.536Z",
       "error": null
     },
     {
       "name": "CCC Aachen",
       "endpoint": "https://status.aachen.ccc.de/spaceapi",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:15.476Z",
+      "lastUpdate": "2025-11-26T13:00:58.618Z",
       "error": null
     },
     {
       "name": "Datenburg",
       "endpoint": "https://datenburg.org/spaceapi.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:15.015Z",
+      "lastUpdate": "2025-11-26T13:00:57.838Z",
       "error": null
     },
     {
       "name": "haxko",
       "endpoint": "https://api.haxko.space",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:15.019Z",
+      "lastUpdate": "2025-11-26T13:00:57.960Z",
       "error": null
     },
     {
       "name": "Hasi e.V.",
       "endpoint": "https://status.ha.si",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:15.587Z",
+      "lastUpdate": "2025-11-26T13:00:58.608Z",
       "error": null
     },
     {
       "name": "CCC Frankfurt",
       "endpoint": "https://status.ccc-ffm.de/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:25.907Z",
+      "lastUpdate": "2025-11-26T13:00:58.739Z",
       "error": null
     },
     {
       "name": "CCC Darmstadt",
       "endpoint": "https://api.chaos-darmstadt.de",
-      "status": false,
-      "lastUpdate": "2025-11-26T11:58:25.941Z",
+      "status": true,
+      "lastUpdate": "2025-11-26T13:00:59.265Z",
       "error": null
     },
     {
       "name": "h´eck - Hackerspace Saarbrücken",
       "endpoint": "http://spaceapi.hacksaar.de/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.028Z",
+      "lastUpdate": "2025-11-26T13:00:58.823Z",
       "error": null
     },
     {
       "name": "Linux User Group Saar",
       "endpoint": "https://lugsaar.de/spaceapi/api.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.157Z",
+      "lastUpdate": "2025-11-26T13:00:59.428Z",
       "error": null
     },
     {
       "name": "CCC Mannheim",
       "endpoint": "https://www.ccc-mannheim.de/spaceapi/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.189Z",
+      "lastUpdate": "2025-11-26T13:00:59.561Z",
       "error": null
     },
     {
@@ -285,62 +285,62 @@
       "endpoint": "https://raumzeitlabor.de/api/spaceapi.json",
       "status": null,
       "error": "HTTP 404",
-      "lastUpdate": "2025-11-26T11:58:26.213Z"
+      "lastUpdate": "2025-11-26T13:00:59.885Z"
     },
     {
       "name": "Chaostreff Backnang",
       "endpoint": "https://spaceapi.ctbk.de",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.178Z",
+      "lastUpdate": "2025-11-26T13:00:59.777Z",
       "error": null
     },
     {
       "name": "C-Hack",
       "endpoint": "https://spaceapi.c-hack.de",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.298Z",
+      "lastUpdate": "2025-11-26T13:01:00.175Z",
       "error": null
     },
     {
       "name": "Entropia e.V.",
       "endpoint": "http://club.entropia.de/spaceapi",
-      "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.156Z",
+      "status": true,
+      "lastUpdate": "2025-11-26T13:00:59.923Z",
       "error": null
     },
     {
       "name": "hacKNology e.V.",
       "endpoint": "https://www.hacknology.de/spaceapi/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.293Z",
+      "lastUpdate": "2025-11-26T13:01:05.507Z",
       "error": null
     },
     {
       "name": "Temporärhaus",
       "endpoint": "https://spaceapi.temporaerhaus.de/spaceapi.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:26.423Z",
+      "lastUpdate": "2025-11-26T13:01:05.619Z",
       "error": null
     },
     {
       "name": "K4CG",
       "endpoint": "https://spaceapi.k4cg.org/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.497Z",
+      "lastUpdate": "2025-11-26T13:01:05.733Z",
       "error": null
     },
     {
       "name": "Binary Kitchen",
       "endpoint": "https://www.binary-kitchen.de/spaceapi.php",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.495Z",
+      "lastUpdate": "2025-11-26T13:01:05.521Z",
       "error": null
     },
     {
       "name": "Makerspace Erfurt",
       "endpoint": "https://status.bytespeicher.org/status.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.658Z",
+      "lastUpdate": "2025-11-26T13:01:05.633Z",
       "error": null
     },
     {
@@ -348,138 +348,138 @@
       "endpoint": "https://metalab.at/status.json",
       "status": null,
       "error": "HTTP 404",
-      "lastUpdate": "2025-11-26T11:58:26.658Z"
+      "lastUpdate": "2025-11-26T13:01:05.754Z"
     },
     {
       "name": "/usr/space",
       "endpoint": "https://www.usrspace.at/spaceapi.json",
       "status": null,
       "error": "Unexpected end of JSON input",
-      "lastUpdate": "2025-11-26T11:58:27.017Z"
+      "lastUpdate": "2025-11-26T13:01:06.120Z"
     },
     {
       "name": "/dev/lol",
       "endpoint": "https://devlol.org/status/hackerspaceapi",
       "status": null,
       "error": "HTTP 404",
-      "lastUpdate": "2025-11-26T11:58:26.858Z"
+      "lastUpdate": "2025-11-26T13:01:05.749Z"
     },
     {
       "name": "CCC Salzburg",
       "endpoint": "https://spaceapi.sbg.chaostreff.at/status/json",
       "status": null,
       "error": "fetch failed",
-      "lastUpdate": "2025-11-26T11:58:31.792Z"
+      "lastUpdate": "2025-11-26T13:01:11.074Z"
     },
     {
       "name": "IT-Syndikat",
       "endpoint": "https://spaceapi.it-syndikat.org/api/status.php",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.944Z",
+      "lastUpdate": "2025-11-26T13:01:06.046Z",
       "error": null
     },
     {
       "name": "Ko-Lab Hackerspace",
       "endpoint": "https://status.ko-lab.space",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:26.772Z",
+      "lastUpdate": "2025-11-26T13:01:05.941Z",
       "error": null
     },
     {
       "name": "Hackerspace Gent",
       "endpoint": "https://windowserver.0x20.be/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.154Z",
+      "lastUpdate": "2025-11-26T13:01:06.018Z",
       "error": null
     },
     {
       "name": "FIXME Hackerspace",
       "endpoint": "https://fixme.ch/cgi-bin/spaceapi.py",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.742Z",
+      "lastUpdate": "2025-11-26T13:01:06.674Z",
       "error": null
     },
     {
       "name": "Chaostreff Bern",
       "endpoint": "https://www.chaosbern.ch/spaceapi.json",
       "status": null,
-      "lastUpdate": "2025-11-26T11:58:27.410Z",
+      "lastUpdate": "2025-11-26T13:01:06.260Z",
       "error": null
     },
     {
       "name": "Luxeria",
       "endpoint": "https://luxeria.ch/spaceapi.json",
-      "lastUpdate": "2025-11-26T11:58:27.062Z",
+      "lastUpdate": "2025-11-26T13:01:05.937Z",
       "error": null
     },
     {
       "name": "Bitwäscherei",
       "endpoint": "https://api.ccczh.space/api/v13",
       "status": null,
-      "lastUpdate": "2025-11-26T11:58:27.977Z",
+      "lastUpdate": "2025-11-26T13:01:06.526Z",
       "error": null
     },
     {
       "name": "Bastli ",
       "endpoint": "https://bastli.ch/hackspace_api.php",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.366Z",
+      "lastUpdate": "2025-11-26T13:01:06.198Z",
       "error": null
     },
     {
       "name": "Coredump",
       "endpoint": "https://status.crdmp.ch",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.536Z",
+      "lastUpdate": "2025-11-26T13:01:06.293Z",
       "error": null
     },
     {
       "name": "Makers im Zigerschlitz",
       "endpoint": "https://api.zigerschlitzmakers.ch/space-api.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.376Z",
+      "lastUpdate": "2025-11-26T13:01:06.201Z",
       "error": null
     },
     {
       "name": "HermitHive",
       "endpoint": "https://hermithive.nl/state.json",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:27.348Z",
+      "lastUpdate": "2025-11-26T13:01:06.166Z",
       "error": null
     },
     {
       "name": "Hackalot",
       "endpoint": "https://hackalot.nl/statejson",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.441Z",
+      "lastUpdate": "2025-11-26T13:01:06.261Z",
       "error": null
     },
     {
       "name": "Hackerspace Nijmegen",
       "endpoint": "https://state.hackerspacenijmegen.nl/state.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:27.356Z",
+      "lastUpdate": "2025-11-26T13:01:06.179Z",
       "error": null
     },
     {
       "name": "Hack42",
       "endpoint": "https://hack42.nl/spacestate/json.php",
       "status": true,
-      "lastUpdate": "2025-11-26T11:58:27.999Z",
+      "lastUpdate": "2025-11-26T13:01:06.588Z",
       "error": null
     },
     {
       "name": "Maakplek",
       "endpoint": "https://maakplek.nl/api",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:28.370Z",
+      "lastUpdate": "2025-11-26T13:01:06.696Z",
       "error": null
     },
     {
       "name": "Hacklab",
       "endpoint": "https://hacklab.kiev.ua/files/spaceapi.json",
       "status": false,
-      "lastUpdate": "2025-11-26T11:58:30.099Z",
+      "lastUpdate": "2025-11-26T13:01:07.142Z",
       "error": null
     }
   ]
