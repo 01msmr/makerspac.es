@@ -11,8 +11,8 @@
   <script src="libs/leaflet/leaflet.js"></script>
 
   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
 
   <link href="libs/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
@@ -25,6 +25,9 @@
 
   <!-- Font Awesome lokal -->
   <link rel="stylesheet" href="libs/fontawesome/css/all.min.css" />
+
+  <!-- Flag Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
 </head>
 
 <body>
@@ -42,28 +45,10 @@
   </a>
 
 
-  <!-- NEU: Style Filter Container -->
-  <div class="style-filter-container">
-    <div class="style-filter-header">
-      <i class="fas fa-filter filter-icon"></i>
-      <span class="filter-title">Styles</span>
-      <div class="filter-counter" id="style-filter-counter">0</div>
-    </div>
-    <div class="style-filter-dropdown" id="style-filter-dropdown" tabindex="-1">
-      <div class="style-filter-content">
-        <!-- Diese werden dynamisch befüllt -->
-      </div>
-      <div class="filter-actions">
-        <button id="clear-all-styles" class="filter-btn"> - clear filter - </button>
-      </div>
-    </div>
-  </div>
-
-
   <!-- search bar container -->
   <div class="search-container">
     <div class="search-input-wrapper">
-      <input type="text" id="search-bar" placeholder="filter by name, city, country, etc." autocomplete="off"
+      <input type="text" id="search-bar" placeholder="name, city, postal, country, etc." autocomplete="off"
         spellcheck="false">
       <div class="search-counter" id="search-counter">0</div>
     </div>

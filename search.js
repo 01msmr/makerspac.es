@@ -190,7 +190,7 @@ class SearchManager {
     let searchQuery = this.searchBar.value.trim().toLowerCase();
 
 
-   // ✨ WENN "xcr" am Anfang steht: Entferne es und suche mit dem Rest
+    // ✨ WENN "xcr" am Anfang steht: Entferne es und suche mit dem Rest
     if (searchQuery === 'xcr') {
       // Nur "xcr" ohne weiteren Text: Zeige nichts an (nur Zoom-Indikator)
       // this.updateMarkers([]); // Verstecke alle Marker
@@ -198,7 +198,7 @@ class SearchManager {
       this.suggestionsDropdown.innerHTML = '';
       this.updateDropdownUI(false);
       return; // Verlasse die Funktion früh
-      
+
     } else if (searchQuery.startsWith('xcr ')) {
       // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
       searchQuery = searchQuery.substring(4); // Entferne "xcr " (4 Zeichen)
@@ -207,16 +207,31 @@ class SearchManager {
       // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
       searchQuery = searchQuery.substring(3); // Entferne "xcr" (3 Zeichen)
       filteredLocations = this.filterLocations(searchQuery);
-    } 
-    
+    }
+
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
 
-    const shouldShowDropdown = searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
+    // ✨ NEU: Zeige Dropdown auch ohne Sucheingabe, wenn Searchbar fokussiert ist
+    const isSearchBarFocused = document.activeElement === this.searchBar;
+    const shouldShowDropdown = searchQuery.length > 0 ||
+      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) ||
+      isSearchBarFocused;
 
     if (shouldShowDropdown) {
-      this.createSuggestionItems(filteredLocations);
-      this.updateDropdownUI(filteredLocations.length > 0);
+      // ✨ IMMER Filter-Pills anzeigen, wenn Dropdown aktiv ist
+      this.createActiveFiltersSection();
+
+      // Nur Suchergebnisse anzeigen, wenn tatsächlich eine Suche eingegeben wurde
+      if (searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters())) {
+        this.createSuggestionItems(filteredLocations);
+      } else {
+        // Entferne alte Suchergebnisse, wenn keine Suche aktiv
+        const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
+        existingSuggestions.forEach(item => item.remove());
+      }
+
+      this.updateDropdownUI(true);
       this.triggerAutoZoom(filteredLocations);
     } else {
       this.suggestionsDropdown.innerHTML = '';
@@ -546,8 +561,403 @@ class SearchManager {
     }
   }
 
+  createActiveFiltersSection() {
+    // ✨ NEU: Zeige Filter-Kategorien als Pills am oberen Rand des Dropdowns
+
+    // Entferne vorhandene Filter-Section
+    const existingSection = this.suggestionsDropdown.querySelector('.active-filters-section');
+    if (existingSection) {
+      existingSection.remove();
+    }
+
+    // Erstelle Filter-Section Container
+    const filtersSection = document.createElement('div');
+    filtersSection.classList.add('active-filters-section');
+
+    // Icon-Mapping für die Filter-Kategorien
+    const categoryConfig = {
+      style: {
+        icon: 'fas fa-people-group',
+        label: 'Style',
+        options: ['for all', 'for youth', 'for students', 'commercial']
+      },
+      doorState: {
+        icon: 'fas fa-door-open',
+        label: 'Status',
+        options: ['open', 'closed']
+      },
+      country: {
+        icon: 'fas fa-flag',
+        label: 'Country',
+        options: this.getUniqueCountries()
+      }
+    };
+
+    // Erstelle Pills für jede Kategorie
+    Object.keys(categoryConfig).forEach(categoryKey => {
+      const config = categoryConfig[categoryKey];
+      const pill = this.createCategoryPill(categoryKey, config);
+      filtersSection.appendChild(pill);
+    });
+
+    // ✨ NEU: Füge "Clear All" Button hinzu, wenn mindestens ein Filter aktiv ist
+    if (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) {
+      const clearAllPill = document.createElement('div');
+      clearAllPill.classList.add('filter-pill', 'filter-pill-clear-all');
+      clearAllPill.innerHTML = '<i class="fas fa-times"></i>';
+      clearAllPill.title = 'Clear all filters';
+
+      clearAllPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.clearAllFilters();
+      });
+
+      filtersSection.appendChild(clearAllPill);
+    }
+
+    // Füge Section am Anfang des Dropdowns ein
+    this.suggestionsDropdown.insertBefore(filtersSection, this.suggestionsDropdown.firstChild);
+  }
+
+  clearAllFilters() {
+    if (!this.styleFilterManager) return;
+
+    // Lösche alle aktiven Filter
+    this.styleFilterManager.selectedStyles.clear();
+
+    // Update UI
+    this.styleFilterManager.updateFilterCounter();
+    this.styleFilterManager.updateHeaderState();
+    this.styleFilterManager.applyFilters();
+  }
+
+  getUniqueCountries() {
+    // Sammle alle einzigartigen Länder mit ihrer Anzahl
+    const countryCount = new Map();
+    this.json.forEach(location => {
+      if (location.loc && location.loc.country) {
+        const country = location.loc.country;
+        countryCount.set(country, (countryCount.get(country) || 0) + 1);
+      }
+    });
+
+    // ✨ NEU: Sortiere nach Anzahl (absteigend)
+    return Array.from(countryCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([country]) => country);
+  }
+
+  getCountryCode(countryName) {
+    // Mapping von Ländernamen zu ISO 3166-1-alpha-2 Codes
+    const countryCodeMap = {
+      'Germany': 'de',
+      'Austria': 'at',
+      'Switzerland': 'ch',
+      'France': 'fr',
+      'Netherlands': 'nl',
+      'Belgium': 'be',
+      'Italy': 'it',
+      'Spain': 'es',
+      'Portugal': 'pt',
+      'Poland': 'pl',
+      'Czech Republic': 'cz',
+      'Denmark': 'dk',
+      'Sweden': 'se',
+      'Norway': 'no',
+      'Finland': 'fi',
+      'United Kingdom': 'gb',
+      'Ireland': 'ie',
+      'Luxembourg': 'lu',
+      'Liechtenstein': 'li',
+      'Slovenia': 'si',
+      'Croatia': 'hr',
+      'Hungary': 'hu',
+      'Romania': 'ro',
+      'Bulgaria': 'bg',
+      'Greece': 'gr',
+      'Slovakia': 'sk',
+      'Estonia': 'ee',
+      'Latvia': 'lv',
+      'Lithuania': 'lt'
+    };
+
+    return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
+  }
+
+  createCategoryPill(categoryKey, config) {
+    const pill = document.createElement('div');
+    pill.classList.add('filter-pill');
+    pill.dataset.category = categoryKey;
+
+    // Prüfe, ob ein Filter in dieser Kategorie aktiv ist
+    const activeFilter = this.getActiveFilterForCategory(categoryKey);
+
+    // ✨ NEU: Icon-Mapping für Style-Optionen
+    const styleIconMap = {
+      'for all': 'fas fa-people-group',
+      'for youth': 'fas fa-child',
+      'for students': 'fas fa-graduation-cap',
+      'commercial': 'fas fa-money-bill-wave'
+    };
+
+    if (activeFilter) {
+      // Aktiver Filter: Blau mit gewählter Option
+      pill.classList.add('filter-pill-active');
+
+      // Spezielle Farben für door-state
+      if (categoryKey === 'doorState') {
+        if (activeFilter === 'open') {
+          pill.classList.add('filter-pill-open');
+        } else if (activeFilter === 'closed') {
+          pill.classList.add('filter-pill-closed');
+        }
+      }
+
+      // ✨ NEU: Zeige Flag-Icon für aktive Länder
+      if (categoryKey === 'country') {
+        const countryCode = this.getCountryCode(activeFilter);
+        pill.innerHTML = `<span class="fi fi-${countryCode}"></span> ${activeFilter}`;
+      }
+      // ✨ NEU: Zeige spezifisches Icon für aktive Style-Optionen
+      else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
+        pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${activeFilter}`;
+      }
+      else {
+        pill.innerHTML = `<i class="${config.icon}"></i> ${activeFilter}`;
+      }
+    } else {
+      // Passiver Filter: Weiß auf Grau mit Label
+      pill.classList.add('filter-pill-passive');
+      pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
+    }
+
+    // Click-Handler für Popover
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleCategoryPopover(pill, categoryKey, config);
+    });
+
+    return pill;
+  }
+
+  getActiveFilterForCategory(categoryKey) {
+    if (!this.styleFilterManager || !this.styleFilterManager.hasActiveFilters()) {
+      return null;
+    }
+
+    const selectedStyles = this.styleFilterManager.getSelectedStyles();
+
+    if (categoryKey === 'style') {
+      const styleOptions = ['for all', 'for youth', 'for students', 'commercial'];
+      return selectedStyles.find(s => styleOptions.includes(s)) || null;
+    } else if (categoryKey === 'doorState') {
+      const doorOptions = ['open', 'closed'];
+      return selectedStyles.find(s => doorOptions.includes(s)) || null;
+    } else if (categoryKey === 'country') {
+      const countries = this.getUniqueCountries();
+      return selectedStyles.find(s => countries.includes(s)) || null;
+    }
+
+    return null;
+  }
+
+  toggleCategoryPopover(pill, categoryKey, config) {
+    // ✨ EINFACH: Schließe alle existierenden Popovers
+    const existingPopovers = document.querySelectorAll('.filter-popover');
+    existingPopovers.forEach(p => {
+      p.remove();
+      // Reaktiviere Zoom beim Schließen
+      if (this.suggestionsDropdown) {
+        this.suggestionsDropdown.classList.remove('is-zooming');
+      }
+    });
+
+    // ✨ EINFACH: Erstelle immer ein neues Popover (kein Toggle)
+    const popover = document.createElement('div');
+    popover.classList.add('filter-popover');
+    popover.dataset.pillCategory = categoryKey;
+
+    // Deaktiviere Zoom während Popover offen ist
+    if (this.suggestionsDropdown) {
+      this.suggestionsDropdown.classList.add('is-zooming');
+    }
+
+    // Füge "—" Option zum Löschen des Filters hinzu
+    const clearOption = document.createElement('div');
+    clearOption.classList.add('filter-popover-item', 'filter-clear-option');
+    clearOption.textContent = '—';
+    clearOption.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.clearCategoryFilter(categoryKey);
+      popover.remove();
+      if (this.suggestionsDropdown) {
+        this.suggestionsDropdown.classList.remove('is-zooming');
+      }
+    });
+    popover.appendChild(clearOption);
+
+    // ✨ NEU: Icon-Mapping für Style-Optionen
+    const styleIconMap = {
+      'for all': 'fas fa-people-group',
+      'for youth': 'fas fa-child',
+      'for students': 'fas fa-graduation-cap',
+      'commercial': 'fas fa-money-bill-wave'
+    };
+
+    // ✨ NEU: Icon-Mapping für Door-State-Optionen
+    const doorStateIconMap = {
+      'open': 'fas fa-door-open',
+      'closed': 'fas fa-door-closed'
+    };
+
+    // Erstelle Optionen
+    config.options.forEach(option => {
+      const optionItem = document.createElement('div');
+      optionItem.classList.add('filter-popover-item');
+
+      // ✨ Füge Flag-Icon für Länder hinzu
+      if (categoryKey === 'country') {
+        const countryCode = this.getCountryCode(option);
+        const flagSpan = document.createElement('span');
+        flagSpan.className = `fi fi-${countryCode}`;
+        flagSpan.style.marginRight = '8px';
+        optionItem.appendChild(flagSpan);
+        optionItem.appendChild(document.createTextNode(option));
+      }
+      // ✨ NEU: Füge spezifisches Icon für Style-Optionen hinzu
+      else if (categoryKey === 'style' && styleIconMap[option]) {
+        const iconElement = document.createElement('i');
+        iconElement.className = styleIconMap[option];
+        iconElement.style.marginRight = '8px';
+        iconElement.style.width = '20px';
+        iconElement.style.textAlign = 'center';
+        optionItem.appendChild(iconElement);
+        optionItem.appendChild(document.createTextNode(option));
+      }
+      // ✨ NEU: Füge spezifisches Icon für Door-State-Optionen hinzu
+      else if (categoryKey === 'doorState' && doorStateIconMap[option]) {
+        const iconElement = document.createElement('i');
+        iconElement.className = doorStateIconMap[option];
+        iconElement.style.marginRight = '8px';
+        iconElement.style.width = '20px';
+        iconElement.style.textAlign = 'center';
+        optionItem.appendChild(iconElement);
+        optionItem.appendChild(document.createTextNode(option));
+      }
+      else {
+        optionItem.textContent = option;
+      }
+
+      // Markiere aktive Option
+      const activeFilter = this.getActiveFilterForCategory(categoryKey);
+      if (activeFilter === option) {
+        optionItem.classList.add('active');
+      }
+
+      // Click-Handler für Option
+      optionItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectCategoryOption(categoryKey, option);
+        popover.remove();
+        if (this.suggestionsDropdown) {
+          this.suggestionsDropdown.classList.remove('is-zooming');
+        }
+      });
+
+      popover.appendChild(optionItem);
+    });
+
+    // Positioniere Popover
+    document.body.appendChild(popover);
+
+    const pillRect = pill.getBoundingClientRect();
+    popover.style.left = pillRect.left + 'px';
+    popover.style.top = (pillRect.bottom + 4) + 'px';
+    popover.style.minWidth = pillRect.width + 'px';
+
+    // Schließe Popover bei Klick außerhalb (nach kurzer Verzögerung)
+    setTimeout(() => {
+      const closeHandler = (e) => {
+        if (!popover.contains(e.target) && !pill.contains(e.target)) {
+          popover.remove();
+          if (this.suggestionsDropdown) {
+            this.suggestionsDropdown.classList.remove('is-zooming');
+          }
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      document.addEventListener('click', closeHandler);
+    }, 100);
+
+    // Schließe Popover beim Scrollen
+    const scrollHandler = () => {
+      popover.remove();
+      if (this.suggestionsDropdown) {
+        this.suggestionsDropdown.classList.remove('is-zooming');
+      }
+      document.removeEventListener('scroll', scrollHandler, true);
+    };
+    document.addEventListener('scroll', scrollHandler, true);
+  }
+
+  clearCategoryFilter(categoryKey) {
+    if (!this.styleFilterManager) return;
+
+    // Hole alle Optionen der Kategorie
+    let categoryOptions = [];
+    if (categoryKey === 'style') {
+      categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
+    } else if (categoryKey === 'doorState') {
+      categoryOptions = ['open', 'closed'];
+    } else if (categoryKey === 'country') {
+      categoryOptions = this.getUniqueCountries();
+    }
+
+    // ✨ FIX: Deaktiviere alle Optionen in dieser Kategorie (vereinfacht)
+    categoryOptions.forEach(opt => {
+      this.styleFilterManager.selectedStyles.delete(opt);
+    });
+
+    // Update UI
+    this.styleFilterManager.updateFilterCounter();
+    this.styleFilterManager.updateHeaderState();
+    this.styleFilterManager.applyFilters();
+  }
+
+  selectCategoryOption(categoryKey, option) {
+    if (!this.styleFilterManager) return;
+
+    // Hole alle Optionen der Kategorie
+    let categoryOptions = [];
+    if (categoryKey === 'style') {
+      categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
+    } else if (categoryKey === 'doorState') {
+      categoryOptions = ['open', 'closed'];
+    } else if (categoryKey === 'country') {
+      categoryOptions = this.getUniqueCountries();
+    }
+
+    // ✨ FIX: Deaktiviere alle anderen Optionen in dieser Kategorie
+    categoryOptions.forEach(opt => {
+      if (opt !== option) {
+        this.styleFilterManager.selectedStyles.delete(opt);
+      }
+    });
+
+    // ✨ FIX: Aktiviere die gewählte Option IMMER
+    this.styleFilterManager.selectedStyles.add(option);
+
+    // Update UI
+    this.styleFilterManager.updateFilterCounter();
+    this.styleFilterManager.updateHeaderState();
+    this.styleFilterManager.applyFilters();
+  }
+
   createSuggestionItems(locations) {
-    this.suggestionsDropdown.innerHTML = '';
+    // ✨ NEU: Entferne nur bestehende Suggestions, behalte Filter-Section
+    const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
+    existingSuggestions.forEach(item => item.remove());
+
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
     const fragment = document.createDocumentFragment();

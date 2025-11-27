@@ -7,24 +7,21 @@ class StyleFilterManager {
     this.icons = icons;
     this.searchManager = searchManager;
 
-    this.filterContainer = document.querySelector('.style-filter-container');
-    this.filterHeader = document.querySelector('.style-filter-header');
-    this.filterDropdown = document.getElementById('style-filter-dropdown');
-    this.filterContent = document.querySelector('.style-filter-content');
-    this.filterCounter = document.getElementById('style-filter-counter');
-    this.clearAllBtn = document.getElementById('clear-all-styles');
+    // ✨ ENTFERNT: Alle DOM-Referenzen zum alten Filter-Dropdown
+    // this.filterContainer = document.querySelector('.style-filter-container');
+    // this.filterHeader = document.querySelector('.style-filter-header');
+    // this.filterDropdown = document.getElementById('style-filter-dropdown');
+    // this.filterContent = document.querySelector('.style-filter-content');
+    // this.filterCounter = document.getElementById('style-filter-counter');
+    // this.clearAllBtn = document.getElementById('clear-all-styles');
 
     this.selectedStyles = new Set();
     this.styleStats = new Map();
-    // Timeout Variable wird nicht mehr benötigt für das Schließen
-    // this.closeDropdownTimeout = null; 
 
     this.initializeStyleStats();
-    this.createFilterItems();
-    this.setupEventListeners();
-
-    // Mache den Header für die Tab-Navigation fokussierbar
-    this.filterHeader.setAttribute('tabindex', '-1');
+    // ✨ ENTFERNT: Keine UI mehr erstellen
+    // this.createFilterItems();
+    // this.setupEventListeners();
 
     console.log('StyleFilterManager initialized with', this.styleStats.size, 'unique styles');
   }
@@ -65,16 +62,20 @@ class StyleFilterManager {
     const openCount = this.json.filter(loc => loc.isOpen === true).length;
     const closedCount = this.json.filter(loc => loc.isOpen === false).length;
 
-    // if (openCount > 0) {
-    //   tempStats.set('open', openCount);
-    // }
-    // if (closedCount > 0) {
-    //   tempStats.set('closed', closedCount);
-    // }
-    
     tempStats.set('open', openCount);
     tempStats.set('closed', closedCount);
-    
+
+    // ✨ NEU: Füge Länder hinzu
+    const countryStats = new Map();
+    this.json.forEach(location => {
+      if (location.loc && location.loc.country) {
+        const country = location.loc.country;
+        if (!countryStats.has(country)) {
+          countryStats.set(country, 0);
+        }
+        countryStats.set(country, countryStats.get(country) + 1);
+      }
+    });
 
     // Erstelle die finale Map in der gewünschten Reihenfolge
     this.styleStats = new Map();
@@ -93,6 +94,12 @@ class StyleFilterManager {
 
     remainingStyles.forEach(([style, count]) => {
       this.styleStats.set(style, count);
+    });
+
+    // ✨ NEU: Füge Länder am Ende hinzu, alphabetisch sortiert
+    const sortedCountries = [...countryStats.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    sortedCountries.forEach(([country, count]) => {
+      this.styleStats.set(country, count);
     });
   }
 
@@ -113,234 +120,39 @@ class StyleFilterManager {
 
 
 
-  createFilterItems() {
-    const fragment = document.createDocumentFragment();
-    this.styleStats.forEach((count, style) => {
-      fragment.appendChild(this.createFilterItem(style, count));
-    });
-    this.filterContent.appendChild(fragment);
-  }
+  // ✨ ENTFERNT: Diese Methoden werden nicht mehr benötigt
+  // createFilterItems() - UI creation removed
+  // createFilterItem() - UI creation removed
+  // setupEventListeners() - UI creation removed
+  // toggleStyleSelection() - Now handled by search.js
+  // updateFilterCounter() - No UI to update
+  // updateHeaderState() - No UI to update
+  // toggleDropdown() - No dropdown anymore
+  // openDropdown() - No dropdown anymore
+  // closeDropdown() - No dropdown anymore
+  // isDropdownOpen() - No dropdown anymore
 
-  createFilterItem(style, count) {
-    const item = document.createElement('div');
-    item.classList.add('style-filter-item');
-    item.dataset.style = style;
-
-    const iconMap = {
-      'for all': 'fas fa-people-group',
-      'open': 'fas fa-door-open',
-      'closed': 'fas fa-door-closed',
-      'for students': 'fas fa-graduation-cap',
-      'for youth': 'fas fa-child',
-      'commercial': 'fas fa-money-bill-wave',
-    };
-
-    const iconClass = iconMap[style.toLowerCase()] || '';
-    const iconHTML = iconClass ? `<i class="${iconClass} filter-item-icon"></i>` : '';
-
-    const displayStyle = style === 'unknown' ? 'Unbekannt' : style;
-
-    item.innerHTML = `
-      <span class="style-label">${iconHTML}${displayStyle}</span>
-      <span class="style-count">${count}</span>
-    `;
-
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleStyleSelection(style, item);
-    });
-
-    return item;
-  }
-
+  // ✨ NEU: Dummy-Methode für Kompatibilität mit search.js
   toggleStyleSelection(style, item) {
+    // Diese Methode wird von search.js aufgerufen
+    // Die eigentliche Logik ist jetzt in search.js
     const isSelected = this.selectedStyles.has(style);
 
     if (isSelected) {
       this.selectedStyles.delete(style);
-      item.classList.remove('selected');
     } else {
-      // Gegenseitiger Ausschluss open/closed
-      if (style === 'open') {
-        this.selectedStyles.delete('closed');
-        const closedItem = this.filterContent.querySelector('[data-style="closed"]');
-        if (closedItem) closedItem.classList.remove('selected');
-      } else if (style === 'closed') {
-        this.selectedStyles.delete('open');
-        const openItem = this.filterContent.querySelector('[data-style="open"]');
-        if (openItem) openItem.classList.remove('selected');
-      }
-
       this.selectedStyles.add(style);
-      item.classList.add('selected');
     }
 
-    this.updateFilterCounter();
-    this.updateHeaderState();
-    this.applyFilters();
-  }
-
-  setupEventListeners() {
-    // ✨ DEAKTIVIERT: Mouse-Hover zum Öffnen des Dropdowns
-    // const isDesktop = !window.matchMedia("(any-hover: none)").matches;
-    // 
-    // if (isDesktop) {
-    //   this.filterContainer.addEventListener('mouseenter', () => {
-    //     clearTimeout(this.closeDropdownTimeout);
-    //     this.openDropdown();
-    //   });
-    //   this.filterContainer.addEventListener('mouseleave', () => {
-    //     this.closeDropdownTimeout = setTimeout(() => this.closeDropdown(), 3000);
-    //   });
-    // }
-
-    const handleActivation = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      this.toggleDropdown();
-
-      if (this.isDropdownOpen()) {
-        this.currentFilterIndex = -1;
-        this.updateActiveFilterItem();
-        setTimeout(() => this.filterDropdown.focus(), 0);
-      }
-    };
-
-    this.filterHeader.addEventListener('click', handleActivation);
-    this.filterHeader.addEventListener('touchstart', handleActivation);
-
-    this.filterHeader.addEventListener('keydown', (e) => {
-      // ENTER/SPACE öffnet/schließt das Dropdown
-      if (e.code === 'Enter' || e.code === 'Space') {
-        handleActivation(e);
-        return;
-      }
-
-      // ✨ ESC schließt das Dropdown
-      if (e.code === 'Escape') {
-        e.preventDefault();
-        if (this.isDropdownOpen()) {
-          this.closeDropdown();
-        }
-        return;
-      }
-    });
-
-    this.clearAllBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.clearAllStyles();
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.style-filter-container')) {
-        this.closeDropdown();
-      }
-    });
-
-    this.currentFilterIndex = -1;
-
-    // Tastaturnavigation INNERHALB des Filter-Dropdowns
-    this.filterDropdown.addEventListener('keydown', (e) => {
-      e.stopPropagation();
-
-      // ✨ ESC schließt das Dropdown
-      if (e.code === 'Escape') {
-        e.preventDefault();
-        this.closeDropdown();
-        return;
-      }
-
-      // ✨ TAB schließt das Dropdown und fokussiert den Header
-      if (e.code === 'Tab') {
-        e.preventDefault();
-        this.closeDropdown();
-        this.filterHeader.focus();
-        return;
-      }
-
-      // UP/DOWN/ENTER Navigation
-      if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.code)) {
-        e.preventDefault();
-      } else {
-        return;
-      }
-
-      const items = [
-        ...this.filterContent.querySelectorAll('.style-filter-item:not(.filter-separator)')
-        // ✨ ENTFERNT: clearAllBtn ist nicht mehr in der Navigation
-      ];
-      if (items.length === 0) return;
-
-      let newIndex = this.currentFilterIndex;
-
-      if (e.code === 'ArrowDown') {
-        newIndex = (this.currentFilterIndex + 1) % items.length;
-      } else if (e.code === 'ArrowUp') {
-        newIndex = (this.currentFilterIndex - 1 + items.length) % items.length;
-      } else if (e.code === 'Enter') {
-        if (this.currentFilterIndex !== -1) {
-          items[this.currentFilterIndex].click();
-        }
-      }
-
-      if (newIndex !== this.currentFilterIndex) {
-        this.currentFilterIndex = newIndex;
-        this.updateActiveFilterItem(items);
-      }
-    });
-  }
-
-
-  // NEUE Methode zum Verwalten des "keyboard-active" Zustands
-  updateActiveFilterItem(items) {
-    items = items || this.filterContent.querySelectorAll('.style-filter-item, .filter-btn');
-    items.forEach((item, index) => {
-      if (index === this.currentFilterIndex) {
-        item.classList.add('keyboard-active');
-        item.scrollIntoView({ block: 'nearest' });
-      } else {
-        item.classList.remove('keyboard-active');
-      }
-    });
-  }
-
-  clearAllStyles() {
-    this.selectedStyles.clear();
-    this.filterContent.querySelectorAll('.style-filter-item.selected').forEach(item => {
-      item.classList.remove('selected');
-    });
-    this.updateFilterCounter();
-    this.updateHeaderState();
     this.applyFilters();
   }
 
   updateFilterCounter() {
-    this.filterCounter.textContent = this.selectedStyles.size;
-    this.filterCounter.classList.toggle('visible', this.selectedStyles.size > 0);
+    // Dummy - kein UI mehr
   }
 
   updateHeaderState() {
-    this.filterHeader.classList.toggle('has-filters', this.selectedStyles.size > 0);
-  }
-
-  toggleDropdown() {
-    this.isDropdownOpen() ? this.closeDropdown() : this.openDropdown();
-  }
-
-  openDropdown() {
-    this.filterDropdown.classList.add('is-active');
-  }
-
-  closeDropdown() {
-    this.filterDropdown.classList.remove('is-active');
-    if (document.activeElement === this.filterDropdown) {
-      this.filterHeader.focus();
-    }
-  }
-
-  isDropdownOpen() {
-    return this.filterDropdown.classList.contains('is-active');
+    // Dummy - kein UI mehr
   }
 
   applyFilters() {
@@ -356,14 +168,26 @@ class StyleFilterManager {
       return;
     }
 
-    // --- NEUE AND-FILTERLOGIK ---
+    // --- NEUE AND-FILTERLOGIK mit Country-Support ---
 
-    // 1. Trenne die aktiven Filter in "normale" Styles und "Status"-Filter
+    // 1. Trenne die aktiven Filter in Kategorien
     const selectedNormalStyles = new Set();
     const selectedStateFilters = new Set();
+    const selectedCountries = new Set();
+
+    // Hole alle möglichen Länder
+    const allCountries = new Set();
+    this.json.forEach(location => {
+      if (location.loc && location.loc.country) {
+        allCountries.add(location.loc.country);
+      }
+    });
+
     this.selectedStyles.forEach(style => {
       if (style === 'open' || style === 'closed') {
         selectedStateFilters.add(style);
+      } else if (allCountries.has(style)) {
+        selectedCountries.add(style);
       } else {
         selectedNormalStyles.add(style);
       }
@@ -372,19 +196,22 @@ class StyleFilterManager {
     // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
     const finalFiltered = searchFiltered.filter(location => {
       const locationStyle = location.style || 'unknown';
+      const locationCountry = location.loc && location.loc.country ? location.loc.country : null;
 
       // Bedingung 1: Muss einem der ausgewählten Styles entsprechen
-      // Diese Bedingung ist erfüllt, wenn KEIN Style-Filter aktiv ist ODER das Element passt.
       const styleMatch = selectedNormalStyles.size === 0 || selectedNormalStyles.has(locationStyle);
 
       // Bedingung 2: Muss dem ausgewählten Status entsprechen
-      // Diese Bedingung ist erfüllt, wenn KEIN Status-Filter aktiv ist ODER das Element passt.
       const stateMatch = selectedStateFilters.size === 0 ||
         (selectedStateFilters.has('open') && location.isOpen === true) ||
         (selectedStateFilters.has('closed') && location.isOpen === false);
 
-      // Das Element wird nur angezeigt, wenn BEIDE Bedingungen erfüllt sind
-      return styleMatch && stateMatch;
+      // Bedingung 3: Muss dem ausgewählten Land entsprechen
+      const countryMatch = selectedCountries.size === 0 ||
+        (locationCountry && selectedCountries.has(locationCountry));
+
+      // Das Element wird nur angezeigt, wenn ALLE Bedingungen erfüllt sind
+      return styleMatch && stateMatch && countryMatch;
     });
 
     this.updateMarkers(finalFiltered);

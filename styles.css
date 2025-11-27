@@ -257,7 +257,7 @@ a#titleurl {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   pointer-events: none;
-  
+
   /* NEU, aber OHNE Funktion?? */
   /* transition: all 0.2s ease;
   z-index: 2; */
@@ -354,6 +354,172 @@ a#titleurl {
 
 #suggestions-dropdown.is-zooming {
   pointer-events: none;
+}
+
+/* ✨ NEU: Active Filters Section Styling */
+.active-filters-section {
+  padding: 6px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background-color: var(--dropdown-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 32px;
+}
+
+.filter-pill {
+  font-family: 'Lato', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px 2px 6px !important;
+  background-color: #0066ff;
+  color: white;
+  border-radius: 100px;
+  font-size: 0.8em;
+  font-weight: light;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  flex-shrink: 0;
+  height: 20px;
+}
+
+.filter-pill:hover {
+  background-color: black;
+  color: white;
+}
+
+
+/* Passive Filter: Weiß auf Grau */
+.filter-pill-passive {
+  background-color: #cccccc;
+  color: #666666;
+}
+
+/* Dark Mode für passive Pills */
+@media (prefers-color-scheme: dark) {
+  .filter-pill-passive {
+    background-color: #444444;
+    color: #aaaaaa;
+  }
+}
+
+/* Aktive Filter: Blau */
+.filter-pill-active {
+  background-color: #0066ff;
+  color: white;
+}
+
+/* Spezielle Farben für open/closed Filters */
+.filter-pill-open {
+  background-color: #00AA00;
+}
+
+.filter-pill-closed {
+  background-color: #DD0000;
+}
+
+/* ✨ NEU: Clear All Filters Button */
+.filter-pill-clear-all {
+  background-color: #cccccc;
+  color: #666666;
+  width: 24px;
+  height: 24px;
+  padding: 0 !important;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ✨ NEU: Clear All Filters Button */
+.filter-pill-clear-all:hover {
+  background-color: black;
+  color: white;
+}
+
+.filter-pill-clear-all i {
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.filter-pill i {
+  font-size: 0.9em;
+}
+
+/* Filter Popover */
+.filter-popover {
+  font-family: 'Lato', sans-serif;
+  position: fixed;
+  margin-top: 4px;
+  background-color: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px 2px var(--shadow-color);
+  min-width: 150px;
+  max-height: none;
+  overflow-y: auto;
+  z-index: 10000;
+}
+
+.filter-popover-item {
+  font-family: 'Lato', sans-serif;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  border-bottom: 1px solid var(--dropdown-border);
+  color: var(--text-color);
+  background-color: var(--dropdown-bg);
+}
+
+.filter-popover-item:last-child {
+  border-bottom: none;
+}
+
+.filter-popover-item:hover {
+  background-color: var(--dropdown-alt-bg);
+}
+
+.filter-popover-item.active {
+  background-color: #0066ff;
+  color: white;
+  font-weight: 600;
+}
+
+/* ✨ NEU: Clear Option Styling */
+.filter-popover-item.filter-clear-option {
+  font-family: 'Lato', sans-serif;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.8em;
+  color: #999999;
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 2px solid var(--dropdown-border);
+  padding: 0px 12px;
+}
+
+.filter-popover-item.filter-clear-option:hover {
+  background-color: rgba(128, 128, 128, 0.5);
+  color: #333333;
+}
+
+@media (prefers-color-scheme: dark) {
+  .filter-popover-item.filter-clear-option:hover {
+    background-color: rgba(128, 128, 128, 0.5);
+    color: #cccccc;
+  }
+}
+
+/* Dark Mode Anpassungen */
+@media (prefers-color-scheme: dark) {
+  .active-filters-section {
+    background-color: var(--dropdown-bg);
+  }
+
+  .filter-pill {
+    background-color: #0066ff;
+  }
 }
 
 .suggestion-item {
@@ -890,7 +1056,7 @@ a#titleurl:hover h3.space-unknown .fas {
   position: relative;
   line-height: 1.5;
   margin-bottom: 2px;
-  font-size:  1.1em;
+  font-size: 1.1em;
 }
 
 .street {
@@ -1103,310 +1269,6 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* +++ END: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
 
-/* Style Filter Container - Kleinerer Kreis passend zur Suchleiste */
-.style-filter-container {
-  z-index: 1000;
-  position: absolute;
-  top: 1.2em;
-  right: 315px;
-  /* Links von der 280px breiten Suchleiste */
-  width: auto;
-  font-family: 'Lato', sans-serif;
-}
-
-.style-filter-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--search-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 38px;
-  /* Angepasst an Suchleisten-Höhe */
-  height: 38px;
-  /* Angepasst an Suchleisten-Höhe */
-  box-shadow: 0px 2px 8px 1px var(--shadow-color);
-  cursor: pointer;
-  opacity: var(--search-opacity);
-  /* transition: all 0.3s ease-in-out; */
-  position: relative;
-  z-index: 2;
-}
-
-.style-filter-header:hover,
-.style-filter-header:focus {
-  opacity: var(--search-focus-opacity);
-  transform: scale(1.05);
-  outline: none;
-}
-
-.style-filter-header.has-filters {
-  border-color: blue;
-  background-color: blue;
-  color: white;
-}
-
-.filter-icon {
-  color: blue;
-  font-size: 1em;
-  transition: color 0.3s ease-in-out;
-}
-
-.style-filter-header.has-filters .filter-icon {
-  color: white;
-}
-
-.filter-title {
-  display: none;
-}
-
-.filter-counter {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  color: white;
-  background-color: #ff4444;
-  border: 2px solid var(--search-bg);
-  border-radius: 50%;
-  width: 18px;
-  /* Proportional kleiner */
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7em;
-  font-weight: bold;
-  opacity: 0;
-  /* transition: opacity 0.3s ease-in-out; */
-}
-
-.filter-counter.visible {
-  opacity: 1;
-}
-
-/* Style Filter Dropdown */
-.style-filter-dropdown {
-  background-color: var(--dropdown-bg);
-  color: var(--text-color);
-  border-radius: 12px;
-  margin-top: 8px;
-  position: absolute;
-  z-index: 1;
-  box-shadow: 0px 4px 12px 2px var(--shadow-color);
-  max-height: 60vh;
-  min-width: 280px;
-  overflow-y: auto;
-  right: 0;
-
-  opacity: 0;
-  pointer-events: none;
-  animation: dropdownSlideOut 0.12s ease-in;
-}
-
-.style-filter-dropdown.is-active {
-  opacity: 1;
-  pointer-events: auto;
-  animation: dropdownSlideIn 0.18s ease-out;
-}
-
-@keyframes dropdownSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes dropdownSlideOut {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-      
-  }
-
-  to {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-}
-
-.style-filter-content {
-  padding: 0;
-}
-
-.style-filter-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--dropdown-border);
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  background-color: var(--dropdown-bg);
-  color: var(--text-color);
-}
-
-.style-filter-item:nth-child(2n) {
-  background-color: var(--dropdown-alt-bg);
-}
-
-.style-filter-item:hover {
-  background-color: rgba(0, 0, 255, 0.1);
-}
-
-.style-filter-item:last-child {
-  border-bottom: none;
-}
-
-.filter-item-icon {
-  margin-right: 0.75em;
-  width: 20px;
-  /* Gibt den Icons einen festen Platz */
-  text-align: center;
-}
-
-/* HINTERGRUNDFARBEN für Open/Closed Filter */
-.style-filter-item[data-style="open"].selected {
-  background-color: #009900;
-  color: white;
-}
-
-.style-filter-item[data-style="closed"].selected {
-  background-color: #dd4444;
-  color: white;
-}
-
-/* Dunklerer Hover-Effekt für die aktiven Zustände */
-/* .style-filter-item[data-style="open"].selected:hover {
-  background-color: #007a00 !important;
-}
-
-.style-filter-item[data-style="closed"].selected:hover {
-  background-color: #b03636 !important;
-} */
-
-.style-filter-item[data-style="open"] .style-count,
-.style-filter-item[data-style="closed"] .style-count {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: black;
-}
-
-/* .style-filter-item[data-style="open"]:hover {
-  background-color: #007a00;
-}
-
-.style-filter-item[data-style="closed"]:hover {
-  background-color: #b03636;
-} */
-
-.style-filter-item.selected {
-  background-color: blue !important;
-  color: white !important;
-}
-
-.style-filter-item.selected:hover {
-  background-color: #0000cc !important;
-}
-
-.style-filter-item[data-style="open"].selected {
-  background-color: green !important;
-}
-
-.style-filter-item[data-style="open"].selected:hover {
-  background-color: #006600 !important;
-}
-
-.style-filter-item[data-style="closed"].selected {
-  background-color: red !important;
-}
-
-.style-filter-item[data-style="closed"].selected:hover {
-  background-color: #cc0000 !important;
-}
-
-/* Visuelles Feedback für Tastaturnavigation in Filtern */
-.style-filter-item.keyboard-active,
-.filter-btn.keyboard-active {
-  outline: 2px solid blue;
-  outline-offset: -2px;
-}
-
-.style-label {
-  flex-grow: 1;
-  font-size: 0.95em;
-  cursor: pointer;
-  user-select: none;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-}
-
-.style-count {
-  color: var(--hover-text-color);
-  font-size: 0.8em;
-  font-weight: bold;
-  background-color: var(--dropdown-alt-bg);
-  padding: 3px 8px;
-  border-radius: 10px;
-  min-width: 24px;
-  text-align: center;
-}
-
-.style-filter-item.selected .style-count {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.filter-actions {
-  padding: 0;
-}
-
-.filter-btn {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  /* 2/3 der normalen Höhe von 12px */
-  border: none;
-  border-top: 1px solid var(--dropdown-border);
-  border-radius: 0;
-  background-color: var(--dropdown-bg);
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 0.95em;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-  width: 100%;
-  justify-content: center;
-}
-
-.filter-btn:hover {
-  background-color: rgba(0, 0, 255, 0.1);
-  color: var(--text-color);
-}
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .filter-icon {
-    color: rgb(102, 179, 255);
-  }
-
-  .style-filter-header.has-filters {
-    background-color: blue;
-    border-color: blue;
-  }
-
-  .style-filter-item.selected {
-    background-color: blue !important;
-  }
-
-  .style-filter-item.selected:hover {
-    background-color: #0000cc !important;
-  }
-}
 
 
 
@@ -1457,7 +1319,7 @@ a#titleurl:hover h3.space-unknown .fas {
   position: fixed;
   width: 26px;
   height: 26px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   border-radius: 50%;
   display: flex;
