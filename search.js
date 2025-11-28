@@ -1024,7 +1024,7 @@ class SearchManager {
 
     let styleIconHtml = '';
     const styleIconMap = {
-      'for all': 'far fa-circle',
+      'for all': 'fas fa-people-group',
       'for students': 'fas fa-graduation-cap',
       'for youth': 'fas fa-child',
       'commercial': 'fas fa-money-bill-wave',
