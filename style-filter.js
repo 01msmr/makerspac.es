@@ -7,21 +7,12 @@ class StyleFilterManager {
     this.icons = icons;
     this.searchManager = searchManager;
 
-    // ✨ ENTFERNT: Alle DOM-Referenzen zum alten Filter-Dropdown
-    // this.filterContainer = document.querySelector('.style-filter-container');
-    // this.filterHeader = document.querySelector('.style-filter-header');
-    // this.filterDropdown = document.getElementById('style-filter-dropdown');
-    // this.filterContent = document.querySelector('.style-filter-content');
-    // this.filterCounter = document.getElementById('style-filter-counter');
-    // this.clearAllBtn = document.getElementById('clear-all-styles');
 
     this.selectedStyles = new Set();
     this.styleStats = new Map();
 
     this.initializeStyleStats();
-    // ✨ ENTFERNT: Keine UI mehr erstellen
-    // this.createFilterItems();
-    // this.setupEventListeners();
+
 
     console.log('StyleFilterManager initialized with', this.styleStats.size, 'unique styles');
   }
@@ -118,19 +109,6 @@ class StyleFilterManager {
     console.log('✅ Filter refreshed with', this.styleStats.size, 'items');
   }
 
-
-
-  // ✨ ENTFERNT: Diese Methoden werden nicht mehr benötigt
-  // createFilterItems() - UI creation removed
-  // createFilterItem() - UI creation removed
-  // setupEventListeners() - UI creation removed
-  // toggleStyleSelection() - Now handled by search.js
-  // updateFilterCounter() - No UI to update
-  // updateHeaderState() - No UI to update
-  // toggleDropdown() - No dropdown anymore
-  // openDropdown() - No dropdown anymore
-  // closeDropdown() - No dropdown anymore
-  // isDropdownOpen() - No dropdown anymore
 
   // ✨ NEU: Dummy-Methode für Kompatibilität mit search.js
   toggleStyleSelection(style, item) {

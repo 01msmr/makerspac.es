@@ -416,10 +416,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Helper function
   function zfill(plz, country) {
-    const expectedLengths = { Germany: 5, Austria: 4, Belgium: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4, Ukraine: 5};
+    const expectedLengths = { Germany: 5, Austria: 4, Belgium: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4, Ukraine: 5 };
     let plzStr = String(plz);
     let expectedLength = expectedLengths[country] || plzStr.length;
     return plzStr.padStart(expectedLength, "0");
+  }
+
+  function getCountryCode(countryName) {
+    // Mapping von Ländernamen zu ISO 3166-1-alpha-2 Codes
+    const countryCodeMap = {
+      'Germany': 'de',
+      'Austria': 'at',
+      'Switzerland': 'ch',
+      'France': 'fr',
+      'Netherlands': 'nl',
+      'Belgium': 'be',
+      'Italy': 'it',
+      'Spain': 'es',
+      'Portugal': 'pt',
+      'Poland': 'pl',
+      'Czech Republic': 'cz',
+      'Denmark': 'dk',
+      'Sweden': 'se',
+      'Norway': 'no',
+      'Finland': 'fi',
+      'United Kingdom': 'gb',
+      'Ireland': 'ie',
+      'Luxembourg': 'lu',
+      'Liechtenstein': 'li',
+      'Slovenia': 'si',
+      'Croatia': 'hr',
+      'Hungary': 'hu',
+      'Romania': 'ro',
+      'Bulgaria': 'bg',
+      'Greece': 'gr',
+      'Slovakia': 'sk',
+      'Estonia': 'ee',
+      'Latvia': 'lv',
+      'Lithuania': 'lt',
+      'Ukraine': 'ua'
+    };
+
+    return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
   }
 
   // Füge updateMarkerIcon zu mapUtils hinzu
@@ -673,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // ✨ NEU: Style-Icons hinzufügen
       let styleIconHtml = '';
       const styleIconMap = {
-        'for all': 'far fa-circle',
+        'for all': 'fas fa-people-group',
         'for students': 'fas fa-graduation-cap',
         'for youth': 'fas fa-child',
         'for students & youth': 'fas fa-graduation-cap',
@@ -693,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const linkText = location.link?.text || linkUrl;
 
       return `
-        <h3 id = "style" > ${ styleIconHtml }${ location.style || '' }</h3 >
+        <h3 id = "style" > ${styleIconHtml}${location.style || ''}</h3 >
           <a id="titleurl" href="${linkUrl}" target="_blank">
             <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
             </a>
@@ -703,8 +741,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   <i></i>
                 </a>
               </div>
-              <span class="city">${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</span><br>
-                <span class="country">${location.loc?.country || ''}</span><br>
+              ${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</span><br>
+                <span class="country"><span class="fi fi-${getCountryCode(location.loc?.country || '')}" style="margin-right: 4px;"></span>${location.loc?.country || ''}</span><br>
                   <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
       `;
     });

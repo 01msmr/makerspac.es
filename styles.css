@@ -363,10 +363,13 @@ a#titleurl {
   flex-wrap: wrap;
   gap: 4px;
   background-color: var(--dropdown-bg);
-  position: sticky;
+  /* ✨ ENTFERNT: position: sticky - Pills scrollen jetzt mit */
+  /* position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 10; */
   min-height: 32px;
+  /* ✨ Border trennt Pills von Suchergebnissen */
+  border-bottom: 1px solid var(--dropdown-border);
 }
 
 .filter-pill {
@@ -448,6 +451,13 @@ a#titleurl {
   font-size: 0.9em;
 }
 
+/* ✨ NEU: Flag-Styling in Pills */
+.flag-in-pill {
+  display: inline-block;
+  width: 16px;
+  margin-right: 4px;
+}
+
 /* Filter Popover */
 .filter-popover {
   font-family: 'Lato', sans-serif;
@@ -522,6 +532,34 @@ a#titleurl {
   }
 }
 
+/* ✨ NEU: Country Group Headers */
+.country-group-header {
+  font-family: 'Lato', sans-serif;
+  padding: 8px 16px;
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 2px solid var(--dropdown-border);
+  font-size: 0.95em;
+  color: var(--text-color);
+  position: sticky;
+  /* ✨ FIX: Sticky unter Filter-Pills (nicht bei top: 0) */
+  top: -12px;
+  /* Höhe der Filter-Section (~44px) + etwas Buffer */
+  z-index: 5;
+  backdrop-filter: blur(8px);
+}
+
+.country-group-header .country-count {
+  color: var(--hover-text-color);
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .country-group-header {
+    background-color: var(--dropdown-alt-bg);
+  }
+}
+
 .suggestion-item {
   font-family: 'Lato', sans-serif;
   padding: 12px 16px;
@@ -532,11 +570,12 @@ a#titleurl {
   border-bottom: 1px solid var(--dropdown-border);
   color: var(--text-color);
 
-  scroll-margin-top: 55px;
+  /* keine sticky Pills mehr */
+  scroll-margin-top: 145px;
 }
 
 /* Optional: Für ältere Browser als Fallback */
-@supports not (scroll-margin-top: 55px) {
+@supports not (scroll-margin-top: 8px) {
   .suggestion-item {
     /* Fallback für Browser die scroll-margin-top nicht unterstützen */
   }

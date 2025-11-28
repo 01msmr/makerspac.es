@@ -223,11 +223,17 @@ class SearchManager {
       this.createActiveFiltersSection();
 
       // Nur Suchergebnisse anzeigen, wenn tatsächlich eine Suche eingegeben wurde
-      if (searchQuery.length > 0 || (this.styleFilterManager && this.styleFilterManager.hasActiveFilters())) {
+      // Zeile 226-228: Definiere klare Bedingungen
+      const hasSearchQuery = searchQuery.length > 0;
+      const hasActiveFilters = this.styleFilterManager && this.styleFilterManager.hasActiveFilters();
+      const hasResults = filteredLocations && filteredLocations.length > 0;
+
+      // Zeile 230: Prüfe alle drei Bedingungen
+      if ((hasSearchQuery || hasActiveFilters) && hasResults) {
         this.createSuggestionItems(filteredLocations);
       } else {
-        // Entferne alte Suchergebnisse, wenn keine Suche aktiv
-        const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
+        // Zeile 234: Räume auf
+        const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
         existingSuggestions.forEach(item => item.remove());
       }
 
@@ -448,6 +454,7 @@ class SearchManager {
 
   scrollToActiveItem() {
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
+      // ✨ scroll-margin-top in CSS ist jetzt korrekt (70px), daher 'nearest' funktioniert
       this.dropdownItems[this.currentDropdownIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }
@@ -678,7 +685,8 @@ class SearchManager {
       'Slovakia': 'sk',
       'Estonia': 'ee',
       'Latvia': 'lv',
-      'Lithuania': 'lt'
+      'Lithuania': 'lt',
+      'Ukraine': 'ua'
     };
 
     return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
@@ -716,7 +724,7 @@ class SearchManager {
       // ✨ NEU: Zeige Flag-Icon für aktive Länder
       if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(activeFilter);
-        pill.innerHTML = `<span class="fi fi-${countryCode}"></span> ${activeFilter}`;
+        pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${activeFilter}`;
       }
       // ✨ NEU: Zeige spezifisches Icon für aktive Style-Optionen
       else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
@@ -821,6 +829,8 @@ class SearchManager {
         const flagSpan = document.createElement('span');
         flagSpan.className = `fi fi-${countryCode}`;
         flagSpan.style.marginRight = '8px';
+        flagSpan.style.display = 'inline-block';
+        flagSpan.style.width = '20px';
         optionItem.appendChild(flagSpan);
         optionItem.appendChild(document.createTextNode(option));
       }
@@ -954,20 +964,56 @@ class SearchManager {
   }
 
   createSuggestionItems(locations) {
-    // ✨ NEU: Entferne nur bestehende Suggestions, behalte Filter-Section
-    const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item');
+    // ✨ NEU: Entferne nur bestehende Suggestions und Country-Headers, behalte Filter-Section
+    const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
     existingSuggestions.forEach(item => item.remove());
 
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
     const fragment = document.createDocumentFragment();
-    const sortedLocations = this.sortLocationsByGeography(locations);
-    sortedLocations.forEach(location => {
-      const item = this.createSuggestionItem(location);
-      fragment.appendChild(item);
+
+    // ✨ NEU: Gruppiere nach Ländern
+    const groupedByCountry = new Map();
+    locations.forEach(location => {
+      const country = location.loc?.country || 'Unknown';
+      if (!groupedByCountry.has(country)) {
+        groupedByCountry.set(country, []);
+      }
+      groupedByCountry.get(country).push(location);
     });
+
+    // ✨ NEU: Sortiere Länder nach Anzahl der Makerspaces (absteigend)
+    const sortedCountries = Array.from(groupedByCountry.entries())
+      .sort((a, b) => b[1].length - a[1].length);
+
+    // ✨ NEU: Erstelle Gruppen mit Headers
+    sortedCountries.forEach(([country, countryLocations]) => {
+      // Country Header
+      const countryHeader = this.createCountryHeader(country, countryLocations.length);
+      fragment.appendChild(countryHeader);
+
+      // Locations innerhalb des Landes sortiert nach Geographie
+      const sortedLocations = this.sortLocationsByGeography(countryLocations);
+      sortedLocations.forEach(location => {
+        const item = this.createSuggestionItem(location);
+        fragment.appendChild(item);
+      });
+    });
+
     this.suggestionsDropdown.appendChild(fragment);
     this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
+  }
+
+  createCountryHeader(country, count) {
+    const header = document.createElement('div');
+    header.classList.add('country-group-header');
+
+    // ✨ Flagge vor Ländername
+    const countryCode = this.getCountryCode(country);
+    const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 6px;"></span>`;
+
+    header.innerHTML = `${flagHtml}<strong>${country}</strong> <span class="country-count">(${count})</span>`;
+    return header;
   }
 
   createSuggestionItem(location) {
@@ -1003,11 +1049,16 @@ class SearchManager {
       }
     }
     if (spaceStatusClass) { item.classList.add(spaceStatusClass); }
+
+    // ✨ NEU: Füge Länderflagge vor PLZ hinzu
+    const countryCode = this.getCountryCode(location.loc.country);
+    const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 4px;"></span>`;
+
     item.innerHTML = `
       <div class="item-content">
         <div class="item-name"><span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
-        <div class.item-details">${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
+        <div class="item-details">${flagHtml}${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
       </div>`;
     this.setupSuggestionItemEvents(item, location);
     return item;
