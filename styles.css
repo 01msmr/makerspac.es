@@ -563,7 +563,7 @@ a#titleurl {
   right: calc(1.5em + 300px + 12px);
   z-index: 1000;
 
-  opacity: var(--search-opacity);
+  opacity: 0.5;
   border: 1px solid var(--border-color);
   box-shadow: 0px 2px 8px 1px var(--shadow-color);
 }

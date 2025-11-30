@@ -51,7 +51,7 @@ class LanguageSwitcher {
     const flagCode = this.flagCodes[currentLang];
 
     this.container.innerHTML = `
-      <div class="language-button" title="Change language">
+      <div class="language-button" title="${this.i18n.t('tooltips.changeLanguage')}">
         <span class="fi fi-${flagCode} language-flag"></span>
       </div>
     `;
@@ -149,6 +149,8 @@ class LanguageSwitcher {
     const button = this.container.querySelector('.language-button');
 
     button.innerHTML = `<span class="fi fi-${flagCode} language-flag"></span>`;
+    // ✨ Aktualisiere auch den Tooltip
+    button.setAttribute('title', this.i18n.t('tooltips.changeLanguage'));
   }
 
   refreshUI() {

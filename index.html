@@ -89,6 +89,26 @@
   <script src="search.js"></script>
   <script src="style-filter.js"></script>
   <script src="map.js"></script>
+
+  <!-- ✨ Scroll-Reset für User Guide und Add Makerspace -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userGuide = document.querySelector('.user-guide');
+      const addMakerspace = document.querySelector('.add-makerspace');
+
+      if (userGuide) {
+        userGuide.addEventListener('mouseleave', () => {
+          userGuide.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      if (addMakerspace) {
+        addMakerspace.addEventListener('mouseleave', () => {
+          addMakerspace.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

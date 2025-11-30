@@ -697,20 +697,23 @@ document.addEventListener('DOMContentLoaded', () => {
       let statusIconHtml = '';
       let nameClass = '';
 
+      // ✨ Übersetzte Tooltips
+      const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
+
       if (location.isOpen === true) {
-        statusIconHtml = '<i class="fas fa-door-open" title="Space ist geöffnet"></i> ';
+        statusIconHtml = `<i class="fas fa-door-open" title="${getTooltip('tooltips.spaceOpen')}"></i> `;
         nameClass = 'space-open';
       }
       else if (location.isOpen === false) {
-        statusIconHtml = '<i class="fas fa-door-closed" title="Space ist geschlossen"></i> ';
+        statusIconHtml = `<i class="fas fa-door-closed" title="${getTooltip('tooltips.spaceClosed')}"></i> `;
         nameClass = 'space-closed';
       }
       else if (location.spaceapi && location.spaceapi.endpoint) {
-        statusIconHtml = '<i class="fas fa-question-circle" title="Space-Status wird geladen..."></i> ';
+        statusIconHtml = `<i class="fas fa-question-circle" title="${getTooltip('tooltips.spaceStatusLoading')}"></i> `;
         nameClass = 'space-unknown';
       }
 
-      // ✨ NEU: Style-Icons hinzufügen
+      // ✨ NEU: Style-Icons hinzufügen mit Übersetzungen
       let styleIconHtml = '';
       const styleIconMap = {
         'for all': 'fas fa-people-group',
@@ -720,10 +723,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'commercial': 'fas fa-money-bill-wave',
       };
 
+      const styleTranslationMap = {
+        'for all': 'styleLabels.forAll',
+        'for students': 'styleLabels.forStudents',
+        'for youth': 'styleLabels.forYouth',
+        'for students & youth': 'styleLabels.forStudentsAndYouth',
+        'commercial': 'styleLabels.commercial',
+      };
+
       const locationStyle = location.style ? location.style.toLowerCase() : '';
 
       if (locationStyle && styleIconMap[locationStyle]) {
-        styleIconHtml = `<i class="${styleIconMap[locationStyle]}" title="${location.style}"></i> `;
+        const translatedStyle = window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style;
+        styleIconHtml = `<i class="${styleIconMap[locationStyle]}" title="${translatedStyle}"></i> `;
       }
 
       const streetName = location.loc?.street?.name || '';
@@ -732,19 +744,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const linkUrl = location.link?.url || '#';
       const linkText = location.link?.text || linkUrl;
 
+      // ✨ Übersetzte Ländernamen
+      const countryName = location.loc?.country || '';
+      const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
+
+      // ✨ Übersetzte Style-Labels
+      const styleLabel = locationStyle && styleTranslationMap[locationStyle] ?
+        (window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style) :
+        (location.style || '');
+
       return `
-        <h3 id = "style" > ${styleIconHtml}${location.style || ''}</h3 >
+        <h3 id = "style" > ${styleIconHtml}${styleLabel}</h3 >
           <a id="titleurl" href="${linkUrl}" target="_blank">
             <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
             </a>
               <div class="popup-street-line">
                 <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
-                <a href="#" class="navigation-icon" title="&#013;    L -   START     route to makerspace    &#013;&#013;    R -   SWITCH  map routing service &#013;">
+                <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
                   <i></i>
                 </a>
               </div>
-              ${zfill(location.loc?.plz || '', location.loc?.country || '')} <b>${location.loc?.city || ''}</span><br>
-                <span class="country"><span class="fi fi-${getCountryCode(location.loc?.country || '')}" style="margin-right: 4px;"></span>${location.loc?.country || ''}</span><br>
+              ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
+                <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
                   <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
       `;
     });
@@ -800,6 +821,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentStickyMarker === marker) {
         currentStickyMarker = null;
         isPopupSticky = false;
+      }
+      // ✨ Fokus zurück auf Searchbar nach Popup-Schließen
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar) {
+        searchBar.focus();
       }
     });
 
@@ -960,6 +986,11 @@ document.addEventListener('DOMContentLoaded', () => {
       currentStickyMarker = null;
       isPopupSticky = false;
       console.log('Sticky popup cleared');
+      // ✨ Fokus zurück auf Searchbar nach Popup-Clearing
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar) {
+        searchBar.focus();
+      }
     }
   }
 
