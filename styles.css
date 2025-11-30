@@ -1529,6 +1529,57 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 
+/*  Styles für Bookmark-System  */
+
+/* Bookmark-Icon im Suggestion-Dropdown */
+.suggestion-bookmark {
+  float: right;
+  margin-left: 8px;
+  cursor: pointer;
+  color: var(--status-color, blue);
+  /* transition: color 0.2s ease, transform 0.1s ease; */
+  font-size: 16px;
+}
+
+.suggestion-bookmark:hover {
+  /* color: #FFD700; */
+  /* transform: scale(1.15); */
+  opacity: 0.6;
+}
+
+.suggestion-bookmark.fas {
+  /* color: #FFD700; */
+}
+
+/* Bookmark-Icon im Popup */
+.popup-bookmark {
+  color: var(--status-color, blue);
+  margin-left: 8px;
+  cursor: pointer;
+  /* color: #888; */
+  /* transition: color 0.2s ease, transform 0.1s ease; */
+  font-size: 1.5em;
+  vertical-align: middle;
+}
+
+.popup-bookmark:hover {
+  opacity: 0.4;
+}
+
+/* Item-Name Container mit Flexbox für bessere Ausrichtung */
+.item-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.item-name>span {
+  flex: 1;
+}
+
+
+
 /* Zoom-Level Anzeige */
 #zoom-indicator {
   position: fixed;

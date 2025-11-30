@@ -697,6 +697,16 @@ document.addEventListener('DOMContentLoaded', () => {
       let statusIconHtml = '';
       let nameClass = '';
 
+      // CSS-Variable für Status-Farbe setzen
+      let statusColor = 'blue'; // default
+      if (location.isOpen === true) {
+        statusColor = 'var(--space-open)';
+      } else if (location.isOpen === false) {
+        statusColor = 'var(--space-closed)';
+      } else if (location.spaceapi && location.spaceapi.endpoint) {
+        statusColor = 'var(--space-unknown)';
+      }
+
       // ✨ Übersetzte Tooltips
       const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
 
@@ -753,20 +763,28 @@ document.addEventListener('DOMContentLoaded', () => {
         (window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style) :
         (location.style || '');
 
+      // ✨ Bookmark-Icon erstellen
+      const bookmarkIcon = window.bookmarkManager ?
+        window.bookmarkManager.createBookmarkIcon(location.uniqueId, 'popup-bookmark') :
+        '';
+
       return `
-        <h3 id = "style" > ${styleIconHtml}${styleLabel}</h3 >
+        <div style="--status-color: ${statusColor};">
+          <h3 id="style">${styleIconHtml}${styleLabel}</h3>
           <a id="titleurl" href="${linkUrl}" target="_blank">
-            <h3 class="${nameClass}">${statusIconHtml}${location.name || 'Unnamed Space'}</h3><br><br>
+            <h3 class="${nameClass}">
+              ${statusIconHtml}${location.name || 'Unnamed Space'}
+            </h3>${bookmarkIcon}<br><br>
+          </a>
+          <div class="popup-street-line">
+            <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
+            <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
+              <i></i>
             </a>
-              <div class="popup-street-line">
-                <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
-                <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
-                  <i></i>
-                </a>
-              </div>
-              ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
-                <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
-                  <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+          </div>
+          ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
+            <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
+              <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
       `;
     });
 
@@ -814,6 +832,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
       // +++ END: NAVIGATION LINK EVENT LISTENERS +++
+
+      // ✨ Initialisiere Bookmark-Icon Event-Listener im Popup
+      if (window.bookmarkManager) {
+        const popupContainer = e.popup._container;
+        window.bookmarkManager.initializeBookmarkListeners(popupContainer);
+      }
     });
 
     marker.on('popupclose', () => {

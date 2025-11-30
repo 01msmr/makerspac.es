@@ -146,12 +146,13 @@ class StyleFilterManager {
       return;
     }
 
-    // --- NEUE AND-FILTERLOGIK mit Country-Support ---
+    // --- NEUE AND-FILTERLOGIK mit Country-Support und Bookmarks ---
 
     // 1. Trenne die aktiven Filter in Kategorien
     const selectedNormalStyles = new Set();
     const selectedStateFilters = new Set();
     const selectedCountries = new Set();
+    let bookmarkFilterActive = false;
 
     // Hole alle möglichen Länder
     const allCountries = new Set();
@@ -162,7 +163,9 @@ class StyleFilterManager {
     });
 
     this.selectedStyles.forEach(style => {
-      if (style === 'open' || style === 'closed') {
+      if (style === 'bookmarked') {
+        bookmarkFilterActive = true;
+      } else if (style === 'open' || style === 'closed') {
         selectedStateFilters.add(style);
       } else if (allCountries.has(style)) {
         selectedCountries.add(style);
@@ -188,8 +191,12 @@ class StyleFilterManager {
       const countryMatch = selectedCountries.size === 0 ||
         (locationCountry && selectedCountries.has(locationCountry));
 
+      // Bedingung 4: Muss gebookmarkt sein (wenn Bookmark-Filter aktiv)
+      const bookmarkMatch = !bookmarkFilterActive ||
+        (window.bookmarkManager && window.bookmarkManager.isBookmarked(location.uniqueId));
+
       // Das Element wird nur angezeigt, wenn ALLE Bedingungen erfüllt sind
-      return styleMatch && stateMatch && countryMatch;
+      return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
 
     this.updateMarkers(finalFiltered);

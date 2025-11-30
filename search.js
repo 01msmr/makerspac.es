@@ -33,6 +33,15 @@ class SearchManager {
 
     this.initializeEventListeners();
     setTimeout(() => { this.setupSpaceAPIEvents(); }, 100);
+
+    // ✨ Event-Listener für Bookmark-Änderungen
+    window.addEventListener('bookmarksChanged', () => {
+      // Aktualisiere Filter-Pills wenn Bookmarks sich ändern
+      if (this.styleFilterManager) {
+        this.createActiveFiltersSection();
+        this.styleFilterManager.applyFilters();
+      }
+    });
   }
 
   setStyleFilterManager(styleFilterManager) {
@@ -681,6 +690,12 @@ class SearchManager {
         icon: 'fas fa-flag',
         label: window.i18n.t('filter.country'),
         options: this.getUniqueCountries()
+      },
+      bookmarks: {
+        icon: 'fas fa-bookmark',
+        label: window.i18n.t('filter.bookmarks') || 'Bookmarks',
+        options: ['bookmarked'],
+        iconOnly: true
       }
     };
 
@@ -833,10 +848,15 @@ class SearchManager {
         }
       }
 
+      // ✨ iconOnly: Nur Icon anzeigen
+      if (config.iconOnly) {
+        const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
+        pill.innerHTML = `<i class="${config.icon}"></i>`;
+        pill.title = `${config.label} (${bookmarkCount})`;
+      }
       // ✨ Zeige Flag-Icon für aktive Länder
-      if (categoryKey === 'country') {
+      else if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(activeFilter);
-        // ✨ NEU: Zeige Country Code (DE, AT, etc.) statt Namen
         pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
       }
       // ✨ Zeige spezifisches Icon für aktive Style-Optionen
@@ -851,7 +871,15 @@ class SearchManager {
     } else {
       // Passiver Filter: Weiß auf Grau mit Label
       pill.classList.add('filter-pill-passive');
-      pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
+
+      // ✨ iconOnly: Nur Icon anzeigen
+      if (config.iconOnly) {
+        const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
+        pill.innerHTML = `<i class="${config.icon}"></i>`;
+        pill.title = `${config.label} (${bookmarkCount})`;
+      } else {
+        pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
+      }
     }
 
     // Click-Handler für Popover
@@ -870,7 +898,10 @@ class SearchManager {
 
     const selectedStyles = this.styleFilterManager.getSelectedStyles();
 
-    if (categoryKey === 'style') {
+    if (categoryKey === 'bookmarks') {
+      const bookmarkOptions = ['bookmarked'];
+      return selectedStyles.find(s => bookmarkOptions.includes(s)) || null;
+    } else if (categoryKey === 'style') {
       const styleOptions = ['for all', 'for youth', 'for students', 'commercial'];
       return selectedStyles.find(s => styleOptions.includes(s)) || null;
     } else if (categoryKey === 'doorState') {
@@ -940,6 +971,11 @@ class SearchManager {
       'closed': 'fas fa-door-closed'
     };
 
+    // ✨ NEU: Icon-Mapping für Bookmark-Optionen
+    const bookmarkIconMap = {
+      'bookmarked': 'fas fa-bookmark'
+    };
+
     // Erstelle Optionen
     config.options.forEach(option => {
       const optionItem = document.createElement('div');
@@ -992,6 +1028,17 @@ class SearchManager {
         optionItem.appendChild(iconElement);
         const translatedDoor = this.translateFilterValue('doorState', option);
         optionItem.appendChild(document.createTextNode(translatedDoor));
+      }
+      // ✨ Füge spezifisches Icon für Bookmark-Optionen hinzu
+      else if (categoryKey === 'bookmarks' && bookmarkIconMap[option]) {
+        const iconElement = document.createElement('i');
+        iconElement.className = bookmarkIconMap[option];
+        iconElement.style.marginRight = '8px';
+        iconElement.style.width = '20px';
+        iconElement.style.textAlign = 'center';
+        optionItem.appendChild(iconElement);
+        // Nutze config.label statt "bookmarked"
+        optionItem.appendChild(document.createTextNode(config.label));
       }
       else {
         const translatedValue = this.translateFilterValue(categoryKey, option);
@@ -1069,7 +1116,9 @@ class SearchManager {
 
     // Hole alle Optionen der Kategorie
     let categoryOptions = [];
-    if (categoryKey === 'style') {
+    if (categoryKey === 'bookmarks') {
+      categoryOptions = ['bookmarked'];
+    } else if (categoryKey === 'style') {
       categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
     } else if (categoryKey === 'doorState') {
       categoryOptions = ['open', 'closed'];
@@ -1093,7 +1142,9 @@ class SearchManager {
 
     // Hole alle Optionen der Kategorie
     let categoryOptions = [];
-    if (categoryKey === 'style') {
+    if (categoryKey === 'bookmarks') {
+      categoryOptions = ['bookmarked'];
+    } else if (categoryKey === 'style') {
       categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
     } else if (categoryKey === 'doorState') {
       categoryOptions = ['open', 'closed'];
@@ -1303,6 +1354,16 @@ class SearchManager {
     item.dataset.uniqueId = location.uniqueId;
     let statusIcon = '', spaceStatusClass = '', nameClass = '';
 
+    // CSS-Variable für Status-Farbe setzen
+    let statusColor = 'blue'; // default
+    if (location.isOpen === true) {
+      statusColor = 'var(--space-open)';
+    } else if (location.isOpen === false) {
+      statusColor = 'var(--space-closed)';
+    } else if (location.spaceapi && location.spaceapi.endpoint) {
+      statusColor = 'var(--space-unknown)';
+    }
+
     let styleIconHtml = '';
     const styleIconMap = {
       'for all': 'fas fa-people-group',
@@ -1335,13 +1396,27 @@ class SearchManager {
     const countryCode = this.getCountryCode(location.loc.country);
     const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 4px;"></span>`;
 
+    // ✨ Bookmark-Icon erstellen
+    const bookmarkIcon = window.bookmarkManager ?
+      window.bookmarkManager.createBookmarkIcon(location.uniqueId, 'suggestion-bookmark') :
+      '';
+
     item.innerHTML = `
-      <div class="item-content">
-        <div class="item-name"><span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span></div>
+      <div class="item-content" style="--status-color: ${statusColor};">
+        <div class="item-name">
+          <span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span>
+          ${bookmarkIcon}
+        </div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
         <div class="item-details">${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
       </div>`;
     this.setupSuggestionItemEvents(item, location);
+
+    // ✨ Initialisiere Bookmark-Icon Event-Listener
+    if (window.bookmarkManager) {
+      window.bookmarkManager.initializeBookmarkListeners(item);
+    }
+
     return item;
   }
 
