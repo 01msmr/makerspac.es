@@ -13,7 +13,7 @@ class I18n {
 
       // ✨ Auto-detect browser language
       const browserLang = navigator.language.substring(0, 2);
-      const supportedLangs = ['de', 'en', 'fr'];
+      const supportedLangs = ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
 
       if (supportedLangs.includes(browserLang)) {
         this.currentLang = browserLang;
@@ -28,7 +28,7 @@ class I18n {
   }
 
   setLanguage(lang) {
-    if (['de', 'en', 'fr'].includes(lang)) {
+    if (['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'].includes(lang)) {
       this.currentLang = lang;
       console.log(`🌍 Language changed to: ${lang}`);
     }
@@ -39,7 +39,7 @@ class I18n {
   }
 
   getSupportedLanguages() {
-    return ['de', 'en', 'fr'];
+    return ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
   }
 
   t(path) {

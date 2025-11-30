@@ -3,165 +3,356 @@
     "style": {
       "de": "Stil",
       "en": "style",
-      "fr": "style"
+      "fr": "style",
+      "it": "stile",
+      "nl": "stijl",
+      "da": "stil",
+      "uk": "стиль"
     },
     "status": {
       "de": "Status",
       "en": "status",
-      "fr": "statut"
+      "fr": "statut",
+      "it": "stato",
+      "nl": "status",
+      "da": "status",
+      "uk": "статус"
     },
     "country": {
       "de": "Land",
       "en": "country",
-      "fr": "pays"
+      "fr": "pays",
+      "it": "paese",
+      "nl": "land",
+      "da": "land",
+      "uk": "країна"
     },
     "clearAll": {
       "de": "Alle Filter löschen",
       "en": "clear all filters",
-      "fr": "supprimer tout filtre"
+      "fr": "supprimer tout filtre",
+      "it": "cancella tutti i filtri",
+      "nl": "wis alle filters",
+      "da": "ryd alle filtre",
+      "uk": "очистити всі фільтри"
     }
   },
   "style": {
     "forAll": {
       "de": "für alle",
       "en": "for all",
-      "fr": "pour tous"
+      "fr": "pour tous",
+      "it": "per tutti",
+      "nl": "voor iedereen",
+      "da": "for alle",
+      "uk": "для всіх"
     },
     "forYouth": {
-      "de": "für Jugend",
+      "de": "für Schüler",
       "en": "for youth",
-      "fr": "pour jeunes"
+      "fr": "pour jeunes",
+      "it": "per giovani",
+      "nl": "voor jongeren",
+      "da": "for unge",
+      "uk": "для молоді"
     },
     "forStudents": {
       "de": "für Studenten",
       "en": "for students",
-      "fr": "pour étudiants"
+      "fr": "pour étudiants",
+      "it": "per studenti",
+      "nl": "voor studenten",
+      "da": "for studerende",
+      "uk": "для студентів"
     },
     "commercial": {
       "de": "kommerziell",
       "en": "commercial",
-      "fr": "commercial"
+      "fr": "commercial",
+      "it": "commerciale",
+      "nl": "commercieel",
+      "da": "kommerciel",
+      "uk": "комерційний"
     }
   },
   "doorState": {
     "open": {
       "de": "offen",
       "en": "open",
-      "fr": "ouvert"
+      "fr": "ouvert",
+      "it": "aperto",
+      "nl": "open",
+      "da": "åben",
+      "uk": "відкрито"
     },
     "closed": {
       "de": "geschlossen",
       "en": "closed",
-      "fr": "fermé"
+      "fr": "fermé",
+      "it": "chiuso",
+      "nl": "gesloten",
+      "da": "lukket",
+      "uk": "закрито"
     }
   },
   "countries": {
-    "Germany": {
-      "de": "Deutschland",
-      "en": "Germany",
-      "fr": "Allemagne"
-    },
     "Austria": {
       "de": "Österreich",
       "en": "Austria",
-      "fr": "Autriche"
-    },
-    "Switzerland": {
-      "de": "Schweiz",
-      "en": "Switzerland",
-      "fr": "Suisse"
-    },
-    "France": {
-      "de": "Frankreich",
-      "en": "France",
-      "fr": "France"
-    },
-    "Netherlands": {
-      "de": "Niederlande",
-      "en": "Netherlands",
-      "fr": "Pays-Bas"
+      "fr": "Autriche",
+      "it": "Austria",
+      "nl": "Oostenrijk",
+      "da": "Østrig",
+      "uk": "Австрія"
     },
     "Belgium": {
       "de": "Belgien",
       "en": "Belgium",
-      "fr": "Belgique"
-    },
-    "Italy": {
-      "de": "Italien",
-      "en": "Italy",
-      "fr": "Italie"
-    },
-    "Spain": {
-      "de": "Spanien",
-      "en": "Spain",
-      "fr": "Espagne"
-    },
-    "Portugal": {
-      "de": "Portugal",
-      "en": "Portugal",
-      "fr": "Portugal"
-    },
-    "Poland": {
-      "de": "Polen",
-      "en": "Poland",
-      "fr": "Pologne"
-    },
-    "Czech Republic": {
-      "de": "Tschechien",
-      "en": "Czech Republic",
-      "fr": "République tchèque"
+      "fr": "Belgique",
+      "it": "Belgio",
+      "nl": "België",
+      "da": "Belgien",
+      "uk": "Бельгія"
     },
     "Denmark": {
       "de": "Dänemark",
       "en": "Denmark",
-      "fr": "Danemark"
+      "fr": "Danemark",
+      "it": "Danimarca",
+      "nl": "Denemarken",
+      "da": "Danmark",
+      "uk": "Данія"
     },
-    "Sweden": {
-      "de": "Schweden",
-      "en": "Sweden",
-      "fr": "Suède"
+    "Germany": {
+      "de": "Deutschland",
+      "en": "Germany",
+      "fr": "Allemagne",
+      "it": "Germania",
+      "nl": "Duitsland",
+      "da": "Tyskland",
+      "uk": "Німеччина"
     },
-    "Norway": {
-      "de": "Norwegen",
-      "en": "Norway",
-      "fr": "Norvège"
-    },
-    "Finland": {
-      "de": "Finnland",
-      "en": "Finland",
-      "fr": "Finlande"
-    },
-    "United Kingdom": {
-      "de": "Vereinigtes Königreich",
-      "en": "United Kingdom",
-      "fr": "Royaume-Uni"
-    },
-    "Ireland": {
-      "de": "Irland",
-      "en": "Ireland",
-      "fr": "Irlande"
+    "Italy": {
+      "de": "Italien",
+      "en": "Italy",
+      "fr": "Italie",
+      "it": "Italia",
+      "nl": "Italië",
+      "da": "Italien",
+      "uk": "Італія"
     },
     "Luxembourg": {
       "de": "Luxemburg",
       "en": "Luxembourg",
-      "fr": "Luxembourg"
+      "fr": "Luxembourg",
+      "it": "Lussemburgo",
+      "nl": "Luxemburg",
+      "da": "Luxembourg",
+      "uk": "Люксембург"
+    },
+    "Netherlands": {
+      "de": "Niederlande",
+      "en": "Netherlands",
+      "fr": "Pays-Bas",
+      "it": "Paesi Bassi",
+      "nl": "Nederland",
+      "da": "Nederlandene",
+      "uk": "Нідерланди"
+    },
+    "Switzerland": {
+      "de": "Schweiz",
+      "en": "Switzerland",
+      "fr": "Suisse",
+      "it": "Svizzera",
+      "nl": "Zwitserland",
+      "da": "Schweiz",
+      "uk": "Швейцарія"
     },
     "Ukraine": {
       "de": "Ukraine",
       "en": "Ukraine",
-      "fr": "Ukraine"
+      "fr": "Ukraine",
+      "it": "Ucraina",
+      "nl": "Oekraïne",
+      "da": "Ukraine",
+      "uk": "Україна"
     }
   },
   "searchResults": {
     "of": {
       "de": "von",
       "en": "of",
-      "fr": "de"
+      "fr": "de",
+      "it": "di",
+      "nl": "van",
+      "da": "af",
+      "uk": "з"
     },
     "noResults": {
       "de": "keine Ergebnisse ",
       "en": "no results ",
-      "fr": "aucun résultat"
+      "fr": "aucun résultat",
+      "it": "nessun risultato",
+      "nl": "geen resultaten",
+      "da": "ingen resultater",
+      "uk": "немає результатів"
     }
+  },
+  "userGuide": {
+    "title": {
+      "de": "? Benutzerhandbuch",
+      "en": "? User Guide",
+      "fr": "? Guide d'utilisation",
+      "it": "? Guida utente",
+      "nl": "? Gebruikershandleiding",
+      "da": "? Brugervejledning",
+      "uk": "? Посібник користувача"
+    },
+    "shortcut": {
+      "de": "Tastenkombination:",
+      "en": "Shortcut:",
+      "fr": "Raccourci:",
+      "it": "Scorciatoia:",
+      "nl": "Sneltoets:",
+      "da": "Genvej:",
+      "uk": "Комбінація клавіш:"
+    },
+    "shortcutDesc": {
+      "de": "Strg-F / Cmd-F / F3 fokussiert Suche",
+      "en": "Ctrl-F / Cmd-F / F3 focuses search",
+      "fr": "Ctrl-F / Cmd-F / F3 met le focus sur la recherche",
+      "it": "Ctrl-F / Cmd-F / F3 focalizza la ricerca",
+      "nl": "Ctrl-F / Cmd-F / F3 focust op zoeken",
+      "da": "Ctrl-F / Cmd-F / F3 fokuserer søgning",
+      "uk": "Ctrl-F / Cmd-F / F3 фокусує пошук"
+    },
+    "filter": {
+      "de": "Filtere",
+      "en": "Filter",
+      "fr": "Filtrer",
+      "it": "Filtra",
+      "nl": "Filter",
+      "da": "Filtrer",
+      "uk": "Фільтр"
+    },
+    "filterDesc": {
+      "de": "… nach Name, Stadt oder PLZ",
+      "en": "… by name, city or postal code",
+      "fr": "… par nom, ville ou code postal",
+      "it": "… per nome, città o codice postale",
+      "nl": "… op naam, stad of postcode",
+      "da": "… efter navn, by eller postnummer",
+      "uk": "… за назвою, містом або поштовим індексом"
+    },
+    "count": {
+      "de": "Anzahl",
+      "en": "Count",
+      "fr": "Nombre",
+      "it": "Conteggio",
+      "nl": "Aantal",
+      "da": "Antal",
+      "uk": "Кількість"
+    },
+    "countDesc": {
+      "de": "… gefilterter Makerspaces",
+      "en": "… of filtered makerspaces",
+      "fr": "… de makerspaces filtrés",
+      "it": "… di makerspace filtrati",
+      "nl": "… van gefilterde makerspaces",
+      "da": "… af filtrerede makerspaces",
+      "uk": "… відфільтрованих мейкерспейсів"
+    },
+    "autoZoom": {
+      "de": "Auto-Zoom",
+      "en": "Auto-Zoom",
+      "fr": "Zoom automatique",
+      "it": "Zoom automatico",
+      "nl": "Auto-zoom",
+      "da": "Auto-zoom",
+      "uk": "Авто-масштаб"
+    },
+    "autoZoomDesc": {
+      "de": "… auf gefilterte Pins",
+      "en": "… to filtered pins",
+      "fr": "… sur les marqueurs filtrés",
+      "it": "… sui pin filtrati",
+      "nl": "… naar gefilterde pinnen",
+      "da": "… til filtrerede pins",
+      "uk": "… до відфільтрованих маркерів"
+    },
+    "highlight": {
+      "de": "Hervorhebung:",
+      "en": "Highlighting:",
+      "fr": "Mise en évidence:",
+      "it": "Evidenziazione:",
+      "nl": "Markering:",
+      "da": "Fremhævning:",
+      "uk": "Виділення:"
+    },
+    "highlightDesc": {
+      "de": "… markierter Elemente",
+      "en": "… of marked elements",
+      "fr": "… des éléments marqués",
+      "it": "… di elementi contrassegnati",
+      "nl": "… van gemarkeerde elementen",
+      "da": "… af markerede elementer",
+      "uk": "… позначених елементів"
+    },
+    "scroll": {
+      "de": "Liste scrollen",
+      "en": "scroll list",
+      "fr": "faire défiler la liste",
+      "it": "scorrere l'elenco",
+      "nl": "lijst scrollen",
+      "da": "rul liste",
+      "uk": "прокрутити список"
+    },
+    "scrollDesc": {
+      "de": "… per Cursortasten",
+      "en": "… with cursor keys",
+      "fr": "… avec les touches du curseur",
+      "it": "… con i tasti cursore",
+      "nl": "… met cursortoetsen",
+      "da": "… med piletaster",
+      "uk": "… клавішами курсору"
+    }
+  },
+  "addMakerspace": {
+    "title": {
+      "de": "+ deinen Makerspace [hinzufügen] 💛",
+      "en": "+ [add] your makerspace 💛",
+      "fr": "+ [ajouter] votre makerspace 💛",
+      "it": "+ [aggiungi] il tuo makerspace 💛",
+      "nl": "+ [voeg toe] jouw makerspace 💛",
+      "da": "+ [tilføj] din makerspace 💛",
+      "uk": "+ [додати] ваш мейкерспейс 💛"
+    },
+    "googleForms": {
+      "de": "per Google Forms",
+      "en": "by Google Forms",
+      "fr": "par Google Forms",
+      "it": "tramite Google Forms",
+      "nl": "via Google Forms",
+      "da": "via Google Forms",
+      "uk": "через Google Forms"
+    },
+    "githubPR": {
+      "de": "per GitHub Pull Request",
+      "en": "by github pull request",
+      "fr": "par pull request github",
+      "it": "tramite pull request github",
+      "nl": "door github pull-verzoek",
+      "da": "via github pull-anmodning",
+      "uk": "за допомогою запиту на витяг з github"
+    }
+  },
+  "searchPlaceholder": {
+    "de": "Name, Stadt, PLZ, etc.",
+    "en": "name, city, postal, etc.",
+    "fr": "nom, ville, code postal, etc.",
+    "it": "nome, città, codice postale, ecc.",
+    "nl": "naam, stad, postcode, enz.",
+    "da": "navn, by, postnummer, osv.",
+    "uk": "назва, місто, індекс, тощо"
   }
 }

@@ -10,19 +10,35 @@ class LanguageSwitcher {
     this.languageNames = {
       'de': 'Deutsch',
       'en': 'English',
-      'fr': 'Français'
+      'fr': 'Français',
+      'it': 'Italiano',
+      'nl': 'Nederlands',
+      'da': 'Dansk',
+      'uk': 'Українська'
     };
 
     this.flagCodes = {
       'de': 'de',
       'en': 'gb', // UK flag for English
-      'fr': 'fr'
+      'fr': 'fr',
+      'it': 'it',
+      'nl': 'nl',
+      'da': 'dk',
+      'uk': 'ua'
     };
   }
 
-  init() {
+  async init() {
+    // ✨ Warte darauf, dass i18n Übersetzungen geladen hat
+    if (!this.i18n.translations || Object.keys(this.i18n.translations).length === 0) {
+      await this.i18n.load();
+    }
+
     this.createLanguageButton();
     this.setupEventListeners();
+
+    // ✨ Übersetze UI-Elemente beim ersten Laden
+    this.translateUIElements();
   }
 
   createLanguageButton() {
@@ -152,15 +168,62 @@ class LanguageSwitcher {
         window.searchManager.styleFilterManager.applyFilters();
       }
     }
+
+    // ✨ Übersetze UI-Elemente
+    this.translateUIElements();
+  }
+
+  translateUIElements() {
+    this.translateUserGuide();
+    this.translateAddMakerspace();
+    this.translateSearchPlaceholder();
+  }
+
+  translateUserGuide() {
+    const userGuide = document.querySelector('.user-guide');
+    if (!userGuide) return;
+
+    userGuide.innerHTML = `
+      <h2>${this.i18n.t('userGuide.title')}</h2>
+      <ol>
+        <li><strong>${this.i18n.t('userGuide.shortcut')}</strong> <br /> ${this.i18n.t('userGuide.shortcutDesc')}</li>
+        <li><strong>${this.i18n.t('userGuide.filter')}</strong> <br /> ${this.i18n.t('userGuide.filterDesc')}</li>
+        <li><strong>${this.i18n.t('userGuide.count')}</strong> <br /> ${this.i18n.t('userGuide.countDesc')}</li>
+        <li><strong>${this.i18n.t('userGuide.autoZoom')}</strong> <br /> ${this.i18n.t('userGuide.autoZoomDesc')}</li>
+        <li><strong>${this.i18n.t('userGuide.highlight')}</strong> <br /> ${this.i18n.t('userGuide.highlightDesc')}</li>
+        <li><strong>${this.i18n.t('userGuide.scroll')}</strong> <br /> ${this.i18n.t('userGuide.scrollDesc')}</li>
+      </ol>
+    `;
+  }
+
+  translateAddMakerspace() {
+    const addMakerspace = document.querySelector('.add-makerspace');
+    if (!addMakerspace) return;
+
+    addMakerspace.innerHTML = `
+      <h2>${this.i18n.t('addMakerspace.title')}</h2>
+      <br />
+      <ul>
+        <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-primary">${this.i18n.t('addMakerspace.googleForms')}</a></li>
+        <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-secondary">${this.i18n.t('addMakerspace.githubPR')}</a></li>
+      </ul>
+    `;
+  }
+
+  translateSearchPlaceholder() {
+    const searchBar = document.getElementById('search-bar');
+    if (!searchBar) return;
+
+    searchBar.placeholder = this.i18n.t('searchPlaceholder');
   }
 }
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     if (window.i18n) {
       window.languageSwitcher = new LanguageSwitcher(window.i18n);
-      window.languageSwitcher.init();
+      await window.languageSwitcher.init();
     }
   });
 } else {
