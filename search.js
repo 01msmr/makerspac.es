@@ -160,7 +160,7 @@ class SearchManager {
     });
 
 
-  
+
 
 
 
@@ -193,6 +193,22 @@ class SearchManager {
 
     this.suggestionsDropdown.addEventListener('scroll', () => {
       this.updateHoverSVGPosition();
+    });
+
+    // ✨ Verhindere Fokusverlust beim Scrollen im Dropdown
+    this.suggestionsDropdown.addEventListener('wheel', (e) => {
+      // Erlaube das Scrollen im Dropdown
+      e.stopPropagation();
+      // Fokus bleibt auf Searchbar
+      setTimeout(() => {
+        this.searchBar.focus();
+      }, 0);
+    }, { passive: true });
+
+    // ✨ Verhindere Fokusverlust beim Touchpad-Scrollen
+    this.suggestionsDropdown.addEventListener('mousedown', (e) => {
+      // Verhindere, dass Dropdown den Fokus bekommt
+      e.preventDefault();
     });
 
     this.map.on('zoomstart movestart', () => {
@@ -475,9 +491,54 @@ class SearchManager {
 
   scrollToActiveItem() {
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
-      // ✨ scroll-margin-top in CSS ist jetzt korrekt (70px), daher 'nearest' funktioniert
-      this.dropdownItems[this.currentDropdownIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const activeItem = this.dropdownItems[this.currentDropdownIndex];
+
+      // ✨ Berechne die Position des aktiven Elements relativ zum Dropdown
+      const dropdown = this.suggestionsDropdown;
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const itemRect = activeItem.getBoundingClientRect();
+
+      // ✨ Höhe der sticky Filter-Section (muss mit CSS scroll-margin-top übereinstimmen)
+      const filterSectionHeight = 119;
+
+      // ✨ Berechne die minimale Top-Position, die das Element haben darf
+      const minAllowedTop = dropdownRect.top + filterSectionHeight;
+
+      // ✨ ABSOLUT VERHINDERN: Element darf NIEMALS auch nur 1px unter Filter-Section sein
+      if (itemRect.top < minAllowedTop) {
+        // ✨ Manuelles Scrollen: Berechne exakt, wie viel gescrollt werden muss
+        const scrollAmount = minAllowedTop - itemRect.top;
+        const targetScrollTop = dropdown.scrollTop - scrollAmount;
+
+        // ✨ SMOOTH Scroll-Animation
+        dropdown.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      }
+      // ✨ Prüfe, ob das Element unterhalb des sichtbaren Bereichs ist
+      else if (itemRect.bottom > dropdownRect.bottom) {
+        // ✨ Für Abwärts-Scrollen kann scrollIntoView verwendet werden
+        activeItem.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        });
+      }
     }
+  }
+
+  scrollToTop() {
+    // ✨ Scrolle das Dropdown ganz nach oben zum ersten Element
+    if (this.suggestionsDropdown) {
+      this.suggestionsDropdown.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // ✨ Setze den Index auf das erste Element
+    this.currentDropdownIndex = 0;
+    this.updateActiveDropdownItem();
   }
 
   getLocationFromDropdownItem(dropdownItem) {
@@ -659,6 +720,12 @@ class SearchManager {
     this.styleFilterManager.updateFilterCounter();
     this.styleFilterManager.updateHeaderState();
     this.styleFilterManager.applyFilters();
+
+    // ✨ Scrolle nach oben zum ersten Element
+    this.scrollToTop();
+
+    // ✨ Setze Fokus zurück auf Searchbar für Cursor-Navigation
+    this.searchBar.focus();
   }
 
   getUniqueCountries() {
@@ -828,6 +895,11 @@ class SearchManager {
       }
     });
 
+    // ✨ Fokus zurück auf Searchbar beim Schließen alter Popovers
+    if (existingPopovers.length > 0) {
+      this.searchBar.focus();
+    }
+
     // ✨ EINFACH: Erstelle immer ein neues Popover (kein Toggle)
     const popover = document.createElement('div');
     popover.classList.add('filter-popover');
@@ -849,6 +921,8 @@ class SearchManager {
       if (this.suggestionsDropdown) {
         this.suggestionsDropdown.classList.remove('is-zooming');
       }
+      // ✨ Fokus zurück auf Searchbar
+      this.searchBar.focus();
     });
     popover.appendChild(clearOption);
 
@@ -938,6 +1012,8 @@ class SearchManager {
         if (this.suggestionsDropdown) {
           this.suggestionsDropdown.classList.remove('is-zooming');
         }
+        // ✨ Fokus zurück auf Searchbar (wird auch in selectCategoryOption gesetzt, aber sicher ist sicher)
+        this.searchBar.focus();
       });
 
       popover.appendChild(optionItem);
@@ -968,6 +1044,8 @@ class SearchManager {
             this.suggestionsDropdown.classList.remove('is-zooming');
           }
           document.removeEventListener('click', closeHandler);
+          // ✨ Fokus zurück auf Searchbar
+          this.searchBar.focus();
         }
       };
       document.addEventListener('click', closeHandler);
@@ -980,6 +1058,8 @@ class SearchManager {
         this.suggestionsDropdown.classList.remove('is-zooming');
       }
       document.removeEventListener('scroll', scrollHandler, true);
+      // ✨ Fokus zurück auf Searchbar
+      this.searchBar.focus();
     };
     document.addEventListener('scroll', scrollHandler, true);
   }
@@ -1035,6 +1115,12 @@ class SearchManager {
     this.styleFilterManager.updateFilterCounter();
     this.styleFilterManager.updateHeaderState();
     this.styleFilterManager.applyFilters();
+
+    // ✨ Scrolle nach oben zum ersten Element
+    this.scrollToTop();
+
+    // ✨ Setze Fokus zurück auf Searchbar für Cursor-Navigation
+    this.searchBar.focus();
   }
 
   createSuggestionItems(locations) {
@@ -1448,6 +1534,8 @@ class SearchManager {
 
     setTimeout(() => {
       this.removeZoomPreviewFrame(secondFrameInfo.layer);
+      // ✨ Fokus zurück auf Searchbar nach komplexem Zoom
+      this.searchBar.focus();
     }, 800);
   }
 
@@ -1469,6 +1557,8 @@ class SearchManager {
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);
       }
+      // ✨ Fokus zurück auf Searchbar nach Zoom
+      this.searchBar.focus();
     });
   }
 

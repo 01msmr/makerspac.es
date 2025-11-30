@@ -752,6 +752,8 @@ a#titleurl {
   position: relative;
   border-bottom: 1px solid var(--dropdown-border);
   color: var(--text-color);
+  /* ✨ Scroll-Margin für korrekte Positionierung unterhalb der sticky Filter-Section */
+  scroll-margin-top: 119px;
 }
 
 
