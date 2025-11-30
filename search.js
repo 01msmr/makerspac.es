@@ -45,20 +45,38 @@ class SearchManager {
     // ✨ NEUE GLOBALE TASTATUR-NAVIGATION
     document.addEventListener('keydown', (e) => {
       const searchBarHasFocus = document.activeElement === this.searchBar;
-      const filterHeaderHasFocus = document.activeElement === this.styleFilterManager?.filterHeader;
-      const filterDropdownHasFocus = document.activeElement === this.styleFilterManager?.filterDropdown;
+      const filterHeaderHasFocus = this.styleFilterManager?.filterHeader && document.activeElement === this.styleFilterManager.filterHeader;
+      const filterDropdownHasFocus = this.styleFilterManager?.filterDropdown && document.activeElement === this.styleFilterManager.filterDropdown;
 
       // ESC - Schließt Dropdown überall
       if (e.code === 'Escape') {
         e.preventDefault();
 
+        // 1. Schließe zuerst den Filter-Popover/Dropdown, wenn aktiv
+        if (this.styleFilterManager?.isDropdownOpen()) {
+          this.styleFilterManager.closeDropdown();
+          return;
+        }
+
+        // 2. Leere die Suche, wenn Text vorhanden ist (schließt implizit das Dropdown über applyFilters)
         if (this.searchBar.value.length > 0) {
           this.clearSearch();
-        } else if (this.styleFilterManager?.isDropdownOpen()) {
-          this.styleFilterManager.closeDropdown();
-        } else {
-          this.handleEscapeKey();
+          return;
         }
+
+        // 3. Schließe das Such-Dropdown explizit, wenn es offen und leer ist
+        // if (this.suggestionsDropdown.classList.contains('is-active')) {
+        //   this.closeDropdown();
+        //   return;
+        // }
+
+        // 3. Wenn die Suche leer ist (und kein Filter-Dropdown aktiv war), schließe das Such-Dropdown.
+        // Das entspricht dem, was handleEscapeKey tun würde, aber ist direkter.
+        this.closeDropdown();
+        return;
+
+        // 4. Wenn keines der obigen zutrifft, rufe den generischen Escape-Handler auf
+        this.handleEscapeKey();
         return;
       }
 
@@ -142,6 +160,11 @@ class SearchManager {
     });
 
 
+  
+
+
+
+
     // Lausche auf Suchfeld-Änderungen
     this.searchBar.addEventListener('input', (e) => {
       const value = e.target.value.trim().toLowerCase();
@@ -222,17 +245,15 @@ class SearchManager {
       // ✨ IMMER Filter-Pills anzeigen, wenn Dropdown aktiv ist
       this.createActiveFiltersSection();
 
-      // Nur Suchergebnisse anzeigen, wenn tatsächlich eine Suche eingegeben wurde
-      // Zeile 226-228: Definiere klare Bedingungen
+      // ✨ FIX: Nur Suchergebnisse anzeigen, wenn tatsächlich eine Suche oder Filter aktiv sind
       const hasSearchQuery = searchQuery.length > 0;
       const hasActiveFilters = this.styleFilterManager && this.styleFilterManager.hasActiveFilters();
       const hasResults = filteredLocations && filteredLocations.length > 0;
 
-      // Zeile 230: Prüfe alle drei Bedingungen
       if ((hasSearchQuery || hasActiveFilters) && hasResults) {
         this.createSuggestionItems(filteredLocations);
       } else {
-        // Zeile 234: Räume auf
+        // Entferne alte Suchergebnisse UND Country-Headers
         const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
         existingSuggestions.forEach(item => item.remove());
       }
@@ -585,17 +606,19 @@ class SearchManager {
     const categoryConfig = {
       style: {
         icon: 'fas fa-people-group',
-        label: 'Style',
+        label: window.i18n.t('filter.style'),
+        // ✨ Interne Werte bleiben Englisch
         options: ['for all', 'for youth', 'for students', 'commercial']
       },
       doorState: {
         icon: 'fas fa-door-open',
-        label: 'Status',
+        label: window.i18n.t('filter.status'),
+        // ✨ Interne Werte bleiben Englisch
         options: ['open', 'closed']
       },
       country: {
         icon: 'fas fa-flag',
-        label: 'Country',
+        label: window.i18n.t('filter.country'),
         options: this.getUniqueCountries()
       }
     };
@@ -692,6 +715,28 @@ class SearchManager {
     return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
   }
 
+  // ✨ NEU: Übersetze Filter-Werte für Anzeige
+  translateFilterValue(categoryKey, value) {
+    if (categoryKey === 'style') {
+      const styleMap = {
+        'for all': 'style.forAll',
+        'for youth': 'style.forYouth',
+        'for students': 'style.forStudents',
+        'commercial': 'style.commercial'
+      };
+      return window.i18n.t(styleMap[value] || value);
+    } else if (categoryKey === 'doorState') {
+      const doorMap = {
+        'open': 'doorState.open',
+        'closed': 'doorState.closed'
+      };
+      return window.i18n.t(doorMap[value] || value);
+    } else if (categoryKey === 'country') {
+      return window.i18n.t(`countries.${value}`);
+    }
+    return value;
+  }
+
   createCategoryPill(categoryKey, config) {
     const pill = document.createElement('div');
     pill.classList.add('filter-pill');
@@ -721,17 +766,20 @@ class SearchManager {
         }
       }
 
-      // ✨ NEU: Zeige Flag-Icon für aktive Länder
+      // ✨ Zeige Flag-Icon für aktive Länder
       if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(activeFilter);
-        pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${activeFilter}`;
+        // ✨ NEU: Zeige Country Code (DE, AT, etc.) statt Namen
+        pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
       }
-      // ✨ NEU: Zeige spezifisches Icon für aktive Style-Optionen
+      // ✨ Zeige spezifisches Icon für aktive Style-Optionen
       else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
-        pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${activeFilter}`;
+        const translatedStyle = this.translateFilterValue('style', activeFilter);
+        pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${translatedStyle}`;
       }
       else {
-        pill.innerHTML = `<i class="${config.icon}"></i> ${activeFilter}`;
+        const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
+        pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
       }
     } else {
       // Passiver Filter: Weiß auf Grau mit Label
@@ -832,9 +880,24 @@ class SearchManager {
         flagSpan.style.display = 'inline-block';
         flagSpan.style.width = '20px';
         optionItem.appendChild(flagSpan);
-        optionItem.appendChild(document.createTextNode(option));
+
+        // ✨ Ländername übersetzen
+        const nameSpan = document.createElement('span');
+        const translatedCountry = window.i18n.t(`countries.${option}`);
+        nameSpan.textContent = translatedCountry;
+        optionItem.appendChild(nameSpan);
+
+        // ✨ NEU: Gesamtzahl der Makerspaces in diesem Land
+        const countInCountry = this.json.filter(loc => loc.loc?.country === option).length;
+        const countSpan = document.createElement('span');
+        countSpan.className = 'country-total-count';
+        countSpan.textContent = ` (${countInCountry})`;
+        optionItem.appendChild(countSpan);
+
+        // ✨ NEU: Verhindere Zeilenumbruch
+        optionItem.style.whiteSpace = 'nowrap';
       }
-      // ✨ NEU: Füge spezifisches Icon für Style-Optionen hinzu
+      // ✨ Füge spezifisches Icon für Style-Optionen hinzu
       else if (categoryKey === 'style' && styleIconMap[option]) {
         const iconElement = document.createElement('i');
         iconElement.className = styleIconMap[option];
@@ -842,9 +905,10 @@ class SearchManager {
         iconElement.style.width = '20px';
         iconElement.style.textAlign = 'center';
         optionItem.appendChild(iconElement);
-        optionItem.appendChild(document.createTextNode(option));
+        const translatedStyle = this.translateFilterValue('style', option);
+        optionItem.appendChild(document.createTextNode(translatedStyle));
       }
-      // ✨ NEU: Füge spezifisches Icon für Door-State-Optionen hinzu
+      // ✨ Füge spezifisches Icon für Door-State-Optionen hinzu
       else if (categoryKey === 'doorState' && doorStateIconMap[option]) {
         const iconElement = document.createElement('i');
         iconElement.className = doorStateIconMap[option];
@@ -852,10 +916,12 @@ class SearchManager {
         iconElement.style.width = '20px';
         iconElement.style.textAlign = 'center';
         optionItem.appendChild(iconElement);
-        optionItem.appendChild(document.createTextNode(option));
+        const translatedDoor = this.translateFilterValue('doorState', option);
+        optionItem.appendChild(document.createTextNode(translatedDoor));
       }
       else {
-        optionItem.textContent = option;
+        const translatedValue = this.translateFilterValue(categoryKey, option);
+        optionItem.textContent = translatedValue;
       }
 
       // Markiere aktive Option
@@ -881,7 +947,15 @@ class SearchManager {
     document.body.appendChild(popover);
 
     const pillRect = pill.getBoundingClientRect();
-    popover.style.left = pillRect.left + 'px';
+
+    // ✨ NEU: Country-Popover rechtsbündig positionieren
+    if (categoryKey === 'country') {
+      popover.style.right = (window.innerWidth - pillRect.right) + 'px';
+      popover.style.left = 'auto';
+    } else {
+      popover.style.left = pillRect.left + 'px';
+    }
+
     popover.style.top = (pillRect.bottom + 4) + 'px';
     popover.style.minWidth = pillRect.width + 'px';
 
@@ -970,6 +1044,13 @@ class SearchManager {
 
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
+
+    // ✨ FIX: Wenn keine Locations, nichts erstellen (verhindert leere Country-Headers)
+    if (!locations || locations.length === 0) {
+      this.dropdownItems = [];
+      return;
+    }
+
     const fragment = document.createDocumentFragment();
 
     // ✨ NEU: Gruppiere nach Ländern
@@ -1007,14 +1088,128 @@ class SearchManager {
   createCountryHeader(country, count) {
     const header = document.createElement('div');
     header.classList.add('country-group-header');
+    header.dataset.countryName = country; // Speichere den nicht-übersetzten Namen für die Scroll-Logik
 
     // ✨ Flagge vor Ländername
     const countryCode = this.getCountryCode(country);
     const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 6px;"></span>`;
 
-    header.innerHTML = `${flagHtml}<strong>${country}</strong> <span class="country-count">(${count})</span>`;
+    // ✨ NEU: Gesamtzahl der Makerspaces in diesem Land
+    const totalInCountry = this.json.filter(loc => loc.loc?.country === country).length;
+
+    // ✨ Übersetze Ländername und "of"
+    const translatedCountry = window.i18n.t(`countries.${country}`);
+    const ofText = window.i18n.t('searchResults.of');
+
+    header.innerHTML = `
+      <div class="country-title-content">
+        ${flagHtml}<strong>${translatedCountry}</strong> <span class="country-count">[${count} ${ofText} ${totalInCountry}]</span>
+      </div>
+      <div class="country-nav-carets">
+        <i class="fas fa-caret-up country-nav-caret" data-direction="prev" title="previous country"></i>
+        <i class="fas fa-caret-down country-nav-caret" data-direction="next" title="next country"></i>
+      </div>
+    `;
+
+    // Füge Event Listener hinzu
+    const upCaret = header.querySelector('[data-direction="prev"]');
+    const downCaret = header.querySelector('[data-direction="next"]');
+
+    upCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'prev'));
+    downCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'next'));
+
     return header;
   }
+
+
+
+
+  getStickyOffset() {
+    // Höhe der Search Bar (48px top padding des dropdowns)
+    const searchBarHeight = 48;
+
+    // Höhe der .active-filters-section (sticky top: 0)
+    const filtersSection = this.suggestionsDropdown.querySelector('.active-filters-section');
+    const filterHeight = filtersSection ? filtersSection.offsetHeight : 0;
+
+    // Der Scroll-Offset muss so groß sein, dass der Country-Header (sticky top: 37px) 
+    // am oberen Rand des Dropdowns kleben bleibt. Die statische Berechnung 85 war empirisch, 
+    // aber wir behalten sie als Fallback. 
+    // Realistischer dynamischer Wert: 48 (Padding-Top) + 37 (Country-Header Top/Filter-Höhe) = 85.
+
+    // Da das Dropdown mit margin-top: -40px und padding-top: 48px beginnt, 
+    // entspricht 48px dem Platz der Search Bar. 
+    // Der Country-Header klebt an 37px. Also ist die korrekte Scroll-Position 48 + 37 = 85.
+
+    // Wir können uns einfach auf den empirischen Wert verlassen, der zuvor funktionierte (85),
+    // oder ihn aus den beiden Sticky-Elementen berechnen.
+
+    return 85;
+  }
+
+
+
+
+  handleCountryScroll(e, currentCountry, direction) {
+    e.stopPropagation();
+
+    const allHeaders = Array.from(this.suggestionsDropdown.querySelectorAll('.country-group-header'));
+
+    // Finde den Index des aktuellen Headers basierend auf dem originalen Ländernamen
+    const currentHeaderIndex = allHeaders.findIndex(h => h.dataset.countryName === currentCountry);
+
+    if (currentHeaderIndex === -1) {
+      console.error('handleCountryScroll: Current country header not found for', currentCountry);
+      return;
+    }
+
+    let targetIndex;
+    if (direction === 'next') {
+      // Nächster Header (ohne Wrap-Around)
+      if (currentHeaderIndex < allHeaders.length - 1) {
+        targetIndex = currentHeaderIndex + 1;
+      } else {
+        // Stoppt am Ende der Liste
+        return;
+      }
+    } else {
+      // Vorheriger Header (ohne Wrap-Around)
+      if (currentHeaderIndex > 0) {
+        targetIndex = currentHeaderIndex - 1;
+      } else {
+        // Stoppt am Anfang der Liste
+        return;
+      }
+    }
+
+    const targetHeader = allHeaders[targetIndex];
+
+    // Holen Sie den korrekten Offset dynamisch
+    const stickyOffset = this.getStickyOffset();
+    const scrollToPosition = targetHeader.offsetTop - stickyOffset;
+
+    // ✨ Aggressive Debugging-Ausgabe (Behalten Sie diese bitte in der Konsole, um den Fehler zu sehen)
+    console.log('--- Scroll Debugging (Previous/Next) ---');
+    console.log('Current Index:', currentHeaderIndex);
+    console.log('Target Index:', targetIndex);
+    console.log('Direction:', direction);
+    console.log('Target OffsetTop:', targetHeader.offsetTop);
+    console.log('Sticky Offset:', stickyOffset);
+    console.log('ScrollTo Position:', scrollToPosition);
+    console.log('Current ScrollTop:', this.suggestionsDropdown.scrollTop);
+    console.log('-----------------------------------');
+    // ✨ Ende Debugging
+
+    if (targetHeader) {
+      this.suggestionsDropdown.scrollTo({
+        top: scrollToPosition,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+
+
 
   createSuggestionItem(location) {
     const item = document.createElement('div');
@@ -1058,7 +1253,7 @@ class SearchManager {
       <div class="item-content">
         <div class="item-name"><span class="${nameClass}">${styleIconHtml}${statusIcon}${location.name}</span></div>
         <div class="item-details">${location.loc.street.name} ${location.loc.street.number} ${location.loc.street.ext}</div>
-        <div class="item-details">${flagHtml}${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
+        <div class="item-details">${this.zfill(location.loc.plz, location.loc.country)} <b>${location.loc.city}</b></div>
       </div>`;
     this.setupSuggestionItemEvents(item, location);
     return item;

@@ -9,6 +9,7 @@ window.addEventListener("keydown", (e) => {
   }
 })
 
+
 document.addEventListener('DOMContentLoaded', () => {
   let map;
   let allMarkers = [];
@@ -466,6 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Main initialization
   async function initializeApp() {
     try {
+      await window.i18n.load('./lang.json');
       setupMap();
       initializeClustering();
       await loadData();

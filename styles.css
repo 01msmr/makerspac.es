@@ -94,7 +94,7 @@ a#titleurl {
   position: absolute;
   top: 1.2em;
   right: 1.5em;
-  width: 280px;
+  width: 300px;
   overflow: visible;
 }
 
@@ -237,6 +237,11 @@ a#titleurl {
   opacity: var(--search-focus-opacity);
 }
 
+/* ✨ NEU: Bei Hover volle Deckkraft */
+#search-bar:hover {
+  opacity: var(--search-focus-opacity);
+}
+
 .search-counter {
   position: absolute;
   right: 4px;
@@ -363,11 +368,10 @@ a#titleurl {
   flex-wrap: wrap;
   gap: 4px;
   background-color: var(--dropdown-bg);
-  /* ✨ ENTFERNT: position: sticky - Pills scrollen jetzt mit */
-  /* position: sticky;
+  position: sticky;
   top: 0;
-  z-index: 10; */
-  min-height: 32px;
+  z-index: 10;
+  min-height: 24px;
   /* ✨ Border trennt Pills von Suchergebnissen */
   border-bottom: 1px solid var(--dropdown-border);
 }
@@ -387,7 +391,7 @@ a#titleurl {
   white-space: nowrap;
   position: relative;
   flex-shrink: 0;
-  height: 20px;
+  height: 16px;
 }
 
 .filter-pill:hover {
@@ -429,8 +433,8 @@ a#titleurl {
 .filter-pill-clear-all {
   background-color: #cccccc;
   color: #666666;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   padding: 0 !important;
   justify-content: center;
   cursor: pointer;
@@ -438,7 +442,7 @@ a#titleurl {
 
 /* ✨ NEU: Clear All Filters Button */
 .filter-pill-clear-all:hover {
-  background-color: black;
+  background-color: red;
   color: white;
 }
 
@@ -497,6 +501,17 @@ a#titleurl {
   font-weight: 600;
 }
 
+/* ✨ NEU: Country total count styling */
+.country-total-count {
+  color: var(--hover-text-color);
+  font-size: 0.85em;
+  margin-left: 4px;
+}
+
+.filter-popover-item.active .country-total-count {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* ✨ NEU: Clear Option Styling */
 .filter-popover-item.filter-clear-option {
   font-family: 'Lato', sans-serif;
@@ -532,20 +547,163 @@ a#titleurl {
   }
 }
 
+
+
+
+
+
+
+
+/* ✨ Language Switcher - FIXES */
+.language-switcher {
+  border-radius: 100px;
+  position: absolute;
+  top: 1.2em;
+  /* border: 1px solid transparent; */
+  right: calc(1.5em + 300px + 12px);
+  z-index: 1000;
+
+  opacity: var(--search-opacity);
+  border: 1px solid var(--border-color);
+  box-shadow: 0px 2px 8px 1px var(--shadow-color);
+}
+
+.language-switcher:hover {
+  position: absolute;
+  top: 1.2em;
+  border: 1px solid transparent;
+  right: calc(1.5em + 300px + 12px);
+  z-index: 1000;
+
+  opacity: var(--search-focus-opacity);
+}
+
+.language-button {
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* .language-button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+} */
+
+.language-flag {
+  /* ✨ PERFEKTER KREIS: Beide Werte IDENTISCH */
+  width: 49px !important;
+  height: 49px !important;
+  font-size: 49px !important;
+  line-height: 49px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.language-popover {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); */
+  /* padding: 2px; */
+  z-index: 10000;
+}
+
+.language-popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: transparent;
+  padding: 2px 0px 2px 12px;
+  cursor: pointer;
+  /* border: 2px solid white; */
+  border-radius: 24px;
+  /* transition: background-color 0.2s ease; */
+  gap: 0;
+  /* font-weight: 600; */
+}
+
+.language-popover-item:hover {
+  background-color: #0066ff;
+  color: white;
+}
+
+.language-flag-popover {
+  /* ✨ PERFEKTER KREIS: Gleiche Größe wie Button-Flagge */
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.language-name {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.8em;
+  padding-right: 1em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .language-button {
+    background-color: var(--dropdown-bg);
+    border-color: var(--border-color);
+  }
+
+  .language-popover {
+    background-color: var(--dropdown-bg);
+    border-color: var(--dropdown-border);
+  }
+
+  .language-popover-item:hover {
+    background-color: var(--dropdown-hover-bg);
+  }
+}
+
+
+
+
+
+
+
+
 /* ✨ NEU: Country Group Headers */
 .country-group-header {
   font-family: 'Lato', sans-serif;
   padding: 8px 16px;
   background-color: var(--dropdown-alt-bg);
   border-bottom: 2px solid var(--dropdown-border);
-  font-size: 0.95em;
+  font-size: 0.9em;
   color: var(--text-color);
   position: sticky;
-  /* ✨ FIX: Sticky unter Filter-Pills (nicht bei top: 0) */
-  top: -12px;
-  /* Höhe der Filter-Section (~44px) + etwas Buffer */
-  z-index: 5;
-  backdrop-filter: blur(8px);
+  top: 37px;
+  z-index: 9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.country-group-header .country-title-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .country-group-header .country-count {
@@ -560,6 +718,31 @@ a#titleurl {
   }
 }
 
+/* Neue Klassen für die Carets */
+.country-nav-carets {
+  display: flex;
+  gap: 8px;
+}
+
+.country-nav-caret {
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 1.1em;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.country-nav-caret:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  color: var(--space-hover);
+}
+
+
+
+
+
+
 .suggestion-item {
   font-family: 'Lato', sans-serif;
   padding: 12px 16px;
@@ -569,17 +752,8 @@ a#titleurl {
   position: relative;
   border-bottom: 1px solid var(--dropdown-border);
   color: var(--text-color);
-
-  /* keine sticky Pills mehr */
-  scroll-margin-top: 145px;
 }
 
-/* Optional: Für ältere Browser als Fallback */
-@supports not (scroll-margin-top: 8px) {
-  .suggestion-item {
-    /* Fallback für Browser die scroll-margin-top nicht unterstützen */
-  }
-}
 
 .suggestion-item:nth-child(2n) {
   background-color: var(--dropdown-alt-bg);
