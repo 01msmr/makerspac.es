@@ -10,6 +10,7 @@ class I18n {
     try {
       const response = await fetch(url);
       this.translations = await response.json();
+      window.translations = this.translations; // ✅ Global verfügbar machen
 
       // ✨ Auto-detect browser language
       const browserLang = navigator.language.substring(0, 2);
@@ -17,13 +18,31 @@ class I18n {
 
       if (supportedLangs.includes(browserLang)) {
         this.currentLang = browserLang;
+        window.currentLanguage = browserLang; // ✅ Global setzen
         console.log(`🌍 Detected browser language: ${browserLang}`);
       } else {
         this.currentLang = 'en'; // Fallback
+        window.currentLanguage = 'en'; // ✅ Global setzen
         console.log(`🌍 Browser language ${browserLang} not supported, using: en`);
       }
+
+      // ✅ Setze Search Placeholder direkt nach Laden
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar && this.translations.searchPlaceholder) {
+        searchBar.placeholder = this.translations.searchPlaceholder[this.currentLang] ||
+          this.translations.searchPlaceholder['de'] ||
+          'Search...';
+        console.log('✅ Search placeholder set to:', searchBar.placeholder);
+      }
+
+      // Update language switcher tooltips
+      if (window.languageSwitcher) {
+        window.languageSwitcher.updateTooltips();
+      }
+
     } catch (error) {
       console.error('Failed to load translations:', error);
+      window.translations = {}; // ✅ Fallback
     }
   }
 

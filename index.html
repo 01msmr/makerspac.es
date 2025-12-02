@@ -23,11 +23,14 @@
   <!-- CSS -->
   <link rel="stylesheet" type="text/css" href="styles.css" />
 
+  <!-- Flag Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
+
   <!-- Font Awesome lokal -->
   <link rel="stylesheet" href="libs/fontawesome/css/all.min.css" />
 
-  <!-- Flag Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 </head>
 
 <body>
@@ -84,8 +87,17 @@
   <!-- <script src="spaceapi-detect.js"></script> -->
   <script src="spaceapi-static.js"></script>
   <script src="i18n.js"></script>
-  <script>window.i18n = new I18n();</script>
+  <script>
+    window.i18n = new I18n();
+    window.i18n.load().then(() => {
+      console.log('✅ Translations loaded and placeholder set');
+    });
+  </script>
+
+  <!-- Bookmark-System -->
   <script src="bookmark-manager.js"></script>
+  <script src="datasync.js"></script> <!-- MUSS nach bookmark-manager.js kommen -->
+
   <script src="language-switcher.js"></script>
   <script src="search.js"></script>
   <script src="style-filter.js"></script>

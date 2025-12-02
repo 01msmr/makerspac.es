@@ -827,7 +827,7 @@ class SearchManager {
     // Prüfe, ob ein Filter in dieser Kategorie aktiv ist
     const activeFilter = this.getActiveFilterForCategory(categoryKey);
 
-    // ✨ NEU: Icon-Mapping für Style-Optionen
+    // ✨ Icon-Mapping für Style-Optionen
     const styleIconMap = {
       'for all': 'fas fa-people-group',
       'for youth': 'fas fa-child',
@@ -848,22 +848,23 @@ class SearchManager {
         }
       }
 
-      // ✨ iconOnly: Nur Icon anzeigen
-      if (config.iconOnly) {
+      // ✅ NUR BOOKMARKS: Icon-only
+      if (categoryKey === 'bookmarks' && config.iconOnly) {
         const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
         pill.innerHTML = `<i class="${config.icon}"></i>`;
         pill.title = `${config.label} (${bookmarkCount})`;
       }
-      // ✨ Zeige Flag-Icon für aktive Länder
+      // ✅ Länder: Flag + Code
       else if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(activeFilter);
         pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
       }
-      // ✨ Zeige spezifisches Icon für aktive Style-Optionen
+      // ✅ Style: Icon + Text
       else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
         const translatedStyle = this.translateFilterValue('style', activeFilter);
         pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${translatedStyle}`;
       }
+      // ✅ Alle anderen: Icon + Text
       else {
         const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
         pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
@@ -872,24 +873,36 @@ class SearchManager {
       // Passiver Filter: Weiß auf Grau mit Label
       pill.classList.add('filter-pill-passive');
 
-      // ✨ iconOnly: Nur Icon anzeigen
-      if (config.iconOnly) {
+      // ✅ NUR BOOKMARKS: Icon-only
+      if (categoryKey === 'bookmarks' && config.iconOnly) {
         const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
         pill.innerHTML = `<i class="${config.icon}"></i>`;
         pill.title = `${config.label} (${bookmarkCount})`;
       } else {
+        // ✅ Alle anderen: Icon + Label
         pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
       }
     }
 
-    // Click-Handler für Popover
-    pill.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleCategoryPopover(pill, categoryKey, config);
-    });
+
+    // ✅ NEUER Click-Handler für Bookmarks: Direkter Toggle!
+    if (categoryKey === 'bookmarks') {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Toggle den bookmarked Filter
+        this.selectCategoryOption('bookmarks', 'bookmarked');
+      });
+    } else {
+      // Für andere Kategorien: Popover
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleCategoryPopover(pill, categoryKey, config);
+      });
+    }
 
     return pill;
   }
+
 
   getActiveFilterForCategory(categoryKey) {
     if (!this.styleFilterManager || !this.styleFilterManager.hasActiveFilters()) {
@@ -1138,13 +1151,21 @@ class SearchManager {
   }
 
   selectCategoryOption(categoryKey, option) {
-    if (!this.styleFilterManager) return;
+  if (!this.styleFilterManager) return;
 
-    // Hole alle Optionen der Kategorie
+  // ✅ Für Bookmarks: Toggle statt Set
+  if (categoryKey === 'bookmarks' && option === 'bookmarked') {
+    if (this.styleFilterManager.selectedStyles.has('bookmarked')) {
+      // Ist aktiv → Deaktiviere
+      this.styleFilterManager.selectedStyles.delete('bookmarked');
+    } else {
+      // Ist inaktiv → Aktiviere
+      this.styleFilterManager.selectedStyles.add('bookmarked');
+    }
+  } else {
+    // Für andere Kategorien: Alte Logik
     let categoryOptions = [];
-    if (categoryKey === 'bookmarks') {
-      categoryOptions = ['bookmarked'];
-    } else if (categoryKey === 'style') {
+    if (categoryKey === 'style') {
       categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
     } else if (categoryKey === 'doorState') {
       categoryOptions = ['open', 'closed'];
@@ -1152,27 +1173,29 @@ class SearchManager {
       categoryOptions = this.getUniqueCountries();
     }
 
-    // ✨ FIX: Deaktiviere alle anderen Optionen in dieser Kategorie
+    // Deaktiviere alle anderen Optionen in dieser Kategorie
     categoryOptions.forEach(opt => {
       if (opt !== option) {
         this.styleFilterManager.selectedStyles.delete(opt);
       }
     });
 
-    // ✨ FIX: Aktiviere die gewählte Option IMMER
+    // Aktiviere die gewählte Option
     this.styleFilterManager.selectedStyles.add(option);
-
-    // Update UI
-    this.styleFilterManager.updateFilterCounter();
-    this.styleFilterManager.updateHeaderState();
-    this.styleFilterManager.applyFilters();
-
-    // ✨ Scrolle nach oben zum ersten Element
-    this.scrollToTop();
-
-    // ✨ Setze Fokus zurück auf Searchbar für Cursor-Navigation
-    this.searchBar.focus();
   }
+
+  // Update UI
+  this.styleFilterManager.updateFilterCounter();
+  this.styleFilterManager.updateHeaderState();
+  this.styleFilterManager.applyFilters();
+
+  // Scrolle nach oben
+  this.scrollToTop();
+
+  // Fokus zurück
+  this.searchBar.focus();
+}
+
 
   createSuggestionItems(locations) {
     // ✨ NEU: Entferne nur bestehende Suggestions und Country-Headers, behalte Filter-Section

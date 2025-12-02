@@ -115,6 +115,31 @@ class BookmarkManager {
     }));
   }
 
+  // Löscht alle Bookmarks
+  clearAllBookmarks() {
+    this.bookmarks.clear();
+    this.saveBookmarks();
+
+    // Aktualisiere alle Bookmark-Icons im DOM
+    document.querySelectorAll('.bookmark-icon').forEach(icon => {
+      const uniqueId = icon.getAttribute('data-unique-id');
+      if (uniqueId) {
+        this.updateBookmarkIcon(icon, uniqueId);
+      }
+    });
+
+    // Trigger Event für Filter-Update
+    window.dispatchEvent(new CustomEvent('bookmarksChanged', {
+      detail: {
+        uniqueId: null,
+        isBookmarked: false,
+        totalCount: 0
+      }
+    }));
+
+    console.log('🗑️ All bookmarks cleared');
+  }
+
   // Initialisiere Event-Listener für Bookmark-Icons im DOM
   initializeBookmarkListeners(container) {
     if (!container) return;

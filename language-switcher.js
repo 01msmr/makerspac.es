@@ -1,236 +1,290 @@
-// language-switcher.js - Language selector with flag icons
+// language-switcher.js - Enhanced mit Settings
 
 class LanguageSwitcher {
-  constructor(i18n) {
-    this.i18n = i18n;
+  constructor() {
+    this.currentLanguage = 'de';
     this.container = null;
-    this.popover = null;
-    this.isOpen = false;
-
-    this.languageNames = {
-      'de': 'Deutsch',
-      'en': 'English',
-      'fr': 'Français',
-      'it': 'Italiano',
-      'nl': 'Nederlands',
-      'da': 'Dansk',
-      'uk': 'Українська'
-    };
-
-    this.flagCodes = {
-      'de': 'de',
-      'en': 'gb', // UK flag for English
-      'fr': 'fr',
-      'it': 'it',
-      'nl': 'nl',
-      'da': 'dk',
-      'uk': 'ua'
-    };
+    this.settingsPopover = null;
+    this.init();
   }
 
-  async init() {
-    // ✨ Warte darauf, dass i18n Übersetzungen geladen hat
-    if (!this.i18n.translations || Object.keys(this.i18n.translations).length === 0) {
-      await this.i18n.load();
+  init() {
+    this.createLanguagePill();
+    this.loadLanguagePreference();
+  }
+
+  // ✅ HIER: Außerhalb von createLanguagePill()
+  getFlagCode(langCode) {
+    const flagMap = {
+      'en': 'gb',  // English → Great Britain flag
+      'da': 'dk',  // Danish → Denmark flag
+      'uk': 'ua'   // Ukrainian → Ukraine flag
+    };
+    return flagMap[langCode] || langCode;
+  }
+
+  createLanguagePill() {
+    // ✅ Warte bis Flag-Icons geladen sind
+    if (!document.querySelector('link[href*="flag-icons"]')) {
+      setTimeout(() => this.createLanguagePill(), 100);
+      return;
     }
 
-    this.createLanguageButton();
-    this.setupEventListeners();
-
-    // ✨ Übersetze UI-Elemente beim ersten Laden
-    this.translateUIElements();
-  }
-
-  createLanguageButton() {
-    // Create container left of searchbar
+    // Erstelle Container
     this.container = document.createElement('div');
-    this.container.id = 'language-switcher';
     this.container.className = 'language-switcher';
 
-    const currentLang = this.i18n.getLanguage();
-    const flagCode = this.flagCodes[currentLang];
+    // Erstelle Pill
+    const pill = document.createElement('div');
+    pill.className = 'language-pill';
 
-    this.container.innerHTML = `
-      <div class="language-button" title="${this.i18n.t('tooltips.changeLanguage')}">
-        <span class="fi fi-${flagCode} language-flag"></span>
-      </div>
-    `;
-
-    // Insert before search container
-    const searchContainer = document.querySelector('.search-container');
-    if (searchContainer) {
-      searchContainer.parentNode.insertBefore(this.container, searchContainer);
-    }
-  }
-
-  setupEventListeners() {
-    const button = this.container.querySelector('.language-button');
-
-    button.addEventListener('click', (e) => {
+    // Flag-Button
+    const flagButton = document.createElement('button');
+    flagButton.className = 'language-flag-button';
+    flagButton.innerHTML = `<span class="fi fi-de"></span>`;
+    flagButton.title = 'Sprache wechseln';
+    flagButton.onclick = (e) => {
       e.stopPropagation();
-      this.togglePopover();
-    });
+      this.toggleLanguagePopover();
+    };
 
-    // Close on outside click
+    // Settings Gear Button
+    const gearButton = document.createElement('button');
+    gearButton.className = 'settings-gear-button';
+    gearButton.innerHTML = '<i class="fas fa-gear"></i>';
+    gearButton.title = 'Einstellungen';
+    gearButton.onclick = (e) => {
+      e.stopPropagation();
+      this.toggleSettingsPopover();
+    };
+
+    pill.appendChild(flagButton);
+    pill.appendChild(gearButton);
+    this.container.appendChild(pill);
+
+    // Füge in DOM ein
+    document.body.appendChild(this.container);
+
+    // Click außerhalb schließt Popovers
     document.addEventListener('click', (e) => {
-      if (this.isOpen && !this.container.contains(e.target) && (!this.popover || !this.popover.contains(e.target))) {
-        this.closePopover();
+      if (!this.container.contains(e.target)) {
+        this.closeAllPopovers();
       }
     });
   }
 
-  togglePopover() {
-    if (this.isOpen) {
-      this.closePopover();
-    } else {
-      this.openPopover();
+
+  toggleLanguagePopover() {
+    // Schließe Settings-Popover
+    this.closeSettingsPopover();
+
+    // Toggle Language-Popover
+    const existingPopover = this.container.querySelector('.language-popover');
+    if (existingPopover) {
+      existingPopover.remove();
+      return;
     }
-  }
 
-  openPopover() {
-    this.closePopover(); // Remove existing if any
+    const popover = document.createElement('div');
+    popover.className = 'language-popover';
 
-    this.popover = document.createElement('div');
-    this.popover.className = 'language-popover';
-
-    const languages = this.i18n.getSupportedLanguages();
-    const currentLang = this.i18n.getLanguage();
+    const languages = [
+      { code: 'de', name: 'Deutsch' },
+      { code: 'en', name: 'English' },
+      { code: 'fr', name: 'Français' },
+      { code: 'it', name: 'Italiano' },
+      { code: 'nl', name: 'Nederlands' },
+      { code: 'da', name: 'Dansk' },
+      { code: 'uk', name: 'Українська' }
+    ];
 
     languages.forEach(lang => {
       const item = document.createElement('div');
       item.className = 'language-popover-item';
-      if (lang === currentLang) {
+      const flagCode = this.getFlagCode(lang.code); // ✅ flagCode definieren!
+      item.innerHTML = `
+    <span class="language-name">${lang.name}</span>
+    <span class="fi fi-${flagCode} language-flag-popover"></span>
+  `;
+
+      if (lang.code === this.currentLanguage) {
         item.classList.add('active');
       }
 
-      const flagCode = this.flagCodes[lang];
-      const langName = this.languageNames[lang];
+      item.onclick = () => {
+        this.changeLanguage(lang.code);
+        popover.remove();
+      };
 
-      // ✨ Name LINKS, Flagge RECHTS
-      item.innerHTML = `
-        <span class="language-name">${langName}</span>
-        <span class="fi fi-${flagCode} language-flag-popover"></span>
-      `;
-
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.selectLanguage(lang);
-      });
-
-      this.popover.appendChild(item);
+      popover.appendChild(item);
     });
 
-    // ✨ Füge Popover zum Container hinzu (statt body) für CSS positioning
-    this.container.appendChild(this.popover);
 
-    this.isOpen = true;
+    this.container.appendChild(popover);
   }
 
-  closePopover() {
-    if (this.popover) {
-      this.popover.remove();
-      this.popover = null;
+  toggleSettingsPopover() {
+    // Schließe Language-Popover
+    this.closeLanguagePopover();
+
+    // Toggle Settings-Popover
+    if (this.settingsPopover) {
+      this.closeSettingsPopover();
+      return;
     }
-    this.isOpen = false;
+
+    this.settingsPopover = document.createElement('div');
+    this.settingsPopover.className = 'settings-popover';
+
+    // Bookmark Sync Section (OHNE Header)
+    const syncSection = document.createElement('div');
+    syncSection.className = 'settings-section';
+
+    // Sync-Optionen
+    const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
+
+    const syncOptions = [
+      {
+        icon: 'fas fa-bookmark',  // ✅ Bookmark-Icon statt Info-Icon
+        label: `${bookmarkCount} ${window.i18n ? window.i18n.t('sync.favorites') : 'Favoriten'}`,
+        action: null,
+        className: 'settings-info'
+      },
+      {
+        icon: 'fas fa-share-alt',
+        label: window.i18n ? window.i18n.t('sync.export') : 'Teilen',
+        action: () => {
+          if (window.bookmarkSync) {
+            window.bookmarkSync.showExportDialog();
+            this.closeSettingsPopover();
+          }
+        }
+      },
+      {
+        icon: 'fas fa-download',
+        label: window.i18n ? window.i18n.t('sync.import') : 'Importieren',
+        action: () => {
+          if (window.bookmarkSync) {
+            window.bookmarkSync.showImportDialog();
+            this.closeSettingsPopover();
+          }
+        }
+      },
+      {
+        icon: 'fas fa-trash',
+        label: window.i18n ? window.i18n.t('sync.clearAll') : 'Alle löschen',
+        action: () => {
+          if (window.bookmarkSync) {
+            window.bookmarkSync.clearAllBookmarks();
+            this.closeSettingsPopover();
+          }
+        },
+        className: 'settings-danger'
+      }
+    ];
+
+    syncOptions.forEach(option => {
+      const item = document.createElement('div');
+      item.className = `settings-item ${option.className || ''}`;
+      item.innerHTML = `
+        <i class="${option.icon}"></i>
+        <span>${option.label}</span>
+      `;
+
+      if (option.action) {
+        item.style.cursor = 'pointer';
+        item.onclick = option.action;
+      }
+
+      syncSection.appendChild(item);
+    });
+
+    this.settingsPopover.appendChild(syncSection);
+
+    // Position berechnen
+    const gearButton = this.container.querySelector('.settings-gear-button');
+    const rect = gearButton.getBoundingClientRect();
+
+    this.settingsPopover.style.position = 'fixed';
+    this.settingsPopover.style.top = `${rect.bottom + 5}px`;
+    this.settingsPopover.style.right = `${window.innerWidth - rect.right}px`;
+
+    document.body.appendChild(this.settingsPopover);
+
+    // Schließen bei Klick außerhalb
+    setTimeout(() => {
+      const closeHandler = (e) => {
+        if (this.settingsPopover &&
+          !this.settingsPopover.contains(e.target) &&
+          !gearButton.contains(e.target)) {
+          this.closeSettingsPopover();
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      document.addEventListener('click', closeHandler);
+    }, 100);
   }
 
-  selectLanguage(lang) {
-    this.i18n.setLanguage(lang);
-    this.updateButton();
-    this.closePopover();
+  closeLanguagePopover() {
+    const popover = this.container.querySelector('.language-popover');
+    if (popover) popover.remove();
+  }
 
-    // Trigger UI refresh
+  closeSettingsPopover() {
+    if (this.settingsPopover) {
+      this.settingsPopover.remove();
+      this.settingsPopover = null;
+    }
+  }
+
+  closeAllPopovers() {
+    this.closeLanguagePopover();
+    this.closeSettingsPopover();
+  }
+
+  changeLanguage(langCode) {
+    this.currentLanguage = langCode;
+    window.currentLanguage = langCode;
+
+    // Update Flag
+    const flagButton = this.container.querySelector('.language-flag-button span');
+    if (flagButton) {
+      const flagCode = this.getFlagCode(langCode); // ✅ Mapping nutzen!
+      flagButton.className = `fi fi-${flagCode}`;
+    }
+
+    // Save preference
+    localStorage.setItem('preferred_language', langCode);
+
+    // Update i18n
+    if (window.i18n) {
+      window.i18n.setLanguage(langCode);
+    }
+
+    // Refresh UI
     this.refreshUI();
   }
 
-  updateButton() {
-    const currentLang = this.i18n.getLanguage();
-    const flagCode = this.flagCodes[currentLang];
-    const button = this.container.querySelector('.language-button');
-
-    button.innerHTML = `<span class="fi fi-${flagCode} language-flag"></span>`;
-    // ✨ Aktualisiere auch den Tooltip
-    button.setAttribute('title', this.i18n.t('tooltips.changeLanguage'));
-  }
-
   refreshUI() {
-    // ✨ Lade Filter-Section komplett neu
-    if (window.searchManager) {
-      // Entferne alte Filter-Section
-      const oldFilterSection = document.querySelector('.active-filters-section');
-      if (oldFilterSection) {
-        oldFilterSection.remove();
-      }
-
-      // Erstelle neue Filter-Section mit aktualisierten Übersetzungen
-      window.searchManager.createActiveFiltersSection();
-
-      // Wende Filter erneut an (behält Auswahl bei)
-      if (window.searchManager.styleFilterManager) {
-        window.searchManager.styleFilterManager.applyFilters();
-      }
-    }
-
-    // ✨ Übersetze UI-Elemente
-    this.translateUIElements();
-  }
-
-  translateUIElements() {
-    this.translateUserGuide();
-    this.translateAddMakerspace();
-    this.translateSearchPlaceholder();
-  }
-
-  translateUserGuide() {
-    const userGuide = document.querySelector('.user-guide');
-    if (!userGuide) return;
-
-    userGuide.innerHTML = `
-      <h2>${this.i18n.t('userGuide.title')}</h2>
-      <ol>
-        <li><strong>${this.i18n.t('userGuide.shortcut')}</strong> <br /> ${this.i18n.t('userGuide.shortcutDesc')}</li>
-        <li><strong>${this.i18n.t('userGuide.filter')}</strong> <br /> ${this.i18n.t('userGuide.filterDesc')}</li>
-        <li><strong>${this.i18n.t('userGuide.count')}</strong> <br /> ${this.i18n.t('userGuide.countDesc')}</li>
-        <li><strong>${this.i18n.t('userGuide.autoZoom')}</strong> <br /> ${this.i18n.t('userGuide.autoZoomDesc')}</li>
-        <li><strong>${this.i18n.t('userGuide.highlight')}</strong> <br /> ${this.i18n.t('userGuide.highlightDesc')}</li>
-        <li><strong>${this.i18n.t('userGuide.scroll')}</strong> <br /> ${this.i18n.t('userGuide.scrollDesc')}</li>
-      </ol>
-    `;
-  }
-
-  translateAddMakerspace() {
-    const addMakerspace = document.querySelector('.add-makerspace');
-    if (!addMakerspace) return;
-
-    addMakerspace.innerHTML = `
-      <h2>${this.i18n.t('addMakerspace.title')}</h2>
-      <br />
-      <ul>
-        <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-primary">${this.i18n.t('addMakerspace.googleForms')}</a></li>
-        <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-secondary">${this.i18n.t('addMakerspace.githubPR')}</a></li>
-      </ul>
-    `;
-  }
-
-  translateSearchPlaceholder() {
+    // Update search placeholder
     const searchBar = document.getElementById('search-bar');
-    if (!searchBar) return;
-
-    searchBar.placeholder = this.i18n.t('searchPlaceholder');
-  }
-}
-
-// Auto-initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', async () => {
-    if (window.i18n) {
-      window.languageSwitcher = new LanguageSwitcher(window.i18n);
-      await window.languageSwitcher.init();
+    if (searchBar && window.i18n) {
+      searchBar.placeholder = window.i18n.t('searchPlaceholder');
     }
-  });
-} else {
-  if (window.i18n) {
-    window.languageSwitcher = new LanguageSwitcher(window.i18n);
-    window.languageSwitcher.init();
+
+    // Trigger filter update
+    if (window.styleFilterManager) {
+      window.styleFilterManager.applyFilters();
+    }
+  }
+
+  loadLanguagePreference() {
+    const saved = localStorage.getItem('preferred_language');
+    if (saved) {
+      this.changeLanguage(saved);
+    }
   }
 }
+
+// Initialize
+window.languageSwitcher = new LanguageSwitcher();

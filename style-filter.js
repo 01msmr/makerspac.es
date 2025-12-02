@@ -100,11 +100,13 @@ class StyleFilterManager {
     console.log('🔄 Refreshing filter statistics...');
     this.initializeStyleStats();
 
-    // Lösche alte Filter-Items
-    this.filterContent.innerHTML = '';
-
-    // Erstelle neue Filter-Items
-    this.createFilterItems();
+    // ✅ FIX: Prüfe ob filterContent existiert
+    if (this.filterContent) {
+      // Lösche alte Filter-Items
+      this.filterContent.innerHTML = '';
+      // Erstelle neue Filter-Items
+      this.createFilterItems();
+    }
 
     console.log('✅ Filter refreshed with', this.styleStats.size, 'items');
   }
