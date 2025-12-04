@@ -1,4 +1,4 @@
-// scripts/search.js - Fix: SVG-Objekt wird wieder korrekt in den DOM eingefügt
+// scripts/search.js - Fix: Country Header Scroll Navigation korrigiert
 
 class SearchManager {
   constructor(map, allMarkers, json, icons, zfill) {
@@ -73,19 +73,8 @@ class SearchManager {
           return;
         }
 
-        // 3. Schließe das Such-Dropdown explizit, wenn es offen und leer ist
-        // if (this.suggestionsDropdown.classList.contains('is-active')) {
-        //   this.closeDropdown();
-        //   return;
-        // }
-
         // 3. Wenn die Suche leer ist (und kein Filter-Dropdown aktiv war), schließe das Such-Dropdown.
-        // Das entspricht dem, was handleEscapeKey tun würde, aber ist direkter.
         this.closeDropdown();
-        return;
-
-        // 4. Wenn keines der obigen zutrifft, rufe den generischen Escape-Handler auf
-        this.handleEscapeKey();
         return;
       }
 
@@ -168,12 +157,6 @@ class SearchManager {
       }
     });
 
-
-
-
-
-
-
     // Lausche auf Suchfeld-Änderungen
     this.searchBar.addEventListener('input', (e) => {
       const value = e.target.value.trim().toLowerCase();
@@ -184,7 +167,6 @@ class SearchManager {
         this.deactivateZoomIndicator();
       }
     });
-
 
     // Bestehende Event Listener (unverändert)
     this.searchBar.addEventListener('keyup', (e) => {
@@ -206,9 +188,7 @@ class SearchManager {
 
     // ✨ Verhindere Fokusverlust beim Scrollen im Dropdown
     this.suggestionsDropdown.addEventListener('wheel', (e) => {
-      // Erlaube das Scrollen im Dropdown
       e.stopPropagation();
-      // Fokus bleibt auf Searchbar
       setTimeout(() => {
         this.searchBar.focus();
       }, 0);
@@ -216,7 +196,6 @@ class SearchManager {
 
     // ✨ Verhindere Fokusverlust beim Touchpad-Scrollen
     this.suggestionsDropdown.addEventListener('mousedown', (e) => {
-      // Verhindere, dass Dropdown den Fokus bekommt
       e.preventDefault();
     });
 
@@ -233,44 +212,34 @@ class SearchManager {
     });
   }
 
-
   updateSearchResults(filteredLocations) {
     let searchQuery = this.searchBar.value.trim().toLowerCase();
 
-
     // ✨ WENN "xcr" am Anfang steht: Entferne es und suche mit dem Rest
     if (searchQuery === 'xcr') {
-      // Nur "xcr" ohne weiteren Text: Zeige nichts an (nur Zoom-Indikator)
-      // this.updateMarkers([]); // Verstecke alle Marker
-      this.updateSearchCounter(0); // Zeige 0 Ergebnisse
+      this.updateSearchCounter(0);
       this.suggestionsDropdown.innerHTML = '';
       this.updateDropdownUI(false);
-      return; // Verlasse die Funktion früh
-
+      return;
     } else if (searchQuery.startsWith('xcr ')) {
-      // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
-      searchQuery = searchQuery.substring(4); // Entferne "xcr " (4 Zeichen)
+      searchQuery = searchQuery.substring(4);
       filteredLocations = this.filterLocations(searchQuery);
     } else if (searchQuery.startsWith('xcr')) {
-      // "xcr " am Anfang: Entferne es und suche mit dem Rest weiter
-      searchQuery = searchQuery.substring(3); // Entferne "xcr" (3 Zeichen)
+      searchQuery = searchQuery.substring(3);
       filteredLocations = this.filterLocations(searchQuery);
     }
 
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
 
-    // ✨ NEU: Zeige Dropdown auch ohne Sucheingabe, wenn Searchbar fokussiert ist
     const isSearchBarFocused = document.activeElement === this.searchBar;
     const shouldShowDropdown = searchQuery.length > 0 ||
       (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) ||
       isSearchBarFocused;
 
     if (shouldShowDropdown) {
-      // ✨ IMMER Filter-Pills anzeigen, wenn Dropdown aktiv ist
       this.createActiveFiltersSection();
 
-      // ✨ FIX: Nur Suchergebnisse anzeigen, wenn tatsächlich eine Suche oder Filter aktiv sind
       const hasSearchQuery = searchQuery.length > 0;
       const hasActiveFilters = this.styleFilterManager && this.styleFilterManager.hasActiveFilters();
       const hasResults = filteredLocations && filteredLocations.length > 0;
@@ -278,7 +247,6 @@ class SearchManager {
       if ((hasSearchQuery || hasActiveFilters) && hasResults) {
         this.createSuggestionItems(filteredLocations);
       } else {
-        // Entferne alte Suchergebnisse UND Country-Headers
         const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
         existingSuggestions.forEach(item => item.remove());
       }
@@ -303,9 +271,8 @@ class SearchManager {
   }
 
   filterLocations(searchQuery) {
-    // ✨ IGNORIERE "xcr" in der Suche
     if (searchQuery === 'xcr') {
-      return this.json; // Zeige alle Locations
+      return this.json;
     }
 
     return this.json.filter(location => {
@@ -502,32 +469,23 @@ class SearchManager {
     if (this.currentDropdownIndex >= 0 && this.currentDropdownIndex < this.dropdownItems.length) {
       const activeItem = this.dropdownItems[this.currentDropdownIndex];
 
-      // ✨ Berechne die Position des aktiven Elements relativ zum Dropdown
       const dropdown = this.suggestionsDropdown;
       const dropdownRect = dropdown.getBoundingClientRect();
       const itemRect = activeItem.getBoundingClientRect();
 
-      // ✨ Höhe der sticky Filter-Section (muss mit CSS scroll-margin-top übereinstimmen)
       const filterSectionHeight = 119;
-
-      // ✨ Berechne die minimale Top-Position, die das Element haben darf
       const minAllowedTop = dropdownRect.top + filterSectionHeight;
 
-      // ✨ ABSOLUT VERHINDERN: Element darf NIEMALS auch nur 1px unter Filter-Section sein
       if (itemRect.top < minAllowedTop) {
-        // ✨ Manuelles Scrollen: Berechne exakt, wie viel gescrollt werden muss
         const scrollAmount = minAllowedTop - itemRect.top;
         const targetScrollTop = dropdown.scrollTop - scrollAmount;
 
-        // ✨ SMOOTH Scroll-Animation
         dropdown.scrollTo({
           top: targetScrollTop,
           behavior: 'smooth'
         });
       }
-      // ✨ Prüfe, ob das Element unterhalb des sichtbaren Bereichs ist
       else if (itemRect.bottom > dropdownRect.bottom) {
-        // ✨ Für Abwärts-Scrollen kann scrollIntoView verwendet werden
         activeItem.scrollIntoView({
           block: 'nearest',
           behavior: 'smooth'
@@ -537,7 +495,6 @@ class SearchManager {
   }
 
   scrollToTop() {
-    // ✨ Scrolle das Dropdown ganz nach oben zum ersten Element
     if (this.suggestionsDropdown) {
       this.suggestionsDropdown.scrollTo({
         top: 0,
@@ -545,7 +502,6 @@ class SearchManager {
       });
     }
 
-    // ✨ Setze den Index auf das erste Element
     this.currentDropdownIndex = 0;
     this.updateActiveDropdownItem();
   }
@@ -660,30 +616,23 @@ class SearchManager {
   }
 
   createActiveFiltersSection() {
-    // ✨ NEU: Zeige Filter-Kategorien als Pills am oberen Rand des Dropdowns
-
-    // Entferne vorhandene Filter-Section
     const existingSection = this.suggestionsDropdown.querySelector('.active-filters-section');
     if (existingSection) {
       existingSection.remove();
     }
 
-    // Erstelle Filter-Section Container
     const filtersSection = document.createElement('div');
     filtersSection.classList.add('active-filters-section');
 
-    // Icon-Mapping für die Filter-Kategorien
     const categoryConfig = {
       style: {
         icon: 'fas fa-people-group',
         label: window.i18n.t('filter.style'),
-        // ✨ Interne Werte bleiben Englisch
         options: ['for all', 'for youth', 'for students', 'commercial']
       },
       doorState: {
         icon: 'fas fa-door-open',
         label: window.i18n.t('filter.status'),
-        // ✨ Interne Werte bleiben Englisch
         options: ['open', 'closed']
       },
       country: {
@@ -699,14 +648,12 @@ class SearchManager {
       }
     };
 
-    // Erstelle Pills für jede Kategorie
     Object.keys(categoryConfig).forEach(categoryKey => {
       const config = categoryConfig[categoryKey];
       const pill = this.createCategoryPill(categoryKey, config);
       filtersSection.appendChild(pill);
     });
 
-    // ✨ NEU: Füge "Clear All" Button hinzu, wenn mindestens ein Filter aktiv ist
     if (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) {
       const clearAllPill = document.createElement('div');
       clearAllPill.classList.add('filter-pill', 'filter-pill-clear-all');
@@ -721,30 +668,24 @@ class SearchManager {
       filtersSection.appendChild(clearAllPill);
     }
 
-    // Füge Section am Anfang des Dropdowns ein
     this.suggestionsDropdown.insertBefore(filtersSection, this.suggestionsDropdown.firstChild);
   }
 
   clearAllFilters() {
     if (!this.styleFilterManager) return;
 
-    // Lösche alle aktiven Filter
     this.styleFilterManager.selectedStyles.clear();
 
-    // Update UI
     this.styleFilterManager.updateFilterCounter();
     this.styleFilterManager.updateHeaderState();
     this.styleFilterManager.applyFilters();
 
-    // ✨ Scrolle nach oben zum ersten Element
     this.scrollToTop();
 
-    // ✨ Setze Fokus zurück auf Searchbar für Cursor-Navigation
     this.searchBar.focus();
   }
 
   getUniqueCountries() {
-    // Sammle alle einzigartigen Länder mit ihrer Anzahl
     const countryCount = new Map();
     this.json.forEach(location => {
       if (location.loc && location.loc.country) {
@@ -753,14 +694,12 @@ class SearchManager {
       }
     });
 
-    // ✨ NEU: Sortiere nach Anzahl (absteigend)
     return Array.from(countryCount.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([country]) => country);
   }
 
   getCountryCode(countryName) {
-    // Mapping von Ländernamen zu ISO 3166-1-alpha-2 Codes
     const countryCodeMap = {
       'Germany': 'de',
       'Austria': 'at',
@@ -797,7 +736,6 @@ class SearchManager {
     return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
   }
 
-  // ✨ NEU: Übersetze Filter-Werte für Anzeige
   translateFilterValue(categoryKey, value) {
     if (categoryKey === 'style') {
       const styleMap = {
@@ -824,10 +762,8 @@ class SearchManager {
     pill.classList.add('filter-pill');
     pill.dataset.category = categoryKey;
 
-    // Prüfe, ob ein Filter in dieser Kategorie aktiv ist
     const activeFilter = this.getActiveFilterForCategory(categoryKey);
 
-    // ✨ Icon-Mapping für Style-Optionen
     const styleIconMap = {
       'for all': 'fas fa-people-group',
       'for youth': 'fas fa-child',
@@ -836,10 +772,8 @@ class SearchManager {
     };
 
     if (activeFilter) {
-      // Aktiver Filter: Blau mit gewählter Option
       pill.classList.add('filter-pill-active');
 
-      // Spezielle Farben für door-state
       if (categoryKey === 'doorState') {
         if (activeFilter === 'open') {
           pill.classList.add('filter-pill-open');
@@ -848,52 +782,41 @@ class SearchManager {
         }
       }
 
-      // ✅ NUR BOOKMARKS: Icon-only
       if (categoryKey === 'bookmarks' && config.iconOnly) {
         const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
         pill.innerHTML = `<i class="${config.icon}"></i>`;
         pill.title = `${config.label} (${bookmarkCount})`;
       }
-      // ✅ Länder: Flag + Code
       else if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(activeFilter);
         pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
       }
-      // ✅ Style: Icon + Text
       else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
         const translatedStyle = this.translateFilterValue('style', activeFilter);
         pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${translatedStyle}`;
       }
-      // ✅ Alle anderen: Icon + Text
       else {
         const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
         pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
       }
     } else {
-      // Passiver Filter: Weiß auf Grau mit Label
       pill.classList.add('filter-pill-passive');
 
-      // ✅ NUR BOOKMARKS: Icon-only
       if (categoryKey === 'bookmarks' && config.iconOnly) {
         const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
         pill.innerHTML = `<i class="${config.icon}"></i>`;
         pill.title = `${config.label} (${bookmarkCount})`;
       } else {
-        // ✅ Alle anderen: Icon + Label
         pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
       }
     }
 
-
-    // ✅ NEUER Click-Handler für Bookmarks: Direkter Toggle!
     if (categoryKey === 'bookmarks') {
       pill.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Toggle den bookmarked Filter
         this.selectCategoryOption('bookmarks', 'bookmarked');
       });
     } else {
-      // Für andere Kategorien: Popover
       pill.addEventListener('click', (e) => {
         e.stopPropagation();
         this.toggleCategoryPopover(pill, categoryKey, config);
@@ -902,7 +825,6 @@ class SearchManager {
 
     return pill;
   }
-
 
   getActiveFilterForCategory(categoryKey) {
     if (!this.styleFilterManager || !this.styleFilterManager.hasActiveFilters()) {
@@ -929,32 +851,26 @@ class SearchManager {
   }
 
   toggleCategoryPopover(pill, categoryKey, config) {
-    // ✨ EINFACH: Schließe alle existierenden Popovers
     const existingPopovers = document.querySelectorAll('.filter-popover');
     existingPopovers.forEach(p => {
       p.remove();
-      // Reaktiviere Zoom beim Schließen
       if (this.suggestionsDropdown) {
         this.suggestionsDropdown.classList.remove('is-zooming');
       }
     });
 
-    // ✨ Fokus zurück auf Searchbar beim Schließen alter Popovers
     if (existingPopovers.length > 0) {
       this.searchBar.focus();
     }
 
-    // ✨ EINFACH: Erstelle immer ein neues Popover (kein Toggle)
     const popover = document.createElement('div');
     popover.classList.add('filter-popover');
     popover.dataset.pillCategory = categoryKey;
 
-    // Deaktiviere Zoom während Popover offen ist
     if (this.suggestionsDropdown) {
       this.suggestionsDropdown.classList.add('is-zooming');
     }
 
-    // Füge "—" Option zum Löschen des Filters hinzu
     const clearOption = document.createElement('div');
     clearOption.classList.add('filter-popover-item', 'filter-clear-option');
     clearOption.textContent = '—';
@@ -965,12 +881,10 @@ class SearchManager {
       if (this.suggestionsDropdown) {
         this.suggestionsDropdown.classList.remove('is-zooming');
       }
-      // ✨ Fokus zurück auf Searchbar
       this.searchBar.focus();
     });
     popover.appendChild(clearOption);
 
-    // ✨ NEU: Icon-Mapping für Style-Optionen
     const styleIconMap = {
       'for all': 'fas fa-people-group',
       'for youth': 'fas fa-child',
@@ -978,23 +892,19 @@ class SearchManager {
       'commercial': 'fas fa-money-bill-wave'
     };
 
-    // ✨ NEU: Icon-Mapping für Door-State-Optionen
     const doorStateIconMap = {
       'open': 'fas fa-door-open',
       'closed': 'fas fa-door-closed'
     };
 
-    // ✨ NEU: Icon-Mapping für Bookmark-Optionen
     const bookmarkIconMap = {
       'bookmarked': 'fas fa-bookmark'
     };
 
-    // Erstelle Optionen
     config.options.forEach(option => {
       const optionItem = document.createElement('div');
       optionItem.classList.add('filter-popover-item');
 
-      // ✨ Füge Flag-Icon für Länder hinzu
       if (categoryKey === 'country') {
         const countryCode = this.getCountryCode(option);
         const flagSpan = document.createElement('span');
@@ -1004,23 +914,19 @@ class SearchManager {
         flagSpan.style.width = '20px';
         optionItem.appendChild(flagSpan);
 
-        // ✨ Ländername übersetzen
         const nameSpan = document.createElement('span');
         const translatedCountry = window.i18n.t(`countries.${option}`);
         nameSpan.textContent = translatedCountry;
         optionItem.appendChild(nameSpan);
 
-        // ✨ NEU: Gesamtzahl der Makerspaces in diesem Land
         const countInCountry = this.json.filter(loc => loc.loc?.country === option).length;
         const countSpan = document.createElement('span');
         countSpan.className = 'country-total-count';
         countSpan.textContent = ` (${countInCountry})`;
         optionItem.appendChild(countSpan);
 
-        // ✨ NEU: Verhindere Zeilenumbruch
         optionItem.style.whiteSpace = 'nowrap';
       }
-      // ✨ Füge spezifisches Icon für Style-Optionen hinzu
       else if (categoryKey === 'style' && styleIconMap[option]) {
         const iconElement = document.createElement('i');
         iconElement.className = styleIconMap[option];
@@ -1031,7 +937,6 @@ class SearchManager {
         const translatedStyle = this.translateFilterValue('style', option);
         optionItem.appendChild(document.createTextNode(translatedStyle));
       }
-      // ✨ Füge spezifisches Icon für Door-State-Optionen hinzu
       else if (categoryKey === 'doorState' && doorStateIconMap[option]) {
         const iconElement = document.createElement('i');
         iconElement.className = doorStateIconMap[option];
@@ -1042,7 +947,6 @@ class SearchManager {
         const translatedDoor = this.translateFilterValue('doorState', option);
         optionItem.appendChild(document.createTextNode(translatedDoor));
       }
-      // ✨ Füge spezifisches Icon für Bookmark-Optionen hinzu
       else if (categoryKey === 'bookmarks' && bookmarkIconMap[option]) {
         const iconElement = document.createElement('i');
         iconElement.className = bookmarkIconMap[option];
@@ -1050,7 +954,6 @@ class SearchManager {
         iconElement.style.width = '20px';
         iconElement.style.textAlign = 'center';
         optionItem.appendChild(iconElement);
-        // Nutze config.label statt "bookmarked"
         optionItem.appendChild(document.createTextNode(config.label));
       }
       else {
@@ -1058,13 +961,11 @@ class SearchManager {
         optionItem.textContent = translatedValue;
       }
 
-      // Markiere aktive Option
       const activeFilter = this.getActiveFilterForCategory(categoryKey);
       if (activeFilter === option) {
         optionItem.classList.add('active');
       }
 
-      // Click-Handler für Option
       optionItem.addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectCategoryOption(categoryKey, option);
@@ -1072,19 +973,16 @@ class SearchManager {
         if (this.suggestionsDropdown) {
           this.suggestionsDropdown.classList.remove('is-zooming');
         }
-        // ✨ Fokus zurück auf Searchbar (wird auch in selectCategoryOption gesetzt, aber sicher ist sicher)
         this.searchBar.focus();
       });
 
       popover.appendChild(optionItem);
     });
 
-    // Positioniere Popover
     document.body.appendChild(popover);
 
     const pillRect = pill.getBoundingClientRect();
 
-    // ✨ NEU: Country-Popover rechtsbündig positionieren
     if (categoryKey === 'country') {
       popover.style.right = (window.innerWidth - pillRect.right) + 'px';
       popover.style.left = 'auto';
@@ -1095,7 +993,6 @@ class SearchManager {
     popover.style.top = (pillRect.bottom + 4) + 'px';
     popover.style.minWidth = pillRect.width + 'px';
 
-    // Schließe Popover bei Klick außerhalb (nach kurzer Verzögerung)
     setTimeout(() => {
       const closeHandler = (e) => {
         if (!popover.contains(e.target) && !pill.contains(e.target)) {
@@ -1104,21 +1001,18 @@ class SearchManager {
             this.suggestionsDropdown.classList.remove('is-zooming');
           }
           document.removeEventListener('click', closeHandler);
-          // ✨ Fokus zurück auf Searchbar
           this.searchBar.focus();
         }
       };
       document.addEventListener('click', closeHandler);
     }, 100);
 
-    // Schließe Popover beim Scrollen
     const scrollHandler = () => {
       popover.remove();
       if (this.suggestionsDropdown) {
         this.suggestionsDropdown.classList.remove('is-zooming');
       }
       document.removeEventListener('scroll', scrollHandler, true);
-      // ✨ Fokus zurück auf Searchbar
       this.searchBar.focus();
     };
     document.addEventListener('scroll', scrollHandler, true);
@@ -1127,7 +1021,6 @@ class SearchManager {
   clearCategoryFilter(categoryKey) {
     if (!this.styleFilterManager) return;
 
-    // Hole alle Optionen der Kategorie
     let categoryOptions = [];
     if (categoryKey === 'bookmarks') {
       categoryOptions = ['bookmarked'];
@@ -1139,73 +1032,59 @@ class SearchManager {
       categoryOptions = this.getUniqueCountries();
     }
 
-    // ✨ FIX: Deaktiviere alle Optionen in dieser Kategorie (vereinfacht)
     categoryOptions.forEach(opt => {
       this.styleFilterManager.selectedStyles.delete(opt);
     });
 
-    // Update UI
     this.styleFilterManager.updateFilterCounter();
     this.styleFilterManager.updateHeaderState();
     this.styleFilterManager.applyFilters();
   }
 
   selectCategoryOption(categoryKey, option) {
-  if (!this.styleFilterManager) return;
+    if (!this.styleFilterManager) return;
 
-  // ✅ Für Bookmarks: Toggle statt Set
-  if (categoryKey === 'bookmarks' && option === 'bookmarked') {
-    if (this.styleFilterManager.selectedStyles.has('bookmarked')) {
-      // Ist aktiv → Deaktiviere
-      this.styleFilterManager.selectedStyles.delete('bookmarked');
-    } else {
-      // Ist inaktiv → Aktiviere
-      this.styleFilterManager.selectedStyles.add('bookmarked');
-    }
-  } else {
-    // Für andere Kategorien: Alte Logik
-    let categoryOptions = [];
-    if (categoryKey === 'style') {
-      categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
-    } else if (categoryKey === 'doorState') {
-      categoryOptions = ['open', 'closed'];
-    } else if (categoryKey === 'country') {
-      categoryOptions = this.getUniqueCountries();
-    }
-
-    // Deaktiviere alle anderen Optionen in dieser Kategorie
-    categoryOptions.forEach(opt => {
-      if (opt !== option) {
-        this.styleFilterManager.selectedStyles.delete(opt);
+    if (categoryKey === 'bookmarks' && option === 'bookmarked') {
+      if (this.styleFilterManager.selectedStyles.has('bookmarked')) {
+        this.styleFilterManager.selectedStyles.delete('bookmarked');
+      } else {
+        this.styleFilterManager.selectedStyles.add('bookmarked');
       }
-    });
+    } else {
+      let categoryOptions = [];
+      if (categoryKey === 'style') {
+        categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
+      } else if (categoryKey === 'doorState') {
+        categoryOptions = ['open', 'closed'];
+      } else if (categoryKey === 'country') {
+        categoryOptions = this.getUniqueCountries();
+      }
 
-    // Aktiviere die gewählte Option
-    this.styleFilterManager.selectedStyles.add(option);
+      categoryOptions.forEach(opt => {
+        if (opt !== option) {
+          this.styleFilterManager.selectedStyles.delete(opt);
+        }
+      });
+
+      this.styleFilterManager.selectedStyles.add(option);
+    }
+
+    this.styleFilterManager.updateFilterCounter();
+    this.styleFilterManager.updateHeaderState();
+    this.styleFilterManager.applyFilters();
+
+    this.scrollToTop();
+
+    this.searchBar.focus();
   }
 
-  // Update UI
-  this.styleFilterManager.updateFilterCounter();
-  this.styleFilterManager.updateHeaderState();
-  this.styleFilterManager.applyFilters();
-
-  // Scrolle nach oben
-  this.scrollToTop();
-
-  // Fokus zurück
-  this.searchBar.focus();
-}
-
-
   createSuggestionItems(locations) {
-    // ✨ NEU: Entferne nur bestehende Suggestions und Country-Headers, behalte Filter-Section
     const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
     existingSuggestions.forEach(item => item.remove());
 
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
 
-    // ✨ FIX: Wenn keine Locations, nichts erstellen (verhindert leere Country-Headers)
     if (!locations || locations.length === 0) {
       this.dropdownItems = [];
       return;
@@ -1213,7 +1092,6 @@ class SearchManager {
 
     const fragment = document.createDocumentFragment();
 
-    // ✨ NEU: Gruppiere nach Ländern
     const groupedByCountry = new Map();
     locations.forEach(location => {
       const country = location.loc?.country || 'Unknown';
@@ -1223,17 +1101,13 @@ class SearchManager {
       groupedByCountry.get(country).push(location);
     });
 
-    // ✨ NEU: Sortiere Länder nach Anzahl der Makerspaces (absteigend)
     const sortedCountries = Array.from(groupedByCountry.entries())
       .sort((a, b) => b[1].length - a[1].length);
 
-    // ✨ NEU: Erstelle Gruppen mit Headers
     sortedCountries.forEach(([country, countryLocations]) => {
-      // Country Header
       const countryHeader = this.createCountryHeader(country, countryLocations.length);
       fragment.appendChild(countryHeader);
 
-      // Locations innerhalb des Landes sortiert nach Geographie
       const sortedLocations = this.sortLocationsByGeography(countryLocations);
       sortedLocations.forEach(location => {
         const item = this.createSuggestionItem(location);
@@ -1243,21 +1117,28 @@ class SearchManager {
 
     this.suggestionsDropdown.appendChild(fragment);
     this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.suggestion-item'));
+
+    // ✨ KRITISCH: Speichere Positionen NACH dem DOM-Rendering
+    requestAnimationFrame(() => {
+      const allHeaders = Array.from(this.suggestionsDropdown.querySelectorAll('.country-group-header'));
+      allHeaders.forEach((header) => {
+        const originalPosition = header.offsetTop;
+        header.dataset.originalTop = originalPosition;
+        console.log(`📍 Saved position for ${header.dataset.countryName}: ${originalPosition}`);
+      });
+    });
   }
 
   createCountryHeader(country, count) {
     const header = document.createElement('div');
     header.classList.add('country-group-header');
-    header.dataset.countryName = country; // Speichere den nicht-übersetzten Namen für die Scroll-Logik
+    header.dataset.countryName = country;
 
-    // ✨ Flagge vor Ländername
     const countryCode = this.getCountryCode(country);
     const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 6px;"></span>`;
 
-    // ✨ NEU: Gesamtzahl der Makerspaces in diesem Land
     const totalInCountry = this.json.filter(loc => loc.loc?.country === country).length;
 
-    // ✨ Übersetze Ländername und "of"
     const translatedCountry = window.i18n.t(`countries.${country}`);
     const ofText = window.i18n.t('searchResults.of');
 
@@ -1271,7 +1152,6 @@ class SearchManager {
       </div>
     `;
 
-    // Füge Event Listener hinzu
     const upCaret = header.querySelector('[data-direction="prev"]');
     const downCaret = header.querySelector('[data-direction="next"]');
 
@@ -1281,95 +1161,116 @@ class SearchManager {
     return header;
   }
 
-
-
-
   getStickyOffset() {
-    // Höhe der Search Bar (48px top padding des dropdowns)
-    const searchBarHeight = 48;
-
-    // Höhe der .active-filters-section (sticky top: 0)
-    const filtersSection = this.suggestionsDropdown.querySelector('.active-filters-section');
-    const filterHeight = filtersSection ? filtersSection.offsetHeight : 0;
-
-    // Der Scroll-Offset muss so groß sein, dass der Country-Header (sticky top: 37px) 
-    // am oberen Rand des Dropdowns kleben bleibt. Die statische Berechnung 85 war empirisch, 
-    // aber wir behalten sie als Fallback. 
-    // Realistischer dynamischer Wert: 48 (Padding-Top) + 37 (Country-Header Top/Filter-Höhe) = 85.
-
-    // Da das Dropdown mit margin-top: -40px und padding-top: 48px beginnt, 
-    // entspricht 48px dem Platz der Search Bar. 
-    // Der Country-Header klebt an 37px. Also ist die korrekte Scroll-Position 48 + 37 = 85.
-
-    // Wir können uns einfach auf den empirischen Wert verlassen, der zuvor funktionierte (85),
-    // oder ihn aus den beiden Sticky-Elementen berechnen.
-
     return 85;
   }
-
-
-
 
   handleCountryScroll(e, currentCountry, direction) {
     e.stopPropagation();
 
     const allHeaders = Array.from(this.suggestionsDropdown.querySelectorAll('.country-group-header'));
 
-    // Finde den Index des aktuellen Headers basierend auf dem originalen Ländernamen
-    const currentHeaderIndex = allHeaders.findIndex(h => h.dataset.countryName === currentCountry);
+    if (allHeaders.length === 0) return;
 
-    if (currentHeaderIndex === -1) {
-      console.error('handleCountryScroll: Current country header not found for', currentCountry);
-      return;
+    const scrollTop = this.suggestionsDropdown.scrollTop;
+    const stickyOffset = this.getStickyOffset();
+
+    // ✨ FIX: Nutze gespeicherte Original-Positionen (nicht offsetTop!)
+    const headerData = allHeaders.map((header, idx) => {
+      const savedPosition = parseInt(header.dataset.originalTop);
+
+      let position = savedPosition;
+
+      if (!savedPosition || isNaN(savedPosition)) {
+        // Fallback: Berechne aus nächstem Element
+        let nextItem = header.nextElementSibling;
+        while (nextItem && !nextItem.classList.contains('suggestion-item')) {
+          nextItem = nextItem.nextElementSibling;
+        }
+
+        if (nextItem) {
+          position = nextItem.offsetTop - 50;
+        } else {
+          position = header.offsetTop;
+        }
+      }
+
+      return {
+        index: idx,
+        element: header,
+        country: header.dataset.countryName,
+        position: position
+      };
+    });
+
+    console.log('📋 Header Data with saved positions:');
+    headerData.forEach(h => {
+      console.log(`  [${h.index}] ${h.country} @ ${h.position}`);
+    });
+
+    // Finde aktuellen sichtbaren Header
+    let currentIndex = -1;
+
+    for (let i = 0; i < headerData.length; i++) {
+      const headerTop = headerData[i].position - stickyOffset;
+
+      if (i < headerData.length - 1) {
+        const nextHeaderTop = headerData[i + 1].position - stickyOffset;
+
+        if (scrollTop >= headerTop - 30 && scrollTop < nextHeaderTop - 30) {
+          currentIndex = i;
+          break;
+        }
+      } else {
+        if (scrollTop >= headerTop - 30) {
+          currentIndex = i;
+          break;
+        }
+      }
     }
 
+    if (currentIndex === -1) {
+      currentIndex = 0;
+    }
+
+    console.log('🎯 Detected current index:', currentIndex, '-', headerData[currentIndex].country);
+
+    // Berechne Ziel-Index
     let targetIndex;
     if (direction === 'next') {
-      // Nächster Header (ohne Wrap-Around)
-      if (currentHeaderIndex < allHeaders.length - 1) {
-        targetIndex = currentHeaderIndex + 1;
-      } else {
-        // Stoppt am Ende der Liste
+      targetIndex = Math.min(currentIndex + 1, headerData.length - 1);
+      if (targetIndex === currentIndex) {
+        console.log('⚠️ Already at last country');
         return;
       }
     } else {
-      // Vorheriger Header (ohne Wrap-Around)
-      if (currentHeaderIndex > 0) {
-        targetIndex = currentHeaderIndex - 1;
-      } else {
-        // Stoppt am Anfang der Liste
+      targetIndex = Math.max(currentIndex - 1, 0);
+      if (targetIndex === currentIndex) {
+        console.log('⚠️ Already at first country');
         return;
       }
     }
 
-    const targetHeader = allHeaders[targetIndex];
+    const targetData = headerData[targetIndex];
+    const scrollToPosition = targetData.position - stickyOffset;
 
-    // Holen Sie den korrekten Offset dynamisch
-    const stickyOffset = this.getStickyOffset();
-    const scrollToPosition = targetHeader.offsetTop - stickyOffset;
-
-    // ✨ Aggressive Debugging-Ausgabe (Behalten Sie diese bitte in der Konsole, um den Fehler zu sehen)
     console.log('--- Scroll Debugging (Previous/Next) ---');
-    console.log('Current Index:', currentHeaderIndex);
-    console.log('Target Index:', targetIndex);
     console.log('Direction:', direction);
-    console.log('Target OffsetTop:', targetHeader.offsetTop);
+    console.log('Current Index:', currentIndex, '-', headerData[currentIndex].country);
+    console.log('Current Saved Position:', headerData[currentIndex].position);
+    console.log('Target Index:', targetIndex, '-', targetData.country);
+    console.log('Target Saved Position:', targetData.position);
     console.log('Sticky Offset:', stickyOffset);
     console.log('ScrollTo Position:', scrollToPosition);
-    console.log('Current ScrollTop:', this.suggestionsDropdown.scrollTop);
+    console.log('Current ScrollTop:', scrollTop);
+    console.log('Difference:', Math.abs(scrollToPosition - scrollTop));
     console.log('-----------------------------------');
-    // ✨ Ende Debugging
 
-    if (targetHeader) {
-      this.suggestionsDropdown.scrollTo({
-        top: scrollToPosition,
-        behavior: 'smooth'
-      });
-    }
+    this.suggestionsDropdown.scrollTo({
+      top: scrollToPosition,
+      behavior: 'smooth'
+    });
   }
-
-
-
 
   createSuggestionItem(location) {
     const item = document.createElement('div');
@@ -1377,8 +1278,7 @@ class SearchManager {
     item.dataset.uniqueId = location.uniqueId;
     let statusIcon = '', spaceStatusClass = '', nameClass = '';
 
-    // CSS-Variable für Status-Farbe setzen
-    let statusColor = 'blue'; // default
+    let statusColor = 'blue';
     if (location.isOpen === true) {
       statusColor = 'var(--space-open)';
     } else if (location.isOpen === false) {
@@ -1415,11 +1315,9 @@ class SearchManager {
     }
     if (spaceStatusClass) { item.classList.add(spaceStatusClass); }
 
-    // ✨ NEU: Füge Länderflagge vor PLZ hinzu
     const countryCode = this.getCountryCode(location.loc.country);
     const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 4px;"></span>`;
 
-    // ✨ Bookmark-Icon erstellen
     const bookmarkIcon = window.bookmarkManager ?
       window.bookmarkManager.createBookmarkIcon(location.uniqueId, 'suggestion-bookmark') :
       '';
@@ -1435,7 +1333,6 @@ class SearchManager {
       </div>`;
     this.setupSuggestionItemEvents(item, location);
 
-    // ✨ Initialisiere Bookmark-Icon Event-Listener
     if (window.bookmarkManager) {
       window.bookmarkManager.initializeBookmarkListeners(item);
     }
@@ -1519,7 +1416,7 @@ class SearchManager {
     path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 265.373,508.216 276.615,526.112C287.858,544.008 302.534,560.527 319.618,573.988C336.703,587.45 356.196,597.856 376.225,604.6C396.254,611.345 416.818,614.43 436.232,614.412L632.86,614.412L632.86,6.618Z');
     path.setAttribute('fill', color);
     svg.appendChild(path);
-    document.body.appendChild(svg); // ✨ WIEDER EINGEFÜGT!
+    document.body.appendChild(svg);
     this.currentHoverSVG = svg;
   }
 
@@ -1632,7 +1529,6 @@ class SearchManager {
 
     setTimeout(() => {
       this.removeZoomPreviewFrame(secondFrameInfo.layer);
-      // ✨ Fokus zurück auf Searchbar nach komplexem Zoom
       this.searchBar.focus();
     }, 800);
   }
@@ -1655,7 +1551,6 @@ class SearchManager {
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);
       }
-      // ✨ Fokus zurück auf Searchbar nach Zoom
       this.searchBar.focus();
     });
   }
@@ -1855,28 +1750,18 @@ class SearchManager {
     }
   }
 
-
-
-
-
-
   activateZoomIndicator() {
     if (this.zoomIndicatorActive) return;
 
     console.log('🎯 Zoom indicator activated');
     this.zoomIndicatorActive = true;
 
-    // Erstelle Zoom-Anzeige
     this.createZoomIndicator();
 
-    // Zeige Anzeige
-    // document.getElementById('map').style.cursor = 'none';
     this.zoomIndicator.style.display = 'block';
 
-    // Update bei Zoom-Änderungen
     this.map.on('zoomend', this.updateZoomIndicator, this);
 
-    // Update bei Mausbewegung
     document.addEventListener('mousemove', this.moveZoomIndicator);
   }
 
@@ -1886,33 +1771,27 @@ class SearchManager {
     console.log('🎯 Zoom indicator deactivated');
     this.zoomIndicatorActive = false;
 
-    // Verstecke Anzeige
     if (this.zoomIndicator) {
       this.zoomIndicator.style.display = 'none';
     }
-    // document.getElementById('map').style.cursor = '';
 
-    // Entferne Event-Listener
     this.map.off('zoomend', this.updateZoomIndicator, this);
     document.removeEventListener('mousemove', this.moveZoomIndicator);
   }
 
   createZoomIndicator() {
-    if (this.zoomIndicator) return; // Bereits erstellt
+    if (this.zoomIndicator) return;
 
-    // Erstelle HTML-Element
     this.zoomIndicator = document.createElement('div');
     this.zoomIndicator.id = 'zoom-indicator';
     this.zoomIndicator.innerHTML = this.map.getZoom();
 
     document.body.appendChild(this.zoomIndicator);
 
-    // Update-Funktion als Arrow Function für korrektes 'this'
     this.moveZoomIndicator = (e) => {
       if (!this.zoomIndicator) return;
 
-      // Folge dem Cursor
-      const offset = -3; // Abstand vom Cursor
+      const offset = -3;
       this.zoomIndicator.style.left = (e.clientX + offset) + 'px';
       this.zoomIndicator.style.top = (e.clientY + offset) + 'px';
     };
