@@ -34,22 +34,22 @@ class BookmarkSync {
    * Importiert Bookmarks aus einer Liste von IDs
    */
   importBookmarks(ids) {
-  const currentLang = window.currentLanguage || 'de';
-  const t = window.translations || {}; // ✅ FIX
-  let imported = 0;
-  
-  ids.forEach(id => {
-    if (!this.bookmarkManager.isBookmarked(id)) {
-      this.bookmarkManager.toggleBookmark(id);
-      imported++;
-    }
-  });
+    const currentLang = window.currentLanguage || 'de';
+    const t = window.translations || {}; // ✅ FIX
+    let imported = 0;
 
-  if (imported > 0) {
-    const msg = t.sync?.importSuccess?.[currentLang] || `${imported} Favoriten importiert`;
-    this.showNotification(msg.replace('{count}', imported), 'success');
+    ids.forEach(id => {
+      if (!this.bookmarkManager.isBookmarked(id)) {
+        this.bookmarkManager.toggleBookmark(id);
+        imported++;
+      }
+    });
+
+    if (imported > 0) {
+      const msg = t.sync?.importSuccess?.[currentLang] || `${imported} Favoriten importiert`;
+      this.showNotification(msg.replace('{count}', imported), 'success');
+    }
   }
-}
 
   /**
    * Exportiert Bookmarks als URL
@@ -180,25 +180,25 @@ class BookmarkSync {
     if (!input) return;
 
     const url = input.value.trim();
-    
+
     try {
       const urlObj = new URL(url);
       const params = new URLSearchParams(urlObj.search);
-      
+
       if (params.has('bookmarks')) {
         const ids = params.get('bookmarks').split(',').filter(id => id);
         this.importBookmarks(ids);
         this.closeDialog();
       } else {
         const currentLang = window.currentLanguage || 'de';
-        const msg = window.translations.sync?.invalidUrl?.[currentLang] || 
-                    'Ungültige URL';
+        const msg = window.translations.sync?.invalidUrl?.[currentLang] ||
+          'Ungültige URL';
         this.showNotification(msg, 'error');
       }
     } catch (e) {
       const currentLang = window.currentLanguage || 'de';
-      const msg = window.translations.sync?.invalidUrl?.[currentLang] || 
-                  'Ungültige URL';
+      const msg = window.translations.sync?.invalidUrl?.[currentLang] ||
+        'Ungültige URL';
       this.showNotification(msg, 'error');
     }
   }
@@ -210,8 +210,8 @@ class BookmarkSync {
     try {
       await navigator.clipboard.writeText(url);
       const currentLang = window.currentLanguage || 'de';
-      const msg = window.translations.sync?.copied?.[currentLang] || 
-                  'Link kopiert!';
+      const msg = window.translations.sync?.copied?.[currentLang] ||
+        'Link kopiert!';
       this.showNotification(msg, 'success');
     } catch (err) {
       // Fallback für ältere Browser
@@ -220,8 +220,8 @@ class BookmarkSync {
         input.select();
         document.execCommand('copy');
         const currentLang = window.currentLanguage || 'de';
-        const msg = window.translations.sync?.copied?.[currentLang] || 
-                    'Link kopiert!';
+        const msg = window.translations.sync?.copied?.[currentLang] ||
+          'Link kopiert!';
         this.showNotification(msg, 'success');
       }
     }
@@ -248,10 +248,10 @@ class BookmarkSync {
 
     const currentLang = window.currentLanguage || 'de';
     const bookmarkCount = this.bookmarkManager.getBookmarkedIds().length;
-    
+
     const menu = document.createElement('div');
     menu.className = 'sync-menu';
-    
+
     menu.innerHTML = `
       <div class="sync-menu-item sync-status">
         <i class="fas fa-bookmark"></i>
@@ -295,17 +295,17 @@ class BookmarkSync {
    */
   clearAllBookmarks() {
     const currentLang = window.currentLanguage || 'de';
-    const msg = (window.translations || {}).sync?.confirmClear?.[currentLang] || 
-                'Wirklich alle Favoriten löschen?';
-    
+    const msg = (window.translations || {}).sync?.confirmClear?.[currentLang] ||
+      'Wirklich alle Favoriten löschen?';
+
     if (confirm(msg)) {
       this.bookmarkManager.clearAllBookmarks();
       this.closeDialog();
       const existingMenu = document.querySelector('.sync-menu');
       if (existingMenu) existingMenu.remove();
-      
-      const successMsg = window.translations.sync?.clearedAll?.[currentLang] || 
-                        'Alle Favoriten gelöscht';
+
+      const successMsg = window.translations.sync?.clearedAll?.[currentLang] ||
+        'Alle Favoriten gelöscht';
       this.showNotification(successMsg, 'success');
     }
   }
@@ -317,9 +317,9 @@ class BookmarkSync {
     const notification = document.createElement('div');
     notification.className = `sync-notification sync-notification-${type}`;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
       notification.classList.add('show');
     }, 10);
@@ -347,6 +347,69 @@ class BookmarkSync {
         this.showImportDialog();
       }
     });
+  }
+
+  /**
+   * ✅ Settings synchronisieren
+   */
+  syncSettings(settings) {
+    const currentSettings = {
+      colorScheme: settings.colorScheme || localStorage.getItem('color-scheme') || 'auto',
+      language: settings.language || localStorage.getItem('preferred_language') || 'de'
+    };
+
+    // In localStorage speichern
+    localStorage.setItem('user-settings', JSON.stringify(currentSettings));
+
+    console.log('✅ Settings synced:', currentSettings);
+  }
+
+  /**
+   * ✅ Settings aus Sync-URL laden
+   */
+  loadSettingsFromSync(syncUrl) {
+    try {
+      const url = new URL(syncUrl);
+      const data = JSON.parse(url.searchParams.get('data') || '{}');
+
+      if (data.settings) {
+        // Color Scheme anwenden
+        if (data.settings.colorScheme) {
+          localStorage.setItem('color-scheme', data.settings.colorScheme);
+          if (window.languageSwitcher) {
+            window.languageSwitcher.setColorScheme(data.settings.colorScheme);
+          }
+        }
+
+        // Sprache anwenden
+        if (data.settings.language) {
+          localStorage.setItem('preferred_language', data.settings.language);
+          if (window.languageSwitcher) {
+            window.languageSwitcher.changeLanguage(data.settings.language);
+          }
+        }
+
+        this.showNotification('Settings synchronized', 'success');
+      }
+    } catch (error) {
+      console.error('Error loading settings from sync:', error);
+    }
+  }
+
+  /**
+   * ✅ QR-Code mit Settings generieren
+   */
+  generateSyncDataWithSettings() {
+    const bookmarks = this.bookmarkManager ? this.bookmarkManager.getBookmarkedIds() : [];
+    const settings = JSON.parse(localStorage.getItem('user-settings') || '{}');
+
+    const syncData = {
+      bookmarks: bookmarks,
+      settings: settings,
+      timestamp: Date.now()
+    };
+
+    return JSON.stringify(syncData);
   }
 }
 

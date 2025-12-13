@@ -480,6 +480,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ✅ GLOBAL: Map und MapLibre Layer
+  let currentMapLibreLayer = null;
+
   function setupMap() {
     console.log('🔧 Starting MapLibre setup...');
 
@@ -488,15 +491,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     console.log('✅ Leaflet map created');
 
+    // ✅ Global verfügbar machen
+    window.map = map;
+
     const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    let currentMapLibreLayer = null;
 
     function updateMapTiles() {
-      const isDarkMode = darkModeQuery.matches;
-      console.log('Dark mode:', isDarkMode);
+      // ✅ Bestimme Dark Mode Status aus localStorage
+      let isDarkMode = false;
+      const colorScheme = localStorage.getItem('color-scheme') || 'auto';
+
+      if (colorScheme === 'dark') {
+        isDarkMode = true;
+      } else if (colorScheme === 'light') {
+        isDarkMode = false;
+      } else { // auto
+        isDarkMode = darkModeQuery.matches;
+      }
+
+      console.log('🗺️ Updating map - Dark mode:', isDarkMode, 'Color scheme:', colorScheme);
 
       const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
-      console.log('Style URL:', styleUrl);
 
       if (currentMapLibreLayer) {
         map.removeLayer(currentMapLibreLayer);
@@ -509,6 +524,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         currentMapLibreLayer.addTo(map);
+
+        // ✅ Global verfügbar machen
+        window.currentMapLibreLayer = currentMapLibreLayer;
 
         const mapContainer = document.getElementById('map');
         if (isDarkMode) {
@@ -523,11 +541,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // ✅ Global verfügbar machen für language-switcher.js
+    window.updateMapTiles = updateMapTiles;
 
     map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
     updateMapTiles();
 
-    darkModeQuery.addEventListener('change', updateMapTiles);
+    // ✅ Lausche auf Auto-Mode Changes
+    darkModeQuery.addEventListener('change', () => {
+      const currentScheme = localStorage.getItem('color-scheme') || 'auto';
+      if (currentScheme === 'auto') {
+        updateMapTiles();
+      }
+    });
   }
 
 

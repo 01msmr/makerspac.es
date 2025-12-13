@@ -7,8 +7,8 @@
   --border-color: #ccc;
   --shadow-color: rgba(0, 0, 0, 0.35);
   --dropdown-bg: white;
-  --dropdown-border: #ddd;
   --dropdown-alt-bg: #f6f6f6;
+  --dropdown-border: #ddd;
   --dropdown-alt-border: #eee;
   --search-bg: white;
   --search-opacity: 0.3;
@@ -492,7 +492,7 @@ a#titleurl {
 }
 
 .filter-popover-item:hover {
-  background-color: var(--dropdown-alt-bg);
+  background-color: var(--hover-text-color-active);
 }
 
 .filter-popover-item.active {
@@ -565,194 +565,238 @@ a#titleurl {
   z-index: 1000;
 }
 
-.language-pill {
-  display: flex;
-  gap: 2px;
+/* ===================================
+   SETTINGS BUTTON (SOLO GEAR)
+   =================================== */
+
+.language-switcher {
+  position: absolute;
+  top: 1.2em;
+  right: calc(1.5em + 300px + 12px);
+  z-index: 1000;
+}
+
+/* Solo Gear Button */
+.settings-gear-button-solo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
   box-shadow: 0px 2px 8px 1px var(--shadow-color);
-  overflow: hidden;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.language-pill:hover {
-  opacity: 0.9;
-}
-
-.language-flag-button,
-.settings-gear-button {
-  background: transparent;
-  border: none;
   cursor: pointer;
-  padding: 6px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  opacity: 0.5;
 }
 
-.language-flag-button:hover,
-.settings-gear-button:hover {
-  background: rgba(0, 102, 255, 0.1);
-}
-
-.language-flag-button span {
-  font-size: 24px;
-  display: block;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.settings-gear-button i {
-  font-size: 18px;
-  color: var(--text-color);
-}
-
-/* Language Popover */
-.language-popover {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 5px;
-  padding: 4px;
+.settings-gear-button-solo:hover {
+  opacity: 0.9;
   background: var(--dropdown-bg);
-  border: 1px solid var(--dropdown-border);
-  border-radius: 24px;
-  box-shadow: 0 4px 12px var(--shadow-color);
-  z-index: 10001;
-  min-width: 180px;
 }
 
-.language-popover-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 24px;
-  cursor: pointer;
-  border-radius: 22px;
-  transition: background 0.2s ease;
-  gap: 12px;
-}
-
-.language-popover-item:hover {
-  background: var(--dropdown-alt-bg);
-}
-
-.language-popover-item.active {
-  background: #0066ff;
-  color: white;
-  font-weight: 600;
-}
-
-.language-name {
-  font-family: 'Lato', sans-serif;
-  font-size: 0.9em;
-}
-
-.language-flag-popover {
+.settings-gear-button-solo i {
   font-size: 20px;
-  display: block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+  color: var(--text-color);
+  transition: transform 0.3s ease;
 }
 
-/* Settings Popover */
+.settings-gear-button-solo:hover i {
+  transform: rotate(90deg);
+}
+
+/* ===================================
+   SETTINGS POPOVER
+   =================================== */
+
 .settings-popover {
   font-family: Lato, sans-serif;
-  position: fixed;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
   background: var(--dropdown-bg);
   border: 1px solid var(--dropdown-border);
-  border-radius: 24px;
+  border-radius: 16px;
   box-shadow: 0 4px 12px 2px var(--shadow-color);
-  min-width: 220px;
-  max-width: 280px;
+  min-width: 280px;
   z-index: 10001;
   overflow: hidden;
   animation: fadeIn 0.15s ease-out;
 }
 
-.settings-section {
+/* Settings Header */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--dropdown-border);
+  background: var(--dropdown-alt-bg);
 }
 
-.settings-section:last-child {
+/* ✅ Zweizeilige Sprach-Sektion */
+.settings-header-languages {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.settings-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.settings-header:last-child {
   border-bottom: none;
 }
 
-.settings-section-header {
+.settings-header-content {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--dropdown-alt-bg);
-  font-weight: 600;
-  font-size: 0.95em;
-  color: var(--text-color);
-  border-bottom: 1px solid var(--dropdown-border);
-}
-
-.settings-section-header i {
-  width: 18px;
-  text-align: center;
-  color: #0066ff;
-}
-
-.settings-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  gap: 8px;
   font-size: 0.9em;
+  font-weight: normal;
+  /* ✅ Normal statt Bold */
   color: var(--text-color);
+  flex-shrink: 0;
 }
 
-.settings-item:hover {
-  background: var(--dropdown-alt-bg);
-}
-
-.settings-item i {
-  width: 18px;
+.settings-header-content i {
+  width: 16px;
   text-align: center;
-  font-size: 1em;
-}
-
-.settings-item.settings-info {
-  cursor: default;
-  font-weight: 600;
   color: #0066ff;
-  background: var(--dropdown-alt-bg);
 }
 
-.settings-item.settings-info:hover {
-  background: var(--dropdown-alt-bg);
+/* Icon Buttons im Header */
+.settings-header-icons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.settings-item.settings-danger {
+/* ✅ FLAGGEN: Zweite Zeile, gleichmäßig verteilt */
+.settings-language-icons {
+  gap: 6px;
+  width: 100%;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.settings-icon-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 0.85em;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+/* ✅ Flaggen: Größere Größe für sichtbare Flaggen */
+.settings-flag-btn {
+  font-size: 20px !important;
+  width: 24px !important;
+  height: 24px !important;
+  opacity: 0.8 !important;
+  /* ✅ Sichtbar */
+  padding: 2px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-flag-btn:hover {
+  opacity: 1 !important;
+  /* ✅ Volle Sichtbarkeit */
+  transform: scale(1.15);
+  background: transparent !important;
+}
+
+/* Dark Mode & andere Icons: MIT active/hover */
+.settings-icon-btn:not(.settings-flag-btn):hover {
+  background: var(--dropdown-border);
+  transform: scale(1.15);
+}
+
+.settings-icon-btn.active {
+  background: #0066ff;
+  color: white;
+  box-shadow: 0 0 0 2px #0066ff;
+}
+
+.settings-icon-btn.settings-icon-danger {
   color: #dd4444;
 }
 
-.settings-item.settings-danger:hover {
+.settings-icon-btn.settings-icon-danger:hover {
   background: rgba(221, 68, 68, 0.1);
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
-  .language-pill {
+  .settings-gear-button-solo {
     background: var(--dropdown-bg);
   }
 
-  .settings-gear-button i {
-    color: var(--text-color);
+  .settings-header {
+    background: var(--dropdown-bg);
   }
+}
+
+/* Dark Mode per Attribute */
+[data-color-scheme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --border-color: #444;
+  --shadow-color: rgba(0, 0, 0, 0.7);
+  --dropdown-bg: #2a2a2a;
+  --dropdown-border: #555;
+  --dropdown-alt-bg: #333;
+  --dropdown-alt-border: #444;
+  --search-bg: #2a2a2a;
+  --search-opacity: 0.9;
+  --search-focus-opacity: 1;
+  --hover-text-color: #aaa;
+  --hover-text-color-active: #ddd;
+}
+
+[data-color-scheme="light"] {
+  --bg-color: white;
+  --text-color: black;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --dropdown-bg: white;
+  --dropdown-alt-bg: #f6f6f6;
+  --dropdown-border: #ddd;
+  --dropdown-alt-border: #eee;
+  --search-bg: white;
+  --search-opacity: 0.3;
+  --search-focus-opacity: 0.9;
+  --hover-text-color: #666;
+  --hover-text-color-active: #ccc;
 }
 
 /* Responsive */
@@ -762,9 +806,10 @@ a#titleurl {
   }
 
   .settings-popover {
-    max-width: 240px;
+    min-width: 240px;
   }
 }
+
 
 
 

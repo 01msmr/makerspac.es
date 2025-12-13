@@ -1,133 +1,67 @@
-// language-switcher.js - Enhanced mit Settings
+// language-switcher.js - FINAL: Flaggen in 2. Zeile, schließt nur bei Map/Search Click
 
 class LanguageSwitcher {
   constructor() {
     this.currentLanguage = 'de';
     this.container = null;
     this.settingsPopover = null;
+    this.documentClickHandler = null;
     this.init();
   }
 
   init() {
-    this.createLanguagePill();
+    this.createSettingsButton();
     this.loadLanguagePreference();
+    this.loadColorScheme();
   }
 
-  // ✅ HIER: Außerhalb von createLanguagePill()
-  getFlagCode(langCode) {
-    const flagMap = {
-      'en': 'gb',  // English → Great Britain flag
-      'da': 'dk',  // Danish → Denmark flag
-      'uk': 'ua'   // Ukrainian → Ukraine flag
-    };
-    return flagMap[langCode] || langCode;
-  }
-
-  createLanguagePill() {
-    // ✅ Warte bis Flag-Icons geladen sind
-    if (!document.querySelector('link[href*="flag-icons"]')) {
-      setTimeout(() => this.createLanguagePill(), 100);
-      return;
+  // ✅ Hole Übersetzungen aus i18n (lang.json)
+  t(key) {
+    if (window.i18n && window.i18n.t) {
+      const translation = window.i18n.t(`settings.${key}`);
+      if (translation === `settings.${key}`) {
+        return this.getFallbackTranslation(key);
+      }
+      return translation;
     }
+    return this.getFallbackTranslation(key);
+  }
 
-    // Erstelle Container
+  getFallbackTranslation(key) {
+    const fallbacks = {
+      title: 'Einstellungen',
+      language: 'Sprache',
+      colorScheme: 'Farbschema',
+      light: 'Hell',
+      auto: 'Automatisch',
+      dark: 'Dunkel',
+      bookmarks: 'Favoriten',
+      share: 'Teilen',
+      import: 'Importieren',
+      deleteAll: 'Alle löschen',
+      confirmDelete: 'Alle Favoriten löschen?'
+    };
+    return fallbacks[key] || key;
+  }
+
+  createSettingsButton() {
     this.container = document.createElement('div');
     this.container.className = 'language-switcher';
 
-    // Erstelle Pill
-    const pill = document.createElement('div');
-    pill.className = 'language-pill';
-
-    // Flag-Button
-    const flagButton = document.createElement('button');
-    flagButton.className = 'language-flag-button';
-    flagButton.innerHTML = `<span class="fi fi-de"></span>`;
-    flagButton.title = 'Sprache wechseln';
-    flagButton.onclick = (e) => {
-      e.stopPropagation();
-      this.toggleLanguagePopover();
-    };
-
-    // Settings Gear Button
-    const gearButton = document.createElement('button');
-    gearButton.className = 'settings-gear-button';
-    gearButton.innerHTML = '<i class="fas fa-gear"></i>';
-    gearButton.title = 'Einstellungen';
-    gearButton.onclick = (e) => {
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'settings-gear-button-solo';
+    settingsButton.innerHTML = '<i class="fas fa-gear"></i>';
+    settingsButton.title = this.t('title');
+    settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSettingsPopover();
-    };
+    });
 
-    pill.appendChild(flagButton);
-    pill.appendChild(gearButton);
-    this.container.appendChild(pill);
-
-    // Füge in DOM ein
+    this.container.appendChild(settingsButton);
     document.body.appendChild(this.container);
-
-    // Click außerhalb schließt Popovers
-    document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target)) {
-        this.closeAllPopovers();
-      }
-    });
-  }
-
-
-  toggleLanguagePopover() {
-    // Schließe Settings-Popover
-    this.closeSettingsPopover();
-
-    // Toggle Language-Popover
-    const existingPopover = this.container.querySelector('.language-popover');
-    if (existingPopover) {
-      existingPopover.remove();
-      return;
-    }
-
-    const popover = document.createElement('div');
-    popover.className = 'language-popover';
-
-    const languages = [
-      { code: 'de', name: 'Deutsch' },
-      { code: 'en', name: 'English' },
-      { code: 'fr', name: 'Français' },
-      { code: 'it', name: 'Italiano' },
-      { code: 'nl', name: 'Nederlands' },
-      { code: 'da', name: 'Dansk' },
-      { code: 'uk', name: 'Українська' }
-    ];
-
-    languages.forEach(lang => {
-      const item = document.createElement('div');
-      item.className = 'language-popover-item';
-      const flagCode = this.getFlagCode(lang.code); // ✅ flagCode definieren!
-      item.innerHTML = `
-    <span class="language-name">${lang.name}</span>
-    <span class="fi fi-${flagCode} language-flag-popover"></span>
-  `;
-
-      if (lang.code === this.currentLanguage) {
-        item.classList.add('active');
-      }
-
-      item.onclick = () => {
-        this.changeLanguage(lang.code);
-        popover.remove();
-      };
-
-      popover.appendChild(item);
-    });
-
-
-    this.container.appendChild(popover);
   }
 
   toggleSettingsPopover() {
-    // Schließe Language-Popover
-    this.closeLanguagePopover();
-
-    // Toggle Settings-Popover
     if (this.settingsPopover) {
       this.closeSettingsPopover();
       return;
@@ -136,98 +70,127 @@ class LanguageSwitcher {
     this.settingsPopover = document.createElement('div');
     this.settingsPopover.className = 'settings-popover';
 
-    // Bookmark Sync Section (OHNE Header)
-    const syncSection = document.createElement('div');
-    syncSection.className = 'settings-section';
+    // 1. SPRACHE SECTION - ZWEIZEILIG
+    const languageHeader = document.createElement('div');
+    languageHeader.className = 'settings-header settings-header-languages';
 
-    // Sync-Optionen
-    const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
-
-    const syncOptions = [
-      {
-        icon: 'fas fa-bookmark',  // ✅ Bookmark-Icon statt Info-Icon
-        label: `${bookmarkCount} ${window.i18n ? window.i18n.t('sync.favorites') : 'Favoriten'}`,
-        action: null,
-        className: 'settings-info'
-      },
-      {
-        icon: 'fas fa-share-alt',
-        label: window.i18n ? window.i18n.t('sync.export') : 'Teilen',
-        action: () => {
-          if (window.bookmarkSync) {
-            window.bookmarkSync.showExportDialog();
-            this.closeSettingsPopover();
-          }
-        }
-      },
-      {
-        icon: 'fas fa-download',
-        label: window.i18n ? window.i18n.t('sync.import') : 'Importieren',
-        action: () => {
-          if (window.bookmarkSync) {
-            window.bookmarkSync.showImportDialog();
-            this.closeSettingsPopover();
-          }
-        }
-      },
-      {
-        icon: 'fas fa-trash',
-        label: window.i18n ? window.i18n.t('sync.clearAll') : 'Alle löschen',
-        action: () => {
-          if (window.bookmarkSync) {
-            window.bookmarkSync.clearAllBookmarks();
-            this.closeSettingsPopover();
-          }
-        },
-        className: 'settings-danger'
-      }
+    const languages = [
+      { code: 'de', flag: 'de', name: 'Deutsch' },
+      { code: 'en', flag: 'gb', name: 'English' },
+      { code: 'fr', flag: 'fr', name: 'Français' },
+      { code: 'nl', flag: 'nl', name: 'Nederlands' },
+      { code: 'it', flag: 'it', name: 'Italiano' },
+      { code: 'da', flag: 'dk', name: 'Dansk' },
+      { code: 'uk', flag: 'ua', name: 'Українська' }
     ];
 
-    syncOptions.forEach(option => {
-      const item = document.createElement('div');
-      item.className = `settings-item ${option.className || ''}`;
-      item.innerHTML = `
-        <i class="${option.icon}"></i>
-        <span>${option.label}</span>
-      `;
+    // ✅ Erstelle Flaggen-HTML für ZWEITE ZEILE
+    const languageIconsHTML = languages.map(lang => {
+      return `<span class="fi fi-${lang.flag} settings-icon-btn settings-flag-btn" data-lang="${lang.code}" title="${lang.name}"></span>`;
+    }).join('');
 
-      if (option.action) {
-        item.style.cursor = 'pointer';
-        item.onclick = option.action;
-      }
+    languageHeader.innerHTML = `
+      <div class="settings-header-row">
+        <div class="settings-header-content">
+          <i class="fas fa-language"></i>
+          <span>${this.t('language')}</span>
+        </div>
+      </div>
+      <div class="settings-header-row">
+        <div class="settings-header-icons settings-language-icons">
+          ${languageIconsHTML}
+        </div>
+      </div>
+    `;
 
-      syncSection.appendChild(item);
+    this.settingsPopover.appendChild(languageHeader);
+
+    // Event-Listener für Flaggen
+    languageHeader.querySelectorAll('[data-lang]').forEach(flag => {
+      flag.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const langCode = flag.dataset.lang;
+        this.changeLanguage(langCode);
+        // ✅ NICHT mehr schließen bei Klick
+      });
     });
 
-    this.settingsPopover.appendChild(syncSection);
+    // 2. DARK MODE SECTION
+    const darkModeHeader = document.createElement('div');
+    darkModeHeader.className = 'settings-header';
 
-    // Position berechnen
-    const gearButton = this.container.querySelector('.settings-gear-button');
-    const rect = gearButton.getBoundingClientRect();
+    const currentMode = localStorage.getItem('color-scheme') || 'auto';
 
-    this.settingsPopover.style.position = 'fixed';
-    this.settingsPopover.style.top = `${rect.bottom + 5}px`;
-    this.settingsPopover.style.right = `${window.innerWidth - rect.right}px`;
+    darkModeHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-circle-half-stroke"></i>
+        <span>${this.t('colorScheme')}</span>
+      </div>
+      <div class="settings-header-icons">
+        <i class="far fa-circle settings-icon-btn ${currentMode === 'light' ? 'active' : ''}" data-mode="light" title="${this.t('light')}"></i>
+        <i class="fas fa-adjust settings-icon-btn ${currentMode === 'auto' ? 'active' : ''}" data-mode="auto" title="${this.t('auto')}"></i>
+        <i class="fas fa-circle settings-icon-btn ${currentMode === 'dark' ? 'active' : ''}" data-mode="dark" title="${this.t('dark')}"></i>
+      </div>
+    `;
 
-    document.body.appendChild(this.settingsPopover);
+    darkModeHeader.querySelectorAll('[data-mode]').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const mode = icon.dataset.mode;
+        this.setColorScheme(mode);
 
-    // Schließen bei Klick außerhalb
+        darkModeHeader.querySelectorAll('[data-mode]').forEach(i => i.classList.remove('active'));
+        icon.classList.add('active');
+      });
+    });
+
+    this.settingsPopover.appendChild(darkModeHeader);
+
+    // 3. BOOKMARKS SECTION
+    const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
+    const bookmarksHeader = document.createElement('div');
+    bookmarksHeader.className = 'settings-header';
+    bookmarksHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-bookmark"></i>
+        <span>${bookmarkCount} ${this.t('bookmarks')}</span>
+      </div>
+      <div class="settings-header-icons">
+        <i class="fas fa-upload settings-icon-btn" data-action="share" title="${this.t('share')}"></i>
+        <i class="fas fa-download settings-icon-btn" data-action="import" title="${this.t('import')}"></i>
+        <i class="fas fa-trash settings-icon-btn settings-icon-danger" data-action="delete" title="${this.t('deleteAll')}"></i>
+      </div>
+    `;
+
+    bookmarksHeader.querySelector('[data-action="share"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.handleBookmarkShare();
+    });
+    bookmarksHeader.querySelector('[data-action="import"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.handleBookmarkImport();
+    });
+    bookmarksHeader.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.handleBookmarkDelete();
+    });
+
+    this.settingsPopover.appendChild(bookmarksHeader);
+
+    this.container.appendChild(this.settingsPopover);
+
+    // ✅ NEUE LOGIK: Schließe NUR bei Klick außerhalb des Settings-Popovers
     setTimeout(() => {
-      const closeHandler = (e) => {
-        if (this.settingsPopover &&
-          !this.settingsPopover.contains(e.target) &&
-          !gearButton.contains(e.target)) {
+      this.documentClickHandler = (e) => {
+        // Prüfe ob der Klick INNERHALB des Settings-Containers war
+        if (!this.container.contains(e.target)) {
+          // Klick war außerhalb -> Schließe Settings
           this.closeSettingsPopover();
-          document.removeEventListener('click', closeHandler);
         }
+        // Sonst: Klick war innerhalb -> Settings bleibt offen
       };
-      document.addEventListener('click', closeHandler);
+      document.addEventListener('click', this.documentClickHandler);
     }, 100);
-  }
-
-  closeLanguagePopover() {
-    const popover = this.container.querySelector('.language-popover');
-    if (popover) popover.remove();
   }
 
   closeSettingsPopover() {
@@ -235,47 +198,197 @@ class LanguageSwitcher {
       this.settingsPopover.remove();
       this.settingsPopover = null;
     }
+
+    // Entferne Event-Listener
+    if (this.documentClickHandler) {
+      document.removeEventListener('click', this.documentClickHandler);
+      this.documentClickHandler = null;
+    }
   }
 
-  closeAllPopovers() {
-    this.closeLanguagePopover();
-    this.closeSettingsPopover();
+  // Bookmark Actions mit separaten Retry-Countern
+  handleBookmarkShare(retryCount = 0) {
+    const maxRetries = 50; // ✅ 5 Sekunden (50 × 100ms)
+
+    if (!window.bookmarkSync) {
+      if (retryCount < maxRetries) {
+        if (retryCount === 0) {
+          console.log('⏳ bookmarkSync not ready yet, waiting...');
+        }
+        if (retryCount % 10 === 0 && retryCount > 0) {
+          console.log(`⏳ Still waiting for bookmarkSync... (${retryCount * 100}ms elapsed)`);
+        }
+        setTimeout(() => this.handleBookmarkShare(retryCount + 1), 100);
+        return;
+      } else {
+        console.error('❌ bookmarkSync not available after 5 seconds');
+        console.error('Debug info:');
+        console.error('  - window.bookmarkManager:', typeof window.bookmarkManager);
+        console.error('  - window.bookmarkSync:', typeof window.bookmarkSync);
+        console.error('  - window.BookmarkSync:', typeof window.BookmarkSync);
+        alert('Bookmark-Synchronisierung ist nicht verfügbar.\n\nBitte öffne die Browser-Console (F12) für Details.');
+        return;
+      }
+    }
+
+    console.log('✅ bookmarkSync ready, opening share dialog');
+    window.bookmarkSync.showExportDialog();
   }
 
+  handleBookmarkImport(retryCount = 0) {
+    const maxRetries = 50; // ✅ 5 Sekunden (50 × 100ms)
+
+    if (!window.bookmarkSync) {
+      if (retryCount < maxRetries) {
+        if (retryCount === 0) {
+          console.log('⏳ bookmarkSync not ready yet, waiting...');
+        }
+        if (retryCount % 10 === 0 && retryCount > 0) {
+          console.log(`⏳ Still waiting for bookmarkSync... (${retryCount * 100}ms elapsed)`);
+        }
+        setTimeout(() => this.handleBookmarkImport(retryCount + 1), 100);
+        return;
+      } else {
+        console.error('❌ bookmarkSync not available after 5 seconds');
+        console.error('Debug info:');
+        console.error('  - window.bookmarkManager:', typeof window.bookmarkManager);
+        console.error('  - window.bookmarkSync:', typeof window.bookmarkSync);
+        console.error('  - window.BookmarkSync:', typeof window.BookmarkSync);
+        alert('Bookmark-Synchronisierung ist nicht verfügbar.\n\nBitte öffne die Browser-Console (F12) für Details.');
+        return;
+      }
+    }
+
+    console.log('✅ bookmarkSync ready, opening import dialog');
+    window.bookmarkSync.showImportDialog();
+  }
+
+  handleBookmarkDelete() {
+    if (window.bookmarkManager && confirm(this.t('confirmDelete'))) {
+      window.bookmarkManager.clearAllBookmarks();
+      console.log('✅ All bookmarks deleted');
+    }
+  }
+
+  // Color Scheme
+  setColorScheme(mode) {
+    localStorage.setItem('color-scheme', mode);
+
+    if (mode === 'auto') {
+      document.documentElement.removeAttribute('data-color-scheme');
+    } else {
+      document.documentElement.setAttribute('data-color-scheme', mode);
+    }
+
+    this.updateMapColorScheme(mode);
+
+    if (window.bookmarkSync && typeof window.bookmarkSync.syncSettings === 'function') {
+      window.bookmarkSync.syncSettings({
+        colorScheme: mode,
+        language: this.currentLanguage
+      });
+      console.log('✅ Settings synced to cloud');
+    }
+
+    console.log('✅ Color scheme set to:', mode);
+  }
+
+  updateMapColorScheme(mode) {
+    let isDarkMode = false;
+
+    if (mode === 'dark') {
+      isDarkMode = true;
+    } else if (mode === 'auto') {
+      isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+      if (isDarkMode) {
+        mapContainer.classList.add('dark-mode-map');
+      } else {
+        mapContainer.classList.remove('dark-mode-map');
+      }
+    }
+
+    if (window.updateMapTiles && typeof window.updateMapTiles === 'function') {
+      window.updateMapTiles();
+      console.log('✅ Map tiles updated');
+    }
+
+    console.log('🗺️ Map dark mode:', isDarkMode);
+  }
+
+  loadColorScheme() {
+    const mode = localStorage.getItem('color-scheme') || 'auto';
+    this.setColorScheme(mode);
+  }
+
+  // Language
   changeLanguage(langCode) {
     this.currentLanguage = langCode;
     window.currentLanguage = langCode;
 
-    // Update Flag
-    const flagButton = this.container.querySelector('.language-flag-button span');
-    if (flagButton) {
-      const flagCode = this.getFlagCode(langCode); // ✅ Mapping nutzen!
-      flagButton.className = `fi fi-${flagCode}`;
-    }
-
-    // Save preference
     localStorage.setItem('preferred_language', langCode);
 
-    // Update i18n
     if (window.i18n) {
       window.i18n.setLanguage(langCode);
     }
 
-    // Refresh UI
+    if (window.bookmarkSync && typeof window.bookmarkSync.syncSettings === 'function') {
+      window.bookmarkSync.syncSettings({
+        colorScheme: localStorage.getItem('color-scheme') || 'auto',
+        language: langCode
+      });
+      console.log('✅ Language synced to cloud');
+    }
+
     this.refreshUI();
   }
 
   refreshUI() {
-    // Update search placeholder
     const searchBar = document.getElementById('search-bar');
     if (searchBar && window.i18n) {
       searchBar.placeholder = window.i18n.t('searchPlaceholder');
     }
 
-    // Trigger filter update
     if (window.styleFilterManager) {
       window.styleFilterManager.applyFilters();
     }
+
+    // ✅ Aktualisiere Settings-Popover Beschriftungen
+    this.updateSettingsLabels();
+  }
+
+  // ✅ NEUE Methode: Aktualisiere Settings-Beschriftungen
+  updateSettingsLabels() {
+    if (!this.settingsPopover) return; // Popover nicht offen
+
+    // Aktualisiere alle Text-Elemente in den Settings
+    const headers = this.settingsPopover.querySelectorAll('.settings-header-content span');
+    if (headers.length >= 3) {
+      headers[0].textContent = this.t('language');
+      headers[1].textContent = this.t('colorScheme');
+
+      // Bookmark-Count beibehalten
+      const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
+      headers[2].textContent = `${bookmarkCount} ${this.t('bookmarks')}`;
+    }
+
+    // Aktualisiere Tooltips
+    const lightBtn = this.settingsPopover.querySelector('[data-mode="light"]');
+    const autoBtn = this.settingsPopover.querySelector('[data-mode="auto"]');
+    const darkBtn = this.settingsPopover.querySelector('[data-mode="dark"]');
+    const shareBtn = this.settingsPopover.querySelector('[data-action="share"]');
+    const importBtn = this.settingsPopover.querySelector('[data-action="import"]');
+    const deleteBtn = this.settingsPopover.querySelector('[data-action="delete"]');
+
+    if (lightBtn) lightBtn.title = this.t('light');
+    if (autoBtn) autoBtn.title = this.t('auto');
+    if (darkBtn) darkBtn.title = this.t('dark');
+    if (shareBtn) shareBtn.title = this.t('share');
+    if (importBtn) importBtn.title = this.t('import');
+    if (deleteBtn) deleteBtn.title = this.t('deleteAll');
   }
 
   loadLanguagePreference() {
@@ -288,3 +401,10 @@ class LanguageSwitcher {
 
 // Initialize
 window.languageSwitcher = new LanguageSwitcher();
+
+// Debug
+console.log('🔧 LanguageSwitcher initialized');
+console.log('   - bookmarkSync:', !!window.bookmarkSync);
+console.log('   - bookmarkManager:', !!window.bookmarkManager);
+console.log('   - i18n:', !!window.i18n);
+console.log('   - updateMapTiles:', !!window.updateMapTiles);
