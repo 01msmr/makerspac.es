@@ -49,6 +49,7 @@ class SearchManager {
   }
 
   initializeEventListeners() {
+    // ✨ Auto-Focus beim Laden - User kann direkt suchen
     this.searchBar.focus();
 
     // ✨ NEUE GLOBALE TASTATUR-NAVIGATION
@@ -174,9 +175,10 @@ class SearchManager {
       if (this.styleFilterManager) this.styleFilterManager.applyFilters();
     });
 
-    this.searchBar.addEventListener('focus', () => {
-      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
-    });
+    // ✨ KEIN Auto-Apply bei Focus mehr - nur bei tatsächlichen Eingaben
+    // this.searchBar.addEventListener('focus', () => {
+    //   if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+    // });
 
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) this.closeDropdown();
@@ -232,10 +234,9 @@ class SearchManager {
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
 
-    const isSearchBarFocused = document.activeElement === this.searchBar;
+    // ✨ Dropdown nur bei tatsächlichem Inhalt oder aktiven Filtern anzeigen
     const shouldShowDropdown = searchQuery.length > 0 ||
-      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) ||
-      isSearchBarFocused;
+      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
 
     if (shouldShowDropdown) {
       this.createActiveFiltersSection();
@@ -1385,7 +1386,20 @@ class SearchManager {
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
+      // ✨ Verhindere, dass Hover-Events das Popup stören
+      targetMarker._openedByHover = false;
+
+      // ✨ Verhindere Hover-Timeout während des Zooms
+      if (window.markerStateManager) {
+        window.markerStateManager.clearTimeouts(targetMarker.uniqueId);
+        window.markerStateManager.setState(targetMarker.uniqueId, {
+          isHovering: false,
+          isDropdownHovering: false
+        });
+      }
+
       this.map.once('moveend', () => {
+        targetMarker._openedByHover = false; // ✨ Nochmal setzen nach Zoom
         targetMarker.openPopup();
         if (window.mapUtils && window.mapUtils.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
@@ -1556,8 +1570,13 @@ class SearchManager {
   }
 
   handleEmptySearch() {
-    this.previousZoomBounds = null;
-    this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, { duration: 1.5 });
+    // ✨ NUR zurückzoomen, wenn vorher ein Auto-Zoom stattgefunden hat
+    // UND die previousZoomBounds nicht null ist
+    // Das verhindert Zoom beim einfachen Fokussieren einer leeren Suchleiste
+    if (this.previousZoomBounds) {
+      this.previousZoomBounds = null;
+      this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, { duration: 1.5 });
+    }
   }
 
   closeDropdown() {

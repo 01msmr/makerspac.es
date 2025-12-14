@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isScaling: false,
         currentScale: 1,
         hoverTimeout: null,
+        stickyTimeout: null,
+        closeTimeout: null,
         debounceTimeout: null
       };
     },
@@ -52,6 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.hoverTimeout) {
         clearTimeout(state.hoverTimeout);
         state.hoverTimeout = null;
+      }
+      if (state.stickyTimeout) {
+        clearTimeout(state.stickyTimeout);
+        state.stickyTimeout = null;
+      }
+      if (state.closeTimeout) {
+        clearTimeout(state.closeTimeout);
+        state.closeTimeout = null;
       }
       if (state.debounceTimeout) {
         clearTimeout(state.debounceTimeout);
@@ -841,6 +851,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // ✨ Popup-Hover: Make sticky when entering popup
+      if (popupElement) {
+        // Erstelle Handler-Funktion (damit wir sie später entfernen können)
+        const handlePopupEnter = () => {
+          console.log('🎯 Popup entered for:', location.name);
+          // Cancel any pending close timeout
+          const state = window.markerStateManager.getState(marker.uniqueId);
+          if (state.closeTimeout) {
+            clearTimeout(state.closeTimeout);
+            window.markerStateManager.setState(marker.uniqueId, { closeTimeout: null });
+            console.log('✅ closeTimeout cancelled');
+          }
+          // ✨ Nur sticky machen wenn noch nicht sticky (verhindert mehrfache Aufrufe)
+          if (currentStickyMarker !== marker) {
+            marker._openedByHover = false;
+            setStickyPopup(marker);
+            console.log('🔒 Popup is now sticky');
+          } else {
+            console.log('✓ Already sticky, skipping');
+          }
+        };
+
+        // Entferne alte Listener (falls vorhanden) und füge neuen hinzu
+        popupElement.removeEventListener('mouseenter', handlePopupEnter);
+        popupElement.addEventListener('mouseenter', handlePopupEnter);
+      }
+
       // +++ START: NAVIGATION LINK EVENT LISTENERS +++
       const navLink = e.popup._container.querySelector('.navigation-icon');
       if (navLink) {
@@ -872,11 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentStickyMarker = null;
         isPopupSticky = false;
       }
-      // ✨ Fokus zurück auf Searchbar nach Popup-Schließen
-      const searchBar = document.getElementById('search-bar');
-      if (searchBar) {
-        searchBar.focus();
-      }
+      // ✨ KEIN Auto-Focus mehr - User möchte vielleicht weiter die Karte erkunden
     });
 
     // HOVER EVENTS mit zentralisiertem State Management
@@ -886,25 +919,55 @@ document.addEventListener('DOMContentLoaded', () => {
       // Verhindere doppelte Hover-Events
       if (state.isHovering) return;
 
+      // ✨ WICHTIG: Lösche ALLE Timeouts inkl. closeTimeout
+      window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+      // ✨ Schließe vorheriges Popup (egal ob sticky oder hover-geöffnet)
+      if (currentStickyMarker && currentStickyMarker !== marker) {
+        currentStickyMarker.closePopup();
+        currentStickyMarker = null;
+        isPopupSticky = false;
+      }
+      // Schließe alle anderen offenen Popups
+      allMarkers.forEach(m => {
+        if (m !== marker && m.isPopupOpen()) {
+          m.closePopup();
+        }
+      });
+
       window.markerStateManager.setState(marker.uniqueId, { isHovering: true });
 
       // Sofortige Skalierung ohne Debounce für bessere UX
       applyMarkerScale(marker, 1.15);
 
-      // Verzögerte Popup-Öffnung
+      // Verzögerte Popup-Öffnung nach 400ms
       const hoverTimeout = setTimeout(() => {
         const currentState = window.markerStateManager.getState(marker.uniqueId);
-        if (currentState.isHovering && !isPopupSticky) {
+        // ✨ Öffnen wenn hovering aktiv (sticky-Check nicht mehr nötig, da wir oben schließen)
+        if (currentState.isHovering && !marker.isPopupOpen()) {
           marker._openedByHover = true;
           marker.openPopup();
         }
       }, 400);
 
-      window.markerStateManager.setState(marker.uniqueId, { hoverTimeout });
+      // ✨ Sticky-Timeout nach 1500ms - macht Popup persistent
+      const stickyTimeout = setTimeout(() => {
+        const currentState = window.markerStateManager.getState(marker.uniqueId);
+        if (currentState.isHovering && marker.isPopupOpen()) {
+          // Popup wird sticky - verhält sich wie geklickt
+          marker._openedByHover = false;
+          setStickyPopup(marker);
+          console.log('🔒 Popup wurde durch langes Hovern (1.5s) sticky:', location.name);
+        }
+      }, 1500);
+
+      window.markerStateManager.setState(marker.uniqueId, { hoverTimeout, stickyTimeout });
     });
 
     marker.on('mouseout', (e) => {
       const state = window.markerStateManager.getState(marker.uniqueId);
+
+      console.log('👋 mouseout for:', location.name, 'isPopupOpen:', marker.isPopupOpen(), 'isPopupSticky:', isPopupSticky, 'currentStickyMarker:', currentStickyMarker === marker);
 
       window.markerStateManager.setState(marker.uniqueId, { isHovering: false });
       window.markerStateManager.clearTimeouts(marker.uniqueId);
@@ -914,8 +977,23 @@ document.addEventListener('DOMContentLoaded', () => {
         applyMarkerScale(marker, 1);
       }
 
-      if (!isPopupSticky || currentStickyMarker !== marker) {
-        marker.closePopup();
+      // ✨ Verzögertes Schließen - NUR wenn Popup tatsächlich offen ist
+      if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
+        console.log('⏱️ Setting closeTimeout (120ms) for:', location.name);
+        const closeTimeout = setTimeout(() => {
+          console.log('⏰ closeTimeout fired for:', location.name);
+          // Nochmal prüfen ob sticky (könnte sich geändert haben)
+          if (!isPopupSticky || currentStickyMarker !== marker) {
+            console.log('❌ Closing popup for:', location.name);
+            marker.closePopup();
+          } else {
+            console.log('✋ Popup is sticky, not closing:', location.name);
+          }
+        }, 120); // 0.12s Verzögerung
+
+        window.markerStateManager.setState(marker.uniqueId, { closeTimeout });
+      } else {
+        console.log('⏭️ Skipping closeTimeout - popup not open or already sticky');
       }
 
       // Icon-Update nur wenn kein Hover-Zustand mehr aktiv
@@ -1036,11 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentStickyMarker = null;
       isPopupSticky = false;
       console.log('Sticky popup cleared');
-      // ✨ Fokus zurück auf Searchbar nach Popup-Clearing
-      const searchBar = document.getElementById('search-bar');
-      if (searchBar) {
-        searchBar.focus();
-      }
+      // ✨ KEIN Auto-Focus mehr
     }
   }
 
