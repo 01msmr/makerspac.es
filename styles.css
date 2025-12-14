@@ -1476,6 +1476,9 @@ a#titleurl:hover h3.space-unknown .fas {
 .navigation-icon:hover {
   right: -20px;
   transition: all ease-in-out 0.25s;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .navigation-icon:hover::before {

@@ -837,6 +837,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const popupElement = popup._container;
       const logoElement = document.querySelector('.title');
 
+      // --- HINZUGEFÜGT: Fix für Popup-Schließen beim Klick auf Inhalt ---
+      if (popupElement) {
+        // Verhindert, dass Mousedown/Click-Events innerhalb des Popups zur Karte propagieren
+        // und dadurch ein Sticky Popup geschlossen wird.
+        popupElement.addEventListener('mousedown', (event) => {
+          // Propagation nur stoppen, wenn NICHT der Schließen-Button geklickt wurde
+          if (!event.target.closest('.leaflet-popup-close-button')) {
+            event.stopPropagation();
+          }
+        });
+      }
+
       if (popupElement && logoElement) {
         const popupRect = popupElement.getBoundingClientRect();
         const logoRect = logoElement.getBoundingClientRect();
