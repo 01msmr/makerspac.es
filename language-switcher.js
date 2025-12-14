@@ -2,7 +2,14 @@
 
 class LanguageSwitcher {
   constructor() {
-    this.currentLanguage = 'de';
+    // ✅ Lade Sprache SOFORT aus localStorage (synchron!)
+    const savedLang = localStorage.getItem('preferred_language');
+    this.currentLanguage = savedLang || 'de'; // Fallback zu 'de'
+
+    console.log('🔧 LanguageSwitcher constructor:');
+    console.log('   - savedLang from localStorage:', savedLang);
+    console.log('   - this.currentLanguage set to:', this.currentLanguage);
+
     this.container = null;
     this.settingsPopover = null;
     this.documentClickHandler = null;
@@ -85,8 +92,11 @@ class LanguageSwitcher {
     ];
 
     // ✅ Erstelle Flaggen-HTML für ZWEITE ZEILE
+    console.log('🎌 Creating flags with currentLanguage:', this.currentLanguage);
     const languageIconsHTML = languages.map(lang => {
-      return `<span class="fi fi-${lang.flag} settings-icon-btn settings-flag-btn" data-lang="${lang.code}" title="${lang.name}"></span>`;
+      const isActive = lang.code === this.currentLanguage ? 'active' : '';
+      console.log(`   - ${lang.code}: ${isActive ? 'ACTIVE' : 'inactive'}`);
+      return `<span class="fi fi-${lang.flag} settings-icon-btn settings-flag-btn ${isActive}" data-lang="${lang.code}" title="${lang.name}"></span>`;
     }).join('');
 
     languageHeader.innerHTML = `
@@ -111,7 +121,10 @@ class LanguageSwitcher {
         e.stopPropagation();
         const langCode = flag.dataset.lang;
         this.changeLanguage(langCode);
-        // ✅ NICHT mehr schließen bei Klick
+
+        // ✅ Klassen im Popover aktualisieren
+        languageHeader.querySelectorAll('[data-lang]').forEach(f => f.classList.remove('active'));
+        flag.classList.add('active');
       });
     });
 
@@ -127,8 +140,8 @@ class LanguageSwitcher {
         <span>${this.t('colorScheme')}</span>
       </div>
       <div class="settings-header-icons">
-        <i class="far fa-circle settings-icon-btn ${currentMode === 'light' ? 'active' : ''}" data-mode="light" title="${this.t('light')}"></i>
         <i class="fas fa-adjust settings-icon-btn ${currentMode === 'auto' ? 'active' : ''}" data-mode="auto" title="${this.t('auto')}"></i>
+        <i class="far fa-circle settings-icon-btn ${currentMode === 'light' ? 'active' : ''}" data-mode="light" title="${this.t('light')}"></i>
         <i class="fas fa-circle settings-icon-btn ${currentMode === 'dark' ? 'active' : ''}" data-mode="dark" title="${this.t('dark')}"></i>
       </div>
     `;
@@ -156,8 +169,8 @@ class LanguageSwitcher {
         <span>${bookmarkCount} ${this.t('bookmarks')}</span>
       </div>
       <div class="settings-header-icons">
-        <i class="fas fa-upload settings-icon-btn" data-action="share" title="${this.t('share')}"></i>
-        <i class="fas fa-download settings-icon-btn" data-action="import" title="${this.t('import')}"></i>
+        <i class="fas fa-download settings-icon-btn" data-action="share" title="${this.t('share')}"></i>
+        <i class="fas fa-upload settings-icon-btn" data-action="import" title="${this.t('import')}"></i>
         <i class="fas fa-trash settings-icon-btn settings-icon-danger" data-action="delete" title="${this.t('deleteAll')}"></i>
       </div>
     `;
@@ -344,6 +357,11 @@ class LanguageSwitcher {
     }
 
     this.refreshUI();
+
+    // ✅ Trigger Event für andere Komponenten
+    document.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: langCode }
+    }));
   }
 
   refreshUI() {
@@ -352,9 +370,10 @@ class LanguageSwitcher {
       searchBar.placeholder = window.i18n.t('searchPlaceholder');
     }
 
-    if (window.styleFilterManager) {
-      window.styleFilterManager.applyFilters();
-    }
+    // ✅ NICHT mehr styleFilterManager - verhindert Map-Reload
+    // if (window.styleFilterManager) {
+    //   window.styleFilterManager.applyFilters();
+    // }
 
     // ✅ Aktualisiere Settings-Popover Beschriftungen
     this.updateSettingsLabels();
@@ -392,9 +411,23 @@ class LanguageSwitcher {
   }
 
   loadLanguagePreference() {
-    const saved = localStorage.getItem('preferred_language');
-    if (saved) {
-      this.changeLanguage(saved);
+    // ✅ WICHTIG: Sprache wurde bereits im constructor aus localStorage geladen
+    // Diese Methode sollte NICHTS überschreiben wenn localStorage einen Wert hatte!
+
+    const savedLang = localStorage.getItem('preferred_language');
+
+    if (savedLang) {
+      // ✅ localStorage hat Vorrang - NIEMALS überschreiben!
+      // this.currentLanguage ist bereits korrekt (aus constructor)
+      console.log(`✅ Language switcher using saved language: ${this.currentLanguage}`);
+    } else {
+      // ✅ KEIN savedLang - dann von i18n übernehmen (falls verfügbar)
+      if (window.i18n && window.i18n.currentLang) {
+        this.currentLanguage = window.i18n.currentLang;
+        console.log(`✅ Language switcher synced with i18n: ${this.currentLanguage}`);
+      } else {
+        console.log(`✅ Language switcher using default: ${this.currentLanguage}`);
+      }
     }
   }
 }

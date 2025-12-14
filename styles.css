@@ -104,6 +104,8 @@ a#titleurl {
   width: 30px;
   height: 30px;
   transition: all 0.15s ease-in;
+  transition-delay: 0.3s;
+  /* ✅ Delay für ALLES inkl. text-align */
   overflow: hidden;
   overflow-y: scroll;
   font-family: 'Lato', sans-serif;
@@ -114,8 +116,10 @@ a#titleurl {
   padding: 6px;
   background-color: #ffff00;
   box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.3);
-  line-height: 1.5em;
-  /* transition-delay: 0s; */
+  line-height: 30px;
+  /* ✅ Zentriert vertikal */
+  text-align: center;
+  /* ✅ Zentriert horizontal */
   opacity: 0.66;
   color: black;
   /* Force black text on yellow background */
@@ -129,21 +133,34 @@ a#titleurl {
   background-color: #ffff00;
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.7);
   line-height: 1.5em;
+  /* ✅ Normale Zeilenhöhe */
+  text-align: left;
+  /* ✅ Linksbündig */
   transition: all 0.4s ease-out;
   transition-delay: 0.3s;
+  /* ✅ Delay beim Hover */
   cursor: help;
   opacity: 0.90;
 }
 
 .user-guide:not(:hover),
 .add-makerspace:not(:hover) {
-  transition-delay: 0.3s;
+  /* ✅ Delay ist im Basis-Selector bereits gesetzt */
   opacity: 0.66;
+}
+
+/* ✅ H2 im minimierten Zustand: nur Icons zeigen */
+.user-guide:not(:hover) h2,
+.add-makerspace:not(:hover) h2 {
+  margin: 0;
+  padding: 0;
+  line-height: 30px;
+  font-size: 18px;
+  /* Text wird durch overflow:hidden des Eltern-Containers ausgeblendet */
 }
 
 .user-guide h2,
 .add-makerspace h2 {
-  text-align: center;
   margin: 0.5em 0;
   font-size: 1em;
   color: black;
@@ -689,8 +706,8 @@ a#titleurl {
 }
 
 .settings-icon-btn {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,6 +717,9 @@ a#titleurl {
   border-radius: 4px;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  text-align: center;
+  vertical-align: middle !important;
+  width: 32px !important;
 }
 
 /* ✅ Flaggen: Größere Größe für sichtbare Flaggen */
@@ -707,19 +727,22 @@ a#titleurl {
   font-size: 20px !important;
   width: 24px !important;
   height: 24px !important;
-  opacity: 0.8 !important;
+  opacity: 0.25 !important;
   /* ✅ Sichtbar */
   padding: 2px;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
+  background-color: transparent !important;
+  /* ✅ Nur Farbe, nicht Image */
 }
 
 .settings-flag-btn:hover {
   opacity: 1 !important;
   /* ✅ Volle Sichtbarkeit */
   transform: scale(1.15);
-  background: transparent !important;
+  background-color: transparent !important;
+  /* ✅ Nur Farbe, nicht Image */
 }
 
 /* Dark Mode & andere Icons: MIT active/hover */
@@ -728,10 +751,19 @@ a#titleurl {
   transform: scale(1.15);
 }
 
-.settings-icon-btn.active {
+/* ✅ Active-Styling NUR für NICHT-Flaggen */
+.settings-icon-btn.active:not(.settings-flag-btn) {
   background: #0066ff;
+  width: 20px;
   color: white;
   box-shadow: 0 0 0 2px #0066ff;
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+/* ✅ Active Flagge: NUR Opacity ändern */
+.settings-flag-btn.active {
+  opacity: 1 !important;
 }
 
 .settings-icon-btn.settings-icon-danger {
