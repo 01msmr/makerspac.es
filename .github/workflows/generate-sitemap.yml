@@ -1,0 +1,51 @@
+name: Generate Sitemap
+
+# Automatische Sitemap-Generierung bei jedem Push
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'locations.json'  # Nur wenn JSON geändert wird
+  workflow_dispatch:  # Manueller Trigger möglich
+
+jobs:
+  generate-sitemap:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Hole komplette History
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      
+      - name: Generate sitemap.xml
+        run: |
+          python3 generate_sitemap.py
+          echo "Sitemap generated successfully"
+      
+      - name: Check if sitemap changed
+        id: check_changes
+        run: |
+          git diff --quiet sitemap.xml || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push sitemap
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add sitemap.xml
+          git commit -m "🤖 Update sitemap.xml [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: No changes
+        if: steps.check_changes.outputs.changed != 'true'
+        run: echo "Sitemap is already up to date"
