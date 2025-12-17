@@ -175,10 +175,14 @@ class SearchManager {
       if (this.styleFilterManager) this.styleFilterManager.applyFilters();
     });
 
-    // ✨ KEIN Auto-Apply bei Focus mehr - nur bei tatsächlichen Eingaben
-    // this.searchBar.addEventListener('focus', () => {
-    //   if (this.styleFilterManager) this.styleFilterManager.applyFilters();
-    // });
+    // ✨           KEIN Auto-Apply bei Focus mehr - nur bei tatsächlichen Eingaben
+    // ✨ Zeige Filter-Pills beim Focus (auch ohne Suche)
+    this.searchBar.addEventListener('focus', () => {
+      if (this.styleFilterManager) {
+        this.createActiveFiltersSection();
+        this.updateDropdownUI(true);
+      }
+    });
 
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) this.closeDropdown();

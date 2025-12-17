@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        // GitHub Pages 404 Handler für Client-Side Routing
+        // 
+        // Wenn jemand direkt eine URL wie makerspac.es/germany aufruft,
+        // zeigt GitHub Pages normalerweise eine 404-Seite.
+        // Dieses Script fängt das ab und leitet zur Hauptseite weiter,
+        // wobei der Pfad erhalten bleibt.
+        
+        (function() {
+            // Hole den aktuellen Pfad (z.B. /germany oder /city-berlin)
+            const path = window.location.pathname;
+            
+            // Erstelle die neue URL zur index.html mit dem Pfad
+            const newUrl = window.location.origin + '/?' + 
+                          encodeURIComponent(path.slice(1)); // Entfernt führendes /
+            
+            // Redirect zur Hauptseite mit dem Pfad als Query-Parameter
+            window.location.replace(newUrl);
+        })();
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+</body>
+</html>

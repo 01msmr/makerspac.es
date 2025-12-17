@@ -1145,6 +1145,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  
+
+
+  function setupRouting() {
+    if (!window.RoutingManager) {
+      console.error('RoutingManager not available');
+      return;
+    }
+
+    const routingManager = new RoutingManager(styleFilterManager, searchManager, json);
+    window.routingManager = routingManager;
+    console.log('RoutingManager initialized successfully');
+  }
+
+
 
   initializeApp();
 });
