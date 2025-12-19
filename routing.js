@@ -462,6 +462,8 @@ class RoutingManager {
       // Pills triggern automatisch Filter über onChange-Callback
     } else {
       console.warn('⚠️ SearchManager not ready yet');
+      // ✨ KORREKTUR: Setze einen Timeout, um es später zu versuchen (Rennen vermeiden)
+      setTimeout(() => this.handleRouteWithPills(), 200); 
     }
   }
 
@@ -479,19 +481,21 @@ class RoutingManager {
       this.handleRouteWithPills();
     });
 
-    // ✨ NEU: Hilfsmethode, da clearAllFilters entfernt wurde
+    // ✨ NEU: Führe den 404-Workaround sofort beim Laden aus
+    // und initialisiere die clearAllPillsAndFilters Methode (wie in der letzten Korrektur)
     this.clearAllPillsAndFilters = () => {
       if (this.styleFilterManager) {
         this.styleFilterManager.selectedStyles.clear();
-        // applyFilters() wird hier weggelassen, da loadPills(pills) im searchManager
-        // die Filterung über den onChange-Callback sowieso triggert.
       }
       if (this.searchManager && this.searchManager.pillsManager) {
         this.searchManager.pillsManager.clear();
         this.searchManager.searchBar.value = '';
       } else if (this.searchManager) {
-        this.searchManager.clearSearchAndPills(); // Fallback auf zentrale Clear-Methode
+        this.searchManager.clearSearchAndPills();
       }
+
+      // ✨ WICHTIG: Manuelle Filterung auslösen, falls SearchManager nicht existiert
+      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
     }
 
     // Führe den 404-Workaround sofort beim Laden aus (bevor DOMContentLoaded triggert)

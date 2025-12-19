@@ -175,14 +175,13 @@ class SearchManager {
       } else {
         this.deactivateZoomIndicator();
       }
-    
 
-
-    // ✨ KORREKTUR/NEU: Bei jeder Eingabe die kombinierte Filterung auslösen
-    if (this.pillsManager || this.styleFilterManager) {
-      this.applyPillFilters(this.pillsManager ? this.pillsManager.getPillsArray() : []);
-    }
-  });
+      // ✨ FIX: applyPillFilters übernimmt die komplette Filter-Logik
+      // (Text-Suche + Pills + Style-Filter)
+      if (this.pillsManager && this.styleFilterManager) {
+        this.applyPillFilters(this.pillsManager.getPillsArray());
+      }
+    });
 
 
     // Bestehende Event Listener (unverändert)
@@ -191,13 +190,25 @@ class SearchManager {
       // if (this.styleFilterManager) this.styleFilterManager.applyFilters(); // <-- AUSKOMMENTIEREN / ENTFERNEN
     });
 
-    // ✨           KEIN Auto-Apply bei Focus mehr - nur bei tatsächlichen Eingaben
     // ✨ Zeige Filter-Pills beim Focus (auch ohne Suche)
     this.searchBar.addEventListener('focus', () => {
-      if (this.styleFilterManager) {
-        this.createActiveFiltersSection();
-        this.updateDropdownUI(true);
+      if (!this.styleFilterManager) return;
+
+      // 1. Erstelle Filter-Section
+      this.createActiveFiltersSection();
+
+      // 2. Öffne Dropdown SOFORT (auch ohne Suchergebnisse)
+      this.suggestionsDropdown.classList.add('is-active');
+      this.searchBar.classList.add('has-suggestions');
+
+      // 3. Optional: Zeige alle Locations nur wenn keine Suche/Pills aktiv
+      // (Auskommentiert, damit nicht alle Ergebnisse angezeigt werden)
+      /*
+      if (this.searchBar.value.trim() === '' && 
+          (!this.pillsManager || this.pillsManager.count() === 0)) {
+        this.styleFilterManager.applyFilters();
       }
+      */
     });
 
     document.addEventListener('click', (e) => {
@@ -603,8 +614,12 @@ class SearchManager {
   updateDropdownIcons() { }
 
   updateDropdownUI(hasResults) {
-    this.suggestionsDropdown.classList.toggle('is-active', hasResults);
-    this.searchBar.classList.toggle('has-suggestions', hasResults);
+    // ✨ FIX: Zeige Dropdown auch wenn Filter-Section vorhanden ist
+    const hasFilterSection = this.suggestionsDropdown.querySelector('.active-filters-section') !== null;
+    const shouldShow = hasResults || hasFilterSection;
+
+    this.suggestionsDropdown.classList.toggle('is-active', shouldShow);
+    this.searchBar.classList.toggle('has-suggestions', shouldShow);
   }
 
   updateSearchCounter(count) {
@@ -1919,18 +1934,22 @@ class SearchManager {
       });
     }
 
-    // 3. Wende zusätzlich Style-Filter an (falls aktiv)
-    if (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) {
-      // StyleFilterManager filtert selbst
-      this.styleFilterManager.applyFilters();
-    } else {
-      // Keine Style-Filter aktiv → zeige gefilterte Ergebnisse direkt
-      this.updateMarkers(filtered);
-      this.updateSearchResults(filtered);
+    // ✨ FIX: Wenn KEINE Pills und KEINE Suche aktiv, reset preFilteredLocations
+    if (pills.length === 0 && searchQuery.length === 0) {
+      if (this.styleFilterManager) {
+        this.styleFilterManager.preFilteredLocations = null;
+        this.styleFilterManager.applyFilters();
+      }
+      return;
     }
 
-    // Update Counter
-    this.updateCounterDisplay(filtered.length);
+    // ✨ FIX: Setze die vorgefilterte Liste im StyleFilterManager
+    if (this.styleFilterManager) {
+      this.styleFilterManager.applyPreFilters(filtered);
+    } else {
+      // Fallback: Zeige gefilterte Ergebnisse direkt
+      this.updateSearchResults(filtered);
+    }
   }
 
   /**

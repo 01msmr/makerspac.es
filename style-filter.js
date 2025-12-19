@@ -8,7 +8,7 @@ class StyleFilterManager {
     this.searchManager = searchManager;
 
     // ✨ NEU: Speichert die Liste, die von SearchManager/PillsManager vorgefiltert wurde
-    this.preFilteredLocations = null; 
+    this.preFilteredLocations = null;
 
     this.selectedStyles = new Set();
     this.styleStats = new Map();
@@ -130,6 +130,16 @@ class StyleFilterManager {
   }
 
 
+  // ✨ KORREKTUR: Fehlende Methode hinzufügen (behebt TypeError)
+  updateFilterCounter() {
+    // Wird von search.js erwartet. Die Logik zur Aktualisierung der Pills liegt in search.js.
+  }
+
+  // ✨ KORREKTUR: Fehlende Methode hinzufügen
+  updateHeaderState() {
+    // Platzhalter
+  }
+
 
   // ✨ NEU: Wird von SearchManager aufgerufen, um die Basisliste zu setzen
   applyPreFilters(locations) {
@@ -142,6 +152,11 @@ class StyleFilterManager {
     // ✨ KORREKTUR: Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
     const baseLocations = this.preFilteredLocations || this.json;
 
+    console.log('🎯 applyFilters called');
+    console.log('  - preFilteredLocations:', this.preFilteredLocations?.length || 'null');
+    console.log('  - baseLocations:', baseLocations.length);
+    console.log('  - hasActiveFilters:', this.hasActiveFilters());
+
     // Wenn keine Style-Filter aktiv sind, zeige alle Suchergebnisse
     if (!this.hasActiveFilters()) {
       this.updateMarkers(baseLocations);
@@ -150,8 +165,14 @@ class StyleFilterManager {
         this.searchManager.createSuggestionItems(baseLocations);
         this.searchManager.updateSearchCounter(baseLocations.length);
         this.searchManager.triggerAutoZoom(baseLocations);
+
+        // ✨ FIX: Öffne Dropdown auch wenn KEINE Style-Filter aktiv sind
+        const hasResults = baseLocations.length > 0;
+        const hasSearchQuery = this.searchManager.searchBar.value.trim().length > 0;
+        this.searchManager.updateDropdownUI(hasResults || hasSearchQuery);
       }
-      this.preFilteredLocations = null; // ✨ NEU: Basis zurücksetzen
+      // ✨ FIX: Setze preFilteredLocations NICHT zurück - wird von applyPillFilters verwaltet
+      // this.preFilteredLocations = null;
       return;
     }
 
@@ -184,7 +205,7 @@ class StyleFilterManager {
     });
 
     // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
-    const finalFiltered = baseLocations.filter(location => { // ✨ KORREKTUR: Filtert die baseLocations
+    const finalFiltered = baseLocations.filter(location => {
       const locationStyle = location.style || 'unknown';
       const locationCountry = location.loc && location.loc.country ? location.loc.country : null;
 
@@ -192,9 +213,18 @@ class StyleFilterManager {
       const styleMatch = selectedNormalStyles.size === 0 || selectedNormalStyles.has(locationStyle);
 
       // Bedingung 2: Muss dem ausgewählten Status entsprechen
-      const stateMatch = selectedStateFilters.size === 0 ||
-        (selectedStateFilters.has('open') && location.isOpen === true) ||
-        (selectedStateFilters.has('closed') && location.isOpen === false);
+      // ✨ FIX: Korrekte AND-Logik - nur die passenden Status zeigen
+      let stateMatch = true; // Default: kein Status-Filter aktiv
+      if (selectedStateFilters.size > 0) {
+        // Wenn Status-Filter aktiv sind, muss die Location einen der Status erfüllen
+        stateMatch = false;
+        if (selectedStateFilters.has('open') && location.isOpen === true) {
+          stateMatch = true;
+        }
+        if (selectedStateFilters.has('closed') && location.isOpen === false) {
+          stateMatch = true;
+        }
+      }
 
       // Bedingung 3: Muss dem ausgewählten Land entsprechen
       const countryMatch = selectedCountries.size === 0 ||
@@ -208,13 +238,22 @@ class StyleFilterManager {
       return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
 
+    console.log('  - finalFiltered:', finalFiltered.length);
+
     this.updateMarkers(finalFiltered);
     if (this.searchManager) {
       // ✨ KORREKTUR: Aktualisiere Vorschläge und Counter mit der FINALEN Liste
       this.searchManager.createSuggestionItems(finalFiltered);
       this.searchManager.updateSearchCounter(finalFiltered.length);
       this.searchManager.triggerAutoZoom(finalFiltered);
+
+      // ✨ FIX: Öffne Dropdown wenn Suchergebnisse vorhanden sind
+      const hasResults = finalFiltered.length > 0;
+      const hasSearchQuery = this.searchManager.searchBar.value.trim().length > 0;
+      this.searchManager.updateDropdownUI(hasResults || hasSearchQuery);
     }
+
+    // ✨ FIX: preFilteredLocations NICHT zurücksetzen - bleibt für nächste Filter-Aktivierung
   }
 
 

@@ -1145,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
 
 
   function setupRouting() {
