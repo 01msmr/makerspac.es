@@ -372,7 +372,7 @@ class LanguageSwitcher {
 
     // ✅ NICHT mehr styleFilterManager - verhindert Map-Reload
     // if (window.styleFilterManager) {
-    //   window.styleFilterManager.applyFilters();
+    //   window.styleFilterManager.applyFilters(); // <--- DIESE ZEILE ENTFERNEN/AUSKOMMENTIEREN
     // }
 
     // ✅ Aktualisiere Settings-Popover Beschriftungen

@@ -7,6 +7,8 @@ class StyleFilterManager {
     this.icons = icons;
     this.searchManager = searchManager;
 
+    // ✨ NEU: Speichert die Liste, die von SearchManager/PillsManager vorgefiltert wurde
+    this.preFilteredLocations = null; 
 
     this.selectedStyles = new Set();
     this.styleStats = new Map();
@@ -127,24 +129,29 @@ class StyleFilterManager {
     this.applyFilters();
   }
 
-  updateFilterCounter() {
-    // Dummy - kein UI mehr
-  }
 
-  updateHeaderState() {
-    // Dummy - kein UI mehr
+
+  // ✨ NEU: Wird von SearchManager aufgerufen, um die Basisliste zu setzen
+  applyPreFilters(locations) {
+    console.log('🔗 Pre-Filter applied with', locations.length, 'locations.');
+    this.preFilteredLocations = locations;
+    this.applyFilters();
   }
 
   applyFilters() {
-    const searchQuery = this.searchManager.searchBar.value.trim().toLowerCase();
-    let searchFiltered = searchQuery.length > 0 ? this.searchManager.filterLocations(searchQuery) : this.json;
+    // ✨ KORREKTUR: Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
+    const baseLocations = this.preFilteredLocations || this.json;
 
-    // Wenn keine Filter aktiv sind, zeige alle Suchergebnisse
+    // Wenn keine Style-Filter aktiv sind, zeige alle Suchergebnisse
     if (!this.hasActiveFilters()) {
-      this.updateMarkers(searchFiltered);
+      this.updateMarkers(baseLocations);
       if (this.searchManager) {
-        this.searchManager.updateSearchResults(searchFiltered);
+        // ✨ WICHTIG: Erstelle Vorschläge mit der BASISt-Liste
+        this.searchManager.createSuggestionItems(baseLocations);
+        this.searchManager.updateSearchCounter(baseLocations.length);
+        this.searchManager.triggerAutoZoom(baseLocations);
       }
+      this.preFilteredLocations = null; // ✨ NEU: Basis zurücksetzen
       return;
     }
 
@@ -177,7 +184,7 @@ class StyleFilterManager {
     });
 
     // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
-    const finalFiltered = searchFiltered.filter(location => {
+    const finalFiltered = baseLocations.filter(location => { // ✨ KORREKTUR: Filtert die baseLocations
       const locationStyle = location.style || 'unknown';
       const locationCountry = location.loc && location.loc.country ? location.loc.country : null;
 
@@ -203,9 +210,13 @@ class StyleFilterManager {
 
     this.updateMarkers(finalFiltered);
     if (this.searchManager) {
-      this.searchManager.updateSearchResults(finalFiltered);
+      // ✨ KORREKTUR: Aktualisiere Vorschläge und Counter mit der FINALEN Liste
+      this.searchManager.createSuggestionItems(finalFiltered);
+      this.searchManager.updateSearchCounter(finalFiltered.length);
+      this.searchManager.triggerAutoZoom(finalFiltered);
     }
   }
+
 
   updateMarkers(filteredLocations) {
     const clusterGroup = window.clusterGroup;

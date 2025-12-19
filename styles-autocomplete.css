@@ -1,0 +1,403 @@
+/* FORCE SHOW für Debug
+.autocomplete-container.is-active {
+  display: flex !important;
+  background: rgba(255, 0, 0, 0.3) !important;
+  Rot = sichtbar
+  min-height: 50px !important;
+} */
+
+
+/*============================================AUTOCOMPLETE PILLS - Enhanced Search============================================*/
+
+/* Autocomplete Container - oberhalb der Searchbar */
+.autocomplete-container {
+  position: absolute !important;
+  /* KORREKTUR: Positionierung UNTERHALB der Searchbar */
+  top: 48px !important;
+  /* Ca. 36px (Searchbar Höhe) + 12px Abstand */
+  transform: none !important;
+  /* Transformation entfernen */
+  margin-bottom: 0 !important;
+  /* Margin entfernen */
+
+  left: 5px !important;
+  right: 5px !important;
+  /* 10px schmäler als Searchbar */
+  z-index: 1002 !important;
+  /* Über Searchbar (1001), unter Modals */
+  background: rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  display: none !important;
+
+  /* ✨ FIX: Flex-Eigenschaften für Pill-Anzeige in der Reihe */
+  flex-direction: row !important; /* Spalte -> Zeile */
+  flex-wrap: wrap !important; /* Umbruch, wenn kein Platz */
+
+  gap: 4px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+}
+
+.autocomplete-container.is-active {
+  display: flex !important;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .autocomplete-container {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -2px 12px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Autocomplete Pills - Vorschläge */
+.autocomplete-pill {
+  background: #000 !important;
+  color: #fff !important;
+  padding: 4px 8px !important; /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
+  border-radius: 12px !important;
+  font-size: 0.75em !important; /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+  font-family: 'Lato', sans-serif !important;
+  user-select: none !important;
+}
+
+.autocomplete-pill:hover {
+  background: #0066ff;
+  transform: scale(1.02);
+}
+
+.autocomplete-pill.focused {
+  background: #0066ff;
+  outline: 2px solid rgba(0, 102, 255, 0.4);
+  outline-offset: 2px;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .autocomplete-pill {
+    background: #fff;
+    color: #000;
+  }
+  
+  .autocomplete-pill:hover,
+  .autocomplete-pill.focused {
+    background: #0066ff;
+    color: #fff;
+  }
+}
+
+/* Autocomplete Type Badges (optional: zur Unterscheidung) */
+.autocomplete-pill .type-badge {
+  font-size: 0.7em;
+  opacity: 0.6;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Autocomplete Count (Anzahl Makerspaces) */
+.autocomplete-pill .count-badge {
+  /* margin-left: auto;
+  padding-left: 8px;
+  font-size: 0.75em;
+  opacity: 0.7; */
+  display: none !important;
+}
+
+
+/* ============================================
+   SEARCH PILLS - In Searchbar
+   ============================================ */
+
+/* Container für Pills innerhalb der Searchbar */
+/* Spezifität erhöhen, um !important zu vermeiden */
+.search-input-wrapper .search-pills-container {
+  /* NEU: Spezifität erhöht */
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  z-index: 3;
+  max-width: calc(100% - 80px);
+  /* Platz für Counter + Padding */
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Firefox */
+  pointer-events: none;
+  /* Pills haben eigene pointer-events */
+}
+
+.search-pills-container::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari */
+}
+
+/* Einzelne Search Pill */
+.search-pill {
+  background: #000;
+  /* !important entfernt */
+  color: #fff;
+  /* !important entfernt */
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+  transition: all 0.2s ease;
+  font-family: 'Lato', sans-serif;
+  pointer-events: auto;
+  /* Pills sind klickbar */
+  user-select: none;
+  position: relative; /* Wichtig für ::after-Positionierung */
+  overflow: hidden; /* Verhindert, dass Text/X bei der Transformation überläuft */
+}
+
+/* ✨ KORREKTUR: Roter Hover-Effekt (Löschen) */
+.search-pill:hover {
+  background: #dd4444;
+  /* Rot für Löschen */
+  /* color: white; - Entfernt, da wir jetzt .search-pill-text verwenden */
+}
+
+/* ✨ NEU: Verbirgt den Pill-Text beim Hover */
+.search-pill:hover .search-pill-text {
+  opacity: 0;
+  /* ✨ NEU: Text verschieben, damit er nicht über dem X liegt (Optional, da opacity=0) */
+  transform: translateX(-10px);
+  transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+}
+
+/* ✨ NEU: Das rote "X" beim Hover einfügen (ersetzt den Text visuell) */
+.search-pill::after {
+  content: "X"; /* Inhalt ist das X */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0); /* Standardmäßig in der Mitte, unsichtbar */
+  font-size: 1.2em;
+  font-weight: bold;
+  opacity: 0;
+  color: #fff;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.search-pill:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+  /* Sichtbar machen */
+  opacity: 1;
+}
+
+
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .search-pill {
+    background: #fff;
+    color: #000;
+  }
+  
+  .search-pill:hover {
+    background: #ddd;
+  }
+}
+
+/* Remove Button (×) */
+.search-pill-remove {
+  /* cursor: pointer;
+  font-size: 1.2em;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  line-height: 1;
+  margin-left: 2px; */
+  display: none !important;
+}
+
+/* .search-pill-remove:hover {
+  opacity: 1;
+} */
+
+/* Pill Type Colors (optional) */
+/* Spezifität erhöhen, um !important zu vermeiden */
+.search-input-wrapper .search-pill[data-type="city"] {
+  /* NEU: Spezifität erhöht */
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  background-color: #000;
+  color: #fff;
+}
+
+.search-input-wrapper .search-pill[data-type="city"]:hover {
+  /* NEU: Spezifität erhöht */
+  background-color: #dd4444;
+}
+
+.search-pill[data-type="zip"] {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;
+}
+
+.search-pill[data-type="zip"]:hover {
+  background: linear-gradient(135deg, #d97fe0 0%, #db4a5d 100%);
+}
+
+.search-pill[data-type="country"] {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #fff;
+}
+
+.search-pill[data-type="country"]:hover {
+  background: linear-gradient(135deg, #3d8fd8 0%, #00d4e0 100%);
+}
+
+/* Searchbar mit Pills - Text-Offset */
+/* ✨ KORREKTUR: Verwende die JS-gesetzte CSS-Variable */
+#search-bar.has-pills {
+  /* Altes padding: 0.6em 2.2em 0.6em 1em; */
+  /* padding-left: calc(var(--pills-width, 0px) + 16px); - Alte Logik */
+  padding-left: var(--dynamic-pill-padding, 1em);
+  /* NEU: CSS Variable */
+  transition: padding-left 0.2s ease;
+}
+
+/* Placeholder ausblenden wenn Pills aktiv */
+#search-bar.has-pills::placeholder {
+  opacity: 0;
+}
+
+
+/* ============================================
+   PILL ANIMATIONS
+   ============================================ */
+
+@keyframes pillSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes pillSlideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateX(-10px);
+  }
+}
+
+.search-pill {
+  animation: pillSlideIn 0.2s ease;
+}
+
+.search-pill.removing {
+  animation: pillSlideOut 0.15s ease;
+}
+
+
+/* ============================================
+   AUTOCOMPLETE SCROLLBAR (nur wenn nötig)
+   ============================================ */
+
+.autocomplete-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.autocomplete-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.autocomplete-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.autocomplete-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .autocomplete-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .autocomplete-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .autocomplete-container {
+    left: 2px;
+    right: 2px;
+  }
+  
+  .search-pills-container {
+    max-width: calc(100% - 60px);
+  }
+  
+  .search-pill {
+    font-size: 0.7em;
+    padding: 3px 6px;
+  }
+  
+  .autocomplete-pill {
+    font-size: 0.8em;
+    padding: 5px 10px;
+  }
+}
+
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus-Visible für Keyboard-Navigation */
+.autocomplete-pill:focus-visible {
+  outline: 3px solid #0066ff;
+  outline-offset: 2px;
+}
+
+.search-pill:focus-visible {
+  outline: 2px solid #0066ff;
+  outline-offset: 1px;
+}
+
+/* Screen Reader Only Text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

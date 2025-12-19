@@ -50,8 +50,10 @@ class I18n {
 
       // Update language switcher tooltips
       if (window.languageSwitcher) {
-        window.languageSwitcher.updateTooltips();
+        // window.languageSwitcher.updateTooltips(); // <--- ALTE ZEILE ENTFERNEN
+        window.languageSwitcher.updateSettingsLabels(); // ✨ KORREKTUR: Neue Methode aufrufen
       }
+
 
     } catch (error) {
       console.error('Failed to load translations:', error);

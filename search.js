@@ -14,6 +14,14 @@ class SearchManager {
     this.overlapCheckFunction = null;
     this.styleFilterManager = null;
 
+    // ✨ NEU: Autocomplete + Pills
+    this.autocompleteManager = null;
+    this.pillsManager = null;
+
+    setTimeout(() => {
+      this.initializeAutocompleteAndPills();
+    }, 100);
+
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
@@ -167,12 +175,20 @@ class SearchManager {
       } else {
         this.deactivateZoomIndicator();
       }
-    });
+    
+
+
+    // ✨ KORREKTUR/NEU: Bei jeder Eingabe die kombinierte Filterung auslösen
+    if (this.pillsManager || this.styleFilterManager) {
+      this.applyPillFilters(this.pillsManager ? this.pillsManager.getPillsArray() : []);
+    }
+  });
+
 
     // Bestehende Event Listener (unverändert)
     this.searchBar.addEventListener('keyup', (e) => {
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return;
-      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
+      // if (this.styleFilterManager) this.styleFilterManager.applyFilters(); // <-- AUSKOMMENTIEREN / ENTFERNEN
     });
 
     // ✨           KEIN Auto-Apply bei Focus mehr - nur bei tatsächlichen Eingaben
@@ -216,6 +232,17 @@ class SearchManager {
         this.clearSearch();
       }
     });
+    // ✨ KORREKTUR: Listener für Sprachwechsel hinzufügen
+    document.addEventListener('languageChanged', () => {
+      // Filter-Sektion (Pills) muss neu erstellt werden, um die Übersetzungen zu aktualisieren
+      this.createActiveFiltersSection();
+
+      // Wenn das Dropdown aktiv ist oder Pills/Text aktiv sind, muss die Filterung neu ausgelöst werden.
+      if (this.suggestionsDropdown.classList.contains('is-active') || this.pillsManager.count() > 0 || this.searchBar.value.length > 0) {
+        // Führe eine Filterung aus, um die Vorschlagselemente neu zu rendern
+        this.applyPillFilters(this.pillsManager.getPillsArray());
+      }
+    });
   }
 
   updateSearchResults(filteredLocations) {
@@ -235,35 +262,15 @@ class SearchManager {
       filteredLocations = this.filterLocations(searchQuery);
     }
 
+    // Wenn XCR aktiv: Update UI mit den XCR-Ergebnissen
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
-
-    // ✨ Dropdown nur bei tatsächlichem Inhalt oder aktiven Filtern anzeigen
-    const shouldShowDropdown = searchQuery.length > 0 ||
-      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
-
-    if (shouldShowDropdown) {
-      this.createActiveFiltersSection();
-
-      const hasSearchQuery = searchQuery.length > 0;
-      const hasActiveFilters = this.styleFilterManager && this.styleFilterManager.hasActiveFilters();
-      const hasResults = filteredLocations && filteredLocations.length > 0;
-
-      if ((hasSearchQuery || hasActiveFilters) && hasResults) {
-        this.createSuggestionItems(filteredLocations);
-      } else {
-        const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
-        existingSuggestions.forEach(item => item.remove());
-      }
-
-      this.updateDropdownUI(true);
-      this.triggerAutoZoom(filteredLocations);
-    } else {
-      this.suggestionsDropdown.innerHTML = '';
-      this.updateDropdownUI(false);
-      this.handleEmptySearch();
-    }
+    this.createSuggestionItems(filteredLocations);
+    this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0);
+    this.triggerAutoZoom(filteredLocations);
+    return;
   }
+
 
   triggerAutoZoom(locations) {
     clearTimeout(this.zoomDebounceTimeout);
@@ -1823,6 +1830,180 @@ class SearchManager {
       if (!this.zoomIndicator) return;
       this.zoomIndicator.innerHTML = Math.round(this.map.getZoom());
     };
+  }
+
+  /**
+   * Initialize Autocomplete & Pills
+   */
+  initializeAutocompleteAndPills() {
+    if (!this.styleFilterManager) {
+      console.warn('⚠️ StyleFilterManager not ready, retrying...');
+      setTimeout(() => this.initializeAutocompleteAndPills(), 100);
+      return;
+    }
+
+    // 1. Erstelle Pills-Manager
+    this.pillsManager = new SearchPillsManager(this.searchBar);
+
+    // 2. Erstelle Autocomplete-Manager
+    this.autocompleteManager = new AutocompleteManager(
+      this.json,
+      this.searchBar,
+      this.styleFilterManager
+    );
+
+    // 3. Setup Callbacks
+    this.setupAutocompleteCallbacks();
+
+    console.log('✅ Autocomplete & Pills initialized');
+  }
+
+  /**
+   * Setup Callbacks zwischen Komponenten
+   */
+  setupAutocompleteCallbacks() {
+    // Autocomplete → Pills (bei Ort-Auswahl)
+    this.autocompleteManager.onSelect((suggestion) => {
+      // Nur Orte werden zu Pills (Styles werden direkt als Filter aktiviert)
+      if (suggestion.type === 'city' ||
+        suggestion.type === 'zip' ||
+        suggestion.type === 'country') {
+        this.pillsManager.addPill(suggestion);
+      }
+    });
+
+    // Pills → Filter anwenden
+    this.pillsManager.onChange((pills) => {
+      this.applyPillFilters(pills);
+
+      // Update URL (wenn RoutingManager verfügbar)
+      if (window.routingManager) {
+        window.routingManager.updateURLFromPills(pills);
+      }
+    });
+  }
+
+  /**
+   * Filter anwenden basierend auf Pills (AND-Verknüpfung)
+   */
+  applyPillFilters(pills) {
+    // Hole Suchtext (ohne Pills)
+    const searchQuery = this.searchBar.value.trim().toLowerCase();
+
+    // Basis: Alle Locations
+    let filtered = this.json;
+
+    // 1. Wende Text-Suche an (falls vorhanden)
+    if (searchQuery.length > 0) {
+      filtered = this.filterLocations(searchQuery);
+    }
+
+    // 2. Wende Pill-Filter an (AND-Verknüpfung)
+    if (pills.length > 0) {
+      pills.forEach(pill => {
+        filtered = filtered.filter(loc => {
+          switch (pill.type) {
+            case 'city':
+              return loc.loc?.city === pill.text;
+
+            case 'zip':
+              return loc.loc?.zip?.toString() === pill.text;
+
+            case 'country':
+              return loc.loc?.country === pill.text;
+
+            default:
+              return true;
+          }
+        });
+      });
+    }
+
+    // 3. Wende zusätzlich Style-Filter an (falls aktiv)
+    if (this.styleFilterManager && this.styleFilterManager.hasActiveFilters()) {
+      // StyleFilterManager filtert selbst
+      this.styleFilterManager.applyFilters();
+    } else {
+      // Keine Style-Filter aktiv → zeige gefilterte Ergebnisse direkt
+      this.updateMarkers(filtered);
+      this.updateSearchResults(filtered);
+    }
+
+    // Update Counter
+    this.updateCounterDisplay(filtered.length);
+  }
+
+  /**
+   * Update Counter Display
+   */
+  updateCounterDisplay(count) {
+    if (!this.searchCounter) return;
+
+    this.searchCounter.textContent = count;
+
+    if (count > 0) {
+      this.searchCounter.classList.add('visible');
+      this.searchCounter.classList.add('has-results');
+      this.searchCounter.classList.remove('no-results');
+    } else {
+      this.searchCounter.classList.remove('visible');
+      this.searchCounter.classList.add('no-results');
+      this.searchCounter.classList.remove('has-results');
+    }
+  }
+
+  /**
+   * Keyboard Shortcuts für Pills
+   */
+  setupPillKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      // Cmd/Ctrl + K = Focus Search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        this.searchBar.focus();
+        this.searchBar.select();
+      }
+
+      // Cmd/Ctrl + Shift + C = Clear Pills
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        if (this.pillsManager) {
+          this.pillsManager.clear();
+        }
+      }
+    });
+  }
+
+  /**
+   * Clear Search completely (Pills + Text + Filter)
+   */
+  clearSearchAndPills() {
+    // Clear Text
+    this.searchBar.value = '';
+
+    // Clear Pills
+    if (this.pillsManager) {
+      this.pillsManager.clear();
+    }
+
+    // Clear Style-Filter
+    if (this.styleFilterManager) {
+      this.styleFilterManager.selectedStyles.clear();
+      this.styleFilterManager.applyFilters();
+    }
+
+    // Hide Autocomplete
+    if (this.autocompleteManager) {
+      this.autocompleteManager.hide();
+    }
+
+    // Reset URL
+    if (window.routingManager) {
+      window.routingManager.updateURLFromPills([]);
+    }
+
+    console.log('🗑️ Search, Pills and Filters cleared');
+
   }
 }
 
