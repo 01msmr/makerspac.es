@@ -302,24 +302,34 @@ class RoutingManager {
   loadPillsFromURL() {
     const path = window.location.pathname.slice(1); // Remove leading /
 
+    console.log('🔍 loadPillsFromURL called');
+    console.log('   - Full URL:', window.location.href);
+    console.log('   - Pathname:', window.location.pathname);
+    console.log('   - Extracted path:', path);
+
     if (!path || path === '') {
+      console.log('   ⚠️ Empty path, returning no pills');
       return [];
     }
 
     // Parse: berlin oder germany+berlin+commercial
     const slugs = path.split('+').filter(s => s.length > 0);
+    console.log('   - Slugs to process:', slugs);
+
     const pills = [];
 
     slugs.forEach(slug => {
+      console.log(`   🔎 Looking for pill with slug: "${slug}"`);
       const pill = this.findPillBySlug(slug);
       if (pill) {
         pills.push(pill);
-        console.log(`✅ Loaded pill from URL: ${pill.text} (${pill.type})`);
+        console.log(`   ✅ Loaded pill from URL: ${pill.text} (${pill.type})`);
       } else {
-        console.warn(`⚠️ Unknown slug in URL: ${slug}`);
+        console.warn(`   ⚠️ Unknown slug in URL: ${slug}`);
       }
     });
 
+    console.log('   📊 Total pills loaded:', pills.length);
     return pills;
   }
 
