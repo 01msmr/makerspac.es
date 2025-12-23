@@ -436,8 +436,12 @@ class RoutingManager {
     // 1. GitHub Pages Workaround: URL korrigieren (z.B. /?berlin -> /berlin)
     const queryPath = this.getQueryPath();
     if (queryPath && queryPath.length > 0) {
-      const newUrl = window.location.origin + '/' + queryPath;
+      const newUrl = '/' + queryPath;
       window.history.replaceState(null, '', newUrl);
+      // WICHTIG: Nach dem Korrigieren der URL müssen wir die Methode neu aufrufen
+      // damit loadPillsFromURL() den korrigierten Pfad liest
+      setTimeout(() => this.handleRouteWithPills(), 0);
+      return;
     }
 
     // 2. Lade Pills aus URL (liest jetzt den korrigierten Pfad)
