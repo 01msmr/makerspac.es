@@ -10,50 +10,51 @@ class AutocompleteManager {
     this.focusedIndex = -1;
     this.onSelectCallback = null;
     this.minChars = 3;
-    
+
     this.initializeEventListeners();
     console.log('✅ AutocompleteManager initialized');
   }
-  
+
   createContainer() {
     const container = document.createElement('div');
     container.className = 'autocomplete-container';
     container.id = 'autocomplete-container';
-    
+
     // Füge ÜBER der Searchbar ein (als Sibling)
     this.searchBar.parentElement.insertBefore(
-      container, 
+      container,
       this.searchBar.parentElement.firstChild
     );
-    
+
     return container;
   }
-  
+
   /**
    * Generiere Vorschläge basierend auf Input
    * Quellen: City, ZIP, Country, Style-Filter
    */
   generateSuggestions(query) {
-    // Mindestlänge prüfen
-    if (query.length < this.minChars) {
+
+    // ✨ KORREKTUR: Vorschläge ausblenden, wenn ein Leerzeichen eingegeben wurde.
+    if (this.searchBar.value.endsWith(' ') || query.length < this.minChars) {
       this.hide();
       return;
     }
-    
+
     query = query.toLowerCase().trim();
     const suggestions = [];
     const seenTexts = new Set(); // Verhindere Duplikate
-    
+
     // 1. CITIES - mit Zählung
     const cityCount = new Map();
     this.json.forEach(loc => {
       const city = loc.loc?.city;
-      if (city && city !== 'CITY_CITY' && 
-          city.toLowerCase().startsWith(query)) {
+      if (city && city !== 'CITY_CITY' &&
+        city.toLowerCase().startsWith(query)) {
         cityCount.set(city, (cityCount.get(city) || 0) + 1);
       }
     });
-    
+
     // Sortiere Städte nach Häufigkeit (meiste zuerst)
     Array.from(cityCount.entries())
       .sort((a, b) => b[1] - a[1])
@@ -68,17 +69,17 @@ class AutocompleteManager {
           seenTexts.add(city.toLowerCase());
         }
       });
-    
+
     // 2. COUNTRIES
     const countryCount = new Map();
     this.json.forEach(loc => {
       const country = loc.loc?.country;
-      if (country && country !== 'COUNTRY_COUNTRY' && 
-          country.toLowerCase().startsWith(query)) {
+      if (country && country !== 'COUNTRY_COUNTRY' &&
+        country.toLowerCase().startsWith(query)) {
         countryCount.set(country, (countryCount.get(country) || 0) + 1);
       }
     });
-    
+
     Array.from(countryCount.entries())
       .forEach(([country, count]) => {
         if (!seenTexts.has(country.toLowerCase())) {
@@ -91,7 +92,7 @@ class AutocompleteManager {
           seenTexts.add(country.toLowerCase());
         }
       });
-    
+
     // 3. ZIP (PLZ)
     const zipSet = new Set();
     this.json.forEach(loc => {
@@ -100,7 +101,7 @@ class AutocompleteManager {
         zipSet.add(zip.toString());
       }
     });
-    
+
     Array.from(zipSet).forEach(zip => {
       if (!seenTexts.has(zip)) {
         suggestions.push({
@@ -112,7 +113,7 @@ class AutocompleteManager {
         seenTexts.add(zip);
       }
     });
-    
+
     // 4. STYLE-FILTER (for-all, commercial, open, closed, etc.)
     const styleFilters = [
       { key: 'for all', label: 'for all', type: 'style' },
@@ -122,7 +123,7 @@ class AutocompleteManager {
       { key: 'open', label: 'open', type: 'status' },
       { key: 'closed', label: 'closed', type: 'status' }
     ];
-    
+
     styleFilters.forEach(filter => {
       if (filter.key.toLowerCase().includes(query)) {
         suggestions.push({
@@ -134,20 +135,20 @@ class AutocompleteManager {
         });
       }
     });
-    
+
     // Sortiere nach Priorität + Relevanz
     suggestions.sort((a, b) => b.sortKey - a.sortKey);
-    
+
     // Limitiere auf 5 Vorschläge
     this.suggestions = suggestions.slice(0, 5);
-    
+
     if (this.suggestions.length > 0) {
       this.render();
     } else {
       this.hide();
     }
   }
-  
+
   /**
    * Zähle Makerspaces für einen Filter
    */
@@ -160,56 +161,56 @@ class AutocompleteManager {
       return this.json.filter(loc => loc.style === filterKey).length;
     }
   }
-  
+
   /**
    * Rendere Vorschläge
    */
   render() {
     this.container.innerHTML = '';
-    
+
     this.suggestions.forEach((suggestion, index) => {
       const pill = document.createElement('div');
       pill.className = 'autocomplete-pill';
       pill.dataset.index = index;
       pill.setAttribute('role', 'option');
       pill.setAttribute('aria-selected', 'false');
-      
+
       // Text
       let html = `<span>${suggestion.text}</span>`;
-      
+
       // Count Badge (optional)
       if (suggestion.count !== null && suggestion.count !== undefined) {
         html += `<span class="count-badge">(${suggestion.count})</span>`;
       }
-      
+
       pill.innerHTML = html;
-      
+
       // Click-Handler
       pill.addEventListener('click', () => {
         this.selectSuggestion(index);
       });
-      
+
       // Hover-Handler (für Keyboard-Navigation)
       pill.addEventListener('mouseenter', () => {
         this.setFocus(index);
       });
-      
+
       this.container.appendChild(pill);
     });
-    
+
     this.show();
     this.focusedIndex = -1;
-    
+
     // Accessibility
     this.container.setAttribute('role', 'listbox');
   }
-  
+
   /**
    * Tastatur-Navigation
    */
   navigate(direction) {
     if (this.suggestions.length === 0) return;
-    
+
     // Remove old focus
     if (this.focusedIndex >= 0 && this.focusedIndex < this.container.children.length) {
       const oldPill = this.container.children[this.focusedIndex];
@@ -218,17 +219,17 @@ class AutocompleteManager {
         oldPill.setAttribute('aria-selected', 'false');
       }
     }
-    
+
     // Update index
     if (direction === 'down') {
       this.focusedIndex = Math.min(
-        this.focusedIndex + 1, 
+        this.focusedIndex + 1,
         this.suggestions.length - 1
       );
     } else if (direction === 'up') {
       this.focusedIndex = Math.max(this.focusedIndex - 1, -1);
     }
-    
+
     // Add new focus
     if (this.focusedIndex >= 0 && this.focusedIndex < this.container.children.length) {
       const newPill = this.container.children[this.focusedIndex];
@@ -239,7 +240,7 @@ class AutocompleteManager {
       }
     }
   }
-  
+
   /**
    * Setze Focus auf bestimmten Index (für Hover)
    */
@@ -252,9 +253,9 @@ class AutocompleteManager {
         oldPill.setAttribute('aria-selected', 'false');
       }
     }
-    
+
     this.focusedIndex = index;
-    
+
     // Add new focus
     if (this.focusedIndex >= 0 && this.focusedIndex < this.container.children.length) {
       const newPill = this.container.children[this.focusedIndex];
@@ -264,7 +265,7 @@ class AutocompleteManager {
       }
     }
   }
-  
+
   /**
    * Auswahl bestätigen
    */
@@ -272,27 +273,30 @@ class AutocompleteManager {
     if (index === undefined) {
       index = this.focusedIndex;
     }
-    
+
     if (index >= 0 && index < this.suggestions.length) {
       const suggestion = this.suggestions[index];
-      
+
       // Unterscheide zwischen Orten und Filtern
       if (suggestion.type === 'style' || suggestion.type === 'status') {
         // FILTER: Aktiviere existierende Filter-Pills
         this.activateFilter(suggestion);
+
+        // ✨ KORREKTUR 1: Leere das Suchfeld auch nach Aktivierung eines Style-Filters
+        this.searchBar.value = '';
+
       } else {
         // ORTE: Callback für Pill-Manager
         if (this.onSelectCallback) {
           this.onSelectCallback(suggestion);
         }
       }
-      
+
       this.hide();
-      this.searchBar.value = ''; // Clear input
       this.searchBar.focus();
     }
   }
-  
+
   /**
    * Aktiviere Style-Filter (statt Pill zu erstellen)
    */
@@ -301,9 +305,9 @@ class AutocompleteManager {
       console.warn('StyleFilterManager not available');
       return;
     }
-    
+
     const filterKey = suggestion.filterKey || suggestion.text;
-    
+
     // Toggle Filter im StyleFilterManager
     if (!this.styleFilterManager.selectedStyles.has(filterKey)) {
       this.styleFilterManager.selectedStyles.add(filterKey);
@@ -311,17 +315,17 @@ class AutocompleteManager {
     } else {
       console.log(`ℹ️ Filter already active: ${filterKey}`);
     }
-    
+
     // Aktualisiere UI
     this.styleFilterManager.applyFilters();
     this.styleFilterManager.updateCounter();
-    
+
     // Trigger auch die Filter-Pills-Darstellung in der Suche
     if (window.searchManager) {
       window.searchManager.createActiveFiltersSection();
     }
   }
-  
+
   /**
    * Enter-Handler
    */
@@ -332,7 +336,7 @@ class AutocompleteManager {
     }
     return false;
   }
-  
+
   /**
    * Tab-Handler (select first suggestion)
    */
@@ -343,14 +347,14 @@ class AutocompleteManager {
     }
     return false;
   }
-  
+
   /**
    * Zeige Container
    */
   show() {
     this.container.classList.add('is-active');
   }
-  
+
   /**
    * Verstecke Container
    */
@@ -359,21 +363,21 @@ class AutocompleteManager {
     this.suggestions = [];
     this.focusedIndex = -1;
   }
-  
+
   /**
    * Ist Autocomplete aktiv?
    */
   isActive() {
     return this.container.classList.contains('is-active');
   }
-  
+
   /**
    * Callback bei Auswahl
    */
   onSelect(callback) {
     this.onSelectCallback = callback;
   }
-  
+
   /**
    * Event Listeners
    */
@@ -382,7 +386,7 @@ class AutocompleteManager {
     let lastInputTime = 0;
     this.searchBar.addEventListener('input', (e) => {
       lastInputTime = Date.now();
-      
+
       // Debounce für Performance
       setTimeout(() => {
         if (Date.now() - lastInputTime >= 150) {
@@ -390,12 +394,12 @@ class AutocompleteManager {
         }
       }, 150);
     });
-    
+
     // Keyboard Navigation
     this.searchBar.addEventListener('keydown', (e) => {
       // Nur wenn Autocomplete aktiv ist
       if (!this.isActive()) return;
-      
+
       if (e.code === 'ArrowDown') {
         e.preventDefault();
         this.navigate('down');
@@ -416,16 +420,16 @@ class AutocompleteManager {
         this.hide();
       }
     });
-    
+
     // Click outside - verstecke Autocomplete
     document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target) && 
-          e.target !== this.searchBar) {
+      if (!this.container.contains(e.target) &&
+        e.target !== this.searchBar) {
         this.hide();
       }
     });
   }
-  
+
   /**
    * Destroy (Cleanup)
    */

@@ -18,13 +18,12 @@ class SearchManager {
     this.autocompleteManager = null;
     this.pillsManager = null;
 
-    setTimeout(() => {
-      this.initializeAutocompleteAndPills();
-    }, 100);
-
+    // ✨ KORREKTUR: Synchroner Aufruf ohne setTimeout
     this.searchBar = document.getElementById('search-bar');
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
+    this.initializeAutocompleteAndPills();
+    // ------------------------------------
 
     this.currentDropdownIndex = -1;
     this.dropdownItems = [];
@@ -54,6 +53,10 @@ class SearchManager {
 
   setStyleFilterManager(styleFilterManager) {
     this.styleFilterManager = styleFilterManager;
+    // ✨ WICHTIG: AutocompleteManager muss den StyleFilterManager erhalten
+    if (this.autocompleteManager) {
+      this.autocompleteManager.styleFilterManager = styleFilterManager;
+    }
   }
 
   initializeEventListeners() {
@@ -71,7 +74,8 @@ class SearchManager {
         e.preventDefault();
 
         // 1. Schließe zuerst den Filter-Popover/Dropdown, wenn aktiv
-        if (this.styleFilterManager?.isDropdownOpen()) {
+        // ✨ KORREKTUR: Prüfe, ob die Methode existiert UND aufgerufen werden kann
+        if (this.styleFilterManager && typeof this.styleFilterManager.isDropdownOpen === 'function' && this.styleFilterManager.isDropdownOpen()) {
           this.styleFilterManager.closeDropdown();
           return;
         }
@@ -298,17 +302,41 @@ class SearchManager {
       return this.json;
     }
 
+    // ✨ ANFORDERUNG: Robuste Suche nach Wortanfang/Trennzeichen
+    const normalizedQuery = searchQuery.toLowerCase();
+
     return this.json.filter(location => {
       if (!location || !location.loc || !location.name || !location.loc.city) return false;
-      const nameMatch = location.name.toLowerCase().includes(searchQuery);
-      const cityMatch = location.loc.city.toLowerCase().includes(searchQuery);
-      const plzMatch = location.loc.plz && this.zfill(location.loc.plz, location.loc.country).startsWith(searchQuery);
-      const countryMatch = location.loc.country &&
-        location.loc.country.toLowerCase().includes(searchQuery);
 
-      return nameMatch || cityMatch || plzMatch || countryMatch;
+      const fieldsToSearch = [
+        location.name,
+        location.loc.city,
+        location.loc.country
+      ].filter(Boolean).map(f => f.toLowerCase());
+
+      const plz = location.loc.plz && this.zfill(location.loc.plz, location.loc.country);
+
+      // --- PLZ-Match (Bleibt: startsWith) ---
+      const plzMatch = plz && plz.startsWith(normalizedQuery);
+      if (plzMatch) return true;
+
+      // --- Wortanfang-Match (Name, City, Country) ---
+
+      // Definiere Trennzeichen: Leerzeichen, Bindestrich, Komma (für Berlin, Deutschland)
+      const separators = /[\s,-]/;
+
+      const wordStartMatch = fieldsToSearch.some(field => {
+        // 1. Prüfe den Anfang des gesamten Feldes
+        if (field.startsWith(normalizedQuery)) return true;
+
+        // 2. Prüfe den Anfang jedes Wortes (nach Trennzeichen)
+        return field.split(separators).some(word => word.startsWith(normalizedQuery));
+      });
+
+      return wordStartMatch;
     });
   }
+
 
   createHoverIcon(color) {
     const iconSvg = `
@@ -634,11 +662,18 @@ class SearchManager {
   }
 
   clearSearch() {
-    this.searchBar.value = '';
-    this.searchBar.focus();
-
-    if (this.styleFilterManager) {
-      this.styleFilterManager.applyFilters();
+    // Wenn Pills da sind, lösche nur den Text und Pill-Filter-Logik übernimmt
+    if (this.pillsManager.count() > 0) {
+      this.searchBar.value = '';
+      this.searchBar.focus();
+      this.applyPillFilters(this.pillsManager.getPillsArray());
+    } else {
+      // Wenn keine Pills da sind, mache den Voll-Reset
+      this.searchBar.value = '';
+      this.searchBar.focus();
+      if (this.styleFilterManager) {
+        this.styleFilterManager.applyPreFilters(null); // Full Reset auf alle Marker
+      }
     }
   }
 
@@ -1162,7 +1197,7 @@ class SearchManager {
     header.dataset.countryName = country;
 
     const countryCode = this.getCountryCode(country);
-    const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 6px;"></span>`;
+    const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 4px;"></span>`;
 
     const totalInCountry = this.json.filter(loc => loc.loc?.country === country).length;
 
@@ -1202,14 +1237,12 @@ class SearchManager {
     const scrollTop = this.suggestionsDropdown.scrollTop;
     const stickyOffset = this.getStickyOffset();
 
-    // ✨ FIX: Nutze gespeicherte Original-Positionen (nicht offsetTop!)
     const headerData = allHeaders.map((header, idx) => {
       const savedPosition = parseInt(header.dataset.originalTop);
 
       let position = savedPosition;
 
       if (!savedPosition || isNaN(savedPosition)) {
-        // Fallback: Berechne aus nächstem Element
         let nextItem = header.nextElementSibling;
         while (nextItem && !nextItem.classList.contains('suggestion-item')) {
           nextItem = nextItem.nextElementSibling;
@@ -1235,7 +1268,6 @@ class SearchManager {
       console.log(`  [${h.index}] ${h.country} @ ${h.position}`);
     });
 
-    // Finde aktuellen sichtbaren Header
     let currentIndex = -1;
 
     for (let i = 0; i < headerData.length; i++) {
@@ -1262,36 +1294,21 @@ class SearchManager {
 
     console.log('🎯 Detected current index:', currentIndex, '-', headerData[currentIndex].country);
 
-    // Berechne Ziel-Index
     let targetIndex;
     if (direction === 'next') {
       targetIndex = Math.min(currentIndex + 1, headerData.length - 1);
       if (targetIndex === currentIndex) {
-        console.log('⚠️ Already at last country');
         return;
       }
     } else {
       targetIndex = Math.max(currentIndex - 1, 0);
       if (targetIndex === currentIndex) {
-        console.log('⚠️ Already at first country');
         return;
       }
     }
 
     const targetData = headerData[targetIndex];
     const scrollToPosition = targetData.position - stickyOffset;
-
-    console.log('--- Scroll Debugging (Previous/Next) ---');
-    console.log('Direction:', direction);
-    console.log('Current Index:', currentIndex, '-', headerData[currentIndex].country);
-    console.log('Current Saved Position:', headerData[currentIndex].position);
-    console.log('Target Index:', targetIndex, '-', targetData.country);
-    console.log('Target Saved Position:', targetData.position);
-    console.log('Sticky Offset:', stickyOffset);
-    console.log('ScrollTo Position:', scrollToPosition);
-    console.log('Current ScrollTop:', scrollTop);
-    console.log('Difference:', Math.abs(scrollToPosition - scrollTop));
-    console.log('-----------------------------------');
 
     this.suggestionsDropdown.scrollTo({
       top: scrollToPosition,
@@ -1412,10 +1429,8 @@ class SearchManager {
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // ✨ Verhindere, dass Hover-Events das Popup stören
       targetMarker._openedByHover = false;
 
-      // ✨ Verhindere Hover-Timeout während des Zooms
       if (window.markerStateManager) {
         window.markerStateManager.clearTimeouts(targetMarker.uniqueId);
         window.markerStateManager.setState(targetMarker.uniqueId, {
@@ -1425,7 +1440,7 @@ class SearchManager {
       }
 
       this.map.once('moveend', () => {
-        targetMarker._openedByHover = false; // ✨ Nochmal setzen nach Zoom
+        targetMarker._openedByHover = false;
         targetMarker.openPopup();
         if (window.mapUtils && window.mapUtils.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
@@ -1453,7 +1468,7 @@ class SearchManager {
     svg.setAttribute('viewBox', '65 0 570 620');
     svg.setAttribute('preserveAspectRatio', 'none');
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 265.373,508.216 276.615,526.112C287.858,544.008 302.534,560.527 319.618,573.988C336.703,587.45 356.196,597.856 376.225,604.6C396.254,611.345 416.818,614.43 436.232,614.412L632.86,614.412L632.86,6.618Z');
+    path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 276.615,526.112 287.858,544.008C302.534,560.527 319.618,573.988 336.703,587.45C356.196,597.856 376.225,604.6 396.254,611.345C416.818,614.43 436.232,614.412 436.232,614.412L632.86,614.412L632.86,6.618Z');
     path.setAttribute('fill', color);
     svg.appendChild(path);
     document.body.appendChild(svg);
@@ -1596,9 +1611,6 @@ class SearchManager {
   }
 
   handleEmptySearch() {
-    // ✨ NUR zurückzoomen, wenn vorher ein Auto-Zoom stattgefunden hat
-    // UND die previousZoomBounds nicht null ist
-    // Das verhindert Zoom beim einfachen Fokussieren einer leeren Suchleiste
     if (this.previousZoomBounds) {
       this.previousZoomBounds = null;
       this.map.flyTo(new L.LatLng(51.0122995, 10.3995537), 7, { duration: 1.5 });
@@ -1851,11 +1863,8 @@ class SearchManager {
    * Initialize Autocomplete & Pills
    */
   initializeAutocompleteAndPills() {
-    if (!this.styleFilterManager) {
-      console.warn('⚠️ StyleFilterManager not ready, retrying...');
-      setTimeout(() => this.initializeAutocompleteAndPills(), 100);
-      return;
-    }
+    // 💡 HINWEIS: styleFilterManager ist hier evtl. noch null, 
+    // muss über setStyleFilterManager nachgeliefert werden.
 
     // 1. Erstelle Pills-Manager
     this.pillsManager = new SearchPillsManager(this.searchBar);
@@ -1864,13 +1873,13 @@ class SearchManager {
     this.autocompleteManager = new AutocompleteManager(
       this.json,
       this.searchBar,
-      this.styleFilterManager
+      this.styleFilterManager // Kann null sein, wird später über setStyleFilterManager gesetzt
     );
 
     // 3. Setup Callbacks
     this.setupAutocompleteCallbacks();
 
-    console.log('✅ Autocomplete & Pills initialized');
+    console.log('✅ Autocomplete & Pills initialized SYNCHRONOUSLY');
   }
 
   /**
@@ -1884,6 +1893,8 @@ class SearchManager {
         suggestion.type === 'zip' ||
         suggestion.type === 'country') {
         this.pillsManager.addPill(suggestion);
+        // ✨ FINALER FIX: Leere das Suchfeld nach dem Hinzufügen der Pill
+        this.searchBar.value = '';
       }
     });
 
@@ -1902,52 +1913,61 @@ class SearchManager {
    * Filter anwenden basierend auf Pills (AND-Verknüpfung)
    */
   applyPillFilters(pills) {
-    // Hole Suchtext (ohne Pills)
     const searchQuery = this.searchBar.value.trim().toLowerCase();
 
-    // Basis: Alle Locations
-    let filtered = this.json;
-
-    // 1. Wende Text-Suche an (falls vorhanden)
-    if (searchQuery.length > 0) {
-      filtered = this.filterLocations(searchQuery);
-    }
-
-    // 2. Wende Pill-Filter an (AND-Verknüpfung)
-    if (pills.length > 0) {
-      pills.forEach(pill => {
-        filtered = filtered.filter(loc => {
-          switch (pill.type) {
-            case 'city':
-              return loc.loc?.city === pill.text;
-
-            case 'zip':
-              return loc.loc?.zip?.toString() === pill.text;
-
-            case 'country':
-              return loc.loc?.country === pill.text;
-
-            default:
-              return true;
-          }
-        });
-      });
-    }
-
-    // ✨ FIX: Wenn KEINE Pills und KEINE Suche aktiv, reset preFilteredLocations
+    // ✨ WICHTIG: 1. RESET-LOGIK (MUSS ALS ERSTES KOMMEN!)
     if (pills.length === 0 && searchQuery.length === 0) {
       if (this.styleFilterManager) {
-        this.styleFilterManager.preFilteredLocations = null;
-        this.styleFilterManager.applyFilters();
+        // Setzt preFilteredLocations auf null und triggert den Filter-Reset
+        this.styleFilterManager.applyPreFilters(null);
       }
       return;
     }
 
-    // ✨ FIX: Setze die vorgefilterte Liste im StyleFilterManager
+    // ✨ 2. HAUPT-FILTER-LOGIK (Wird nur ausgeführt, wenn Pills ODER Text aktiv sind)
+    let filtered = this.json;
+
+    // Text-Suche
+    if (searchQuery.length > 0) {
+      filtered = this.filterLocations(searchQuery);
+    }
+
+    // Pill-Filterung
+    if (pills.length > 0) {
+      const router = window.routingManager;
+
+      if (router) {
+        pills.forEach(pill => {
+          filtered = filtered.filter(loc => {
+            switch (pill.type) {
+              case 'city':
+                if (loc.loc?.city) {
+                  const locationSlug = router.cityToSlug(loc.loc.city);
+                  const pillSlug = router.cityToSlug(pill.text);
+                  return locationSlug === pillSlug;
+                }
+                return false;
+
+              case 'zip':
+                return loc.loc?.plz?.toString() === pill.text;
+
+              case 'country':
+                return loc.loc?.country === pill.text;
+
+              default:
+                return true;
+            }
+          });
+        });
+      }
+    }
+
+    // 3. Übergabe an StyleFilterManager
     if (this.styleFilterManager) {
+      // Wenn wir hier ankommen, sind Pills ODER Text aktiv.
       this.styleFilterManager.applyPreFilters(filtered);
     } else {
-      // Fallback: Zeige gefilterte Ergebnisse direkt
+      // Fallback
       this.updateSearchResults(filtered);
     }
   }
@@ -2026,4 +2046,4 @@ class SearchManager {
   }
 }
 
-window.SearchManager = SearchManager;
+window.SearchManager = SearchManager

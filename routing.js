@@ -1,52 +1,89 @@
-// routing.js - URL-basisches Routing für Filter + Pills
+// routing.js (ES MODULE)
+// URL-basiertes Routing für Filter + Pills
 
-class RoutingManager {
+export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
     this.styleFilterManager = styleFilterManager;
     this.searchManager = searchManager;
-    this.json = json;
+    this.json = json; // <-- Referenz auf window.json
 
-    // Extrahiere ALLE Länder aus den Daten
-    this.countries = this.findAllCountries();
+    // === Daten vorbereiten: Initialisierung verzögern (Private Properties) ===
+    this._countries = null;
+    this._routes = null;
+    this._citiesWithMultipleSpaces = null;
+    this._cityRoutes = null;
 
-    // Erstelle dynamische Routes für alle Länder (Style/Country)
-    this.routes = this.createRoutes();
+    console.log('✅ RoutingManager constructor called (Lazy Load - Final)');
 
-    // Extrahiere alle Städte mit 2+ Makerspaces
-    this.citiesWithMultipleSpaces = this.findCitiesWithMultipleSpaces();
-
-    // Erstelle Map für Städte-URLs (mit und ohne city- prefix)
-    this.cityRoutes = this.createCityRoutes();
-
-    // Init mit Pills-Support (ersetzt die alte init())
-    this.initWithPills();
+    // Init mit Pills-Support
+    this.initRoutingListeners();
   }
 
-  findAllCountries() {
-    // Sammle alle einzigartigen Länder aus den Daten
+  // === LAZY GETTER: Stellt sicher, dass die Daten nur einmal geladen werden ===
+  _ensureDataLoaded() {
+    // 1. Prüft, ob die Extraktion bereits erfolgreich war
+    if (this._countries !== null) return;
+
+    // 2. Prüft, ob this.json gefüllt ist. Wenn nicht, brechen wir ab.
+    if (this.json.length === 0) {
+      return;
+    }
+
+    // DATENEXTRAKTION WIRD JETZT AUSGEFÜHRT (mit korrekter Reihenfolge)
+    this._countries = this._findAllCountries();
+    this._citiesWithMultipleSpaces = this._findCitiesWithMultipleSpaces();
+    this._routes = this._createRoutes();
+    this._cityRoutes = this._createCityRoutes();
+
+    console.log('--- DEBUG: Routing Data Loaded LAZY ---');
+    console.log(`JSON Data Length: ${this.json.length}`);
+    console.log(`Countries: ${this._countries.slice(0, 3)}... (${this._countries.length})`);
+    console.log('--------------------------------------');
+  }
+
+  // ========================================
+  // DATA EXTRACTION (Private Helfer)
+  // ========================================
+
+  _findAllCountries() {
     const countries = new Set();
-
-    this.json.forEach(location => {
-      const country = location.loc?.country;
-      if (country && country !== 'COUNTRY_COUNTRY') {
-        countries.add(country);
-      }
+    this.json.forEach(loc => {
+      const c = loc.loc?.country;
+      if (c && c !== 'COUNTRY_COUNTRY') countries.add(c);
     });
-
     return Array.from(countries).sort();
   }
 
-  createRoutes() {
-    // Erstelle Routes dynamisch für Styles und Länder
-    const routes = {};
-
-    // Länder - dynamisch aus Daten
-    this.countries.forEach(country => {
-      const slug = this.countryToSlug(country);
-      routes[slug] = { type: 'country', value: country };
+  _findCitiesWithMultipleSpaces() {
+    const counts = new Map();
+    this.json.forEach(loc => {
+      const city = loc.loc?.city;
+      if (city && city !== 'CITY_CITY') {
+        counts.set(city, (counts.get(city) || 0) + 1);
+      }
     });
 
-    // Zielgruppen (Styles) - statisch
+    const result = new Map();
+    counts.forEach((count, city) => {
+      if (count >= 2) result.set(city, count);
+    });
+    return result;
+  }
+
+  // ========================================
+  // ROUTES & SLUGS
+  // ========================================
+
+  _createRoutes() {
+    const routes = {};
+
+    this._countries.forEach(country => {
+      routes[this.countryToSlug(country)] = {
+        type: 'country',
+        value: country
+      };
+    });
+
     routes['for-all'] = { type: 'style', value: 'for all' };
     routes['for-students'] = { type: 'style', value: 'for students' };
     routes['for-youth'] = { type: 'style', value: 'for youth' };
@@ -57,99 +94,32 @@ class RoutingManager {
     return routes;
   }
 
-  countryToSlug(country) {
-    // Konvertiert Länder-Namen zu URL-Slugs
-    return country
-      .toLowerCase()
-      .replace(/ä/g, 'ae')
-      .replace(/ö/g, 'oe')
-      .replace(/ü/g, 'ue')
-      .replace(/ß/g, 'ss')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-  }
-
-  getQueryPath() {
-    // Extrahiert Pfad aus Query-String (GitHub Pages 404 Workaround)
-    const query = window.location.search;
-    if (query && query.startsWith('?')) {
-      const path = decodeURIComponent(query.slice(1));
-      return path;
-    }
-    return null;
-  }
-
-  findCitiesWithMultipleSpaces() {
-    const cityCount = new Map();
-
-    this.json.forEach(location => {
-      const city = location.loc?.city;
-      if (city && city !== 'CITY_CITY') {
-        cityCount.set(city, (cityCount.get(city) || 0) + 1);
-      }
-    });
-
-    // Nur Städte mit 2+ Spaces behalten
-    const result = new Map();
-    cityCount.forEach((count, city) => {
-      if (count >= 2) {
-        result.set(city, count);
-      }
-    });
-
-    return result;
-  }
-
-  createCityRoutes() {
-    // Erstellt Map von URL-Slugs zu Stadt-Namen
-    // Fügt "city-" prefix nur bei Konflikten mit bestehenden Routes hinzu
+  _createCityRoutes() {
     const cityRoutes = new Map();
-    const conflicts = new Set();
 
-    this.citiesWithMultipleSpaces.forEach((count, city) => {
+    this._citiesWithMultipleSpaces.forEach((_, city) => {
       const slug = this.cityToSlug(city);
-
-      // Prüfe ob der Slug mit bestehenden Routes kollidiert
-      if (this.routes[slug]) {
-        conflicts.add(city);
-        // Verwende city- prefix bei Konflikt
-        cityRoutes.set('city-' + slug, city);
-        console.log(`Conflict detected: "${city}" -> using "city-${slug}"`);
+      if (this._routes[slug]) {
+        cityRoutes.set(`city-${slug}`, city);
       } else {
-        // Kein Konflikt - verwende Slug ohne prefix
         cityRoutes.set(slug, city);
       }
     });
 
-    if (conflicts.size > 0) {
-      console.log('City name conflicts resolved:', Array.from(conflicts));
-    }
-
     return cityRoutes;
   }
 
-  // Die alten Methoden (handleRoute, filterByCity, filterByCountry etc.) 
-  // wurden entfernt, da ihre Funktionalität durch die Pill-Logik ersetzt wird.
-  // Es bleiben nur die Hilfsmethoden:
-
-  slugToCity(slug) {
-    // Konvertiert URL-Slug zu Stadt-Namen
-    // berlin -> Berlin
-    // bad-tolz -> Bad Tölz
-    return slug
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-      .replace(/Ae/g, 'Ä')
-      .replace(/Oe/g, 'Ö')
-      .replace(/Ue/g, 'Ü');
+  countryToSlug(str) {
+    return this.normalizeSlug(str);
   }
 
-  cityToSlug(city) {
-    // Konvertiert Stadt-Namen zu URL-Slug
-    // Berlin -> berlin
-    // Bad Tölz -> bad-tolz
-    return city
+  cityToSlug(str) {
+    return this.normalizeSlug(str);
+  }
+
+  normalizeSlug(str) {
+    return str
+      .trim() // ✨ HINZUGEFÜGT: Entfernt führende/anhängende Leerzeichen
       .toLowerCase()
       .replace(/ä/g, 'ae')
       .replace(/ö/g, 'oe')
@@ -159,369 +129,236 @@ class RoutingManager {
       .replace(/[^a-z0-9-]/g, '');
   }
 
-  formatStyleTitle(style) {
-    // Formatiert Style für Title Tag
-    const map = {
-      'for all': 'Public',
-      'for students': 'Student',
-      'for youth': 'Youth',
-      'commercial': 'Commercial',
-      'open': 'Currently Open',
-      'closed': 'Currently Closed'
-    };
-    return map[style] || style;
-  }
+  // ========================================
+  // URL HELPERS
+  // ========================================
 
-  updatePageMeta(title, description) {
-    // Aktualisiere Page Title
-    document.title = `${title} | makerspac.es`;
-
-    // Aktualisiere Meta Description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.name = 'description';
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.content = description;
-
-    // Aktualisiere Open Graph Tags
-    this.updateOGTag('og:title', title);
-    this.updateOGTag('og:description', description);
-    this.updateOGTag('og:url', window.location.href);
-  }
-
-  updateOGTag(property, content) {
-    let tag = document.querySelector(`meta[property="${property}"]`);
-    if (!tag) {
-      tag = document.createElement('meta');
-      tag.setAttribute('property', property);
-      document.head.appendChild(tag);
-    }
-    tag.content = content;
-  }
-
-  // Public API für Navigation
-  navigateTo(path) {
-    window.history.pushState(null, '', `/${path}`);
-    // Der Aufruf von handleRoute() wird durch den expliziten Aufruf der Pill-Logik ersetzt
-    this.handleRouteWithPills();
-  }
-
-  // Generiere alle verfügbaren Filter-URLs
-  getAllFilterUrls() {
-    const urls = [];
-
-    // Länder und Styles
-    Object.keys(this.routes).forEach(route => {
-      urls.push(`/${route}`);
-    });
-
-    // Städte (mit oder ohne city- prefix je nach Konflikt)
-    this.cityRoutes.forEach((cityName, slug) => {
-      urls.push(`/${slug}`);
-    });
-
-    return urls;
-  }
-
-  // Hilfsfunktion: Hole URL für eine bestimmte Stadt
-  getCityUrl(cityName) {
-    for (let [slug, name] of this.cityRoutes) {
-      if (name === cityName) {
-        return `/${slug}`;
-      }
+  getQueryPath() {
+    if (window.location.search.startsWith('?')) {
+      return decodeURIComponent(window.location.search.slice(1));
     }
     return null;
   }
 
-  // ========================================
-  // PILL-ROUTING METHODS
-  // ========================================
-
-  /**
-   * Update URL basierend auf aktiven Pills
-   * Format: /berlin oder /germany+berlin+commercial
-   */
   updateURLFromPills(pills) {
-    if (!pills || pills.length === 0) {
-      if (window.location.pathname !== '/') {
-        window.history.pushState(null, '', '/');
-        this.updatePageMeta(
-          'Makerspace Map',
-          'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland'
-        );
-      }
-      return;
-    }
+    this._ensureDataLoaded();
 
-    // Nur die ERSTE Pill verwenden
-    const firstPill = pills[0];
-    const path = this.pillToSlug(firstPill);
+    const slugs = pills
+      .map(p => this.findSlugByPill(p))
+      .filter(Boolean);
 
-    // Update URL
-    const newUrl = `/${path}`;
-    if (window.location.pathname !== newUrl) {
-      window.history.pushState(null, '', newUrl);
+    const newPath = slugs.length > 0 ? `/${slugs.join('+')}` : window.location.pathname;
 
-      const title = this.generateTitleFromPills([firstPill]);
-      const description = this.generateDescriptionFromPills([firstPill]);
-      this.updatePageMeta(title, description);
+    if (newPath !== window.location.pathname) {
+      history.pushState(null, '', newPath);
     }
   }
 
-  /**
-   * Konvertiere Pill zu URL-Slug
-   * Stadt-Namen bekommen "-city" Suffix nur bei Konflikten
-   */
-  pillToSlug(pill) {
-    let slug = pill.text
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/ä/g, 'ae')
-      .replace(/ö/g, 'oe')
-      .replace(/ü/g, 'ue')
-      .replace(/ß/g, 'ss')
-      .replace(/[^a-z0-9-]/g, '');
+  findSlugByPill(pill) {
+    this._ensureDataLoaded();
 
-    // Bei Cities: Prüfe auf Konflikte mit bestehenden Routes
+    // Fallback-Listen für sicheren Zugriff
+    const cityRoutes = this._cityRoutes || new Map();
+    const routes = this._routes || {};
+
+    if (pill.type === 'country') {
+      return this.countryToSlug(pill.text);
+    }
+
+    // City Slug (mit oder ohne "city-" Präfix)
     if (pill.type === 'city') {
-      // Prüfe ob der Slug mit Ländern oder Styles kollidiert
-      if (this.routes[slug]) {
-        slug = slug + '-city';
-        console.log(`⚠️ Conflict detected: Added -city suffix to "${pill.text}" → ${slug}`);
+      // Prüfe Kollisionen
+      for (const [routeSlug, city] of cityRoutes) {
+        if (city === pill.text) {
+          return routeSlug;
+        }
       }
+      // Fallback über alle Slugs
+      return this.cityToSlug(pill.text);
     }
 
-    return slug;
+    // Style Slugs
+    if (pill.type === 'style') {
+      const slug = Object.keys(routes).find(key => routes[key].value === pill.text);
+      return slug;
+    }
+
+    return null;
   }
 
-  /**
-   * Lade Pills aus URL beim Seitenaufruf
-   */
+  // ========================================
+  // PILLS <-> URL
+  // ========================================
+
   loadPillsFromURL() {
-    const path = window.location.pathname.slice(1); // Remove leading /
+    this._ensureDataLoaded();
+    const path = window.location.pathname.slice(1);
+    if (!path) return [];
 
-    console.log('🔍 loadPillsFromURL called');
-    console.log('   - Full URL:', window.location.href);
-    console.log('   - Pathname:', window.location.pathname);
-    console.log('   - Extracted path:', path);
-
-    if (!path || path === '') {
-      console.log('   ⚠️ Empty path, returning no pills');
-      return [];
-    }
-
-    // Parse: berlin oder germany+berlin+commercial
-    const slugs = path.split('+').filter(s => s.length > 0);
-    console.log('   - Slugs to process:', slugs);
-
-    const pills = [];
-
-    slugs.forEach(slug => {
-      console.log(`   🔎 Looking for pill with slug: "${slug}"`);
-      const pill = this.findPillBySlug(slug);
-      if (pill) {
-        pills.push(pill);
-        console.log(`   ✅ Loaded pill from URL: ${pill.text} (${pill.type})`);
-      } else {
-        console.warn(`   ⚠️ Unknown slug in URL: ${slug}`);
-      }
-    });
-
-    console.log('   📊 Total pills loaded:', pills.length);
-    return pills;
+    const slugs = path.split('+');
+    return slugs
+      .map(slug => this.findPillBySlug(slug))
+      .filter(Boolean);
   }
 
-  /**
-   * Finde Pill-Objekt basierend auf URL-Slug
-   */
   findPillBySlug(slug) {
-    // 1. Prüfe Länder
-    for (let country of this.countries) {
-      if (this.countryToSlug(country) === slug) {
-        return {
-          text: country,
-          type: 'country',
-          count: this.countLocationsByCountry(country)
-        };
+    this._ensureDataLoaded();
+
+    // Fallback auf leere Strukturen
+    const countries = this._countries || [];
+    const cityRoutes = this._cityRoutes || new Map();
+    const routes = this._routes || {};
+
+    // 1. Suche nach COUNTRY
+    for (const c of countries) {
+      const countrySlug = this.countryToSlug(c);
+      if (countrySlug === slug) {
+        return { text: c, type: 'country', count: this._countLocationsByCountry(c) };
       }
     }
 
-    // 2. Prüfe Städte (mit und ohne -city Suffix)
-    const citySlug = slug.endsWith('-city') ? slug.slice(0, -5) : slug;
+    // 2. Suche nach CITY: Aggressive Suche über alle Cities
+    let foundCityName = null;
 
-    for (let [routeSlug, cityName] of this.cityRoutes) {
-      if (routeSlug === slug || routeSlug === citySlug) {
-        return {
-          text: cityName,
-          type: 'city',
-          count: this.countLocationsByCity(cityName)
-        };
+    // A. Prüfe CityRoutes (mit Kollisions-Slugs)
+    for (const [routeSlug, city] of cityRoutes) {
+      if (routeSlug === slug) { // Prüft auf z.B. 'city-berlin'
+        foundCityName = city;
+        break;
       }
     }
 
-    // 3. Prüfe PLZ
-    const zip = slug.replace(/^plz-/, ''); // Support für plz-12345
-    if (/^\d+$/.test(zip)) {
-      const hasZip = this.json.some(loc => loc.loc?.zip?.toString() === zip);
-      if (hasZip) {
-        return {
-          text: zip,
-          type: 'zip',
-          count: this.countLocationsByZip(zip)
-        };
+    // B. Fallback: Prüfe alle Städte direkt (für Slugs ohne Kollisionspräfix)
+    if (!foundCityName) {
+      // ✨ KORREKTUR: Direkte Suche über die Rohdaten für den kanonischen Namen
+      for (const loc of this.json) {
+        if (loc.loc?.city) {
+          if (this.cityToSlug(loc.loc.city) === slug) { // Prüft auf 'berlin'
+            foundCityName = loc.loc.city;
+            break;
+          }
+        }
       }
     }
 
-    // 4. Prüfe Style-Filter
-    if (this.routes[slug] && this.routes[slug].type === 'style') {
+    // Wenn ein City-Name gefunden wurde
+    if (foundCityName) {
+      return { text: foundCityName, type: 'city', count: this._countLocationsByCity(foundCityName) };
+    }
+
+
+    // 3. Suche nach STYLE
+    if (routes[slug]?.type === 'style') {
+      const style = routes[slug].value;
       return {
-        text: this.routes[slug].value,
+        text: style,
         type: 'style',
-        filterKey: this.routes[slug].value,
-        count: this.countLocationsByStyle(this.routes[slug].value)
+        filterKey: style,
+        count: this._countLocationsByStyle(style)
       };
     }
 
-    // Nicht gefunden
     return null;
   }
 
-  /**
-   * Zähle Locations nach Kriterien (für Count-Badges)
-   */
-  countLocationsByCountry(country) {
-    return this.json.filter(loc => loc.loc?.country === country).length;
+  // ========================================
+  // COUNTS (Private, da sie intern sind)
+  // ========================================
+
+  _countLocationsByCountry(c) {
+    return this.json.filter(l => l.loc?.country === c).length;
   }
 
-  countLocationsByCity(city) {
-    return this.json.filter(loc => loc.loc?.city === city).length;
+  _countLocationsByCity(c) {
+    return this.json.filter(l => l.loc?.city === c).length;
   }
 
-  countLocationsByZip(zip) {
-    return this.json.filter(loc => loc.loc?.zip?.toString() === zip).length;
+  _countLocationsByStyle(style) {
+    if (style === 'open') return this.json.filter(l => l.isOpen === true).length;
+    if (style === 'closed') return this.json.filter(l => l.isOpen === false).length;
+    return this.json.filter(l => l.style === style).length;
   }
 
-  countLocationsByStyle(style) {
-    if (style === 'open') {
-      return this.json.filter(loc => loc.isOpen === true).length;
-    } else if (style === 'closed') {
-      return this.json.filter(loc => loc.isOpen === false).length;
+  // ========================================
+  // META
+  // ========================================
+
+  updatePageMeta(title, desc) {
+    document.title = `${title} | makerspac.es`;
+
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = desc;
+  }
+
+  // ✨ NEU: Erzwingt einen erneuten Aufruf der Routenbehandlung
+  rerunRouteHandler() {
+    console.log('🔄 Rerunning route handler after data load.');
+    this._ensureDataLoaded(); // Stellt sicher, dass die Daten extrahiert werden
+    this.handleRouteWithPills();
+  }
+
+  // ========================================
+  // ROUTING CORE
+  // ========================================
+
+  clearAllPillsAndFilters() {
+    this.styleFilterManager?.selectedStyles?.clear();
+    this.styleFilterManager?.applyFilters();
+
+    if (this.searchManager?.pillsManager) {
+      this.searchManager.pillsManager.clear();
+      this.searchManager.searchBar.value = '';
     } else {
-      return this.json.filter(loc => loc.style === style).length;
+      this.searchManager?.clearSearchAndPills();
     }
   }
 
-  /**
-   * Generiere Seiten-Titel aus Pills
-   */
-  generateTitleFromPills(pills) {
-    if (pills.length === 0) {
-      return 'Makerspace Map';
-    }
-
-    const parts = pills.map(pill => pill.text);
-    return `Makerspaces in ${parts.join(', ')}`;
-  }
-
-  /**
-   * Generiere Meta-Description aus Pills
-   */
-  generateDescriptionFromPills(pills) {
-    if (pills.length === 0) {
-      return 'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland';
-    }
-
-    const parts = pills.map(pill => pill.text);
-    const location = parts.join(', ');
-
-    return `Find all makerspaces, fablabs and hackerspaces in ${location}. Interactive map with opening hours and contact details.`;
-  }
-
-  /**
-   * Browser Back/Forward Handler - erweitert für Pills
-   */
   handleRouteWithPills() {
-    // 1. GitHub Pages Workaround: URL korrigieren (z.B. /?berlin -> /berlin)
+    this._ensureDataLoaded(); // <--- DATEN LADEN BEI ERSTEM AUFRUF
+
     const queryPath = this.getQueryPath();
-    if (queryPath && queryPath.length > 0) {
-      const newUrl = '/' + queryPath;
-      window.history.replaceState(null, '', newUrl);
-      // WICHTIG: Nach dem Korrigieren der URL müssen wir die Methode neu aufrufen
-      // damit loadPillsFromURL() den korrigierten Pfad liest
-      setTimeout(() => this.handleRouteWithPills(), 0);
-      return;
+    if (queryPath) {
+      // Wenn wir einen Query-Parameter (?berlin) sehen, wandeln wir ihn in einen Pfad um
+      history.replaceState(null, '', `/${queryPath}`);
+      return this.handleRouteWithPills();
     }
 
-    // 2. Lade Pills aus URL (liest jetzt den korrigierten Pfad)
     const pills = this.loadPillsFromURL();
 
-    if (pills.length === 0) {
-      // Keine Pills = Standard-Zustand herstellen
+    // Debugging-Zeile
+    console.log(`🔎 Route Handler: Path='${window.location.pathname}', Pills found: ${pills.length > 0 ? pills.map(p => p.text).join(', ') : 'None'}`);
+
+    if (!pills.length) {
       this.clearAllPillsAndFilters();
-      this.updatePageMeta('Makerspace Map', 'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland');
+      this.updatePageMeta(
+        'Makerspace Map',
+        'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland'
+      );
       return;
     }
 
-    // 3. Lade Pills in SearchPillsManager
-    if (window.searchManager && window.searchManager.pillsManager) {
-      window.searchManager.pillsManager.loadPills(pills);
-
-      // Metadaten aktualisieren, da Pills geladen wurden
-      const title = this.generateTitleFromPills(pills);
-      const description = this.generateDescriptionFromPills(pills);
-      this.updatePageMeta(title, description);
-
-      // Pills triggern automatisch Filter über onChange-Callback
+    if (this.searchManager?.pillsManager) {
+      this.searchManager.pillsManager.loadPills(pills);
+      this.updatePageMeta(
+        `Makerspaces in ${pills.map(p => p.text).join(', ')}`,
+        `Find makerspaces in ${pills.map(p => p.text).join(', ')}`
+      );
     } else {
-      console.warn('⚠️ SearchManager not ready yet');
-      // ✨ KORREKTUR: Setze einen Timeout, um es später zu versuchen (Rennen vermeiden)
-      setTimeout(() => this.handleRouteWithPills(), 200); 
+      console.error('❌ FATAL: SearchPillsManager is null during route handling.');
     }
   }
 
-  /**
-   * ✨ NEU: Initialisierung mit Pills-Support (ersetzt die alte init())
-   */
-  initWithPills() {
-    // Handle Route beim Laden (muss nach DOMContentLoaded passieren)
-    window.addEventListener('DOMContentLoaded', () => {
-      this.handleRouteWithPills();
-    });
-
-    // Browser Back/Forward
-    window.addEventListener('popstate', () => {
-      this.handleRouteWithPills();
-    });
-
-    // ✨ NEU: Führe den 404-Workaround sofort beim Laden aus
-    // und initialisiere die clearAllPillsAndFilters Methode (wie in der letzten Korrektur)
-    this.clearAllPillsAndFilters = () => {
-      if (this.styleFilterManager) {
-        this.styleFilterManager.selectedStyles.clear();
-      }
-      if (this.searchManager && this.searchManager.pillsManager) {
-        this.searchManager.pillsManager.clear();
-        this.searchManager.searchBar.value = '';
-      } else if (this.searchManager) {
-        this.searchManager.clearSearchAndPills();
-      }
-
-      // ✨ WICHTIG: Manuelle Filterung auslösen, falls SearchManager nicht existiert
-      if (this.styleFilterManager) this.styleFilterManager.applyFilters();
-    }
-
-    // Führe den 404-Workaround sofort beim Laden aus (bevor DOMContentLoaded triggert)
+  initRoutingListeners() {
+    // Wir rufen ensureDataLoaded nicht hier auf, sondern im handleRouteWithPills, 
+    // um den asynchronen Load-Status zu berücksichtigen.
+    window.addEventListener('popstate', () => this.handleRouteWithPills());
     this.handleRouteWithPills();
 
-    console.log('✅ RoutingManager initialized with Pills support');
-    console.log('📍 Countries:', this.countries);
-    console.log('🏙️ Cities:', Array.from(this.cityRoutes.keys()));
+    console.log('✅ RoutingManager initialized with Pills listeners');
   }
-}
-
-// Export für Nutzung in anderen Modulen
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = RoutingManager;
 }

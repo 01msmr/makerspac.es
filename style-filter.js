@@ -143,8 +143,13 @@ class StyleFilterManager {
 
   // ✨ NEU: Wird von SearchManager aufgerufen, um die Basisliste zu setzen
   applyPreFilters(locations) {
-    console.log('🔗 Pre-Filter applied with', locations.length, 'locations.');
-    this.preFilteredLocations = locations;
+    if (locations === null) {
+      console.log('🔗 Pre-Filter removed. Using all locations as base.');
+      this.preFilteredLocations = null;
+    } else {
+      console.log('🔗 Pre-Filter applied with', locations.length, 'locations.');
+      this.preFilteredLocations = locations;
+    }
     this.applyFilters();
   }
 
@@ -157,26 +162,23 @@ class StyleFilterManager {
     console.log('  - baseLocations:', baseLocations.length);
     console.log('  - hasActiveFilters:', this.hasActiveFilters());
 
-    // Wenn keine Style-Filter aktiv sind, zeige alle Suchergebnisse
-    if (!this.hasActiveFilters()) {
+    // 1. VOLL-RESET-LOGIK: Wenn keine aktiven Filter und keine Pre-Filter (Text/Pills) aktiv sind
+    if (!this.hasActiveFilters() && this.preFilteredLocations === null) {
       this.updateMarkers(baseLocations);
       if (this.searchManager) {
-        // ✨ WICHTIG: Erstelle Vorschläge mit der BASISt-Liste
+        // Aktualisiere alle Sektionen mit der vollen Liste
+        this.searchManager.createActiveFiltersSection();
         this.searchManager.createSuggestionItems(baseLocations);
         this.searchManager.updateSearchCounter(baseLocations.length);
         this.searchManager.triggerAutoZoom(baseLocations);
 
-        // ✨ FIX: Öffne Dropdown auch wenn KEINE Style-Filter aktiv sind
-        const hasResults = baseLocations.length > 0;
-        const hasSearchQuery = this.searchManager.searchBar.value.trim().length > 0;
-        this.searchManager.updateDropdownUI(hasResults || hasSearchQuery);
+        // ✨ KORREKTUR: Dropdown ausblenden, da keine aktive Suche/Filterung stattfindet
+        this.searchManager.updateDropdownUI(false);
       }
-      // ✨ FIX: Setze preFilteredLocations NICHT zurück - wird von applyPillFilters verwaltet
-      // this.preFilteredLocations = null;
       return;
     }
 
-    // --- NEUE AND-FILTERLOGIK mit Country-Support und Bookmarks ---
+    // --- FILTER-LOGIK (Nur ausgeführt, wenn Style-Filter ODER Pre-Filter aktiv sind) ---
 
     // 1. Trenne die aktiven Filter in Kategorien
     const selectedNormalStyles = new Set();
@@ -184,7 +186,6 @@ class StyleFilterManager {
     const selectedCountries = new Set();
     let bookmarkFilterActive = false;
 
-    // Hole alle möglichen Länder
     const allCountries = new Set();
     this.json.forEach(location => {
       if (location.loc && location.loc.country) {
@@ -209,14 +210,12 @@ class StyleFilterManager {
       const locationStyle = location.style || 'unknown';
       const locationCountry = location.loc && location.loc.country ? location.loc.country : null;
 
-      // Bedingung 1: Muss einem der ausgewählten Styles entsprechen
+      // Bedingung 1: Style
       const styleMatch = selectedNormalStyles.size === 0 || selectedNormalStyles.has(locationStyle);
 
-      // Bedingung 2: Muss dem ausgewählten Status entsprechen
-      // ✨ FIX: Korrekte AND-Logik - nur die passenden Status zeigen
-      let stateMatch = true; // Default: kein Status-Filter aktiv
+      // Bedingung 2: Status
+      let stateMatch = true;
       if (selectedStateFilters.size > 0) {
-        // Wenn Status-Filter aktiv sind, muss die Location einen der Status erfüllen
         stateMatch = false;
         if (selectedStateFilters.has('open') && location.isOpen === true) {
           stateMatch = true;
@@ -226,34 +225,46 @@ class StyleFilterManager {
         }
       }
 
-      // Bedingung 3: Muss dem ausgewählten Land entsprechen
+      // Bedingung 3: Land
       const countryMatch = selectedCountries.size === 0 ||
         (locationCountry && selectedCountries.has(locationCountry));
 
-      // Bedingung 4: Muss gebookmarkt sein (wenn Bookmark-Filter aktiv)
+      // Bedingung 4: Bookmark
       const bookmarkMatch = !bookmarkFilterActive ||
         (window.bookmarkManager && window.bookmarkManager.isBookmarked(location.uniqueId));
 
-      // Das Element wird nur angezeigt, wenn ALLE Bedingungen erfüllt sind
       return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
 
     console.log('  - finalFiltered:', finalFiltered.length);
 
+    // 3. ANWENDUNG AUF MAP UND DROPDOWN
     this.updateMarkers(finalFiltered);
+
     if (this.searchManager) {
-      // ✨ KORREKTUR: Aktualisiere Vorschläge und Counter mit der FINALEN Liste
+      // Aktualisiere Dropdown (Liste) und Counter
+      this.searchManager.createActiveFiltersSection();
       this.searchManager.createSuggestionItems(finalFiltered);
       this.searchManager.updateSearchCounter(finalFiltered.length);
       this.searchManager.triggerAutoZoom(finalFiltered);
 
-      // ✨ FIX: Öffne Dropdown wenn Suchergebnisse vorhanden sind
+      // ✨ KORREKTUR: Explizites Update des Dropdown-Zustands
       const hasResults = finalFiltered.length > 0;
       const hasSearchQuery = this.searchManager.searchBar.value.trim().length > 0;
-      this.searchManager.updateDropdownUI(hasResults || hasSearchQuery);
-    }
+      const hasActivePills = this.searchManager.pillsManager.count() > 0;
 
-    // ✨ FIX: preFilteredLocations NICHT zurücksetzen - bleibt für nächste Filter-Aktivierung
+      // Das Dropdown ist sichtbar, wenn IRGENDEIN Filter-Zustand aktiv ist
+      this.searchManager.updateDropdownUI(hasResults || hasSearchQuery || hasActivePills || this.hasActiveFilters());
+
+      // 4. Map-Neuzechnung erzwingen 
+      const clusterGroup = window.clusterGroup;
+      if (clusterGroup) {
+        if (typeof clusterGroup.refreshClusters === 'function') {
+          clusterGroup.refreshClusters(); // Erzwingt Cluster-Update
+        }
+        window.map.invalidateSize(); // Erzwingt Leaflet Map-Update
+      }
+    }
   }
 
 
