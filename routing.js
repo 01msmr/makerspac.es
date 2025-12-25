@@ -13,6 +13,21 @@ export class RoutingManager {
     this._citiesWithMultipleSpaces = null;
     this._cityRoutes = null;
 
+    // ✨ NEU: Übersetzungstabelle für Städte (Deutsch -> Englisch für Slugs)
+    this._cityTranslationMap = {
+      'München': 'Munich',
+      'Köln': 'Cologne',
+      'Nürnberg': 'Nuremberg',
+      'Wien': 'Vienna',
+      'Zürich': 'Zurich',
+      'Genf': 'Geneva',
+      'Basel': 'Basel',
+      'Graz': 'Graz',
+      'Linz': 'Linz',
+      'Bern': 'Bern'
+      // Weitere Städte könnten hier bei Bedarf hinzugefügt werden
+    };
+
     console.log('✅ RoutingManager constructor called (Lazy Load - Final)');
 
     // Init mit Pills-Support
@@ -114,7 +129,11 @@ export class RoutingManager {
   }
 
   cityToSlug(str) {
-    return this.normalizeSlug(str);
+    // 1. Prüfe, ob eine englische/kanonische Übersetzung existiert
+    const translatedCity = this._cityTranslationMap[str] || str;
+
+    // 2. Erzeuge Slug aus der (ggf. übersetzten) Zeichenkette
+    return this.normalizeSlug(translatedCity);
   }
 
   normalizeSlug(str) {
@@ -233,7 +252,10 @@ export class RoutingManager {
       // ✨ KORREKTUR: Direkte Suche über die Rohdaten für den kanonischen Namen
       for (const loc of this.json) {
         if (loc.loc?.city) {
-          if (this.cityToSlug(loc.loc.city) === slug) { // Prüft auf 'berlin'
+          // Muss den Slug des *kanonischen* Namens (z.B. "Munich") mit dem Slug aus der URL vergleichen.
+          const expectedSlug = this.cityToSlug(loc.loc.city);
+
+          if (expectedSlug === slug) {
             foundCityName = loc.loc.city;
             break;
           }

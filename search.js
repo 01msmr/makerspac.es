@@ -311,7 +311,8 @@ class SearchManager {
       const fieldsToSearch = [
         location.name,
         location.loc.city,
-        location.loc.country
+        location.loc.country,
+        location.loc.street?.name // Verwende optional chaining für Sicherheit
       ].filter(Boolean).map(f => f.toLowerCase());
 
       const plz = location.loc.plz && this.zfill(location.loc.plz, location.loc.country);

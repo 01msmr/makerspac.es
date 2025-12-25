@@ -100,6 +100,15 @@ window.mapUtils = {
 
 let clusterGroup = null;
 
+// ✨ NEU: HINZUGEFÜGT: Map für Style-Übersetzungen (Fehlerbehebung)
+const styleTranslationMap = {
+  'for all': 'style.forAll',
+  'for students': 'style.forStudents',
+  'for youth': 'style.forYouth',
+  'for students & youth': 'style.forStudents',
+  'commercial': 'style.commercial'
+};
+
 // +++ START: NAVIGATION LINK FUNCTIONS +++
 function updateNavigationIconAppearance(navLinkElement, location) {
   const icon = navLinkElement.querySelector('i');
@@ -738,6 +747,7 @@ function createMarkerForLocation(location) {
     const countryName = location.loc?.country || '';
     const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
 
+    // FEHLERBEHOBUNG: styleTranslationMap ist nun definiert
     const styleLabel = locationStyle && styleTranslationMap[locationStyle] ?
       (window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style) :
       (location.style || '');
@@ -916,6 +926,10 @@ function createMarkerForLocation(location) {
       isDropdownHovering: false
     });
     window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+    // KORREKTUR: Setze Sticky-Status sofort beim Klick,
+    // um Race Conditions mit dem mouseout-handler zu vermeiden und das Popup offen zu halten.
+    setStickyPopup(marker);
 
     if (!marker.isPopupOpen()) {
       marker.openPopup();
