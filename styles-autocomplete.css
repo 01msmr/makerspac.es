@@ -75,6 +75,16 @@
   transform: scale(1.02);
 }
 
+/* KORREKTUR: FOKUSSIERTE PILL - WEISSER HINTERGRUND, BLAUER FETTER TEXT */
+.autocomplete-pill.focused {
+  background: #fff !important;
+  /* Weißer Hintergrund */
+  color: #0066ff !important;
+  /* Blauer Text */
+  /* font-weight: 700 !important; */
+  outline-offset: 2px; outline: none !important;    /* <--- Diese Zeile sollte das Standard-Outline entfernen */
+}
+
 .autocomplete-pill.focused {
   background: #0066ff;
   outline: 2px solid rgba(0, 102, 255, 0.4);
@@ -92,6 +102,19 @@
   .autocomplete-pill.focused {
     background: #0066ff;
     color: #fff;
+  }
+  
+  /* KORREKTUR: FOKUSSIERTE PILL - Dark Mode */
+  .autocomplete-pill.focused {
+    background: #fff !important;
+    /* Weißer Hintergrund */
+    color: #000 !important;
+    /* Schwarzer Text (oder sehr dunkles Blau) für besseren Kontrast */
+    font-weight: 700 !important;
+    /* Fetter Text */
+    outline: 2px solid #0066ff !important;
+    /* Blauer Outline */
+    outline-offset: 2px;
   }
 }
 

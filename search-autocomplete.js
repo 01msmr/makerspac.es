@@ -9,7 +9,7 @@ class AutocompleteManager {
     this.suggestions = [];
     this.focusedIndex = -1;
     this.onSelectCallback = null;
-    this.minChars = 3;
+    this.minChars = 2; // ANPASSUNG: minChars von 3 auf 2
 
     this.initializeEventListeners();
     console.log('✅ AutocompleteManager initialized');
@@ -45,7 +45,7 @@ class AutocompleteManager {
     const suggestions = [];
     const seenTexts = new Set(); // Verhindere Duplikate
 
-    // 1. CITIES - mit Zählung
+    // 1. CITIES - mit Zählung (BEIBEHALTEN)
     const cityCount = new Map();
     this.json.forEach(loc => {
       const city = loc.loc?.city;
@@ -70,7 +70,8 @@ class AutocompleteManager {
         }
       });
 
-    // 2. COUNTRIES
+    // 2. COUNTRIES (AUSKOMMENTIERT)
+    /*
     const countryCount = new Map();
     this.json.forEach(loc => {
       const country = loc.loc?.country;
@@ -92,8 +93,9 @@ class AutocompleteManager {
           seenTexts.add(country.toLowerCase());
         }
       });
+    */
 
-    // 3. ZIP (PLZ)
+    // 3. ZIP (PLZ) (BEIBEHALTEN, da als Ort/Adresse relevant)
     const zipSet = new Set();
     this.json.forEach(loc => {
       const zip = loc.loc?.zip;
@@ -114,7 +116,8 @@ class AutocompleteManager {
       }
     });
 
-    // 4. STYLE-FILTER (for-all, commercial, open, closed, etc.)
+    // 4. STYLE-FILTER (for-all, commercial, open, closed, etc.) (AUSKOMMENTIERT)
+    /*
     const styleFilters = [
       { key: 'for all', label: 'for all', type: 'style' },
       { key: 'for students', label: 'for students', type: 'style' },
@@ -135,6 +138,7 @@ class AutocompleteManager {
         });
       }
     });
+    */
 
     // Sortiere nach Priorität + Relevanz
     suggestions.sort((a, b) => b.sortKey - a.sortKey);
@@ -206,7 +210,7 @@ class AutocompleteManager {
   }
 
   /**
-   * Tastatur-Navigation
+   * Tastatur-Navigation (Wird durch TAB/SHIFT+TAB Logik ersetzt, aber für setFocus() beibehalten)
    */
   navigate(direction) {
     if (this.suggestions.length === 0) return;
@@ -338,17 +342,6 @@ class AutocompleteManager {
   }
 
   /**
-   * Tab-Handler (select first suggestion)
-   */
-  handleTab() {
-    if (this.suggestions.length > 0) {
-      this.selectSuggestion(0);
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Zeige Container
    */
   show() {
@@ -397,28 +390,65 @@ class AutocompleteManager {
 
     // Keyboard Navigation
     this.searchBar.addEventListener('keydown', (e) => {
-      // Nur wenn Autocomplete aktiv ist
+      // Wenn das Autocomplete-Dropdown NICHT aktiv ist, return.
       if (!this.isActive()) return;
 
-      if (e.code === 'ArrowDown') {
-        e.preventDefault();
-        this.navigate('down');
-      } else if (e.code === 'ArrowUp') {
-        e.preventDefault();
-        this.navigate('up');
-      } else if (e.code === 'Enter') {
-        if (this.handleEnter()) {
+      const numSuggestions = this.suggestions.length;
+
+      // KORREKTUR: Navigation per TAB / SHIFT+TAB
+      if (e.code === 'Tab') {
+        e.preventDefault(); // WICHTIG: Überschreibt die globale Tab-Funktion
+
+        if (numSuggestions === 0) {
+          return; // Nichts zu tun
+        }
+
+        if (numSuggestions === 1) {
+          // ANFORDERUNG 1: Bei genau 1 Ergebnis aktivieren
+          this.selectSuggestion(0);
+          return;
+        }
+
+        // --- Mehrere Ergebnisse (numSuggestions > 1): Im Kreis navigieren ---
+
+        let newIndex;
+        if (e.shiftKey) {
+          // SHIFT+TAB (Rückwärts/Zyklisch)
+          // Wenn der Fokus bei -1 (Sucheingabe) ist, gehe zum letzten Element.
+          // Ansonsten normal rückwärts.
+          newIndex = this.focusedIndex <= 0 ? numSuggestions - 1 : this.focusedIndex - 1;
+        } else {
+          // TAB (Vorwärts/Zyklisch)
+          // Wenn der Fokus beim letzten Element ist, gehe zu 0.
+          // Ansonsten normal vorwärts.
+          newIndex = this.focusedIndex >= numSuggestions - 1 ? 0 : this.focusedIndex + 1;
+        }
+
+        this.setFocus(newIndex);
+      }
+      // KORREKTUR: Auswahl per ENTER / SPACE
+      else if (e.code === 'Enter' || e.code === 'Space') {
+        if (numSuggestions === 0) {
+          return; // Nichts zu aktivieren
+        }
+
+        // Index der Auswahl: Fokussiertes Element, oder wenn kein Fokus (-1) und nur 1 Ergebnis, dann Element 0.
+        const indexToSelect = (this.focusedIndex === -1 && numSuggestions === 1) ? 0 : this.focusedIndex;
+
+        if (indexToSelect >= 0) {
+          this.selectSuggestion(indexToSelect);
           e.preventDefault();
         }
-      } else if (e.code === 'Tab') {
-        // Tab = Select first suggestion
-        if (this.handleTab()) {
-          e.preventDefault();
-        }
-      } else if (e.code === 'Escape') {
+
+      }
+      // ESCAPE bleibt für das Schließen
+      else if (e.code === 'Escape') {
         e.preventDefault();
         this.hide();
       }
+
+      // ArrowDown/ArrowUp/ArrowLeft/ArrowRight werden NICHT hier abgefangen, 
+      // um mit dem SearchManager kompatibel zu bleiben.
     });
 
     // Click outside - verstecke Autocomplete
