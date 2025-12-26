@@ -88,7 +88,7 @@ class I18n {
         <li><strong>${this.t('userGuide.filter')}</strong> <br /> ${this.t('userGuide.filterText')}</li>
         <li><strong>${this.t('userGuide.count')}</strong> <br /> ${this.t('userGuide.countText')}</li>
         <li><strong>${this.t('userGuide.autoZoom')}</strong> <br /> ${this.t('userGuide.autoZoomText')}</li>
-        <li><strong>${this.t('userGuide.highlight')}:</strong> <br /> ${this.t('userGuide.highlightText')}</li>
+        <li><strong>${this.t('userGuide.highlight')}</strong> <br /> ${this.t('userGuide.highlightText')}</li>
         <li><strong>${this.t('userGuide.scroll')}</strong> <br /> ${this.t('userGuide.scrollText')}</li>
       </ol>
     `;
