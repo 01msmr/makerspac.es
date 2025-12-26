@@ -326,12 +326,16 @@ function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
 
   connectionLine = L.polyline(curvePoints, {
     color: color,
-    weight: 5.5,
+    weight: 6,
     opacity: 1,
     interactive: false,
     bubblingMouseEvents: false,
-    smoothFactor: 0,
-    noClip: true
+    smoothFactor: 0.0,
+    noClip: true,
+    lineCap: 'round',    // WICHTIG
+    lineJoin: 'round',   // WICHTIG
+    // ✨ WICHTIG FÜR CANVAS: Setzen Sie einen expliziten Renderer
+    renderer: L.canvas()
   }).addTo(map);
 
   connectionLine.bringToFront();
@@ -499,7 +503,8 @@ function setupMap() {
   console.log('🔧 Starting MapLibre setup...');
 
   map = new L.Map('map', {
-    maxZoom: 18
+    maxZoom: 18,
+    preferCanvas: true
   });
   console.log('✅ Leaflet map created');
 
@@ -777,9 +782,12 @@ function createMarkerForLocation(location) {
   });
 
   marker.on('popupopen', (e) => {
+
+    // ✨ KORREKTUR: Sticky wird nur für Taps/Klicks gesetzt (kein Hover)
     if (!marker._openedByHover) {
       setStickyPopup(marker);
     }
+
     marker._openedByHover = false;
 
     const popup = marker.getPopup();
@@ -808,15 +816,23 @@ function createMarkerForLocation(location) {
       }
     }
 
+    // ✨ NEU: Logic für Popup-Enter: Bricht den Close-Timer ab und macht es sofort Sticky
     if (popupElement) {
       const handlePopupEnter = () => {
         const state = window.markerStateManager.getState(marker.uniqueId);
+
+        // 1. Schließ-Timeout abbrechen (sehr wichtig!)
         if (state.closeTimeout) {
           clearTimeout(state.closeTimeout);
           window.markerStateManager.setState(marker.uniqueId, { closeTimeout: null });
         }
+
+        // 2. Wenn es noch nicht Sticky ist, sofort Sticky machen.
         if (currentStickyMarker !== marker) {
-          marker._openedByHover = false;
+          // Timer für den 1500ms Sticky Timeout abbrechen, da die Maus jetzt das Popup hält.
+          window.markerStateManager.clearTimeouts(marker.uniqueId);
+
+          // Sofort Sticky setzen
           setStickyPopup(marker);
         }
       };
@@ -824,6 +840,7 @@ function createMarkerForLocation(location) {
       popupElement.removeEventListener('mouseenter', handlePopupEnter);
       popupElement.addEventListener('mouseenter', handlePopupEnter);
     }
+
 
     const navLink = e.popup._container.querySelector('.navigation-icon');
     if (navLink) {
@@ -879,10 +896,11 @@ function createMarkerForLocation(location) {
       }
     }, 400);
 
+    // ✨ KORRIGIERT: 1500ms Sticky-Timeout wiederhergestellt
     const stickyTimeout = setTimeout(() => {
       const currentState = window.markerStateManager.getState(marker.uniqueId);
+      // Wir setzen Sticky NUR, wenn das Popup NICHT bereits offen ist (ansonsten macht das der popupopen-Handler)
       if (currentState.isHovering && marker.isPopupOpen()) {
-        marker._openedByHover = false;
         setStickyPopup(marker);
       }
     }, 1500);
@@ -900,41 +918,33 @@ function createMarkerForLocation(location) {
       applyMarkerScale(marker, 1);
     }
 
-    if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
-      const closeTimeout = setTimeout(() => {
-        if (!isPopupSticky || currentStickyMarker !== marker) {
-          marker.closePopup();
-        }
-      }, 120);
-
-      window.markerStateManager.setState(marker.uniqueId, { closeTimeout });
-    }
-
-    setTimeout(() => {
-      if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
-        updateMarkerIcon(marker, location);
+    // ✨ KORRIGIERT: Schließ-Logik mit 0ms Timeout
+    const closeCheckTimeout = setTimeout(() => {
+      // Prüfe den Sticky-Status ERNEUT nach einer Mikroverzögerung.
+      if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
+        marker.closePopup();
       }
-    }, 50);
+
+      // Stelle sicher, dass der Timeout auch im State gelöscht wird, falls er nicht schließt.
+      window.markerStateManager.setState(marker.uniqueId, { closeTimeout: null });
+
+      // Marker-Icon erst danach aktualisieren
+      setTimeout(() => {
+        if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
+          updateMarkerIcon(marker, location);
+        }
+      }, 50);
+
+    }, 0); // ✨ Verzögerung auf 0ms reduziert für schnellstmögliche Prüfung
+
+    // Speichere den neuen Timeout-Handle im State Manager
+    window.markerStateManager.setState(marker.uniqueId, { closeTimeout: closeCheckTimeout });
   });
 
-  marker.on('click', (e) => {
-    e.originalEvent?.stopPropagation();
-    marker._openedByHover = false;
 
-    window.markerStateManager.setState(marker.uniqueId, {
-      isHovering: false,
-      isDropdownHovering: false
-    });
-    window.markerStateManager.clearTimeouts(marker.uniqueId);
+  // ✨ WICHTIG: marker.on('click', ...) WURDE ENTFERNT, 
+  // um sich vollständig auf das Tap/Hover-Verhalten zu verlassen.
 
-    // KORREKTUR: Setze Sticky-Status sofort beim Klick,
-    // um Race Conditions mit dem mouseout-handler zu vermeiden und das Popup offen zu halten.
-    setStickyPopup(marker);
-
-    if (!marker.isPopupOpen()) {
-      marker.openPopup();
-    }
-  });
 
   allMarkers.push(marker);
 }
