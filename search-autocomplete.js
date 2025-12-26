@@ -183,8 +183,8 @@ class AutocompleteManager {
       let html = `<span>${suggestion.text}</span>`;
 
       // Count Badge (optional)
-      if (suggestion.count !== null && suggestion.count !== undefined) {
-        html += `<span class="count-badge">(${suggestion.count})</span>`;
+      if (suggestion.count > 1 && suggestion.count !== undefined) {
+        html += `<span class="count-badge">${suggestion.count}</span>`;
       }
 
       pill.innerHTML = html;

@@ -357,16 +357,9 @@
       if (this.currentHoverSVG && this.currentHoverItem) {
         const location = this.getLocationFromDropdownItem(this.currentHoverItem);
         if (location) {
-          let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-hover').trim();
-          if (location.spaceapi && location.spaceapi.endpoint) {
-            if (location.isOpen === true) {
-              hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-open').trim();
-            } else if (location.isOpen === false) {
-              hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
-            } else {
-              hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
-            }
-          }
+          // KORREKTUR: Verwende die globale Funktion, die den HEX-WERT zurückgibt
+          const hoverColor = window.getDynamicSpaceColor(location);
+
           this.removeConnectionLine();
           this.cleanupHoverSVG();
           this.createHoverSVG(this.currentHoverItem, location, hoverColor);
@@ -378,6 +371,7 @@
       }
     }
 
+
     applyHoverEffects(item, location) {
       this.suggestionsDropdown.querySelectorAll('.js-hover').forEach(el => {
         el.classList.remove('js-hover');
@@ -388,16 +382,8 @@
       this.isDropdownHovering = true;
       this.currentHoverItem = item;
 
-      let hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-hover').trim();
-
-      if (location.spaceapi && location.spaceapi.endpoint) {
-        hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-unknown').trim();
-        if (location.isOpen === true) {
-          hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-open').trim();
-        } else if (location.isOpen === false) {
-          hoverColor = getComputedStyle(document.documentElement).getPropertyValue('--space-closed').trim();
-        }
-      }
+      // KORREKTUR: Verwende die globale Funktion, die den HEX-WERT zurückgibt
+      const hoverColor = window.getDynamicSpaceColor(location);
 
       this.createHoverSVG(item, location, hoverColor);
       const targetMarker = this.findMarkerByLocation(location);
@@ -420,6 +406,7 @@
         }, 300);
       }
     }
+
 
     removeHoverEffects(location) {
       if (this.currentHoverItem) {
@@ -454,6 +441,7 @@
         }
       }
     }
+
 
     handleTabKey() {
       this.searchBar.focus();

@@ -18,9 +18,9 @@
   /* Space Status Farben */
 
   --space-hover: #0000ff;
-  --space-open: #00AA00;
+  --space-open: #009900;
   --space-closed: #DD0000;
-  --space-unknown: #FF8C00;
+  --space-unknown: #EE8800;
 }
 
 /* *** Dark Mode Variables *** */
@@ -185,14 +185,14 @@ a#titleurl {
 .add-makerspace {
   box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.5) inset !important;
   left: 1.5em;
-  background-color: #0000ff;
+  background-color: var(--space-hover);
   opacity: 0.5;
   color: white;
 }
 
 .add-makerspace:hover {
   height: 12%;
-  background-color: #0000ff;
+  background-color: var(--space-hover);
   cursor: wait;
   opacity: 0.90;
 }
@@ -264,8 +264,8 @@ a#titleurl {
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  color: blue;
-  border: 1px solid #0000ff;
+  color: var(--space-hover);
+  border: 1px solid var(--space-hover);
   border-radius: 50%;
   width: 28px;
   height: 28px;
@@ -320,7 +320,7 @@ a#titleurl {
 
 /* ✨ NEU: Hover-Effekt - nur wenn clearable */
 .search-counter.is-clearable:hover {
-  background: var(--primary-color, #0066cc);
+  background: var(--space-hover);
   color: white;
   transform: translateY(-50%) scale(1.1);
 }
@@ -399,7 +399,7 @@ a#titleurl {
   align-items: center;
   gap: 2px;
   padding: 2px 8px 2px 6px !important;
-  background-color: #0066ff;
+  background-color: var(--space-hover);
   color: white;
   border-radius: 100px;
   font-size: 0.8em;
@@ -420,7 +420,7 @@ a#titleurl {
 /* Passive Filter: Weiß auf Grau */
 .filter-pill-passive {
   background-color: #cccccc;
-  color: #666666;
+  color: #333333;
 }
 
 /* Dark Mode für passive Pills */
@@ -657,7 +657,7 @@ a#titleurl {
 .settings-header-languages {
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 48px;
 }
 
 .settings-header-row {
@@ -767,7 +767,7 @@ a#titleurl {
 }
 
 .settings-icon-btn.settings-icon-danger {
-  color: #dd4444;
+  color: var(--space-closed);
 }
 
 .settings-icon-btn.settings-icon-danger:hover {
@@ -1271,38 +1271,23 @@ hr {
 } */
 
 /* *** Door-Icon Klassen *** */
-.door-icon-open {
-  color: #009900 !important;
+.space-name-open, .door-icon-open {
+  color: var(--space-open);
   /* Grün für geöffnet */
 }
 
-.door-icon-closed {
-  color: #dd4444 !important;
+.space-name-closed, .door-icon-closed {
+  color: var(--space-closed);
   /* Rot für geschlossen */
 }
 
-.door-icon-unknown {
-  color: #FF8C00 !important;
+.space-name-unknown, .door-icon-unknown {
+  color: var(--space-unknown);
   /* Orange für unbekannt */
 }
 
-/* *** Space-Status Farben für Namen *** */
-.space-name-open {
-  color: #009900 !important;
-  /* Grüner Name für geöffnete Spaces */
-  font-weight: 600;
-}
-
-.space-name-closed {
-  color: #dd4444 !important;
-  /* Roter Name für geschlossene Spaces */
-  font-weight: 600;
-}
-
-/* *** NEU: Gelber Name für Spaces mit unbekanntem Status *** */
-.space-name-unknown {
-  color: #FF8C00 !important;
-  /* Gelber Name für Spaces mit unbekanntem Status */
+/* *** weight 600 für Namen *** */
+.space-name-open, .space-name-closed, .space-name-unknown {
   font-weight: 600;
 }
 
@@ -1312,7 +1297,7 @@ hr {
 /* Diese Regel sorgt für den blauen Hintergrund und macht ALLE Texte weiß. */
 .suggestion-item:hover,
 .suggestion-item.keyboard-active {
-  background-color: blue;
+  background-color: var(--space-hover);
   color: white !important;
   /* Setzt die Farbe für Details, etc. */
 }
@@ -1327,26 +1312,26 @@ hr {
 /* 2. Spezifische Überschreibung der HINTERGRUNDFARBE für offene Spaces */
 .suggestion-item.space-open:hover,
 .suggestion-item.space-open.keyboard-active {
-  background-color: #009900 !important;
+  background-color: var(--space-open);
 }
 
 /* 3. Spezifische Überschreibung der HINTERGRUNDFARBE für geschlossene Spaces */
 .suggestion-item.space-closed:hover,
 .suggestion-item.space-closed.keyboard-active {
-  background-color: #dd4444 !important;
+  background-color: var(--space-closed);
 }
 
 /* *** NEU: 4. Spezifische Überschreibung der HINTERGRUNDFARBE für unbekannten Status (gelb) *** */
 .suggestion-item.space-unknown:hover,
 .suggestion-item.space-unknown.keyboard-active {
-  background-color: #FF8C00 !important;
+  background-color: var(--space-unknown);
 }
 
 /* === POPUP NAME HIGHLIGHTING (Open & Closed) === */
 
 /* Styling für den Makerspace-Namen, WENN der Space offen ist */
 a#titleurl h3.space-open {
-  background-color: #009900 !important;
+  background-color: var(--space-open);
   /* Grüner Hintergrund */
 }
 
@@ -1360,7 +1345,7 @@ a#titleurl h3.space-open .fas {
 
 /* Styling für den Makerspace-Namen, WENN der Space geschlossen ist */
 a#titleurl h3.space-closed {
-  background-color: #dd4444 !important;
+  background-color: var(--space-closed);
   /* Roter Hintergrund */
 }
 
@@ -1381,9 +1366,9 @@ a#titleurl h3.space-closed .fas {
 
 /* Styling für den Makerspace-Namen, WENN der Space-Status unbekannt ist */
 a#titleurl h3.space-unknown {
-  background-color: #FF8C00 !important;
+  background-color: var(--space-unknown);
   /* Gelber Hintergrund */
-  border-color: #FF8C00 !important;
+  border-color: var(--space-unknown);
   /* Gelber Rand */
 }
 
@@ -1400,35 +1385,35 @@ a#titleurl h3.space-unknown .fas {
 /* Hover-Effekt für offenen Spaces: weißer Hintergrund, grüne Schrift */
 a#titleurl:hover h3.space-open {
   background-color: white !important;
-  color: #009900 !important;
-  border-color: #009900 !important;
+  color: var(--space-open);
+  border-color: var(--space-open);
 }
 
 /* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
 a#titleurl:hover h3.space-closed {
   background-color: white !important;
-  color: #dd4444 !important;
-  border-color: #dd4444 !important;
+  color: var(--space-closed);
+  border-color: var(--space-closed);
 }
 
 /* Hover-Effekt für unbekannte Spaces: weißer Hintergrund, gelbe Schrift */
 a#titleurl:hover h3.space-unknown {
   background-color: white !important;
-  color: #FF8C00 !important;
-  border-color: #FF8C00 !important;
+  color: var(--space-unknown);
+  border-color:var(--space-unknown);
 }
 
 /* Icons bei Hover in entsprechender Status-Farbe */
 a#titleurl:hover h3.space-open .fas {
-  color: #009900 !important;
+  color: var(--space-open);
 }
 
 a#titleurl:hover h3.space-closed .fas {
-  color: #dd4444 !important;
+  color: var(--space-closed);
 }
 
 a#titleurl:hover h3.space-unknown .fas {
-  color: #FF8C00 !important;
+  color: var(--space-unknown);
 }
 
 /* +++ START: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
@@ -1537,36 +1522,36 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Color Definitions Based on Parent Status Class */
 .popup-street-line.status-open .navigation-icon {
-  color: #009900;
+  color: var(--space-open);
 }
 
 .popup-street-line.status-closed .navigation-icon {
-  color: #dd4444;
+  color: var(--space-closed);
 }
 
 .popup-street-line.status-unknown .navigation-icon {
-  color: #FF8C00;
+  color: var(--space-unknown);
 }
 
 .popup-street-line.status-default .navigation-icon {
-  color: #0000ff;
+  color: var(--space-hover);
 }
 
 /* Hover Effects for Navigation Icons */
 .popup-street-line.status-open .navigation-icon:hover {
-  color: #007700;
+  color: var(--space-open);
 }
 
 .popup-street-line.status-closed .navigation-icon:hover {
-  color: #bb2222;
+  color: var(--space-closed);
 }
 
 .popup-street-line.status-unknown .navigation-icon:hover {
-  color: #e6760e;
+  color:var(--space-unknown);
 }
 
 .popup-street-line.status-default .navigation-icon:hover {
-  color: #0000cc;
+  color: var(--space-hover);
 }
 
 /* Service-specific Icon Styling with Pseudo-elements */
@@ -1818,7 +1803,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .sync-url-input:focus {
   outline: none;
-  border-color: #0066cc;
+  border-color: var(--space-hover);
 }
 
 /* Buttons */
@@ -1836,7 +1821,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .sync-btn-primary {
-  background: #0066cc;
+  background: var(--space-hover);
   color: white;
 }
 
@@ -1855,7 +1840,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .sync-btn-copy {
-  background: #0066cc;
+  background: var(--space-hover);
   color: white;
   padding: 12px 16px;
 }
@@ -1866,6 +1851,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* QR Code Container */
 .sync-qr-container {
+  font-family: 'Lato', sans-serif !important;
   display: flex;
   justify-content: center;
   padding: 20px;
@@ -1924,11 +1910,11 @@ a#titleurl:hover h3.space-unknown .fas {
   background: var(--dropdown-alt-bg);
   cursor: default;
   font-weight: 600;
-  color: #00AA00;
+  color: var(--space-open);
 }
 
 .sync-menu-item.sync-danger {
-  color: #dd4444;
+  color: var(--space-closed);
 }
 
 .sync-menu-item.sync-danger:hover {
@@ -1937,7 +1923,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Sync Pill */
 .sync-pill {
-  background: #0066cc !important;
+  background: var(--space-hover) !important;
   color: white !important;
   margin-left: 8px;
   padding: 8px 12px !important;
@@ -1947,7 +1933,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .sync-pill:hover {
-  background: #0099cc !important;
+  background: var(--space-hover) !important;
   transform: translateY(-1px);
 }
 
@@ -1976,22 +1962,22 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .sync-notification-success {
-  background: #00AA00;
+  background: var(--space-open);
   color: white;
 }
 
 .sync-notification-error {
-  background: #dd4444;
+  background: var(--space-closed);
   color: white;
 }
 
 .sync-notification-warning {
-  background: #ff9800;
+  background: var(--space-unknown);
   color: white;
 }
 
 .sync-notification-info {
-  background: #0066cc;
+  background: var(--space-hover);
   color: white;
 }
 

@@ -129,11 +129,22 @@
 
 /* Autocomplete Count (Anzahl Makerspaces) */
 .autocomplete-pill .count-badge {
-  /* margin-left: auto;
-  padding-left: 8px;
-  font-size: 0.75em;
-  opacity: 0.7; */
-  display: none !important;
+  margin-left: 4px;
+  margin-right: 0px;
+  padding: 2px;
+  text-align: center;
+  width: 11px;
+  height: 11px;
+  font-size: 0.9em;
+  /* opacity: 0.85; */
+  color: black;
+  background-color: white;
+  border-radius: 100%;
+}
+
+.autocomplete-pill:focus .count-badge {
+  color: white;
+  background-color: black;
 }
 
 
