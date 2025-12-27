@@ -6620,6 +6620,36 @@
 
 
   {
+    "name": "Hackerspace Brussels",
+    "loc": {
+      "lat": 50.8557647,
+      "long": 4.3198282,
+      "plz": 1080,
+      "city": "Molenbeek-Saint-Jean",
+      "street": {
+        "name": "Rue Osseghem",
+        "number": 53,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hsbxl.be",
+      "text": "hsbxl.be"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.hsbxl.be/index.php/0.1/spaceapi/"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251115
+    }
+ },
+
+
+  {
     "name": "Ko-Lab Hackerspace",
     "loc": {
       "lat": 51.0192665,
