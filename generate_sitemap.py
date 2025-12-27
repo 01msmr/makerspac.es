@@ -86,7 +86,7 @@ def create_sitemap(base_url='https://makerspac.es'):
     
     # Lade Makerspace-Daten
     data = load_makerspaces()
-    cities = find_all_cities_for_sitemap(data
+    cities = find_all_cities_for_sitemap(data),
     countries = find_all_countries(data)
     
     # Erstelle Root Element
