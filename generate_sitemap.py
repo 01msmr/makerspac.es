@@ -86,7 +86,7 @@ def create_sitemap(base_url='https://makerspac.es'):
     
     # Lade Makerspace-Daten
     data = load_makerspaces()
-    cities = find_cities_with_multiple_spaces(data)
+    cities = find_all_cities_for_sitemap(data
     countries = find_all_countries(data)
     
     # Erstelle Root Element
@@ -199,7 +199,7 @@ def save_sitemap(xml_content, filename='sitemap.xml'):
 
 def print_stats(data):
     """Gibt Statistiken über die Sitemap aus"""
-    cities = find_cities_with_multiple_spaces(data)
+    cities = find_all_cities_for_sitemap(data
     countries = find_all_countries(data)
     
     print("\n=== Sitemap Statistiken ===")
