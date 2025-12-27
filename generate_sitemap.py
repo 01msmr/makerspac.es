@@ -147,7 +147,15 @@ def create_sitemap(base_url='https://makerspac.es'):
         
         # Location
         loc = ET.SubElement(url_elem, 'loc')
-        loc.text = f"{base_url}/{url_data['loc']}" if url_data['loc'] else base_url
+         # ✨ NEU: HASH-MODE ANPASSUNG
+        # Wenn der loc-Wert leer ist (Startseite), verwende nur die base_url
+        if not url_data['loc']:
+            final_url = base_url
+        # Ansonsten füge den Hash-Präfix hinzu
+        else:
+            final_url = f"{base_url}/#/{url_data['loc']}" 
+            
+        loc.text = final_url
         
         # Last Modified
         lastmod = ET.SubElement(url_elem, 'lastmod')
