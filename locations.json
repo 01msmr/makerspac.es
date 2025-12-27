@@ -6593,6 +6593,36 @@
 
 
   {
+    "name": "eLab HTU Graz",
+    "loc": {
+      "lat": 47.0581771,
+      "long": 15.4594425,
+      "plz": 8010,
+      "city": "Graz",
+      "street": {
+        "name": "Inffeldgasse",
+        "number": 18,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for students",
+    "link": {
+      "url": "https://htugraz.at/e-lab",
+      "text": "htugraz.at/e-lab"
+    },
+    "spaceapi": {
+      "endpoint": "https://doorothy.htu.tugraz.at/doorothy/elab/status.spaceapi"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
+    }
+ },
+
+
+  {
     "name": "Makerspace Carinthia",
     "loc": {
       "lat": 46.6180671,
