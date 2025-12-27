@@ -199,7 +199,7 @@ def save_sitemap(xml_content, filename='sitemap.xml'):
 
 def print_stats(data):
     """Gibt Statistiken über die Sitemap aus"""
-    cities = find_all_cities_for_sitemap(data
+    cities = find_all_cities_for_sitemap(data),
     countries = find_all_countries(data)
     
     print("\n=== Sitemap Statistiken ===")
