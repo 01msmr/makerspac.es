@@ -6644,7 +6644,7 @@
     "dates": {
       "space.init": 20010000,
       "blog.latest": 20010000,
-      "datacheck.latest": 20251115
+      "datacheck.latest": 20251230
     }
  },
 
@@ -7251,6 +7251,66 @@
       "init": 20010000,
       "blog.latest": 20010000,
       "space.edited.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Hackerspace Drenthe",
+    "loc": {
+      "lat": 52.6598384,
+      "long": 6.7548194,
+      "plz": 7742,
+      "city": "AB Coevorden",
+      "street": {
+        "name": "Van Heeckerenlaan",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hackerspace-drenthe.nl",
+      "text": "www.hackerspace-drenthe.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://mqtt.hackerspace-drenthe.nl/spaceapi"
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251230
+    }
+  },
+
+
+  {
+    "name": "FabLab Coevorden",
+    "loc": {
+      "lat": 52.6599534,
+      "long": 6.7549756,
+      "plz": 7742,
+      "city": "AB Coevorden",
+      "street": {
+        "name": "Van Heeckerenlaan",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for youth",
+    "link": {
+      "url": "https://www.fablabcoevorden.nl",
+      "text": "www.fablabcoevorden.nl"
+    },
+    "spaceapi": {
+      "endpoint": ""
+    },
+    "dates": {
+      "init": 20010000,
+      "blog.latest": 20010000,
+      "space.edited.latest": 20251230
     }
   },
 
