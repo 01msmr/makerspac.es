@@ -1,30 +1,43 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Redirecting...</title>
+    <!-- 
+      GitHub Pages 404 Handler für Client-Side Routing (Hash-Fragment-Hack).
+      Dies ist notwendig, da GitHub Pages den History-Mode von SPAs nicht unterstützt.
+      Es leitet von /germany zu /#/germany um, damit die index.html geladen wird
+      und der SPA-Router das Routing übernehmen kann.
+    -->
     <script>
-        // GitHub Pages 404 Handler für Client-Side Routing
-        // 
-        // Wenn jemand direkt eine URL wie makerspac.es/germany aufruft,
-        // zeigt GitHub Pages normalerweise eine 404-Seite.
-        // Dieses Script fängt das ab und leitet zur Hauptseite weiter,
-        // wobei der Pfad erhalten bleibt.
-        
-        (function() {
-            // Hole den aktuellen Pfad (z.B. /germany oder /city-berlin)
+        (function () {
+            // Hole den angefragten Pfad (z.B. /germany)
             const path = window.location.pathname;
-            
-            // Erstelle die neue URL zur index.html mit dem Pfad
-            const newUrl = window.location.origin + '/?' + 
-                          encodeURIComponent(path.slice(1)); // Entfernt führendes /
-            
-            // Redirect zur Hauptseite mit dem Pfad als Query-Parameter
-            window.location.replace(newUrl);
+
+            // Basis-Pfad: Für Custom Domains (makerspac.es) ist das '/'.
+            // Für Projektseiten (user.github.io/repo) müsste es '/repo/' sein.
+            const base = '/';
+
+            // WICHTIG: Redirect zur index.html mit dem Pfad als Hash-Fragment.
+            // window.location.origin + base ist normalerweise die index.html
+            // Beispiel: makerspac.es/germany  wird zu  makerspac.es/#/germany
+            window.location.replace(window.location.origin + base + '#' + path);
         })();
     </script>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+    </style>
 </head>
+
 <body>
-    <p>Redirecting...</p>
+    <h1>Seite nicht gefunden (404)</h1>
+    <p>Wir leiten Sie zur korrekten Seite weiter...</p>
+    <p><a href="./">Zur Startseite</a></p>
 </body>
+
 </html>

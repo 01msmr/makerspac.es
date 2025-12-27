@@ -1,11 +1,11 @@
 // routing.js (ES MODULE)
-// URL-basiertes Routing für Filter + Pills
+// URL-basiertes Routing für Filter + Pills, NEU: **HASH-MODE**
 
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
     this.styleFilterManager = styleFilterManager;
     this.searchManager = searchManager;
-    this.json = json; // <-- Referenz auf window.json
+    this.json = json;
 
     // === Daten vorbereiten: Initialisierung verzögern (Private Properties) ===
     this._countries = null;
@@ -28,7 +28,7 @@ export class RoutingManager {
       // Weitere Städte könnten hier bei Bedarf hinzugefügt werden
     };
 
-    console.log('✅ RoutingManager constructor called (Lazy Load - Final)');
+    console.log('✅ RoutingManager constructor called (Hash Mode)');
 
     // Init mit Pills-Support
     this.initRoutingListeners();
@@ -149,15 +149,10 @@ export class RoutingManager {
   }
 
   // ========================================
-  // URL HELPERS
+  // URL HELPERS (HASH-MODE)
   // ========================================
 
-  getQueryPath() {
-    if (window.location.search.startsWith('?')) {
-      return decodeURIComponent(window.location.search.slice(1));
-    }
-    return null;
-  }
+  // ✨ ENTFERNT: getQueryPath() ist im Hash-Mode nicht mehr nötig
 
   updateURLFromPills(pills) {
     this._ensureDataLoaded();
@@ -166,9 +161,14 @@ export class RoutingManager {
       .map(p => this.findSlugByPill(p))
       .filter(Boolean);
 
-    const newPath = slugs.length > 0 ? `/${slugs.join('+')}` : window.location.pathname;
+    // NEU: Verwenden Sie den Hash für die URL
+    // Format: #/slug1+slug2
+    const newHash = slugs.length > 0 ? `#/${slugs.join('+')}` : '';
 
-    if (newPath !== window.location.pathname) {
+    // Wir verwenden history.pushState, um den Hash zu ändern, ohne die Seite neu zu laden.
+    if (newHash !== window.location.hash) {
+      // Wenn Hash leer ist, löschen wir den Hash und gehen zur Root-URL zurück (z.B. makerspac.es/)
+      const newPath = newHash || window.location.pathname;
       history.pushState(null, '', newPath);
     }
   }
@@ -206,12 +206,20 @@ export class RoutingManager {
   }
 
   // ========================================
-  // PILLS <-> URL
+  // PILLS <-> URL (HASH-MODE)
   // ========================================
 
   loadPillsFromURL() {
     this._ensureDataLoaded();
-    const path = window.location.pathname.slice(1);
+
+    // NEU: Lese den Hash-Teil und entferne das initiale '#/'
+    const hash = window.location.hash;
+    // Prüfe auf ein gültiges Hash-Format (z.B. #/germany+open)
+    if (!hash || !hash.startsWith('#/')) return [];
+
+    // Der Pfad ist nun der Hash-Teil ohne das # und ohne das /
+    const path = hash.slice(2);
+
     if (!path) return [];
 
     const slugs = path.split('+');
@@ -343,17 +351,13 @@ export class RoutingManager {
   handleRouteWithPills() {
     this._ensureDataLoaded(); // <--- DATEN LADEN BEI ERSTEM AUFRUF
 
-    const queryPath = this.getQueryPath();
-    if (queryPath) {
-      // Wenn wir einen Query-Parameter (?berlin) sehen, wandeln wir ihn in einen Pfad um
-      history.replaceState(null, '', `/${queryPath}`);
-      return this.handleRouteWithPills();
-    }
+    // ✨ ENTFERNT: Die queryPath-Logik (zuvor: '?berlin' zu '/berlin' umwandeln)
+    // Sie wird nicht mehr benötigt, da die 404.html direkt zu '#/berlin' umleitet.
 
     const pills = this.loadPillsFromURL();
 
     // Debugging-Zeile
-    console.log(`🔎 Route Handler: Path='${window.location.pathname}', Pills found: ${pills.length > 0 ? pills.map(p => p.text).join(', ') : 'None'}`);
+    console.log(`🔎 Route Handler: Hash='${window.location.hash}', Pills found: ${pills.length > 0 ? pills.map(p => p.text).join(', ') : 'None'}`);
 
     if (!pills.length) {
       this.clearAllPillsAndFilters();
@@ -376,11 +380,12 @@ export class RoutingManager {
   }
 
   initRoutingListeners() {
-    // Wir rufen ensureDataLoaded nicht hier auf, sondern im handleRouteWithPills, 
-    // um den asynchronen Load-Status zu berücksichtigen.
-    window.addEventListener('popstate', () => this.handleRouteWithPills());
+    // Horcht auf Änderungen des Hash-Fragments (z.B. manuelles Ändern oder Back/Forward-Button)
+    window.addEventListener('hashchange', () => this.handleRouteWithPills());
+
+    // Initialer Aufruf
     this.handleRouteWithPills();
 
-    console.log('✅ RoutingManager initialized with Pills listeners');
+    console.log('✅ RoutingManager initialized with Hash listeners');
   }
 }
