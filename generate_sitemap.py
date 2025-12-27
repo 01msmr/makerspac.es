@@ -58,8 +58,19 @@ def get_city_url_slug(city, reserved_routes):
     else:
         return slug
 
-def find_cities_with_multiple_spaces(data):
-    """Findet alle Städte mit 2+ Makerspaces"""
+# def find_cities_with_multiple_spaces(data):
+#     """Findet alle Städte mit 2+ Makerspaces"""
+#     city_count = {}
+    
+#     for location in data:
+#         city = location.get('loc', {}).get('city')
+#         if city and city != 'CITY_CITY':
+#             city_count[city] = city_count.get(city, 0) + 1
+    
+#     return {city: count for city, count in city_count.items() if count >= 2}
+
+def find_all_cities_for_sitemap(data):
+    """Findet alle Städte mit 1+ Makerspaces für die Sitemap"""
     city_count = {}
     
     for location in data:
@@ -67,7 +78,8 @@ def find_cities_with_multiple_spaces(data):
         if city and city != 'CITY_CITY':
             city_count[city] = city_count.get(city, 0) + 1
     
-    return {city: count for city, count in city_count.items() if count >= 2}
+    # Rückgabe aller Städte, bei denen der Zähler >= 1 ist (also alle gefundenen)
+    return {city: count for city, count in city_count.items() if count >= 1}
 
 def create_sitemap(base_url='https://makerspac.es'):
     """Erstellt die komplette sitemap.xml"""
