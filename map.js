@@ -332,10 +332,10 @@ function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
     bubblingMouseEvents: false,
     smoothFactor: 0.0,
     noClip: true,
-    lineCap: 'round',    // WICHTIG
-    lineJoin: 'round',   // WICHTIG
+    // lineCap: 'round',    // WICHTIG
+    // lineJoin: 'round',   // WICHTIG
     // ✨ WICHTIG FÜR CANVAS: Setzen Sie einen expliziten Renderer
-    renderer: L.canvas()
+    // renderer: L.canvas()
   }).addTo(map);
 
   connectionLine.bringToFront();
@@ -504,7 +504,7 @@ function setupMap() {
 
   map = new L.Map('map', {
     maxZoom: 18,
-    preferCanvas: true
+    // preferCanvas: true
   });
   console.log('✅ Leaflet map created');
 
