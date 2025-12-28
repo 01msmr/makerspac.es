@@ -159,6 +159,42 @@ class LanguageSwitcher {
 
     this.settingsPopover.appendChild(darkModeHeader);
 
+    // ✨ NEU: 3. CLUSTERING SECTION
+    const clusteringHeader = document.createElement('div');
+    clusteringHeader.className = 'settings-header';
+
+    // Startwert: Clustering ist standardmäßig aktiv (true)
+    // Wir verwenden einen Toggle-Button (ON/OFF)
+    const isClusteringActive = window.mapUtils && window.mapUtils.clusteringEnabled !== false;
+
+    clusteringHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-layer-group"></i>
+        <span>${this.t('clustering')}</span>
+      </div>
+      <div class="settings-header-icons">
+        <i class="fas fa-toggle-on settings-icon-btn ${isClusteringActive ? 'active' : ''}" data-clustering="on" title="Aktiv"></i>
+        <i class="fas fa-toggle-off settings-icon-btn ${!isClusteringActive ? 'active' : ''}" data-clustering="off" title="Inaktiv"></i>
+      </div>
+    `;
+
+    clusteringHeader.querySelectorAll('[data-clustering]').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const enable = icon.dataset.clustering === 'on';
+
+        if (window.mapUtils && typeof window.mapUtils.toggleClustering === 'function') {
+          window.mapUtils.toggleClustering(enable);
+
+          // Setze den Schalter-Zustand im Popover
+          clusteringHeader.querySelectorAll('[data-clustering]').forEach(i => i.classList.remove('active'));
+          icon.classList.add('active');
+        }
+      });
+    });
+
+    this.settingsPopover.appendChild(clusteringHeader);
+
     // 3. BOOKMARKS SECTION
     const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
     const bookmarksHeader = document.createElement('div');
@@ -398,6 +434,8 @@ class LanguageSwitcher {
     const lightBtn = this.settingsPopover.querySelector('[data-mode="light"]');
     const autoBtn = this.settingsPopover.querySelector('[data-mode="auto"]');
     const darkBtn = this.settingsPopover.querySelector('[data-mode="dark"]');
+    const clusterOnBtn = this.settingsPopover.querySelector('[data-clustering="on"]');
+    const clusterOffBtn = this.settingsPopover.querySelector('[data-clustering="off"]');
     const shareBtn = this.settingsPopover.querySelector('[data-action="share"]');
     const importBtn = this.settingsPopover.querySelector('[data-action="import"]');
     const deleteBtn = this.settingsPopover.querySelector('[data-action="delete"]');
@@ -405,6 +443,8 @@ class LanguageSwitcher {
     if (lightBtn) lightBtn.title = this.t('light');
     if (autoBtn) autoBtn.title = this.t('auto');
     if (darkBtn) darkBtn.title = this.t('dark');
+    if (clusterOnBtn) clusterOnBtn.title = this.t('clusteringOn'); // ✨ NEU
+    if (clusterOffBtn) clusterOffBtn.title = this.t('clusteringOff'); // ✨ NEU
     if (shareBtn) shareBtn.title = this.t('share');
     if (importBtn) importBtn.title = this.t('import');
     if (deleteBtn) deleteBtn.title = this.t('deleteAll');

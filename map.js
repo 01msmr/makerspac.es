@@ -95,8 +95,51 @@ window.mapUtils = {
   clearStickyPopup: clearStickyPopup,
   setStickyPopup: setStickyPopup,
   setMarkerDropdownHover: setMarkerDropdownHover,
-  clearMarkerDropdownHover: clearMarkerDropdownHover
+  clearMarkerDropdownHover: clearMarkerDropdownHover,
+
+  // ✨ NEU: Funktionen zum Umschalten des Clustering
+  toggleClustering: toggleClustering
 };
+
+// Globaler Status-Flag
+let clusteringEnabled = true;
+
+// ----------------------------------------------------
+// ✨ NEU: Clustering Ein-/Ausschalten Logik
+// ----------------------------------------------------
+
+function toggleClustering(enable) {
+  if (enable === clusteringEnabled) return;
+
+  clusteringEnabled = enable;
+
+  // 1. Alle Marker entfernen
+  // Wenn das Clustering aktiv ist, ist clusterGroup auf der Karte
+  if (map.hasLayer(clusterGroup)) {
+    map.removeLayer(clusterGroup);
+  }
+
+  // 2. Alle individuellen Marker von der Karte entfernen (falls sie direkt drauf sind)
+  allMarkers.forEach(marker => {
+    if (map.hasLayer(marker)) {
+      map.removeLayer(marker);
+    }
+  });
+
+  if (enable) {
+    // Clustering aktivieren: clusterGroup zur Karte hinzufügen, Marker zum clusterGroup
+    map.addLayer(clusterGroup);
+    clusterGroup.addLayers(allMarkers);
+    console.log('✅ Clustering aktiviert.');
+  } else {
+    // Clustering deaktivieren: Marker direkt zur Karte hinzufügen
+    // WICHTIG: Füge die Marker NICHT der clusterGroup hinzu, sondern direkt zur map
+    allMarkers.forEach(marker => {
+      map.addLayer(marker);
+    });
+    console.log('❌ Clustering deaktiviert.');
+  }
+}
 
 let clusterGroup = null;
 
@@ -572,9 +615,9 @@ function setupMap() {
 function initializeClustering() {
   clusterGroup = L.markerClusterGroup({
     maxClusterRadius: function (zoom) {
-      if (zoom <= 9) return 42;
-      if (zoom <= 11) return 21;
-      if (zoom <= 13) return 10;
+      if (zoom <= 9) return 50;
+      if (zoom <= 11) return 30;
+      if (zoom <= 13) return 20;
       return 0;
     },
     disableClusteringAtZoom: 14,
@@ -599,15 +642,15 @@ function initializeClustering() {
       let size;
 
       // ✨ KORRIGIERT: Unterschiedliche Größen zuweisen
-      if (count > 20) {
+      if (count > 19) {
         className = 'marker-cluster-large';
-        size = 48; // Größe L
-      } else if (count > 10) {
+        size = 48; // Größe L  == 20 - …
+      } else if (count > 9) {
         className = 'marker-cluster-medium';
-        size = 32; // Größe M
+        size = 32; // Größe M  == 10 - 19
       } else {
         className = 'marker-cluster-small';
-        size = 24; // Größe S
+        size = 24; // Größe S.  == 2 - 9
       }
 
 
