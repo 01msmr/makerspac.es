@@ -433,8 +433,8 @@ a#titleurl {
 
 /* Aktive Filter: Blau */
 .filter-pill-active {
-  background-color: #0066ff;
-  color: white;
+  background-color: var(--space-hover)
+  color: var(var(--text-color))
 }
 
 /* Spezielle Farben für open/closed Filters */
@@ -847,13 +847,18 @@ a#titleurl {
 
 
 
-
+/* ✨ NEU: Utility-Klasse zum Ausblenden */
+.is-hidden {
+  display: none !important;
+  /* Stellt sicher, dass das Element ausgeblendet wird */
+}
 
 
 /* ✨ NEU: Country Group Headers */
 .country-group-header {
   font-family: 'Lato', sans-serif;
-  padding: 8px 16px;
+  font-size: 0.9em;
+  padding: 2px 16px;
   background-color: var(--dropdown-alt-bg);
   border-bottom: 2px solid var(--dropdown-border);
   font-size: 0.9em;
@@ -869,13 +874,85 @@ a#titleurl {
 .country-group-header .country-title-content {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+  /* ✨ NEU: Flex-Grow, um den Button-Bereich links zu halten */
+  flex-grow: 1;
 }
+
+/* --------------------------------- */
+/* ✨ NEU: Country Filter Button (Der anklickbare Bereich) */
+/* --------------------------------- */
+
+.country-filter-button {
+  /* font-size: 0.9em; */
+  display: flex;
+  /* align-items: center; */
+  border: none !important;
+  outline: none !important;
+  gap: 3px;
+  /* Abstand zwischen Flagge, Icon und Text */
+  padding: 5px 9px 4px 5px;
+  border-radius: 36px;
+  /* margin: 0; */
+  margin-left: 2px;
+  cursor: pointer;
+  /* transition: all 0.2s ease; */
+  font-weight: bold;
+}
+
+/* Hover-Effekt des gesamten Buttons: Hintergrund-Highlight */
+.country-filter-button:hover {
+  background-color: var(--space-hover);
+  color: var(--hover-text-color)
+}
+
+/* Zustand: Filter ist aktiv */
+.country-filter-button.country-filter-active {
+  background-color: var(--space-hover);
+  color: white;
+}
+
+/* Flagge (unverändert) */
+.country-filter-button .flag-in-header {
+  font-size: 20px;
+  line-height: 1;
+  /* Flaggen-Styling aus der Flaggen-Bibliothek */
+  flex-shrink: 0;
+}
+
+/* Filter-Icon (soll bei Hover/Aktivierung weiß werden) */
+.country-filter-button .filter-icon-in-header {
+  color: var(--text-color);
+}
+
+/* Filter-Icon und Ländername bei Hover/Aktivierung */
+.country-filter-button:hover .filter-icon-in-header,
+.country-filter-button.country-filter-active .filter-icon-in-header,
+.country-filter-button:hover .country-filter-name,
+.country-filter-button.country-filter-active .country-filter-name {
+  color: white !important;
+}
+
+/* --------------------------------- */
+/* ✨ NEU: Visuelles Highlight des Headers bei aktivem Filter */
+/* --------------------------------- */
+
+/* .country-group-header.is-filtered {
+  border-left: 5px solid var(--space-hover);
+  padding-left: 11px;
+} */
+
 
 .country-group-header .country-count {
   color: var(--hover-text-color);
   font-weight: normal;
-  font-size: 0.9em;
+  font-size: 0.8em;
+  /* ✨ NEU: Flex-Grow 1 hinzugefügt, damit der Count links von den Carets bleibt */
+  flex-grow: 1;
+  text-align: right;
+  padding-right: 4px;
+  margin-left: 0;
+  padding-left: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -887,7 +964,7 @@ a#titleurl {
 /* Neue Klassen für die Carets */
 .country-nav-carets {
   display: flex;
-  gap: 8px;
+  gap: 0px;
 }
 
 .country-nav-caret {
@@ -1645,42 +1722,79 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* Cluster Styling */
-.marker-cluster-small {
-  background-color: rgba(153, 161, 104, 0.4);
-  border: 2px solid rgba(153, 161, 104, 0.8);
+
+
+
+/* ALLGEMEINE CLUSTER-STYLING-ÄNDERUNGEN */
+
+.marker-cluster {
+  /* Verwenden von Flexbox zur Zentrierung des Kind-Elements (div) */
+  display: flex;
+  align-items: center;  /* Vertikale Zentrierung */
+  justify-content: center;  /* Horizontale Zentrierung */
+  border-radius: 100px;  /* Für runde Cluster */
 }
 
-.marker-cluster-small div {
-  background-color: rgba(153, 161, 104, 0.4);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
+/* Styling des inneren Div-Elements (enthält die Zahl) */
+
+/* Das innere Div-Element muss die volle Größe des Eltern-Clusters einnehmen,
+   um die Zentrierung von Schritt 1 zu nutzen, und zusätzlich Flexbox nutzen,
+   um die Zahl selbst zu zentrieren. */
+
+.marker-cluster div {
+  width: 100%;
+  height: 100%;
+  border-radius: 200px;
+
+  /* Flexbox-Zentrierung für die Zahl selbst */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+
+
+
+
+/* WICHTIG: Setzt die Hauptfarbe des äußeren Clusters */
+.marker-cluster-small {
+  background-color: rgba(50, 50, 50, 0.6) !important;
+  border: 2px solid rgba(50, 50, 50, 0.8) !important;
 }
 
 .marker-cluster-medium {
-  background-color: rgba(255, 140, 0, 0.4);
-  border: 2px solid rgba(255, 140, 0, 0.8);
-}
-
-.marker-cluster-medium div {
-  background-color: rgba(255, 140, 0, 0.4);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
+  background-color: rgba(50, 50, 50, 0.7) !important;
+  border: 2px solid rgba(50, 50, 50, 0.8) !important;
 }
 
 .marker-cluster-large {
-  background-color: rgba(255, 80, 80, 0.4);
-  border: 2px solid rgba(255, 80, 80, 0.8);
+  background-color: rgba(50, 50, 50, 0.8) !important;
+  border: 2px solid rgba(50, 50, 50, 0.8) !important;
+}
+
+/* WICHTIG: Überschreibt die Hintergrundfarbe des inneren Rings auf Transparent */
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: transparent !important; /* Wichtig, damit keine Standard-Hintergrundfarbe (grün) durchscheint */
+  color: white;
+  font-weight: bold;
+}
+
+.marker-cluster-small div {
+  font-size: 1.4em;
+}
+
+.marker-cluster-medium div {
+  font-size: 1.6em;
 }
 
 .marker-cluster-large div {
-  background-color: rgba(255, 80, 80, 0.4);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
+  font-size: 1.8em;
 }
-
 
 
 /*  Styles für Bookmark-System  */

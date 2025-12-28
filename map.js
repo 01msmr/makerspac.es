@@ -572,15 +572,15 @@ function setupMap() {
 function initializeClustering() {
   clusterGroup = L.markerClusterGroup({
     maxClusterRadius: function (zoom) {
-      if (zoom <= 9) return 60;
-      if (zoom <= 11) return 40;
-      if (zoom <= 13) return 25;
+      if (zoom <= 9) return 42;
+      if (zoom <= 11) return 21;
+      if (zoom <= 13) return 10;
       return 0;
     },
     disableClusteringAtZoom: 14,
     spiderfyOnMaxZoom: true,
     spiderfyDistanceMultiplier: 2,
-    showCoverageOnHover: true,
+    showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
     animate: true,
     animateAddingMarkers: false,
@@ -593,19 +593,23 @@ function initializeClustering() {
       weight: 3,
       opacity: 0.8,
       fillOpacity: 0.2
-    },
-    iconCreateFunction: function (cluster) {
+    }, iconCreateFunction: function (cluster) {
       const count = cluster.getChildCount();
-      let className = 'marker-cluster-small';
-      let size = 40;
+      let className;
+      let size;
 
+      // ✨ KORRIGIERT: Unterschiedliche Größen zuweisen
       if (count > 20) {
         className = 'marker-cluster-large';
-        size = 40;
+        size = 48; // Größe L
       } else if (count > 10) {
         className = 'marker-cluster-medium';
-        size = 40;
+        size = 32; // Größe M
+      } else {
+        className = 'marker-cluster-small';
+        size = 24; // Größe S
       }
+
 
       return new L.DivIcon({
         html: '<div>' + count + '</div>',

@@ -1196,24 +1196,46 @@ class SearchManager {
     });
   }
 
+  // createCountryHeader wird aktualisiert, um carets auszublenden
   createCountryHeader(country, count) {
     const header = document.createElement('div');
     header.classList.add('country-group-header');
     header.dataset.countryName = country;
 
     const countryCode = this.getCountryCode(country);
-    const flagHtml = `<span class="fi fi-${countryCode}" style="margin-right: 4px;"></span>`;
-
-    const totalInCountry = this.json.filter(loc => loc.loc?.country === country).length;
-
     const translatedCountry = window.i18n.t(`countries.${country}`);
     const ofText = window.i18n.t('searchResults.of');
 
+    const isFilterActive = this.getActiveFilterForCategory('country') === country;
+    const activeClass = isFilterActive ? 'country-filter-active' : '';
+
+    // Klassen für das Ausblenden der Elemente bei aktivem Filter
+    const countClass = isFilterActive ? 'is-hidden' : '';
+    const caretsClass = isFilterActive ? 'is-hidden' : '';
+
     header.innerHTML = `
       <div class="country-title-content">
-        ${flagHtml}<strong>${translatedCountry}</strong> <span class="country-count">[${count} ${ofText} ${totalInCountry}]</span>
+        
+        <!-- NEU: Flagge steht VOR dem Button und ist NICHT Teil davon -->
+        <span class="fi fi-${countryCode} flag-in-header"></span> 
+        
+        <!-- Filter-Button: Enthält Icon und Länderbezeichnung -->
+        <div class="country-filter-button ${activeClass}" data-country="${country}" title="${window.i18n.t('filter.country')} ${translatedCountry}">
+          
+          <!-- Filter-Icon -->
+          <i class="fas fa-filter filter-icon-in-header"></i> 
+          
+          <!-- Länderbezeichnung -->
+          <span class="country-filter-name">${translatedCountry}</span>
+
+        </div>
+        
+        <!-- Space-Anzahl wird bei aktivem Filter ausgeblendet -->
+        <span class="country-count ${countClass}">[${count} ${ofText} ${this.json.filter(loc => loc.loc?.country === country).length}]</span>
       </div>
-      <div class="country-nav-carets">
+      
+      <!-- Carets werden bei aktivem Filter ausgeblendet -->
+      <div class="country-nav-carets ${caretsClass}">
         <i class="fas fa-caret-up country-nav-caret" data-direction="prev" title="previous country"></i>
         <i class="fas fa-caret-down country-nav-caret" data-direction="next" title="next country"></i>
       </div>
@@ -1221,12 +1243,44 @@ class SearchManager {
 
     const upCaret = header.querySelector('[data-direction="prev"]');
     const downCaret = header.querySelector('[data-direction="next"]');
+    const filterButton = header.querySelector('.country-filter-button');
 
-    upCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'prev'));
-    downCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'next'));
+    if (upCaret) upCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'prev'));
+    if (downCaret) downCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'next'));
+
+    // Event-Listener für den neuen Filter-Button
+    if (filterButton) {
+      filterButton.addEventListener('click', (e) => this.handleCountryFilterClick(e, country));
+    }
+
+    // Wenn der Filter für dieses Land aktiv ist, bekommt der gesamte Header eine Klasse
+    if (isFilterActive) {
+      header.classList.add('is-filtered');
+    }
 
     return header;
   }
+
+  // ✨ NEUE FUNKTION: Logik zum Aktivieren/Deaktivieren des Länderfilters
+  handleCountryFilterClick(e, country) {
+    e.stopPropagation();
+
+    if (!this.styleFilterManager) return;
+
+    const currentActiveFilter = this.getActiveFilterForCategory('country');
+
+    if (currentActiveFilter === country) {
+      // Filter ist aktiv → DEAKTIVIEREN
+      this.clearCategoryFilter('country');
+    } else {
+      // Filter ist inaktiv oder anderes Land ist aktiv → AKTIVIEREN
+      this.selectCategoryOption('country', country);
+    }
+
+    // Das Dropdown muss nicht geschlossen werden, aber die Ansicht sollte aktualisiert werden.
+    this.searchBar.focus();
+  }
+
 
   getStickyOffset() {
     return 85;
