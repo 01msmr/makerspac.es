@@ -88,20 +88,13 @@ const icons = {
   unknownStatusIcon: window.MapIcons.unknownStatusIcon
 };
 
-// Map Utils für Search Manager
-window.mapUtils = {
-  createConnectionLine: createConnectionLine,
-  removeConnectionLine: removeConnectionLine,
-  clearStickyPopup: clearStickyPopup,
-  setStickyPopup: setStickyPopup,
-  setMarkerDropdownHover: setMarkerDropdownHover,
-  clearMarkerDropdownHover: clearMarkerDropdownHover,
-
-  // ✨ NEU: Funktionen zum Umschalten des Clustering
-  toggleClustering: toggleClustering
-};
+// ✨ NEU: Helper-Funktion, die den Zustand direkt aus der Modul-Variable liest
+function isClusteringCurrentlyEnabled() {
+  return clusteringEnabled;
+}
 
 // Globaler Status-Flag
+// ✨ KORRIGIERT: Status ist initial IMMER AKTIV
 let clusteringEnabled = true;
 
 // ----------------------------------------------------
@@ -111,10 +104,11 @@ let clusteringEnabled = true;
 function toggleClustering(enable) {
   if (enable === clusteringEnabled) return;
 
+  // ✨ KORRIGIERT: KEIN localStorage-Zugriff mehr!
+
   clusteringEnabled = enable;
 
   // 1. Alle Marker entfernen
-  // Wenn das Clustering aktiv ist, ist clusterGroup auf der Karte
   if (map.hasLayer(clusterGroup)) {
     map.removeLayer(clusterGroup);
   }
@@ -142,6 +136,22 @@ function toggleClustering(enable) {
 }
 
 let clusterGroup = null;
+
+// Map Utils für Search Manager
+window.mapUtils = {
+  createConnectionLine: createConnectionLine,
+  removeConnectionLine: removeConnectionLine,
+  clearStickyPopup: clearStickyPopup,
+  setStickyPopup: setStickyPopup,
+  setMarkerDropdownHover: setMarkerDropdownHover,
+  clearMarkerDropdownHover: clearMarkerDropdownHover,
+  updateMarkerIcon: updateMarkerIcon,
+
+  // ✨ NEU: Funktionen zum Umschalten des Clustering
+  toggleClustering: toggleClustering,
+  isClusteringEnabled: isClusteringCurrentlyEnabled // ✨ WICHTIG für language-switcher.js
+};
+
 
 // ✨ NEU: HINZUGEFÜGT: Map für Style-Übersetzungen (Fehlerbehebung)
 const styleTranslationMap = {
@@ -529,6 +539,10 @@ async function initializeApp() {
     setupMap();
     initializeClustering();
     await loadData(); // WICHTIG: loadData füllt window.json
+
+    // ✨ KORRIGIERT: KEIN toggleClustering(false) beim Laden mehr!
+    // Der Standardzustand (ON) wird von initializeClustering übernommen.
+
     setupSearch();
     setupStyleFilter();
     setupRouting();
@@ -667,7 +681,6 @@ function initializeClustering() {
 }
 
 
-
 async function loadData() {
   try {
     const response = await fetch("./locations.json");
@@ -741,7 +754,10 @@ function createMarkerForLocation(location) {
     opacity: 0.66
   });
 
+  // ✨ KORRIGIERT: Die Marker werden HIER initial zur ClusterGroup hinzugefügt.
+  // Da clusteringEnabled = true ist, ist dies der korrekte Initialzustand.
   clusterGroup.addLayer(marker);
+
   marker.uniqueId = location.uniqueId;
 
   marker.bindPopup((layer) => {
@@ -1112,7 +1128,10 @@ const init = async () => {
     await window.i18n.load('./lang.json');
     setupMap();
     initializeClustering();
-    await loadData();
+    await loadData(); // WICHTIG: loadData füllt window.json
+
+    // ✨ KORRIGIERT: KEIN toggleClustering(false) beim Laden mehr!
+
     setupSearch();
     setupStyleFilter();
     setupRouting();
