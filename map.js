@@ -104,34 +104,27 @@ let clusteringEnabled = true;
 function toggleClustering(enable) {
   if (enable === clusteringEnabled) return;
 
-  // ✨ KORRIGIERT: KEIN localStorage-Zugriff mehr!
-
   clusteringEnabled = enable;
 
-  // 1. Alle Marker entfernen
-  if (map.hasLayer(clusterGroup)) {
-    map.removeLayer(clusterGroup);
-  }
+  // 1. ClusterGroup komplett leeren (entfernt alle Marker intern und von der Map)
+  clusterGroup.clearLayers();
 
-  // 2. Alle individuellen Marker von der Karte entfernen (falls sie direkt drauf sind)
-  allMarkers.forEach(marker => {
-    if (map.hasLayer(marker)) {
-      map.removeLayer(marker);
-    }
-  });
-
+  // 2. Layer-Container togglen
   if (enable) {
-    // Clustering aktivieren: clusterGroup zur Karte hinzufügen, Marker zum clusterGroup
-    map.addLayer(clusterGroup);
-    clusterGroup.addLayers(allMarkers);
+    if (!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
     console.log('✅ Clustering aktiviert.');
   } else {
-    // Clustering deaktivieren: Marker direkt zur Karte hinzufügen
-    // WICHTIG: Füge die Marker NICHT der clusterGroup hinzu, sondern direkt zur map
-    allMarkers.forEach(marker => {
-      map.addLayer(marker);
-    });
+    if (map.hasLayer(clusterGroup)) map.removeLayer(clusterGroup);
     console.log('❌ Clustering deaktiviert.');
+  }
+
+  // 3. Filter-Kette neu starten
+  if (window.searchManager && typeof window.searchManager.applyPillFilters === 'function') {
+    const pills = window.searchManager.pillsManager.getPillsArray();
+    // ✨ FIX: Asynchrone Verzögerung hinzufügen, um Leaflet Zeit zum Aufräumen zu geben.
+    setTimeout(() => {
+      window.searchManager.applyPillFilters(pills);
+    }, 50);
   }
 }
 
@@ -541,15 +534,14 @@ async function initializeApp() {
     await loadData(); // WICHTIG: loadData füllt window.json
 
     // ✨ KORRIGIERT: KEIN toggleClustering(false) beim Laden mehr!
-    // Der Standardzustand (ON) wird von initializeClustering übernommen.
 
     setupSearch();
     setupStyleFilter();
     setupRouting();
     setupMapClickHandler();
   } catch (error) {
-    console.error("A critical error occurred during app initialization:", error);
-    alert("The application could not be started. Please check the developer console.");
+    console.error('⛔ A critical error occurred during app initialization:', error);
+    alert('The application could not be started. Please check the developer console.');
   }
 }
 
@@ -597,7 +589,7 @@ function setupMap() {
 
       currentMapLibreLayer.addTo(map);
 
-      window.currentMapLibreLayer = currentMapLibreLayer;
+      window.currentMapLibreLayer = currentMapLibreLayer; // Korrigierter Name
 
       const mapContainer = document.getElementById('map');
       if (isDarkMode) {
@@ -754,8 +746,8 @@ function createMarkerForLocation(location) {
     opacity: 0.66
   });
 
-  // ✨ KORRIGIERT: Die Marker werden HIER initial zur ClusterGroup hinzugefügt.
-  // Da clusteringEnabled = true ist, ist dies der korrekte Initialzustand.
+  // ✨ KORRIGIERT: Die Marker werden HIER initial zur ClusterGroup hinzugefügt, 
+  // da clusteringEnabled = true ist (der Standardzustand).
   clusterGroup.addLayer(marker);
 
   marker.uniqueId = location.uniqueId;
@@ -1137,8 +1129,8 @@ const init = async () => {
     setupRouting();
     setupMapClickHandler();
   } catch (error) {
-    console.error("A critical error occurred during app initialization:", error);
-    alert("The application could not be started. Please check the developer console.");
+    console.error('⛔ A critical error occurred during app initialization:', error);
+    alert('The application could not be started. Please check the developer console.');
   }
 }
 

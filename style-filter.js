@@ -270,42 +270,53 @@ class StyleFilterManager {
 
   updateMarkers(filteredLocations) {
     const clusterGroup = window.clusterGroup;
-    if (!clusterGroup) return;
+    const map = window.map;
+    if (!clusterGroup || !map) return;
+
+    // ✅ WICHTIG: Prüfe Clustering-Status
+    const isClusteringActive = window.mapUtils && window.mapUtils.isClusteringEnabled();
 
     const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
 
     this.allMarkers.forEach(marker => {
       const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
+      // 1. ENTFERNE Marker von ALLEN Layern (Hard Reset)
+      if (clusterGroup.hasLayer(marker)) {
+        clusterGroup.removeLayer(marker);
+      }
+      if (map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      }
+
       if (filteredIds.has(marker.uniqueId)) {
-        // Marker soll angezeigt werden
-        if (!clusterGroup.hasLayer(marker)) {
+        // 2. FÜGE Marker zum RICHTIGEN Layer hinzu
+        if (isClusteringActive) {
           clusterGroup.addLayer(marker);
+        } else {
+          // ✅ Wenn Clustering deaktiviert, füge direkt zur Map hinzu
+          map.addLayer(marker);
         }
 
-        // ✨ FIX: Icon-Update basierend auf Status
+        // 3. Icon setzen
         let iconToSet;
 
         if (location && location.isOpen === true) {
-          iconToSet = this.icons.greenIcon;  // ✅ Grün!
+          iconToSet = this.icons.greenIcon;
         } else if (location && location.isOpen === false) {
-          iconToSet = this.icons.redIcon;    // ✅ Rot!
+          iconToSet = this.icons.redIcon;
         } else if (location && location.spaceapi && location.spaceapi.endpoint) {
-          iconToSet = this.icons.unknownStatusIcon; // ✅ Gelb/Unknown!
+          iconToSet = this.icons.unknownStatusIcon;
         } else {
           iconToSet = this.icons.highlightIcon;
         }
 
         marker.setIcon(iconToSet);
-
-      } else {
-        // Marker soll versteckt werden
-        if (clusterGroup.hasLayer(marker)) {
-          clusterGroup.removeLayer(marker);
-        }
       }
+      // Wenn nicht gefiltert: Marker bleibt entfernt (durch Schritt 1)
     });
   }
+
 
   getSelectedStyles() {
     return Array.from(this.selectedStyles);

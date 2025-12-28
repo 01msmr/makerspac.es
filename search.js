@@ -37,7 +37,9 @@
       this.zoomIndicatorActive = false;
 
       this.lastKeypressTime = 0;
-      this.isSvgUpdateScheduled = false; // ✨ NEU: rAF-Status-Flag
+      // this.isSvgUpdateScheduled = false; // ✨ NEU: rAF-Status-Flag
+
+      this._skipAutoZoom = false; // ✨ WICHTIG: Flag, das von map.js gesetzt wird
 
       this.initializeEventListeners();
       setTimeout(() => { this.setupSpaceAPIEvents(); }, 100);
@@ -285,7 +287,16 @@
       this.updateSearchCounter(filteredLocations.length);
       this.createSuggestionItems(filteredLocations);
       this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0);
-      this.triggerAutoZoom(filteredLocations);
+
+      // HIER WIRD DIE LOGIK EINGEFÜGT:
+      // ✨ FIX: AutoZoom unterdrücken, wenn das Flag gesetzt ist
+      if (!this._skipAutoZoom) {
+        this.triggerAutoZoom(filteredLocations);
+      } else {
+        // ✨ WICHTIG: Flag ZURÜCKSETZEN, da der Zoom-Versuch jetzt beendet ist
+        this._skipAutoZoom = false;
+      }
+
       return;
     }
 
@@ -596,6 +607,7 @@
 
     updateMarkers(filteredLocations) {
       const clusterGroup = window.clusterGroup;
+      const isClusteringActive = window.mapUtils && window.mapUtils.isClusteringEnabled();
       if (!clusterGroup) return;
 
       const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
@@ -603,14 +615,26 @@
       this.allMarkers.forEach(marker => {
         const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
+        // 1. Markern von ALLEN Layern entfernen (Hard Reset)
+        if (clusterGroup.hasLayer(marker)) {
+          clusterGroup.removeLayer(marker);
+        }
+        if (this.map.hasLayer(marker)) {
+          this.map.removeLayer(marker);
+        }
+
+        // Nur Marker, die den Filtern entsprechen, verarbeiten
         if (filteredIds.has(marker.uniqueId)) {
-          if (!clusterGroup.hasLayer(marker) && window.mapUtils.clusteringEnabled) {
+
+          // 2. MARKER ZUM AKTUELLEM AKTIVEN LAYER HINZUFÜGEN
+          if (isClusteringActive) {
             clusterGroup.addLayer(marker);
-          } else if (!window.mapUtils.clusteringEnabled && !this.map.hasLayer(marker)) {
-            // Wenn Clustering deaktiviert ist, Marker direkt auf die Karte legen
+          } else {
+            // Hinzufügen zur Map, da Clustering aus ist
             this.map.addLayer(marker);
           }
 
+          // 3. ICON SETZEN (Diese Logik war bereits korrekt)
           let iconToSet;
 
           if (location.isOpen === true) {
@@ -624,18 +648,12 @@
           }
 
           marker.setIcon(iconToSet);
-
-        } else {
-          // Marker entfernen
-          if (clusterGroup.hasLayer(marker)) {
-            clusterGroup.removeLayer(marker);
-          }
-          if (this.map.hasLayer(marker)) {
-            this.map.removeLayer(marker);
-          }
         }
+        // Wenn der Marker NICHT gefiltert ist, bleibt er entfernt (durch Schritt 1)
       });
     }
+
+
 
     setupSpaceAPIEvents() {
       if (window.spaceAPI) {
