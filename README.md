@@ -1,9 +1,9 @@
 Map of Makerspaces
 
- currently contains only data from Germany (, Austria and Switzerland). 
+currently contains data from D-A-CH region (Germany, Austria and Switzerland, and also som EU countries). 
 
-Curated and Listed by Ulrich Maasmeier. 
+programmed and curated by Ulrich Maasmeier & AI.
 
 
-Map from [openstreetmap.org](https://www.openstreetmap.org),
-integration with the help of [leaflet.js](https://leafletjs.com) - 
+Map data from [openstreetmap.org](https://www.openstreetmap.org),
+integration with the help of [leaflet.js](https://leafletjs.com).
