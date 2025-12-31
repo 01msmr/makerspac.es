@@ -1418,10 +1418,94 @@
 
 
   {
+    "name": "Toppoint",
+    "loc": {
+      "lat": 54.3364372,
+      "long": 10.1148217,
+      "plz": 24118,
+      "city": "Kiel",
+      "street": {
+        "name": "Holzkoppelweg",
+        "number": 20,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.toppoint.de",
+      "text": "www.toppoint.de"
+    },
+    "dates": {
+      "space.init": 19900719,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
+    }
+  },
+
+
+  {
+    "name": "Digitalzentrum Amt Süderbrarup",
+    "loc": {
+      "lat": 54.6412753,
+      "long": 9.7617872,
+      "plz": 24392,
+      "city": "Süderbrarup",
+      "street": {
+        "name": "Team Allee",
+        "number": 24,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://www.diz.digital",
+      "text": "www.diz.digital"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
+    }
+  },
+
+
+  {
+    "name": "Nordlab",
+    "loc": {
+      "lat": 54.7916691,
+      "long": 9.4423641,
+      "plz": 24937,
+      "city": "Flensburg",
+      "street": {
+        "name": "St. Jürgen Straße",
+        "number": 95,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://fablab.sh",
+      "text": "fablab.sh"
+    },
+    "spaceapi": {
+      "endpoint": "http://spaceapi.nordlab-ev.de"
+    },
+    "dates": {
+      "space.init": 20140828,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
+    }
+  },
+
+
+  {
     "name": "CCC Flensburg",
     "loc": {
-      "lat": 54.3416710,
-      "long": 10.1250908,
+      "lat": 54.8045085,
+      "long": 9.4235077,
       "plz": 24939,
       "city": "Flensburg",
       "street": {
@@ -1443,6 +1527,36 @@
       "space.init": 20150213,
       "blog.latest": 20250630,
       "datacheck.latest": 20251015
+    }
+  },
+
+
+  {
+    "name": "Ideenreich",
+    "loc": {
+      "lat": 54.7756013,
+      "long": 9.4506405,
+      "plz": 24943,
+      "city": "Flensburg",
+      "street": {
+        "name": "Kanzleistraße",
+        "number": 91,
+        "ext": "-93"
+      },
+      "country": "Germany"
+    },
+    "style": "for students & youth",
+    "link": {
+      "url": "https://hs-flensburg.de/hochschule/organisation/einrichtungen/fablab-ideenreich",
+      "text": "https://hs-flensburg.de"
+    },
+    "spaceapi": {
+      "endpoint": ""
+    },
+    "dates": {
+      "space.init": 20010101,
+      "blog.latest": 20010101,
+      "datacheck.latest": 20251230
     }
   },
 
@@ -1500,6 +1614,91 @@
       "space.init": 20220525,
       "blog.latest": 20250316,
       "datacheck.latest": 20251115
+    }
+  },
+
+
+  {
+    "name": "Makerspace Aurich",
+    "loc": {
+      "lat": 53.4807932,
+      "long": 7.4884013
+      ,
+      "plz": 26603,
+      "city": "Aurich",
+      "street": {
+        "name": "Weddigenstraße",
+        "number": 5,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://makerspace-aurich.de",
+      "text": "makerspace-aurich.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.thingspeak.com/channels/1222682/fields/1/last"
+    },
+    "dates": {
+      "space.init": 20150406,
+      "blog.latest": 20010101,
+      "datacheck.latest": 20251230
+    }
+  },
+
+
+  {
+    "name": "MakerSpace Leer",
+    "loc": {
+      "lat": 53.2308623,
+      "long": 7.4494828,
+      "plz": 26789,
+      "city": " Leer (Ostfriesland)",
+      "street": {
+        "name": "Gaswerkstraße",
+        "number": 18,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.landkreis-leer.de/makerspace",
+      "text": "www.landkreis-leer.de"
+    },
+    "dates": {
+      "space.init": 20231130,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
+    }
+  },
+
+
+  {
+    "name": "Klüterraum Papenburg",
+    "loc": {
+      "lat": 53.0798861,
+      "long": 7.3926672,
+      "plz": 26871,
+      "city": "Papenburg",
+      "street": {
+        "name": "Hauptkanal Links",
+        "number": 58,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.klueterraum.de",
+      "text": "www.klueterraum.de"
+    },
+    "dates": {
+      "space.init": 20231130,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20251230
     }
   },
 
