@@ -399,21 +399,34 @@
       });
 
       item.classList.add('js-hover');
-
       this.isDropdownHovering = true;
       this.currentHoverItem = item;
 
-      // KORREKTUR: Verwende die globale Funktion, die den HEX-WERT zurückgibt
       const hoverColor = window.getDynamicSpaceColor(location);
-
-      // ✨ WICHTIG: createHoverSVG wird hier aufgerufen, um das Element ZU INITIALISIEREN.
       this.createHoverSVG(item, location, hoverColor);
+
       const targetMarker = this.findMarkerByLocation(location);
 
       if (targetMarker) {
+        const clusterGroup = window.clusterGroup;
+        const isClusteringActive = window.mapUtils && window.mapUtils.isClusteringEnabled();
+
+        // ✨ OPTIMIERUNG: Nur wenn Clustering aktiv ist UND der Marker in einem Cluster steckt
+        if (isClusteringActive && clusterGroup) {
+          const visibleParent = clusterGroup.getVisibleParent(targetMarker);
+
+          // Wenn der sichtbare Elternteil NICHT der Marker selbst ist, ist er in einem Cluster versteckt
+          if (visibleParent && visibleParent !== targetMarker) {
+            targetMarker.addTo(this.map);
+            targetMarker._isTemporarilyUnclustered = true;
+            console.log(`📌 Marker für ${location.name} temporär aus Cluster geholt.`);
+          }
+        }
+
         if (window.markerStateManager) {
           window.markerStateManager.setState(targetMarker.uniqueId, { isDropdownHovering: true });
         }
+
         if (window.mapUtils && window.mapUtils.setMarkerDropdownHover) {
           window.mapUtils.setMarkerDropdownHover(targetMarker, true);
         }
@@ -437,7 +450,7 @@
 
       this.isDropdownHovering = false;
       this.currentHoverItem = null;
-      this.cleanupHoverSVG(); // ✨ SVG WIRD HIER ENTFERNT (nur beim Mouseout)
+      this.cleanupHoverSVG();
       this.removeConnectionLine();
 
       if (this.popupTimeout) {
@@ -447,9 +460,17 @@
 
       const targetMarker = this.findMarkerByLocation(location);
       if (targetMarker) {
+        // ✨ OPTIMIERUNG: Nur entfernen, wenn er wirklich temporär "geholt" wurde
+        if (targetMarker._isTemporarilyUnclustered) {
+          this.map.removeLayer(targetMarker);
+          targetMarker._isTemporarilyUnclustered = false;
+          console.log(`♻️ Marker für ${location.name} zurück ins Cluster gegeben.`);
+        }
+
         if (window.markerStateManager) {
           window.markerStateManager.setState(targetMarker.uniqueId, { isDropdownHovering: false });
         }
+
         if (window.mapUtils && window.mapUtils.clearMarkerDropdownHover) {
           window.mapUtils.clearMarkerDropdownHover(targetMarker);
         }
@@ -615,7 +636,7 @@
       this.allMarkers.forEach(marker => {
         const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
 
-        // 1. Markern von ALLEN Layern entfernen (Hard Reset)
+        // Erst überall entfernen (Reset)
         if (clusterGroup.hasLayer(marker)) {
           clusterGroup.removeLayer(marker);
         }
@@ -623,20 +644,16 @@
           this.map.removeLayer(marker);
         }
 
-        // Nur Marker, die den Filtern entsprechen, verarbeiten
+        // Wenn der Marker zum Suchergebnis gehört
         if (filteredIds.has(marker.uniqueId)) {
-
-          // 2. MARKER ZUM AKTUELLEM AKTIVEN LAYER HINZUFÜGEN
+          // ✨ ÄNDERUNG: Marker dem korrekten Layer hinzufügen (Cluster oder direkt Map)
           if (isClusteringActive) {
             clusterGroup.addLayer(marker);
           } else {
-            // Hinzufügen zur Map, da Clustering aus ist
             this.map.addLayer(marker);
           }
 
-          // 3. ICON SETZEN (Diese Logik war bereits korrekt)
           let iconToSet;
-
           if (location.isOpen === true) {
             iconToSet = this.icons.greenIcon;
           } else if (location.isOpen === false) {
@@ -649,7 +666,6 @@
 
           marker.setIcon(iconToSet);
         }
-        // Wenn der Marker NICHT gefiltert ist, bleibt er entfernt (durch Schritt 1)
       });
     }
 
