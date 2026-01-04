@@ -1,4 +1,4 @@
-// map.js - Finale Anti-Flacker Version mit zentralisiertem Marker-State Management und Navigation
+// map.js - Finale Anti-Flacker Version mit ID-basiertem State Management und Navigation
 
 import { RoutingManager } from './routing.js';
 console.log('📦 map.js loaded as module');
@@ -12,9 +12,9 @@ window.addEventListener("keydown", (e) => {
   }
 })
 
-// ✨ NEU: Globaler Cache für City Slugs -> Kanonische Namen
-// (Wird zwar im aktuellen Design nicht mehr genutzt, aber als Fallback beibehalten)
-window.CITY_SLUG_CACHE = new Map();
+// ✅ OPTIMIERUNG: Globale Indizes für schnellen ID-Zugriff
+window.locationById = new Map();
+window.markerById = new Map();
 
 // *** Modul-Scope Start ***
 
@@ -28,18 +28,18 @@ let isPopupSticky = false;
 
 // *** WICHTIG: json als globale Variable ***
 window.json = [];
-let json = window.json; // HINWEIS: 'json' ist hier nur eine lokale Kopie von window.json
+let json = window.json;
 
 // ZENTRALISIERTER MARKER-STATE MANAGEMENT
 window.markerStateManager = {
   states: new Map(),
 
-  setState(markerId, state) {
-    this.states.set(markerId, { ...this.getState(markerId), ...state });
+  setState(locationId, state) {
+    this.states.set(locationId, { ...this.getState(locationId), ...state });
   },
 
-  getState(markerId) {
-    return this.states.get(markerId) || {
+  getState(locationId) {
+    return this.states.get(locationId) || {
       isHovering: false,
       isDropdownHovering: false,
       isScaling: false,
@@ -51,13 +51,13 @@ window.markerStateManager = {
     };
   },
 
-  isAnyHoverActive(markerId) {
-    const state = this.getState(markerId);
+  isAnyHoverActive(locationId) {
+    const state = this.getState(locationId);
     return state.isHovering || state.isDropdownHovering;
   },
 
-  clearTimeouts(markerId) {
-    const state = this.getState(markerId);
+  clearTimeouts(locationId) {
+    const state = this.getState(locationId);
     if (state.hoverTimeout) {
       clearTimeout(state.hoverTimeout);
       state.hoverTimeout = null;
@@ -74,7 +74,7 @@ window.markerStateManager = {
       clearTimeout(state.debounceTimeout);
       state.debounceTimeout = null;
     }
-    this.setState(markerId, state);
+    this.setState(locationId, state);
   }
 };
 
@@ -88,17 +88,16 @@ const icons = {
   unknownStatusIcon: window.MapIcons.unknownStatusIcon
 };
 
-// ✨ NEU: Helper-Funktion, die den Zustand direkt aus der Modul-Variable liest
+// Helper-Funktion, die den Zustand direkt aus der Modul-Variable liest
 function isClusteringCurrentlyEnabled() {
   return clusteringEnabled;
 }
 
 // Globaler Status-Flag
-// ✨ KORRIGIERT: Status ist initial IMMER AKTIV
 let clusteringEnabled = true;
 
 // ----------------------------------------------------
-// ✨ NEU: Clustering Ein-/Ausschalten Logik
+// Clustering Ein-/Ausschalten Logik
 // ----------------------------------------------------
 
 function toggleClustering(enable) {
@@ -106,7 +105,7 @@ function toggleClustering(enable) {
 
   clusteringEnabled = enable;
 
-  // 1. ClusterGroup komplett leeren (entfernt alle Marker intern und von der Map)
+  // 1. ClusterGroup komplett leeren
   clusterGroup.clearLayers();
 
   // 2. Layer-Container togglen
@@ -121,7 +120,6 @@ function toggleClustering(enable) {
   // 3. Filter-Kette neu starten
   if (window.searchManager && typeof window.searchManager.applyPillFilters === 'function') {
     const pills = window.searchManager.pillsManager.getPillsArray();
-    // ✨ FIX: Asynchrone Verzögerung hinzufügen, um Leaflet Zeit zum Aufräumen zu geben.
     setTimeout(() => {
       window.searchManager.applyPillFilters(pills);
     }, 50);
@@ -139,14 +137,11 @@ window.mapUtils = {
   setMarkerDropdownHover: setMarkerDropdownHover,
   clearMarkerDropdownHover: clearMarkerDropdownHover,
   updateMarkerIcon: updateMarkerIcon,
-
-  // ✨ NEU: Funktionen zum Umschalten des Clustering
   toggleClustering: toggleClustering,
-  isClusteringEnabled: isClusteringCurrentlyEnabled // ✨ WICHTIG für language-switcher.js
+  isClusteringEnabled: isClusteringCurrentlyEnabled
 };
 
-
-// ✨ NEU: HINZUGEFÜGT: Map für Style-Übersetzungen (Fehlerbehebung)
+// Map für Style-Übersetzungen
 const styleTranslationMap = {
   'for all': 'style.forAll',
   'for students': 'style.forStudents',
@@ -158,10 +153,9 @@ const styleTranslationMap = {
 // +++ START: NAVIGATION LINK FUNCTIONS +++
 function updateNavigationIconAppearance(navLinkElement, location) {
   const icon = navLinkElement.querySelector('i');
-  const parentContainer = navLinkElement.parentElement; // Das ist .popup-street-line
+  const parentContainer = navLinkElement.parentElement;
   if (!icon || !parentContainer) return;
 
-  // 1. Set service data attribute for CSS to handle icon selection
   const savedService = localStorage.getItem('mapService');
   const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
   const ninetySixHours = 96 * 60 * 60 * 1000;
@@ -170,7 +164,6 @@ function updateNavigationIconAppearance(navLinkElement, location) {
   const serviceToUse = serviceExpired ? 'default' : savedService;
   navLinkElement.setAttribute('data-service', serviceToUse);
 
-  // 2. Set status data attribute for CSS to handle coloring
   parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
 
   let statusClass = 'status-default';
@@ -242,8 +235,8 @@ function openMap(service, lat, long) {
 
 // DROPDOWN HOVER MANAGEMENT
 function setMarkerDropdownHover(marker, isHovering) {
-  const state = window.markerStateManager.getState(marker.uniqueId);
-  window.markerStateManager.setState(marker.uniqueId, { isDropdownHovering: isHovering });
+  const state = window.markerStateManager.getState(marker.locationId);
+  window.markerStateManager.setState(marker.locationId, { isDropdownHovering: isHovering });
 
   if (isHovering) {
     applyMarkerScale(marker, 1.15);
@@ -378,10 +371,6 @@ function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
     bubblingMouseEvents: false,
     smoothFactor: 0.0,
     noClip: true,
-    // lineCap: 'round',    // WICHTIG
-    // lineJoin: 'round',   // WICHTIG
-    // ✨ WICHTIG FÜR CANVAS: Setzen Sie einen expliziten Renderer
-    // renderer: L.canvas()
   }).addTo(map);
 
   connectionLine.bringToFront();
@@ -389,16 +378,13 @@ function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
   return connectionLine;
 }
 
-
-
-
 // ZENTRALISIERTE MARKER SKALIERUNG mit Animation
 function applyMarkerScale(marker, targetScale) {
-  const state = window.markerStateManager.getState(marker.uniqueId);
+  const state = window.markerStateManager.getState(marker.locationId);
 
   if (state.currentScale === targetScale || state.isScaling) return;
 
-  window.markerStateManager.setState(marker.uniqueId, {
+  window.markerStateManager.setState(marker.locationId, {
     isScaling: true,
     currentScale: targetScale
   });
@@ -407,18 +393,14 @@ function applyMarkerScale(marker, targetScale) {
     marker._icon.style.zIndex = targetScale > 1 ? '1000' : '';
 
     setTimeout(() => {
-      window.markerStateManager.setState(marker.uniqueId, { isScaling: false });
+      window.markerStateManager.setState(marker.locationId, { isScaling: false });
     }, 200);
   }
 }
 
-
-
-
-
 // Helper function zum konsistenten Icon-Update
 function updateMarkerIcon(marker, location) {
-  const state = window.markerStateManager.getState(marker.uniqueId);
+  const state = window.markerStateManager.getState(marker.locationId);
 
   if (state.isHovering || state.isDropdownHovering) {
     return;
@@ -440,14 +422,13 @@ function updateMarkerIcon(marker, location) {
     window.styleFilterManager.hasActiveFilters();
 
   if (searchQuery.length > 0 || hasActiveFilters) {
-    // WICHTIG: Hier verwenden wir window.json
     const filteredLocations = window.json.filter(loc =>
       loc.name.toLowerCase().includes(searchQuery) ||
       zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
       loc.loc.city.toLowerCase().includes(searchQuery)
     );
 
-    if (filteredLocations.some(loc => loc.uniqueId === location.uniqueId)) {
+    if (filteredLocations.some(loc => loc.ID === location.ID)) {
       let iconToSet;
 
       if (location.isOpen === true) {
@@ -531,9 +512,7 @@ async function initializeApp() {
     await window.i18n.load('./lang.json');
     setupMap();
     initializeClustering();
-    await loadData(); // WICHTIG: loadData füllt window.json
-
-    // ✨ KORRIGIERT: KEIN toggleClustering(false) beim Laden mehr!
+    await loadData();
 
     setupSearch();
     setupStyleFilter();
@@ -545,7 +524,7 @@ async function initializeApp() {
   }
 }
 
-// ✅ GLOBAL: Map und MapLibre Layer
+// GLOBAL: Map und MapLibre Layer
 let currentMapLibreLayer = null;
 
 function setupMap() {
@@ -553,7 +532,6 @@ function setupMap() {
 
   map = new L.Map('map', {
     maxZoom: 18,
-    // preferCanvas: true
   });
   console.log('✅ Leaflet map created');
 
@@ -569,7 +547,7 @@ function setupMap() {
       isDarkMode = true;
     } else if (colorScheme === 'light') {
       isDarkMode = false;
-    } else { // auto
+    } else {
       isDarkMode = darkModeQuery.matches;
     }
 
@@ -589,7 +567,7 @@ function setupMap() {
 
       currentMapLibreLayer.addTo(map);
 
-      window.currentMapLibreLayer = currentMapLibreLayer; // Korrigierter Name
+      window.currentMapLibreLayer = currentMapLibreLayer;
 
       const mapContainer = document.getElementById('map');
       if (isDarkMode) {
@@ -617,7 +595,6 @@ function setupMap() {
   });
 }
 
-
 function initializeClustering() {
   clusterGroup = L.markerClusterGroup({
     maxClusterRadius: function (zoom) {
@@ -642,23 +619,22 @@ function initializeClustering() {
       weight: 3,
       opacity: 0.8,
       fillOpacity: 0.2
-    }, iconCreateFunction: function (cluster) {
+    },
+    iconCreateFunction: function (cluster) {
       const count = cluster.getChildCount();
       let className;
       let size;
 
-      // ✨ KORRIGIERT: Unterschiedliche Größen zuweisen
       if (count > 19) {
         className = 'marker-cluster-large';
-        size = 48; // Größe L  == 20 - …
+        size = 48;
       } else if (count > 9) {
         className = 'marker-cluster-medium';
-        size = 32; // Größe M  == 10 - 19
+        size = 32;
       } else {
         className = 'marker-cluster-small';
-        size = 24; // Größe S.  == 2 - 9
+        size = 24;
       }
-
 
       return new L.DivIcon({
         html: '<div>' + count + '</div>',
@@ -672,20 +648,54 @@ function initializeClustering() {
   window.clusterGroup = clusterGroup;
 }
 
-
 async function loadData() {
   try {
     const response = await fetch("./locations.json");
-    if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Network response was not ok: ${response.statusStatus}`);
 
-    // ✨ WICHTIG: Befüllen der GLOBALEN Variable
-    window.json = await response.json();
-    json = window.json; // Aktualisiere die lokale Kopie (optional, aber sicher)
+    const rawData = await response.json();
+
+    // ✅ FILTER: Entferne das erste Objekt (TEMPLATE) - enthält die nächste zu verwendende ID
+    window.json = rawData.slice(1); // Überspringe Index 0
+    json = window.json;
+
+    console.log(`🗑️ Filtered out template (next ID: ${rawData[0]?.ID})`);
+    console.log(`📊 Loaded ${json.length} active locations`);
+
+    // ✅ OPTIMIERUNG: Baue Index für schnellen ID-Zugriff
+    console.log("🔍 Building location index by ID...");
+    const idSet = new Set();
+    let issuesFound = 0;
+
+    json.forEach((location, index) => {
+      // 1. Prüfe ob ID existiert
+      if (typeof location.ID !== 'number') {
+        console.error(`❌ Location "${location.name}" (index ${index}) has invalid ID: ${location.ID}`);
+        issuesFound++;
+        return;
+      }
+
+      // 2. Prüfe auf Duplikate
+      if (idSet.has(location.ID)) {
+        console.error(`❌ DUPLICATE ID ${location.ID} found for "${location.name}" (index ${index})`);
+        issuesFound++;
+        return;
+      }
+
+      // 3. Speichere im globalen Index
+      idSet.add(location.ID);
+      window.locationById.set(location.ID, location);
+    });
+
+    if (issuesFound > 0) {
+      console.error(`❌ Found ${issuesFound} ID issues - some locations may not work correctly`);
+    } else {
+      console.log(`✅ All ${json.length} location IDs validated successfully`);
+    }
 
     console.log("📍 Creating markers immediately...");
     json.forEach((location, index) => {
       if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
-        location.uniqueId = 'loc-' + index;
         createMarkerForLocation(location);
       }
     });
@@ -695,7 +705,7 @@ async function loadData() {
     const spaceAPI = new StaticSpaceAPI();
     window.spaceAPI = spaceAPI;
 
-    console.log("📄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
+    console.log("🔄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
 
     spaceAPI.onStatusUpdate((location) => {
       updateMarkerIconForLocation(location);
@@ -710,14 +720,13 @@ async function loadData() {
       console.log("✅ SpaceAPI status loading complete:");
       console.log(`   - ✅ Open: ${openCount}`);
       console.log(`   - ❌ Closed: ${closedCount}`);
-      console.log(`- ⚠️ Null: ${nullCount}`);
-      console.log(`- ❓ Undefined: ${undefinedCount}`);
+      console.log(`   - ⚠️ Null: ${nullCount}`);
+      console.log(`   - ❓ Undefined: ${undefinedCount}`);
 
       if (window.styleFilterManager && typeof window.styleFilterManager.refreshStyleStats === 'function') {
         window.styleFilterManager.refreshStyleStats();
       }
 
-      // ✨ FINALER FIX: Routing-Logik erneut ausführen
       if (window.routingManager && typeof window.routingManager.rerunRouteHandler === 'function') {
         window.routingManager.rerunRouteHandler();
       } else {
@@ -730,7 +739,6 @@ async function loadData() {
     alert("Failed to load location pins.");
   }
 }
-
 
 function createMarkerForLocation(location) {
   const lat = location.loc?.lat;
@@ -746,11 +754,13 @@ function createMarkerForLocation(location) {
     opacity: 0.66
   });
 
-  // ✨ KORRIGIERT: Die Marker werden HIER initial zur ClusterGroup hinzugefügt, 
-  // da clusteringEnabled = true ist (der Standardzustand).
   clusterGroup.addLayer(marker);
 
-  marker.uniqueId = location.uniqueId;
+  // ✅ OPTIMIERUNG: Verwende location.ID direkt
+  marker.locationId = location.ID;
+
+  // ✅ OPTIMIERUNG: Speichere Marker im globalen Index für schnellen Zugriff
+  window.markerById.set(location.ID, marker);
 
   marker.bindPopup((layer) => {
     let statusIconHtml = '';
@@ -807,42 +817,37 @@ function createMarkerForLocation(location) {
     const countryName = location.loc?.country || '';
     const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
 
-    // FEHLERBEHOBUNG: styleTranslationMap ist nun definiert
     const styleLabel = locationStyle && styleTranslationMap[locationStyle] ?
       (window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style) :
       (location.style || '');
 
     const bookmarkIcon = window.bookmarkManager ?
-      window.bookmarkManager.createBookmarkIcon(location.uniqueId, 'popup-bookmark') :
+      window.bookmarkManager.createBookmarkIcon(location.ID, 'popup-bookmark') :
       '';
 
     return `
-        <div style="--status-color: ${statusColor};">
-          <h3 id="style">${styleIconHtml}${styleLabel}</h3>
-          <a id="titleurl" href="${linkUrl}" target="_blank">
-            <h3 class="${nameClass}">
-              ${statusIconHtml}${location.name || 'Unnamed Space'}
-            </h3>${bookmarkIcon}<br><br>
-          </a>
-          <div class="popup-street-line">
-            <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
-            <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
-              <i></i>
-            </a>
-          </div>
-          ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
-            <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
-              <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
-      `;
+            <div style="--status-color: ${statusColor};">
+              <h3 id="style">${styleIconHtml}${styleLabel}</h3>
+              <a id="titleurl" href="${linkUrl}" target="_blank">
+                <h3 class="${nameClass}">
+                  ${statusIconHtml}${location.name || 'Unnamed Space'}
+                </h3>${bookmarkIcon}<br><br>
+                </a>
+                  <div class="popup-street-line">
+                    <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
+                    <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
+                      <i></i>
+                    </a>
+                  </div>
+                  ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
+                    <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
+                      <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+                      `;
   });
-
   marker.on('popupopen', (e) => {
-
-    // ✨ KORREKTUR: Sticky wird nur für Taps/Klicks gesetzt (kein Hover)
     if (!marker._openedByHover) {
       setStickyPopup(marker);
     }
-
     marker._openedByHover = false;
 
     const popup = marker.getPopup();
@@ -871,23 +876,17 @@ function createMarkerForLocation(location) {
       }
     }
 
-    // ✨ NEU: Logic für Popup-Enter: Bricht den Close-Timer ab und macht es sofort Sticky
     if (popupElement) {
       const handlePopupEnter = () => {
-        const state = window.markerStateManager.getState(marker.uniqueId);
+        const state = window.markerStateManager.getState(marker.locationId);
 
-        // 1. Schließ-Timeout abbrechen (sehr wichtig!)
         if (state.closeTimeout) {
           clearTimeout(state.closeTimeout);
-          window.markerStateManager.setState(marker.uniqueId, { closeTimeout: null });
+          window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
         }
 
-        // 2. Wenn es noch nicht Sticky ist, sofort Sticky machen.
         if (currentStickyMarker !== marker) {
-          // Timer für den 1500ms Sticky Timeout abbrechen, da die Maus jetzt das Popup hält.
-          window.markerStateManager.clearTimeouts(marker.uniqueId);
-
-          // Sofort Sticky setzen
+          window.markerStateManager.clearTimeouts(marker.locationId);
           setStickyPopup(marker);
         }
       };
@@ -895,7 +894,6 @@ function createMarkerForLocation(location) {
       popupElement.removeEventListener('mouseenter', handlePopupEnter);
       popupElement.addEventListener('mouseenter', handlePopupEnter);
     }
-
 
     const navLink = e.popup._container.querySelector('.navigation-icon');
     if (navLink) {
@@ -913,7 +911,6 @@ function createMarkerForLocation(location) {
       window.bookmarkManager.initializeBookmarkListeners(popupContainer);
     }
   });
-
   marker.on('popupclose', () => {
     document.querySelector('.title').classList.remove('popup-active');
     if (currentStickyMarker === marker) {
@@ -921,13 +918,11 @@ function createMarkerForLocation(location) {
       isPopupSticky = false;
     }
   });
-
   marker.on('mouseover', (e) => {
-    const state = window.markerStateManager.getState(marker.uniqueId);
-
+    const state = window.markerStateManager.getState(marker.locationId);
     if (state.isHovering) return;
 
-    window.markerStateManager.clearTimeouts(marker.uniqueId);
+    window.markerStateManager.clearTimeouts(marker.locationId);
 
     if (currentStickyMarker && currentStickyMarker !== marker) {
       currentStickyMarker.closePopup();
@@ -940,80 +935,85 @@ function createMarkerForLocation(location) {
       }
     });
 
-    window.markerStateManager.setState(marker.uniqueId, { isHovering: true });
+    window.markerStateManager.setState(marker.locationId, { isHovering: true });
     applyMarkerScale(marker, 1.15);
 
     const hoverTimeout = setTimeout(() => {
-      const currentState = window.markerStateManager.getState(marker.uniqueId);
+      const currentState = window.markerStateManager.getState(marker.locationId);
       if (currentState.isHovering && !marker.isPopupOpen()) {
         marker._openedByHover = true;
         marker.openPopup();
       }
     }, 400);
 
-    // ✨ KORRIGIERT: 1500ms Sticky-Timeout wiederhergestellt
     const stickyTimeout = setTimeout(() => {
-      const currentState = window.markerStateManager.getState(marker.uniqueId);
-      // Wir setzen Sticky NUR, wenn das Popup NICHT bereits offen ist (ansonsten macht das der popupopen-Handler)
+      const currentState = window.markerStateManager.getState(marker.locationId);
       if (currentState.isHovering && marker.isPopupOpen()) {
         setStickyPopup(marker);
       }
     }, 1500);
 
-    window.markerStateManager.setState(marker.uniqueId, { hoverTimeout, stickyTimeout });
+    window.markerStateManager.setState(marker.locationId, { hoverTimeout, stickyTimeout });
   });
-
   marker.on('mouseout', (e) => {
-    const state = window.markerStateManager.getState(marker.uniqueId);
-
-    window.markerStateManager.setState(marker.uniqueId, { isHovering: false });
-    window.markerStateManager.clearTimeouts(marker.uniqueId);
+    const state = window.markerStateManager.getState(marker.locationId);
+    window.markerStateManager.setState(marker.locationId, { isHovering: false });
+    window.markerStateManager.clearTimeouts(marker.locationId);
 
     if (!state.isDropdownHovering) {
       applyMarkerScale(marker, 1);
     }
 
-    // ✨ KORRIGIERT: Schließ-Logik mit 0ms Timeout
     const closeCheckTimeout = setTimeout(() => {
-      // Prüfe den Sticky-Status ERNEUT nach einer Mikroverzögerung.
       if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
         marker.closePopup();
       }
 
-      // Stelle sicher, dass der Timeout auch im State gelöscht wird, falls er nicht schließt.
-      window.markerStateManager.setState(marker.uniqueId, { closeTimeout: null });
+      window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
 
-      // Marker-Icon erst danach aktualisieren
       setTimeout(() => {
-        if (!window.markerStateManager.isAnyHoverActive(marker.uniqueId)) {
+        if (!window.markerStateManager.isAnyHoverActive(marker.locationId)) {
           updateMarkerIcon(marker, location);
         }
       }, 50);
 
-    }, 0); // ✨ Verzögerung auf 0ms reduziert für schnellstmögliche Prüfung
+    }, 0);
 
-    // Speichere den neuen Timeout-Handle im State Manager
-    window.markerStateManager.setState(marker.uniqueId, { closeTimeout: closeCheckTimeout });
+    window.markerStateManager.setState(marker.locationId, { closeTimeout: closeCheckTimeout });
   });
-
-
-  // ✨ WICHTIG: marker.on('click', ...) WURDE ENTFERNT, 
-  // um sich vollständig auf das Tap/Hover-Verhalten zu verlassen.
-
-
   allMarkers.push(marker);
 }
+// ============================================================================
+// OPTIMIERTE HILFSFUNKTIONEN: Nutzen ID statt find() - O(1) statt O(n)
+// ============================================================================
+/**
+ 
+Findet Location anhand ID
+*/
+function getLocationById(id) {
+  return window.locationById.get(id);
+}
 
-// ✨ NEUE HILFSFUNKTION: Aktualisiere Marker-Icon für eine Location
+/**
+ 
+Findet Marker anhand Location ID
+*/
+function getMarkerByLocationId(id) {
+  return window.markerById.get(id);
+}
+
+/**
+ 
+Aktualisiert Marker-Icon für Location
+*/
 function updateMarkerIconForLocation(location) {
-  const marker = allMarkers.find(m => m.uniqueId === location.uniqueId);
+  const marker = getMarkerByLocationId(location.ID);
   if (!marker) return;
 
-  const state = window.markerStateManager.getState(marker.uniqueId);
+  const state = window.markerStateManager.getState(marker.locationId);
   if (state.isHovering || state.isDropdownHovering) {
     return;
   }
-
   let newIcon;
   if (location.isOpen === true) {
     newIcon = icons.greenIcon;
@@ -1024,62 +1024,45 @@ function updateMarkerIconForLocation(location) {
   } else {
     newIcon = icons.highlightIcon;
   }
-
   marker.setIcon(newIcon);
-
   if (marker.isPopupOpen()) {
     marker.closePopup();
     marker.openPopup();
   }
 }
-
-
-
 // Style Filter Setup
 function setupStyleFilter() {
   if (!window.StyleFilterManager) {
     console.error('StyleFilterManager not available');
     return;
   }
-
-  // WICHTIG: window.json als Quelle verwenden
   styleFilterManager = new StyleFilterManager(window.json, allMarkers, icons, searchManager);
   window.styleFilterManager = styleFilterManager;
-
   if (searchManager) {
     searchManager.setStyleFilterManager(styleFilterManager);
   }
-
   console.log('StyleFilterManager initialized successfully');
-
   const openCount = window.json.filter(loc => loc.isOpen === true).length;
   const closedCount = window.json.filter(loc => loc.isOpen === false).length;
   const unknownCount = window.json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length;
-
   console.log('📊 Filter initialized with:');
   console.log(`   - Open spaces: ${openCount}`);
   console.log(`   - Closed spaces: ${closedCount}`);
   console.log(`   - Unknown/loading: ${unknownCount}`);
-
   if (openCount === 0 && closedCount === 0) {
     console.log('⏳ SpaceAPI status is still loading in background...');
     console.log('   Filter will be updated automatically when data arrives');
   }
 }
-
-
 function setupSearch() {
   if (!window.mapUtils) {
     console.error('mapUtils not available when setting up search');
     return;
   }
-
-  // WICHTIG: window.json als Quelle verwenden
   searchManager = new SearchManager(map, allMarkers, window.json, icons, zfill);
   window.searchManager = searchManager;
   console.log('SearchManager initialized successfully');
 }
-
 function clearStickyPopup() {
   if (currentStickyMarker && isPopupSticky) {
     currentStickyMarker.closePopup();
@@ -1087,13 +1070,11 @@ function clearStickyPopup() {
     isPopupSticky = false;
   }
 }
-
 function setStickyPopup(marker) {
   clearStickyPopup();
   currentStickyMarker = marker;
   isPopupSticky = true;
 }
-
 function setupMapClickHandler() {
   map.on('click', (e) => {
     if (e.originalEvent && e.originalEvent.target &&
@@ -1102,28 +1083,105 @@ function setupMapClickHandler() {
     }
   });
 }
-
-
 function setupRouting() {
   const routingManager = new RoutingManager(
     window.styleFilterManager,
     window.searchManager,
     window.json
   );
-
   window.routingManager = routingManager;
 }
+// ============================================================================
+// NEUE UTILITY-FUNKTIONEN: ID-basierte Validierung
+// ============================================================================
+/**
+ 
+Validiert alle IDs in der JSON
+*/
+window.validateLocationIds = function () {
+  const idSet = new Set();
+  const issues = [];
 
-// ✨ KORRIGIERTE Hauptfunktion (const init) um Syntaxfehler zu vermeiden
+  window.json.forEach((location, index) => {
+    if (typeof location.ID !== 'number') {
+      issues.push({
+        type: 'invalid',
+        index,
+        name: location.name,
+        id: location.ID,
+        message: `Location "${location.name}" (index ${index}) has invalid ID: ${location.ID}`
+      });
+      return;
+    }
+    if (idSet.has(location.ID)) {
+      const duplicate = Array.from(window.json).find((loc, i) =>
+        i < index && loc.ID === location.ID
+      );
+      issues.push({
+        type: 'duplicate',
+        index,
+        name: location.name,
+        id: location.ID,
+        duplicate: duplicate,
+        message: `Duplicate ID ${location.ID} - also used by "${duplicate?.name}"`
+      });
+      return;
+    }
+
+    idSet.add(location.ID);
+  });
+  return {
+    valid: issues.length === 0,
+    totalLocations: window.json.length,
+    uniqueIds: idSet.size,
+    issues: issues
+  };
+};
+/**
+ 
+Gibt einen Bericht über alle IDs aus
+*/
+window.reportLocationIdStatus = function () {
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log('📊 LOCATION ID STATUS REPORT');
+  console.log('═══════════════════════════════════════════════════════════');
+
+  const validation = window.validateLocationIds();
+  console.log(`Total Locations: ${validation.totalLocations}`);
+  console.log(`Valid IDs: ${validation.uniqueIds}`);
+  console.log(`Status: ${validation.valid ? '✅ VALID' : '❌ ISSUES FOUND'}`);
+  if (validation.issues.length > 0) {
+    console.log('\n⚠️ ISSUES FOUND:');
+    validation.issues.forEach((issue, i) => {
+      console.log(`\n${i + 1}. ${issue.type.toUpperCase()}`);
+      console.log(`   Location: "${issue.name}" (index ${issue.index})`);
+      console.log(`   ID: ${issue.id}`);
+      if (issue.duplicate) {
+        console.log(`   Also used by: "${issue.duplicate.name}"`);
+      }
+    });
+  } else {
+    console.log('\n✅ No issues found - all IDs are valid and unique!');
+  }
+  console.log('\n📈 ID STATISTICS:');
+  const ids = window.json.map(loc => loc.ID).filter(id => typeof id === 'number');
+  if (ids.length > 0) {
+    console.log(`   Min ID: ${Math.min(...ids)}`);
+    console.log(`   Max ID: ${Math.max(...ids)}`);
+    console.log(`   ID Range: ${Math.max(...ids) - Math.min(...ids) + 1}`);
+    const sortedIds = [...ids].sort((a, b) => a - b);
+    const isSequential = sortedIds.every((id, i) => i === 0 || id === sortedIds[i - 1] + 1);
+    console.log(`   Sequential: ${isSequential ? '✅ Yes' : '⚠️ No (gaps exist)'}`);
+  }
+  console.log('\n═══════════════════════════════════════════════════════════');
+};
+// Hauptinitialisierung
 const init = async () => {
   try {
     await window.i18n.load('./lang.json');
     setupMap();
     initializeClustering();
-    await loadData(); // WICHTIG: loadData füllt window.json
-
-    // ✨ KORRIGIERT: KEIN toggleClustering(false) beim Laden mehr!
-
+    await loadData();
     setupSearch();
     setupStyleFilter();
     setupRouting();
@@ -1133,6 +1191,4 @@ const init = async () => {
     alert('The application could not be started. Please check the developer console.');
   }
 }
-
-// FINALER AUFRUF IM MODUL-SCOPE
 init();

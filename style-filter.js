@@ -230,8 +230,9 @@ class StyleFilterManager {
         (locationCountry && selectedCountries.has(locationCountry));
 
       // Bedingung 4: Bookmark
+      // ✅ OPTIMIERT: Nutze location.ID statt uniqueId
       const bookmarkMatch = !bookmarkFilterActive ||
-        (window.bookmarkManager && window.bookmarkManager.isBookmarked(location.uniqueId));
+        (window.bookmarkManager && window.bookmarkManager.isBookmarked(location.ID));
 
       return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
@@ -276,10 +277,12 @@ class StyleFilterManager {
     // ✅ WICHTIG: Prüfe Clustering-Status
     const isClusteringActive = window.mapUtils && window.mapUtils.isClusteringEnabled();
 
-    const filteredIds = new Set(filteredLocations.map(loc => loc.uniqueId));
+    // ✅ OPTIMIERT: Nutze location.ID
+    const filteredIds = new Set(filteredLocations.map(loc => loc.ID));
 
     this.allMarkers.forEach(marker => {
-      const location = this.json.find(loc => loc.uniqueId === marker.uniqueId);
+      // ✅ OPTIMIERT: O(1) statt O(n) mit Map.get()
+      const location = window.locationById.get(marker.locationId);
 
       // 1. ENTFERNE Marker von ALLEN Layern (Hard Reset)
       if (clusterGroup.hasLayer(marker)) {
@@ -289,7 +292,7 @@ class StyleFilterManager {
         map.removeLayer(marker);
       }
 
-      if (filteredIds.has(marker.uniqueId)) {
+      if (filteredIds.has(marker.locationId)) {
         // 2. FÜGE Marker zum RICHTIGEN Layer hinzu
         if (isClusteringActive) {
           clusterGroup.addLayer(marker);

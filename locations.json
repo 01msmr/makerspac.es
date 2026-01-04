@@ -1,8 +1,36 @@
 [
-  
-
+  {
+    "name": "TEMPLATE",
+    "ID": 0,
+    "loc": {
+      "lat": 1,
+      "long": 1,
+      "plz": 1,
+      "city": "CITYCITYCITY",
+      "street": {
+        "name": "STREETSTREETSTREET",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "COUNTRYCOUNTRYCOUNTRY"
+    },
+    "style": "STYLESTYLESTYLE",
+    "link": {
+      "url": "URLURLURLURLURL",
+      "text": "URLtextURLtextURLtextURLtext"
+    },
+    "spaceapi": {
+      "endpoint": "APIAPIAPI"
+    },
+    "dates": {
+      "space.init": 20010001,
+      "blog.latest": 20010001,
+      "datacheck.latest": 20010001
+    }
+  },
   {
     "name": "Toolbox Bodensee",
+    "ID": 1,
     "loc": {
       "lat": 47.7126816,
       "long": 9.3995537,
@@ -28,11 +56,10 @@
       "blog.latest": 20250505,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "SLUB Makerspace",
+    "ID": 2,
     "loc": {
       "lat": 51.0296177,
       "long": 13.7387907,
@@ -55,11 +82,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Turmlabor, TU Dresden",
+    "ID": 3,
     "loc": {
       "lat": 51.0271193,
       "long": 13.7236009,
@@ -85,11 +111,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "c3d2",
+    "ID": 4,
     "loc": {
       "lat": 51.0810679,
       "long": 13.7285471,
@@ -115,11 +140,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Konglomerat e.V.",
+    "ID": 5,
     "loc": {
       "lat": 51.0461546,
       "long": 13.7160188,
@@ -142,11 +166,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Geistesblitz",
+    "ID": 6,
     "loc": {
       "lat": 51.0962523,
       "long": 14.6667034,
@@ -169,11 +192,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Polytechnischer Werkraum Zittau",
+    "ID": 7,
     "loc": {
       "lat": 50.8972850,
       "long": 14.8042781,
@@ -196,11 +218,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Leipzig",
+    "ID": 8,
     "loc": {
       "lat": 51.3664380,
       "long": 12.3651633,
@@ -223,11 +244,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Offene Werkstatt Grünau",
+    "ID": 9,
     "loc": {
       "lat": 51.3202960,
       "long": 12.2887017,
@@ -250,11 +270,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "dezentrale e.V.",
+    "ID": 10,
     "loc": {
       "lat": 51.3464633,
       "long": 12.3961990,
@@ -280,11 +299,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Wissenschaftsladen Leipzig e.V.",
+    "ID": 11,
     "loc": {
       "lat": 51.3459307,
       "long": 12.4071764,
@@ -307,11 +325,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Eigenbaukombinat Halle",
+    "ID": 12,
     "loc": {
       "lat": 51.4799004,
       "long": 11.9922494,
@@ -337,11 +354,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Werkstatt auf Gut Ziegenberg",
+    "ID": 13,
     "loc": {
       "lat": 51.7212248,
       "long": 11.2449546,
@@ -364,11 +380,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Krautspace Jena",
+    "ID": 14,
     "loc": {
       "lat": 50.9292225,
       "long": 11.5826600,
@@ -394,11 +409,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Lichtwerkstatt Jena",
+    "ID": 15,
     "loc": {
       "lat": 50.9085994,
       "long": 11.5685813,
@@ -421,11 +435,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Chaostreff Chemnitz",
+    "ID": 16,
     "loc": {
       "lat": 50.8306387,
       "long": 12.9397299,
@@ -451,11 +464,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "c-base",
+    "ID": 17,
     "loc": {
       "lat": 52.5130073,
       "long": 13.4200807,
@@ -481,11 +493,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Crisis Response Makerspace",
+    "ID": 18,
     "loc": {
       "lat": 52.5125285,
       "long": 13.4243907,
@@ -508,11 +519,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Afra Berlin (Abteilung-für-Redundanz-Abteilung)",
+    "ID": 19,
     "loc": {
       "lat": 52.5081971,
       "long": 13.4962224,
@@ -538,11 +548,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "berlinCreators",
+    "ID": 20,
     "loc": {
       "lat": 52.5344713,
       "long": 13.3584493,
@@ -565,11 +574,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Schokowerkstatt",
+    "ID": 21,
     "loc": {
       "lat": 52.5009318,
       "long": 13.4233556,
@@ -592,11 +600,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "TüftelLab Berlin",
+    "ID": 22,
     "loc": {
       "lat": 52.5034893,
       "long": 13.4322983,
@@ -619,11 +626,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Happylab Berlin",
+    "ID": 23,
     "loc": {
       "lat": 52.4793453,
       "long": 13.4323412,
@@ -646,11 +652,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Kulturlabor Trial & Error e. V.",
+    "ID": 24,
     "loc": {
       "lat": 52.4706280,
       "long": 13.4425500,
@@ -673,11 +678,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Neukölln",
+    "ID": 25,
     "loc": {
       "lat": 52.4839416,
       "long": 13.4495344,
@@ -700,11 +704,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250830
     }
- },
-
-
+  },
   {
     "name": "MotionLab.Berlin",
+    "ID": 26,
     "loc": {
       "lat": 52.4936567,
       "long": 13.4482343,
@@ -727,11 +730,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Fluktus Werkstätten",
+    "ID": 27,
     "loc": {
       "lat": 52.4569223,
       "long": 13.3931526,
@@ -754,11 +756,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "TJP e.V.",
+    "ID": 28,
     "loc": {
       "lat": 52.4357181,
       "long": 13.5865102,
@@ -781,11 +782,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace in der Schiller-Bibliothek",
+    "ID": 29,
     "loc": {
       "lat": 52.5465548,
       "long": 13.3573688,
@@ -808,11 +808,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "machBar",
+    "ID": 30,
     "loc": {
       "lat": 52.3894436,
       "long": 13.0785543,
@@ -838,11 +837,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "STUDIO 114",
+    "ID": 31,
     "loc": {
       "lat": 52.3893456,
       "long": 13.0770747,
@@ -865,11 +863,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Offene Werkstatt der THB",
+    "ID": 32,
     "loc": {
       "lat": 52.4108910,
       "long": 12.5376198,
@@ -892,11 +889,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Cocolab",
+    "ID": 33,
     "loc": {
       "lat": 52.1320340,
       "long": 12.5170139,
@@ -919,11 +915,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Landkombinat e.V.",
+    "ID": 34,
     "loc": {
       "lat": 53.8400254,
       "long": 13.0743426,
@@ -946,11 +941,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Entität e. V.",
+    "ID": 35,
     "loc": {
       "lat": 53.5600378,
       "long": 13.2633732,
@@ -973,11 +967,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Greifswald",
+    "ID": 36,
     "loc": {
       "lat": 54.1020857,
       "long": 13.4426848,
@@ -1000,11 +993,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hackspace Rostock",
+    "ID": 37,
     "loc": {
       "lat": 54.0873611,
       "long": 12.1245820,
@@ -1027,11 +1019,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakerPort Stralsund",
+    "ID": 38,
     "loc": {
       "lat": 54.3145323,
       "long": 13.0960375,
@@ -1054,11 +1045,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250830
     }
- },
-
-
+  },
   {
     "name": "Project Bay Makerspace",
+    "ID": 39,
     "loc": {
       "lat": 54.5084929,
       "long": 13.6182393,
@@ -1081,11 +1071,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hacklabor",
+    "ID": 40,
     "loc": {
       "lat": 53.6011623,
       "long": 11.4182198,
@@ -1111,11 +1100,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "TüftelLab Hamburg",
+    "ID": 41,
     "loc": {
       "lat": 53.5552490,
       "long": 9.9875944,
@@ -1138,11 +1126,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "HoFaLab e.V.",
+    "ID": 42,
     "loc": {
       "lat": 53.5205538,
       "long": 10.0199596,
@@ -1165,11 +1152,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Fabulous St. Pauli",
+    "ID": 43,
     "loc": {
       "lat": 53.5421506,
       "long": 10.010595,
@@ -1192,11 +1178,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "TU Hamburg - WorkING Lab",
+    "ID": 44,
     "loc": {
       "lat": 53.4594515,
       "long": 9.9692056,
@@ -1219,11 +1204,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Stübi Makerspace",
+    "ID": 45,
     "loc": {
       "lat": 53.4829981,
       "long": 10.0154837,
@@ -1247,10 +1231,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "OpenLab Hamburg",
+    "ID": 46,
     "loc": {
       "lat": 53.5676751,
       "long": 10.1130128,
@@ -1274,10 +1257,9 @@
       "datacheck.latest": 20250830
     }
   },
-
-
   {
     "name": "Makerhafen",
+    "ID": 47,
     "loc": {
       "lat": 53.5628589,
       "long": 9.9257698,
@@ -1301,10 +1283,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "CCC Hansestadt Hamburg",
+    "ID": 48,
     "loc": {
       "lat": 53.5595298,
       "long": 9.9445682,
@@ -1331,10 +1312,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Attraktor",
+    "ID": 49,
     "loc": {
       "lat": 53.5498981,
       "long": 9.9464159,
@@ -1361,10 +1341,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "StartUpYard Wismar",
+    "ID": 50,
     "loc": {
       "lat": 53.8892887,
       "long": 11.4471012,
@@ -1388,10 +1367,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "FabLab Kiel",
+    "ID": 51,
     "loc": {
       "lat": 54.3416710,
       "long": 10.1250908,
@@ -1415,10 +1393,9 @@
       "datacheck.latest": 20250830
     }
   },
-
-
   {
     "name": "Toppoint",
+    "ID": 52,
     "loc": {
       "lat": 54.3364372,
       "long": 10.1148217,
@@ -1442,10 +1419,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "Digitalzentrum Amt Süderbrarup",
+    "ID": 53,
     "loc": {
       "lat": 54.6412753,
       "long": 9.7617872,
@@ -1469,10 +1445,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "Nordlab",
+    "ID": 54,
     "loc": {
       "lat": 54.7916691,
       "long": 9.4423641,
@@ -1499,10 +1474,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "CCC Flensburg",
+    "ID": 55,
     "loc": {
       "lat": 54.8045085,
       "long": 9.4235077,
@@ -1529,10 +1503,9 @@
       "datacheck.latest": 20251015
     }
   },
-
-
   {
     "name": "Ideenreich",
+    "ID": 56,
     "loc": {
       "lat": 54.7756013,
       "long": 9.4506405,
@@ -1559,10 +1532,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "Mainframe",
+    "ID": 57,
     "loc": {
       "lat": 53.1438763,
       "long": 8.2208066,
@@ -1589,10 +1561,9 @@
       "datacheck.latest": 20251115
     }
   },
-
-
   {
     "name": "KreativKellerei",
+    "ID": 58,
     "loc": {
       "lat": 54.3416710,
       "long": 10.1250908,
@@ -1616,14 +1587,12 @@
       "datacheck.latest": 20251115
     }
   },
-
-
   {
     "name": "Makerspace Aurich",
+    "ID": 59,
     "loc": {
       "lat": 53.4807932,
-      "long": 7.4884013
-      ,
+      "long": 7.4884013,
       "plz": 26603,
       "city": "Aurich",
       "street": {
@@ -1647,10 +1616,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "MakerSpace Leer",
+    "ID": 60,
     "loc": {
       "lat": 53.2308623,
       "long": 7.4494828,
@@ -1674,10 +1642,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "Klüterraum Papenburg",
+    "ID": 61,
     "loc": {
       "lat": 53.0798861,
       "long": 7.3926672,
@@ -1701,10 +1668,9 @@
       "datacheck.latest": 20251230
     }
   },
-
-
   {
     "name": "FabLab Bremen",
+    "ID": 62,
     "loc": {
       "lat": 53.0811707,
       "long": 8.8161746,
@@ -1728,10 +1694,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Hackerspace Bremen",
+    "ID": 63,
     "loc": {
       "lat": 53.0819924,
       "long": 8.8058690,
@@ -1758,10 +1723,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "LeineLab",
+    "ID": 64,
     "loc": {
       "lat": 52.3931078,
       "long": 9.7228931,
@@ -1788,10 +1752,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Hafven Maker Space",
+    "ID": 65,
     "loc": {
       "lat": 52.3880068,
       "long": 9.7262848,
@@ -1815,10 +1778,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Leitstelle 511",
+    "ID": 66,
     "loc": {
       "lat": 52.3881262,
       "long": 9.7179175,
@@ -1845,10 +1807,9 @@
       "datacheck.latest": 20251115
     }
   },
-
-
   {
     "name": "MakerLab Hannover",
+    "ID": 67,
     "loc": {
       "lat": 52.3888563,
       "long": 9.7131595,
@@ -1872,10 +1833,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Freies Labor Hildesheim",
+    "ID": 68,
     "loc": {
       "lat": 52.1687961,
       "long": 9.9783449,
@@ -1902,10 +1862,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "OpenEcoLab Rahden",
+    "ID": 69,
     "loc": {
       "lat": 52.4300641,
       "long": 8.6178826,
@@ -1928,11 +1887,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakerSpace Minden",
+    "ID": 70,
     "loc": {
       "lat": 52.2822402,
       "long": 8.9106055,
@@ -1955,11 +1913,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "C3PB",
+    "ID": 71,
     "loc": {
       "lat": 51.7170399,
       "long": 8.7475661,
@@ -1982,11 +1939,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Univ. Paderborn - garage33",
+    "ID": 72,
     "loc": {
       "lat": 51.7198208,
       "long": 8.7799918,
@@ -2009,11 +1965,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Gütersloh",
+    "ID": 73,
     "loc": {
       "lat": 51.9022879,
       "long": 8.3773189,
@@ -2039,11 +1994,10 @@
       "blog.latest": 20251003,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "ACME Labs e.V.",
+    "ID": 74,
     "loc": {
       "lat": 52.0204391,
       "long": 8.5465210,
@@ -2069,11 +2023,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "Hackerspace Bielefeld",
+    "ID": 75,
     "loc": {
       "lat": 52.0369989,
       "long": 8.5692467,
@@ -2099,11 +2052,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "flipdot Hackspace",
+    "ID": 76,
     "loc": {
       "lat": 51.3209321,
       "long": 9.4950466,
@@ -2129,11 +2081,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MaGie - Makerspace Gießen",
+    "ID": 77,
     "loc": {
       "lat": 50.5899306,
       "long": 8.6777523,
@@ -2156,11 +2107,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Magrathea Laboratories",
+    "ID": 78,
     "loc": {
       "lat": 50.5522661,
       "long": 9.6807826,
@@ -2183,11 +2133,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "oLaF - offenes Labor Fulda",
+    "ID": 79,
     "loc": {
       "lat": 50.5545190,
       "long": 9.6969593,
@@ -2210,11 +2159,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Braunschweig",
+    "ID": 80,
     "loc": {
       "lat": 52.2822038,
       "long": 10.5156945,
@@ -2237,11 +2185,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Stratum 0",
+    "ID": 81,
     "loc": {
       "lat": 52.2783659,
       "long": 10.5212312,
@@ -2267,11 +2214,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Macherburg",
+    "ID": 82,
     "loc": {
       "lat": 52.1080902,
       "long": 11.6337976,
@@ -2294,11 +2240,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Netz39 e.V.",
+    "ID": 83,
     "loc": {
       "lat": 52.1195855,
       "long": 11.6292363,
@@ -2321,11 +2266,10 @@
       "blog.latest": 20250716,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Transfer- und Gründerzentrum - Otto-von-Guericke-Universität",
+    "ID": 84,
     "loc": {
       "lat": 52.1389715,
       "long": 11.6445172,
@@ -2348,11 +2292,10 @@
       "blog.latest": 20250716,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Werk- und Kulturscheune",
+    "ID": 85,
     "loc": {
       "lat": 52.2962480,
       "long": 11.7000305,
@@ -2375,11 +2318,10 @@
       "blog.latest": 20250716,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC / Chaosdorf e.V.",
+    "ID": 86,
     "loc": {
       "lat": 51.2125555,
       "long": 6.7996446,
@@ -2405,11 +2347,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "GarageLab e.V.",
+    "ID": 87,
     "loc": {
       "lat": 51.2277831,
       "long": 6.8003976,
@@ -2432,11 +2373,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Maschinendorf",
+    "ID": 88,
     "loc": {
       "lat": 51.2277380,
       "long": 6.8003522,
@@ -2459,11 +2399,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "matrix FabLab",
+    "ID": 89,
     "loc": {
       "lat": 51.2266781,
       "long": 6.8887495,
@@ -2486,11 +2425,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250830
     }
- },
-
-
+  },
   {
     "name": "TüftelLab Neuss",
+    "ID": 90,
     "loc": {
       "lat": 51.2013193,
       "long": 6.6868142,
@@ -2513,11 +2451,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "fnordeingang",
+    "ID": 91,
     "loc": {
       "lat": 51.1862405,
       "long": 6.6926407,
@@ -2543,11 +2480,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "/dev/tal e.V.",
+    "ID": 92,
     "loc": {
       "lat": 51.2669778,
       "long": 7.1457854,
@@ -2573,11 +2509,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "DevLab-TSA e.V.",
+    "ID": 93,
     "loc": {
       "lat": 51.2894156,
       "long": 7.2323595,
@@ -2600,11 +2535,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "ideenWerk",
+    "ID": 94,
     "loc": {
       "lat": 51.2825126,
       "long": 7.0307407,
@@ -2627,11 +2561,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Institut für DIY-Kultur e.V.",
+    "ID": 95,
     "loc": {
       "lat": 51.1845173,
       "long": 7.0499224,
@@ -2654,11 +2587,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Chaostreff Dortmund",
+    "ID": 96,
     "loc": {
       "lat": 51.5277368,
       "long": 7.4649990,
@@ -2681,11 +2613,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "LABOR e.V.",
+    "ID": 97,
     "loc": {
       "lat": 51.4809269,
       "long": 7.2085766,
@@ -2711,11 +2642,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "RUB-Makerspace",
+    "ID": 98,
     "loc": {
       "lat": 51.4654434,
       "long": 7.2597076,
@@ -2738,11 +2668,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Chaospott",
+    "ID": 99,
     "loc": {
       "lat": 51.4385497,
       "long": 7.0250623,
@@ -2768,11 +2697,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab HBK Essen",
+    "ID": 100,
     "loc": {
       "lat": 51.3907031,
       "long": 7.0778540,
@@ -2798,11 +2726,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250830
     }
- },
-
-
+  },
   {
     "name": "c3RE",
+    "ID": 101,
     "loc": {
       "lat": 51.6243988,
       "long": 7.1691211,
@@ -2828,11 +2755,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Halle1",
+    "ID": 102,
     "loc": {
       "lat": 51.5740596,
       "long": 7.0255863,
@@ -2855,11 +2781,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "HRW-FabLab",
+    "ID": 103,
     "loc": {
       "lat": 51.5331482,
       "long": 6.9324461,
@@ -2882,11 +2807,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Bocholt",
+    "ID": 104,
     "loc": {
       "lat": 51.8385327,
       "long": 6.6037374,
@@ -2909,11 +2833,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "bastelbude dinslaken",
+    "ID": 105,
     "loc": {
       "lat": 51.5728623,
       "long": 6.7600835,
@@ -2936,11 +2859,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Kamp-Lintfort",
+    "ID": 106,
     "loc": {
       "lat": 51.5002542,
       "long": 6.5456018,
@@ -2963,11 +2885,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Technik- und Design-Café - Amplonius-Gymnasium",
+    "ID": 107,
     "loc": {
       "lat": 51.5498775,
       "long": 6.5943044,
@@ -2990,11 +2911,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Hochschule Niederrhein",
+    "ID": 108,
     "loc": {
       "lat": 51.3170762,
       "long": 6.5697306,
@@ -3017,11 +2937,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Münster",
+    "ID": 109,
     "loc": {
       "lat": 51.9521985,
       "long": 7.6404866,
@@ -3044,11 +2963,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "ARTandTECH.space",
+    "ID": 110,
     "loc": {
       "lat": 52.2780394,
       "long": 7.4297324,
@@ -3071,11 +2989,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace FH Münster",
+    "ID": 111,
     "loc": {
       "lat": 52.1431977,
       "long": 7.3234219,
@@ -3098,11 +3015,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Rabbithole – Chaostreff Osnabrück",
+    "ID": 112,
     "loc": {
       "lat": 52.2727575,
       "long": 8.0457727,
@@ -3125,11 +3041,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Schüler-Forschungs-Zentrum Osnabrück - Hochschule Osnabrück",
+    "ID": 113,
     "loc": {
       "lat": 52.2867229,
       "long": 8.0180000,
@@ -3152,11 +3067,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace in der Stadtbücherei",
+    "ID": 114,
     "loc": {
       "lat": 52.2740654,
       "long": 7.7173847,
@@ -3179,11 +3093,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "ibbspace",
+    "ID": 115,
     "loc": {
       "lat": 52.2699361,
       "long": 7.7428334,
@@ -3206,11 +3119,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Forschung und Technik e.V.",
+    "ID": 116,
     "loc": {
       "lat": 52.4864010,
       "long": 7.3331372,
@@ -3233,11 +3145,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace TH Köln",
+    "ID": 117,
     "loc": {
       "lat": 50.9349146,
       "long": 6.9881421,
@@ -3260,11 +3171,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Liebig257",
+    "ID": 118,
     "loc": {
       "lat": 50.9584849,
       "long": 6.9407522,
@@ -3287,11 +3197,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "DingFabrik Köln e.V.",
+    "ID": 119,
     "loc": {
       "lat": 50.9536877,
       "long": 6.9307613,
@@ -3314,11 +3223,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Cologne e.V.",
+    "ID": 120,
     "loc": {
       "lat": 50.9503949,
       "long": 6.9129535,
@@ -3344,11 +3252,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Probierwerk Leverkusen",
+    "ID": 121,
     "loc": {
       "lat": 51.0679183,
       "long": 7.0112994,
@@ -3371,11 +3278,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Werkraum47",
+    "ID": 122,
     "loc": {
       "lat": 51.0236519,
       "long": 7.6559215,
@@ -3398,11 +3304,10 @@
       "blog.latest": 20250424,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Computer-Club an der RWTH Aachen",
+    "ID": 123,
     "loc": {
       "lat": 50.7732395,
       "long": 6.0851814,
@@ -3425,11 +3330,10 @@
       "blog.latest": 20250508,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Aachen",
+    "ID": 124,
     "loc": {
       "lat": 50.7717189,
       "long": 6.0914743,
@@ -3455,11 +3359,10 @@
       "blog.latest": 20250508,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Digitales Aachen e.V.",
+    "ID": 125,
     "loc": {
       "lat": 50.7752964,
       "long": 6.0795787,
@@ -3482,11 +3385,10 @@
       "blog.latest": 20250508,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Freie Maker e.V.",
+    "ID": 126,
     "loc": {
       "lat": 50.7907176,
       "long": 6.1060403,
@@ -3509,11 +3411,10 @@
       "blog.latest": 20241130,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Aachen",
+    "ID": 127,
     "loc": {
       "lat": 50.7789110,
       "long": 6.0593010,
@@ -3536,11 +3437,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "RoboScope - Schülerlabor an der RWTH",
+    "ID": 128,
     "loc": {
       "lat": 50.7818162,
       "long": 6.0468808,
@@ -3563,11 +3463,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Roboterclub Aachen",
+    "ID": 129,
     "loc": {
       "lat": 50.7793183,
       "long": 6.0628171,
@@ -3590,11 +3489,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Datenburg",
+    "ID": 130,
     "loc": {
       "lat": 50.7388750,
       "long": 7.0943817,
@@ -3620,11 +3518,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Makerspace Bonn",
+    "ID": 131,
     "loc": {
       "lat": 50.6981704,
       "long": 7.1450146,
@@ -3647,11 +3544,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Machwerk e.V.",
+    "ID": 132,
     "loc": {
       "lat": 50.7751948,
       "long": 7.2857734,
@@ -3674,11 +3570,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Maschinendeck",
+    "ID": 133,
     "loc": {
       "lat": 49.7499043,
       "long": 6.6165592,
@@ -3701,11 +3596,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Wittlich",
+    "ID": 134,
     "loc": {
       "lat": 49.9865645,
       "long": 6.8880852,
@@ -3728,11 +3622,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Offene Werkstatt Mainz",
+    "ID": 135,
     "loc": {
       "lat": 50.0056681,
       "long": 8.2578132,
@@ -3755,11 +3648,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "INNODIG - HS Trier",
+    "ID": 136,
     "loc": {
       "lat": 49.6083608,
       "long": 7.1699258,
@@ -3782,11 +3674,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "KOLab Makerspace",
+    "ID": 137,
     "loc": {
       "lat": 50.3633568,
       "long": 7.5579490,
@@ -3809,11 +3700,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakerSpace Mayen-Koblenz",
+    "ID": 138,
     "loc": {
       "lat": 50.4213020,
       "long": 7.5751657,
@@ -3836,11 +3726,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "haxko",
+    "ID": 139,
     "loc": {
       "lat": 50.4345202,
       "long": 7.4045055,
@@ -3866,11 +3755,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Fab Lab Siegen",
+    "ID": 140,
     "loc": {
       "lat": 50.8760889,
       "long": 8.0219029,
@@ -3893,11 +3781,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hasi e.V.",
+    "ID": 141,
     "loc": {
       "lat": 50.8689171,
       "long": 8.0044810,
@@ -3923,11 +3810,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "InfoTastic Academy",
+    "ID": 142,
     "loc": {
       "lat": 51.1251226,
       "long": 7.9005333,
@@ -3950,11 +3836,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Hamm-Westfalen",
+    "ID": 143,
     "loc": {
       "lat": 51.6723493,
       "long": 7.8069204,
@@ -3977,11 +3862,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Kreativwerkstatt des Frankfurter Verbands",
+    "ID": 144,
     "loc": {
       "lat": 50.1364995,
       "long": 8.6685926,
@@ -4004,11 +3888,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakeLab Uni Frankfurt",
+    "ID": 145,
     "loc": {
       "lat": 50.1170558,
       "long": 8.6499490,
@@ -4031,11 +3914,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Frankfurt",
+    "ID": 146,
     "loc": {
       "lat": 50.1088164,
       "long": 8.6564187,
@@ -4061,11 +3943,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hackerspace FFM",
+    "ID": 147,
     "loc": {
       "lat": 50.1886436,
       "long": 8.5910195,
@@ -4088,11 +3969,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Maker-Werkstadt Frankfurt",
+    "ID": 148,
     "loc": {
       "lat": 50.1028670,
       "long": 8.7016436,
@@ -4115,11 +3995,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Hanau",
+    "ID": 149,
     "loc": {
       "lat": 50.1352742,
       "long": 8.9175025,
@@ -4142,11 +4021,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Jugendkulturzentrum Kreativwerkstatt",
+    "ID": 150,
     "loc": {
       "lat": 49.9710270,
       "long": 9.1481905,
@@ -4169,11 +4047,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Schaffenburg e.V.",
+    "ID": 151,
     "loc": {
       "lat": 49.9878298,
       "long": 9.1359044,
@@ -4196,11 +4073,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Darmstadt",
+    "ID": 152,
     "loc": {
       "lat": 49.8708503,
       "long": 8.6512245,
@@ -4226,11 +4102,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Darmstadt",
+    "ID": 153,
     "loc": {
       "lat": 49.8802245,
       "long": 8.6325583,
@@ -4253,11 +4128,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Wiesbaden",
+    "ID": 154,
     "loc": {
       "lat": 50.0555848,
       "long": 8.3085765,
@@ -4280,11 +4154,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "h´eck - Hackerspace Saarbrücken",
+    "ID": 155,
     "loc": {
       "lat": 49.2792729,
       "long": 7.0357556,
@@ -4310,11 +4183,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Linux User Group Saar",
+    "ID": 156,
     "loc": {
       "lat": 49.3132809,
       "long": 6.7469811,
@@ -4340,11 +4212,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Ideenw3rk Ludwigshafen",
+    "ID": 157,
     "loc": {
       "lat": 49.4808814,
       "long": 8.4486120,
@@ -4367,11 +4238,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Rhein-Neckar",
+    "ID": 158,
     "loc": {
       "lat": 49.7520597,
       "long": 8.4526774,
@@ -4394,11 +4264,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "U.10 Makerspace in der vhs",
+    "ID": 159,
     "loc": {
       "lat": 49.6277619,
       "long": 8.3563924,
@@ -4421,11 +4290,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Mannheim",
+    "ID": 160,
     "loc": {
       "lat": 49.4636929,
       "long": 8.4886974,
@@ -4451,11 +4319,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "RaumZeitLabor",
+    "ID": 161,
     "loc": {
       "lat": 49.5074119,
       "long": 8.5206333,
@@ -4481,11 +4348,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CoMakingSpace",
+    "ID": 162,
     "loc": {
       "lat": 49.4082468,
       "long": 8.6465979,
@@ -4508,11 +4374,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Friedrich-Realschule Makerspace",
+    "ID": 163,
     "loc": {
       "lat": 49.5604562,
       "long": 8.6689824,
@@ -4535,11 +4400,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "shackspace",
+    "ID": 164,
     "loc": {
       "lat": 48.7746559,
       "long": 9.2390528,
@@ -4562,11 +4426,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250822
     }
- },
-
-
+  },
   {
     "name": "HOBBYHIMMEL",
+    "ID": 165,
     "loc": {
       "lat": 48.8186647,
       "long": 9.1697130,
@@ -4589,11 +4452,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace - Hochschule d. Medien",
+    "ID": 166,
     "loc": {
       "lat": 48.7419217,
       "long": 9.1007603,
@@ -4616,11 +4478,10 @@
       "blog.latest": 20010000,
       "space.edited.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Aerospace Lab",
+    "ID": 167,
     "loc": {
       "lat": 48.5947405,
       "long": 8.8563196,
@@ -4643,11 +4504,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Chaostreff Backnang",
+    "ID": 168,
     "loc": {
       "lat": 48.9486703,
       "long": 9.4296153,
@@ -4673,11 +4533,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakEd_digital",
+    "ID": 169,
     "loc": {
       "lat": 48.9095854,
       "long": 9.1828659,
@@ -4700,11 +4559,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Tinkertank",
+    "ID": 170,
     "loc": {
       "lat": 48.8918928,
       "long": 9.1841940,
@@ -4727,11 +4585,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Neckar-Alb e.V.",
+    "ID": 171,
     "loc": {
       "lat": 48.5156939,
       "long": 9.0630645,
@@ -4754,11 +4611,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FRANZ!werk",
+    "ID": 172,
     "loc": {
       "lat": 48.5117638,
       "long": 9.0751247,
@@ -4781,11 +4637,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "KI-Makerspace",
+    "ID": 173,
     "loc": {
       "lat": 48.5179418,
       "long": 9.0611375,
@@ -4808,11 +4663,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Werkstadthaus",
+    "ID": 174,
     "loc": {
       "lat": 48.5103000,
       "long": 9.0784016,
@@ -4835,11 +4689,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "SonnenLab",
+    "ID": 175,
     "loc": {
       "lat": 48.5625724,
       "long": 8.4853851,
@@ -4862,11 +4715,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "makeRTreff Reutlingen",
+    "ID": 176,
     "loc": {
       "lat": 48.4989448,
       "long": 9.2035208,
@@ -4889,11 +4741,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Univ. Stuttgart - Universum",
+    "ID": 177,
     "loc": {
       "lat": 48.7460948,
       "long": 9.1035644,
@@ -4916,11 +4767,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Essembly",
+    "ID": 178,
     "loc": {
       "lat": 48.7414977,
       "long": 9.3119614,
@@ -4943,11 +4793,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Maker Space experimenta",
+    "ID": 179,
     "loc": {
       "lat": 49.1437552,
       "long": 9.2149291,
@@ -4970,11 +4819,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Neuenstadt",
+    "ID": 180,
     "loc": {
       "lat": 49.2370860,
       "long": 9.3362978,
@@ -4997,11 +4845,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "C-Hack",
+    "ID": 181,
     "loc": {
       "lat": 48.7134887,
       "long": 8.7383220,
@@ -5027,11 +4874,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Karlsruhe",
+    "ID": 182,
     "loc": {
       "lat": 49.0047362,
       "long": 8.4291871,
@@ -5054,11 +4900,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Entropia e.V.",
+    "ID": 183,
     "loc": {
       "lat": 49.0068805,
       "long": 8.4071734,
@@ -5084,11 +4929,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "BÄMlab im ZKM",
+    "ID": 184,
     "loc": {
       "lat": 49.0013440,
       "long": 8.3839439,
@@ -5111,11 +4955,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Bruchsal",
+    "ID": 185,
     "loc": {
       "lat": 49.1682700,
       "long": 8.6204634,
@@ -5138,11 +4981,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace HS Offenburg",
+    "ID": 186,
     "loc": {
       "lat": 48.4576465,
       "long": 7.9423574,
@@ -5165,11 +5007,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "hacKNology e.V.",
+    "ID": 187,
     "loc": {
       "lat": 47.6593908,
       "long": 9.1659670,
@@ -5195,11 +5036,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Innovationswerkstatt Konstanz",
+    "ID": 188,
     "loc": {
       "lat": 47.6588972,
       "long": 9.1663681,
@@ -5222,11 +5062,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Konstanz",
+    "ID": 189,
     "loc": {
       "lat": 47.6900375,
       "long": 9.1876305,
@@ -5249,11 +5088,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "innolab bodensee",
+    "ID": 190,
     "loc": {
       "lat": 47.6759407,
       "long": 9.1688982,
@@ -5276,11 +5114,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Werkstatt am Seerhein",
+    "ID": 191,
     "loc": {
       "lat": 47.6716647,
       "long": 9.1589756,
@@ -5303,11 +5140,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
-    "name": "Werkstatt am Seerhein",
+    "name": "CCC Freiburg",
+    "ID": 192,
     "loc": {
       "lat": 47.9930954,
       "long": 7.8405817,
@@ -5330,11 +5166,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Freilab",
+    "ID": 193,
     "loc": {
       "lat": 48.0092550,
       "long": 7.8281109,
@@ -5357,11 +5192,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab München",
+    "ID": 194,
     "loc": {
       "lat": 48.1374604,
       "long": 11.5341587,
@@ -5384,11 +5218,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Munich Maker Lab",
+    "ID": 195,
     "loc": {
       "lat": 48.1589395,
       "long": 11.5500795,
@@ -5411,11 +5244,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "WerkBox³",
+    "ID": 196,
     "loc": {
       "lat": 48.1584708,
       "long": 11.5504107,
@@ -5438,11 +5270,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "c.lab - Makerspace",
+    "ID": 197,
     "loc": {
       "lat": 48.1563287,
       "long": 11.5567005,
@@ -5465,11 +5296,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace München",
+    "ID": 198,
     "loc": {
       "lat": 48.1608454,
       "long": 11.5524567,
@@ -5492,11 +5322,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "TüftelLab München",
+    "ID": 199,
     "loc": {
       "lat": 48.1570606,
       "long": 11.5514604,
@@ -5519,11 +5348,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Erfindergarden",
+    "ID": 200,
     "loc": {
       "lat": 48.1309241,
       "long": 11.5918795,
@@ -5546,11 +5374,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Nachbarschaftswerk wagnis e.V.",
+    "ID": 201,
     "loc": {
       "lat": 48.1302353,
       "long": 11.7001701,
@@ -5573,11 +5400,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Offene Werkstatt Gilching",
+    "ID": 202,
     "loc": {
       "lat": 48.1089627,
       "long": 11.3005398,
@@ -5600,11 +5426,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakerLab Murnau e.V.",
+    "ID": 203,
     "loc": {
       "lat": 47.6735585,
       "long": 11.2066981,
@@ -5627,11 +5452,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "RO-LIP",
+    "ID": 204,
     "loc": {
       "lat": 47.8674772,
       "long": 12.1072482,
@@ -5654,11 +5478,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Oberlab",
+    "ID": 205,
     "loc": {
       "lat": 47.7504505,
       "long": 11.7376338,
@@ -5681,11 +5504,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "brigk Makerspace",
+    "ID": 206,
     "loc": {
       "lat": 48.7651278,
       "long": 11.4343439,
@@ -5708,11 +5530,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MakerSpace EBE",
+    "ID": 207,
     "loc": {
       "lat": 48.0737053,
       "long": 11.9075329,
@@ -5735,11 +5556,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Allgäu",
+    "ID": 208,
     "loc": {
       "lat": 47.7294584,
       "long": 10.3122255,
@@ -5762,11 +5582,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Garching",
+    "ID": 209,
     "loc": {
       "lat": 48.2683205,
       "long": 11.6660252,
@@ -5790,14 +5609,13 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Wissenswerkstatt Friedrichshafen",
+    "ID": 210,
     "loc": {
       "lat": 47.6522300,
       "long": 9.4723957,
-      "plz": 88045,
+      "plz": 3010,
       "city": "Friedrichshafen",
       "street": {
         "name": "Bahnhofplatz",
@@ -5817,10 +5635,9 @@
       "datacheck.latest": 20250830
     }
   },
-
-
   {
     "name": "dgtal Lab",
+    "ID": 211,
     "loc": {
       "lat": 47.7838528,
       "long": 9.6114344,
@@ -5844,10 +5661,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Creapolis-Wangen e.V.",
+    "ID": 212,
     "loc": {
       "lat": 47.6970405,
       "long": 9.8522212,
@@ -5871,10 +5687,9 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "H.O.M.E. Weingarten",
+    "ID": 213,
     "loc": {
       "lat": 47.8104865,
       "long": 9.6481626,
@@ -5898,13 +5713,12 @@
       "datacheck.latest": 20250726
     }
   },
-
-
   {
     "name": "Freiraum",
+    "ID": 214,
     "loc": {
       "lat": 48.4005227,
-      "long": 9.991260,
+      "long": 9.99126,
       "plz": 89073,
       "city": "Ulm",
       "street": {
@@ -5924,11 +5738,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Verschwörhaus Ulm",
+    "ID": 215,
     "loc": {
       "lat": 48.3964469,
       "long": 9.9904377,
@@ -5951,11 +5764,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Univ. Ulm - Student Lab",
+    "ID": 216,
     "loc": {
       "lat": 48.4199119,
       "long": 9.9467254,
@@ -5978,11 +5790,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Temporärhaus",
+    "ID": 217,
     "loc": {
       "lat": 48.3962981,
       "long": 10.0020026,
@@ -6008,11 +5819,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "K4CG",
+    "ID": 218,
     "loc": {
       "lat": 49.4481177,
       "long": 11.0816744,
@@ -6038,11 +5848,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "FabLab Landkreis Fürth e. V.",
+    "ID": 219,
     "loc": {
       "lat": 49.5111321,
       "long": 10.8793421,
@@ -6065,11 +5874,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Fab Lab Region Nürnberg",
+    "ID": 220,
     "loc": {
       "lat": 49.4376640,
       "long": 10.9926694,
@@ -6092,11 +5900,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Werk Eins Makerspace",
+    "ID": 221,
     "loc": {
       "lat": 49.4381285,
       "long": 10.9932841,
@@ -6119,11 +5926,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FAU FabLab",
+    "ID": 222,
     "loc": {
       "lat": 49.5741987,
       "long": 11.0301147,
@@ -6146,11 +5952,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Nürnberger Land e.V.",
+    "ID": 223,
     "loc": {
       "lat": 49.5581655,
       "long": 11.3412260,
@@ -6173,11 +5978,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Region Rothenburg",
+    "ID": 224,
     "loc": {
       "lat": 49.3783607,
       "long": 10.1779903,
@@ -6200,11 +6004,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Binary Kitchen",
+    "ID": 225,
     "loc": {
       "lat": 49.0098221,
       "long": 12.1189611,
@@ -6230,11 +6033,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "MINT-Labs Regensburg",
+    "ID": 226,
     "loc": {
       "lat": 49.0002471,
       "long": 12.1042628,
@@ -6257,11 +6059,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Regensburger Schülerlabor RSL",
+    "ID": 227,
     "loc": {
       "lat": 48.9961667,
       "long": 12.0940905,
@@ -6284,11 +6085,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "planraum",
+    "ID": 228,
     "loc": {
       "lat": 49.0162487,
       "long": 12.1309313,
@@ -6311,11 +6111,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Technik für Kinder e.V.",
+    "ID": 229,
     "loc": {
       "lat": 48.8378190,
       "long": 12.9481793,
@@ -6338,11 +6137,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CREAPOLIS Makerspace",
+    "ID": 230,
     "loc": {
       "lat": 50.2538682,
       "long": 10.9595537,
@@ -6365,11 +6163,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "FabLab Würzburg",
+    "ID": 231,
     "loc": {
       "lat": 49.8017338,
       "long": 9.9286698,
@@ -6392,11 +6189,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "UNIKAT",
+    "ID": 232,
     "loc": {
       "lat": 50.6828046,
       "long": 10.9396706,
@@ -6419,11 +6215,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Makerspace Erfurt",
+    "ID": 233,
     "loc": {
       "lat": 50.9829399,
       "long": 11.0400019,
@@ -6449,11 +6244,10 @@
       "blog.latest": 20250804,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "Metalab",
+    "ID": 234,
     "loc": {
       "lat": 48.2094862,
       "long": 16.3561031,
@@ -6479,11 +6273,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Happylab Wien",
+    "ID": 235,
     "loc": {
       "lat": 48.2194148,
       "long": 16.4067915,
@@ -6506,11 +6299,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Maker Austria",
+    "ID": 236,
     "loc": {
       "lat": 48.1882890,
       "long": 16.3467836,
@@ -6533,11 +6325,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "HAND.WERK.STADT",
+    "ID": 237,
     "loc": {
       "lat": 48.0832519,
       "long": 16.2993311,
@@ -6560,11 +6351,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "/usr/space",
+    "ID": 238,
     "loc": {
       "lat": 47.9229905,
       "long": 16.2119331,
@@ -6590,11 +6380,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Segmentation Vault",
+    "ID": 239,
     "loc": {
       "lat": 48.2036763,
       "long": 15.6201487,
@@ -6617,11 +6406,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "/dev/lol",
+    "ID": 240,
     "loc": {
       "lat": 48.3058349,
       "long": 14.2838510,
@@ -6647,11 +6435,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "otelo Linz",
+    "ID": 241,
     "loc": {
       "lat": 48.2492638,
       "long": 14.3082813,
@@ -6674,11 +6461,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Steyr-Werke",
+    "ID": 242,
     "loc": {
       "lat": 48.0449155,
       "long": 14.4167987,
@@ -6701,11 +6487,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "otelo Vorchdorf",
+    "ID": 243,
     "loc": {
       "lat": 48.0062999,
       "long": 13.9231099,
@@ -6728,11 +6513,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Salzburg",
+    "ID": 244,
     "loc": {
       "lat": 47.7940083,
       "long": 13.0565329,
@@ -6758,11 +6542,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "IT-Syndikat",
+    "ID": 245,
     "loc": {
       "lat": 47.2578210,
       "long": 11.3960576,
@@ -6788,11 +6571,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "eLab HTU Graz",
+    "ID": 246,
     "loc": {
       "lat": 47.0581771,
       "long": 15.4594425,
@@ -6818,11 +6600,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251230
     }
- },
-
-
+  },
   {
     "name": "Makerspace Carinthia",
+    "ID": 247,
     "loc": {
       "lat": 46.6180671,
       "long": 14.3171542,
@@ -6845,11 +6626,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hackerspace Brussels",
+    "ID": 248,
     "loc": {
       "lat": 50.8557647,
       "long": 4.3198282,
@@ -6875,11 +6655,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251230
     }
- },
-
-
+  },
   {
     "name": "Ko-Lab Hackerspace",
+    "ID": 249,
     "loc": {
       "lat": 51.0192665,
       "long": 4.4718210,
@@ -6905,11 +6684,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Hackerspace Gent",
+    "ID": 250,
     "loc": {
       "lat": 51.0751501,
       "long": 3.7260859,
@@ -6935,11 +6713,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "FIXME Hackerspace",
+    "ID": 251,
     "loc": {
       "lat": 46.5321969,
       "long": 6.5914047,
@@ -6965,11 +6742,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Chaostreff Bern",
+    "ID": 252,
     "loc": {
       "lat": 46.9442711,
       "long": 7.4220360,
@@ -6995,11 +6771,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251015
     }
- },
-
-
+  },
   {
     "name": "Luxeria",
+    "ID": 253,
     "loc": {
       "lat": 47.0360672,
       "long": 8.2799066,
@@ -7025,11 +6800,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Bitwäscherei",
+    "ID": 254,
     "loc": {
       "lat": 47.3874368,
       "long": 8.5204040,
@@ -7055,11 +6829,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Bastli ",
+    "ID": 255,
     "loc": {
       "lat": 47.3786246,
       "long": 8.5492348,
@@ -7085,11 +6858,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250926
     }
- },
-
-
+  },
   {
     "name": "ODENWILUSENZ",
+    "ID": 256,
     "loc": {
       "lat": 47.6951660,
       "long": 8.5806571,
@@ -7112,11 +6884,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250926
     }
- },
-
-
+  },
   {
     "name": "FabLab Winti",
+    "ID": 257,
     "loc": {
       "lat": 47.4942757,
       "long": 8.7165349,
@@ -7139,11 +6910,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Coredump",
+    "ID": 258,
     "loc": {
       "lat": 47.2251119,
       "long": 8.8339446,
@@ -7169,11 +6939,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Makers im Zigerschlitz",
+    "ID": 259,
     "loc": {
       "lat": 47.0987434,
       "long": 9.0699091,
@@ -7199,11 +6968,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
     }
- },
-
-
+  },
   {
     "name": "Ruum42",
+    "ID": 260,
     "loc": {
       "lat": 47.4206758,
       "long": 9.3557012,
@@ -7226,11 +6994,10 @@
       "blog.latest": 20010000,
       "datacheck.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Hal9k",
+    "ID": 261,
     "loc": {
       "lat": 57.0187230,
       "long": 9.8821367,
@@ -7253,38 +7020,36 @@
       "blog.latest": 20010000,
       "space.edited.latest": 20251115
     }
- },
-
-
-{
-  "name": "NOI Makerspace",
-  "loc": {
-    "lat": 46.4786013,
-    "long": 11.3325925,
-    "plz": 39100,
-    "city": "Bolzano-Bozen",
-    "street": {
-      "name": "Via Volta",
-      "number": 13,
-      "ext": "a"
+  },
+  {
+    "name": "NOI Makerspace",
+    "ID": 262,
+    "loc": {
+      "lat": 46.4786013,
+      "long": 11.3325925,
+      "plz": 39100,
+      "city": "Bolzano-Bozen",
+      "street": {
+        "name": "Via Volta",
+        "number": 13,
+        "ext": "a"
+      },
+      "country": "Italy"
     },
-    "country": "Italy"
+    "style": "commercial",
+    "link": {
+      "url": "https://makerspace.noi.bz.it",
+      "text": "makerspace.noi.bz.it"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "blog.latest": 20010000,
+      "datacheck.latest": 20250726
+    }
   },
-  "style": "commercial",
-  "link": {
-    "url": "https://makerspace.noi.bz.it",
-    "text": "makerspace.noi.bz.it"
-  },
-  "dates": {
-    "space.init": 20010000,
-    "blog.latest": 20010000,
-    "datacheck.latest": 20250726
-  }
-},
-
-
   {
     "name": "BASE1 makerspace",
+    "ID": 263,
     "loc": {
       "lat": 49.6004781,
       "long": 6.1140391,
@@ -7307,11 +7072,10 @@
       "blog.latest": 20010000,
       "space.edited.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "CCC Lëtzebuerg",
+    "ID": 264,
     "loc": {
       "lat": 49.6207694,
       "long": 6.1224033,
@@ -7334,11 +7098,10 @@
       "blog.latest": 20250630,
       "space.edited.latest": 20250726
     }
- },
-
-
+  },
   {
     "name": "Level2",
+    "ID": 265,
     "loc": {
       "lat": 49.5915948,
       "long": 6.1405476,
@@ -7362,10 +7125,9 @@
       "space.edited.latest": 20250726
     }
   },
-
-
   {
     "name": "HermitHive",
+    "ID": 266,
     "loc": {
       "lat": 52.0293447,
       "long": 5.0830369,
@@ -7392,10 +7154,9 @@
       "space.edited.latest": 20251115
     }
   },
-
-
   {
     "name": "Hackalot",
+    "ID": 267,
     "loc": {
       "lat": 51.4843364,
       "long": 5.4495034,
@@ -7422,10 +7183,9 @@
       "space.edited.latest": 20251115
     }
   },
-
-
   {
     "name": "Hackerspace Nijmegen",
+    "ID": 268,
     "loc": {
       "lat": 51.8374345,
       "long": 5.8444145,
@@ -7452,10 +7212,9 @@
       "space.edited.latest": 20251115
     }
   },
-
-
   {
     "name": "Hack42",
+    "ID": 269,
     "loc": {
       "lat": 51.9771387,
       "long": 5.9402584,
@@ -7482,10 +7241,9 @@
       "space.edited.latest": 20251115
     }
   },
-
-
   {
     "name": "Hackerspace Drenthe",
+    "ID": 270,
     "loc": {
       "lat": 52.6598384,
       "long": 6.7548194,
@@ -7512,10 +7270,9 @@
       "space.edited.latest": 20251230
     }
   },
-
-
   {
     "name": "FabLab Coevorden",
+    "ID": 271,
     "loc": {
       "lat": 52.6599534,
       "long": 6.7549756,
@@ -7542,10 +7299,9 @@
       "space.edited.latest": 20251230
     }
   },
-
-
   {
     "name": "Maakplek",
+    "ID": 272,
     "loc": {
       "lat": 53.2310177,
       "long": 6.5841430,
@@ -7572,10 +7328,9 @@
       "space.edited.latest": 20251115
     }
   },
-
-
   {
     "name": "Hacklab",
+    "ID": 273,
     "loc": {
       "lat": 50.4784962,
       "long": 30.4917879,

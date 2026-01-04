@@ -34,21 +34,23 @@ class BookmarkManager {
   }
 
   // Prüfe ob ein Makerspace gebookmarkt ist
-  isBookmarked(uniqueId) {
-    return this.bookmarks.has(uniqueId);
+  // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
+  isBookmarked(locationId) {
+    return this.bookmarks.has(locationId);
   }
 
   // Toggle Bookmark für einen Makerspace
-  toggleBookmark(uniqueId) {
-    if (this.bookmarks.has(uniqueId)) {
-      this.bookmarks.delete(uniqueId);
-      console.log(`🔖 Removed bookmark: ${uniqueId}`);
+  // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
+  toggleBookmark(locationId) {
+    if (this.bookmarks.has(locationId)) {
+      this.bookmarks.delete(locationId);
+      console.log(`🔖 Removed bookmark: ${locationId}`);
     } else {
-      this.bookmarks.add(uniqueId);
-      console.log(`🔖 Added bookmark: ${uniqueId}`);
+      this.bookmarks.add(locationId);
+      console.log(`🔖 Added bookmark: ${locationId}`);
     }
     this.saveBookmarks();
-    return this.isBookmarked(uniqueId);
+    return this.isBookmarked(locationId);
   }
 
   // Hole alle gebookmarten Makerspace-IDs
@@ -62,23 +64,25 @@ class BookmarkManager {
   }
 
   // Erstelle HTML für Bookmark-Icon
-  createBookmarkIcon(uniqueId, className = '') {
-    const isBookmarked = this.isBookmarked(uniqueId);
+  // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
+  createBookmarkIcon(locationId, className = '') {
+    const isBookmarked = this.isBookmarked(locationId);
     const iconClass = isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark';
     const title = isBookmarked ?
       (window.i18n ? window.i18n.t('tooltips.removeBookmark') : 'Remove bookmark') :
       (window.i18n ? window.i18n.t('tooltips.addBookmark') : 'Add bookmark');
 
     return `<i class="${iconClass} bookmark-icon ${className}" 
-               data-unique-id="${uniqueId}" 
+               data-location-id="${locationId}" 
                title="${title}"></i>`;
   }
 
   // Aktualisiere ein Bookmark-Icon im DOM
-  updateBookmarkIcon(iconElement, uniqueId) {
+  // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
+  updateBookmarkIcon(iconElement, locationId) {
     if (!iconElement) return;
 
-    const isBookmarked = this.isBookmarked(uniqueId);
+    const isBookmarked = this.isBookmarked(locationId);
     const title = isBookmarked ?
       (window.i18n ? window.i18n.t('tooltips.removeBookmark') : 'Remove bookmark') :
       (window.i18n ? window.i18n.t('tooltips.addBookmark') : 'Add bookmark');
@@ -97,19 +101,20 @@ class BookmarkManager {
   }
 
   // Event-Handler für Bookmark-Click
-  handleBookmarkClick(event, uniqueId) {
+  // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
+  handleBookmarkClick(event, locationId) {
     event.preventDefault();
     event.stopPropagation();
 
     const iconElement = event.target;
-    this.toggleBookmark(uniqueId);
-    this.updateBookmarkIcon(iconElement, uniqueId);
+    this.toggleBookmark(locationId);
+    this.updateBookmarkIcon(iconElement, locationId);
 
     // Trigger Event für andere Komponenten (z.B. Filter-Update)
     window.dispatchEvent(new CustomEvent('bookmarksChanged', {
       detail: {
-        uniqueId: uniqueId,
-        isBookmarked: this.isBookmarked(uniqueId),
+        locationId: locationId,
+        isBookmarked: this.isBookmarked(locationId),
         totalCount: this.getCount()
       }
     }));
@@ -121,17 +126,18 @@ class BookmarkManager {
     this.saveBookmarks();
 
     // Aktualisiere alle Bookmark-Icons im DOM
+    // ✅ OPTIMIERT: Verwendet data-location-id statt data-unique-id
     document.querySelectorAll('.bookmark-icon').forEach(icon => {
-      const uniqueId = icon.getAttribute('data-unique-id');
-      if (uniqueId) {
-        this.updateBookmarkIcon(icon, uniqueId);
+      const locationId = icon.getAttribute('data-location-id');
+      if (locationId) {
+        this.updateBookmarkIcon(icon, parseInt(locationId, 10));
       }
     });
 
     // Trigger Event für Filter-Update
     window.dispatchEvent(new CustomEvent('bookmarksChanged', {
       detail: {
-        uniqueId: null,
+        locationId: null,
         isBookmarked: false,
         totalCount: 0
       }
@@ -141,15 +147,16 @@ class BookmarkManager {
   }
 
   // Initialisiere Event-Listener für Bookmark-Icons im DOM
+  // ✅ OPTIMIERT: Verwendet data-location-id statt data-unique-id
   initializeBookmarkListeners(container) {
     if (!container) return;
 
     const bookmarkIcons = container.querySelectorAll('.bookmark-icon');
     bookmarkIcons.forEach(icon => {
       icon.addEventListener('click', (e) => {
-        const uniqueId = icon.getAttribute('data-unique-id');
-        if (uniqueId) {
-          this.handleBookmarkClick(e, uniqueId);
+        const locationId = icon.getAttribute('data-location-id');
+        if (locationId) {
+          this.handleBookmarkClick(e, parseInt(locationId, 10));
         }
       });
     });
