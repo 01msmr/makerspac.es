@@ -202,6 +202,13 @@ class SearchManager {
     this.searchBar.addEventListener('focus', () => {
       if (!this.styleFilterManager) return;
 
+      // ✅ NEU: Clearer alten Hover-Status
+      this.cleanupHoverSVG();
+      if (this.currentHoverItem) {
+        this.currentHoverItem.classList.remove('js-hover');
+        this.currentHoverItem = null;
+      }
+
       // 1. Erstelle Filter-Section
       this.createActiveFiltersSection();
 
@@ -288,13 +295,9 @@ class SearchManager {
     this.createSuggestionItems(filteredLocations);
     this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0);
 
-    // HIER WIRD DIE LOGIK EINGEFÜGT:
-    // ✨ FIX: AutoZoom unterdrücken, wenn das Flag gesetzt ist
-    if (!this._skipAutoZoom) {
+    // ✅ SAUBERE LÖSUNG: Auto-Zoom nur wenn KEIN manueller Space-Klick
+    if (!this._manualSpaceClick) {
       this.triggerAutoZoom(filteredLocations);
-    } else {
-      // ✨ WICHTIG: Flag ZURÜCKSETZEN, da der Zoom-Versuch jetzt beendet ist
-      this._skipAutoZoom = false;
     }
 
     return;
@@ -302,10 +305,16 @@ class SearchManager {
 
 
   triggerAutoZoom(locations) {
+    // ✅ SAUBERE LÖSUNG: Blockiere Auto-Zoom bei manuellem Space-Klick
+    if (this._manualSpaceClick) {
+      console.log('🚫 Auto-Zoom blocked - manual space click active');
+      return;
+    }
+
     clearTimeout(this.zoomDebounceTimeout);
     const DEBOUNCE_DELAY = 800;
     this.zoomDebounceTimeout = setTimeout(() => {
-      if (locations.length > 0) {
+      if (locations.length > 0 && !this._manualSpaceClick) {
         this.setupAutoZoom(locations);
       }
     }, DEBOUNCE_DELAY);
@@ -436,6 +445,7 @@ class SearchManager {
 
       this.popupTimeout = setTimeout(() => {
         if (this.isDropdownHovering) {
+          targetMarker._openedByHover = true; // ✅ Markiere als Hover-Popup
           targetMarker.openPopup();
         }
       }, 300);
@@ -1526,9 +1536,16 @@ class SearchManager {
 
   // WIEDERHERGESTELLTE Methode handleSuggestionClick (Original)
   handleSuggestionClick(location) {
-
+    // ✅ SAUBERE LÖSUNG: Verhindere alle Auto-Zoom-Mechanismen
+    // 1. Clearer Debounce-Timeout (verhindert verzögerten Auto-Zoom)
     clearTimeout(this.zoomDebounceTimeout);
+
+    // 2. Setze Flag um triggerAutoZoom zu blockieren
+    this._manualSpaceClick = true;
+
+    // 3. Direkter Zoom auf Space
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
+
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
       targetMarker._openedByHover = false;
@@ -1548,13 +1565,27 @@ class SearchManager {
         if (window.mapUtils && window.mapUtils.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
         }
+        // URL-Update erfolgt automatisch durch popupopen-Event ✅
       });
     }
 
-    // WIEDERHERGESTELLTE LOGIK: Name wird immer eingetragen
+    // ✅ NEU: Setze Pre-Filter auf diesen EINEN Space
+    if (window.styleFilterManager) {
+      window.styleFilterManager.applyPreFilters([location]);
+    }
+
+    // Setze Name im Suchfeld
     this.searchBar.value = location.name;
 
-    this.closeDropdown();
+    // ✅ NEU: Zeige Dropdown mit diesem einen Space
+    this.createSuggestionItems([location]);
+    this.updateSearchCounter(1);
+    this.updateDropdownUI(true); // Dropdown bleibt offen
+
+    // ✅ WICHTIG: Reset Flag nach 1000ms (sicher nach allen Events)
+    setTimeout(() => {
+      this._manualSpaceClick = false;
+    }, 1000);
   }
 
 
@@ -1726,7 +1757,14 @@ class SearchManager {
   }
 
   closeDropdown() {
-    if (window.mapUtils && window.mapUtils.clearStickyPopup) { window.mapUtils.clearStickyPopup(); }
+    // ✅ Nur clearStickyPopup wenn KEIN manueller Space-Click aktiv
+    // (Bei manuellem Click wird setStickyPopup im moveend aufgerufen)
+    if (!this._manualSpaceClick) {
+      if (window.mapUtils && window.mapUtils.clearStickyPopup) {
+        window.mapUtils.clearStickyPopup();
+      }
+    }
+
     this.suggestionsDropdown.classList.remove('is-active');
     this.searchBar.classList.remove('has-suggestions');
     this.removeConnectionLine();

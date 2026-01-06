@@ -1,6 +1,5 @@
 /*
- * Synchronization System
- * Ermöglicht anonyme Synchronisierung von Favoriten, etc.
+ * anonyme Synchronisierung
  */
 
 class BookmarkSync {
@@ -15,9 +14,6 @@ class BookmarkSync {
     this.setupEventListeners();
   }
 
-  /**
-   * Prüft beim Laden, ob Bookmarks über URL importiert werden sollen
-   */
   checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('bookmarks')) {
@@ -30,9 +26,6 @@ class BookmarkSync {
     }
   }
 
-  /**
-   * Importiert Bookmarks aus einer Liste von IDs
-   */
   importBookmarks(ids) {
     const currentLang = window.currentLanguage || 'de';
     const t = window.translations || {}; // ✅ FIX
@@ -53,8 +46,9 @@ class BookmarkSync {
 
   /**
    * Exportiert Bookmarks als URL
+   * ✅ NEU: Unterstützt ID-basierte URLs
    */
-  exportAsUrl() {
+  exportAsUrl(useLocationRoute = true) {
     const bookmarkIds = this.bookmarkManager.getBookmarkedIds();
 
     if (bookmarkIds.length === 0) {
@@ -65,7 +59,13 @@ class BookmarkSync {
       return null;
     }
 
-    return `${window.location.origin}${window.location.pathname}?bookmarks=${bookmarkIds.join(',')}`;
+    if (useLocationRoute && bookmarkIds.length > 0) {
+      // Option 1: ID-basierte Route
+      return `${window.location.origin}${window.location.pathname}#/location/${bookmarkIds.join(',')}`;
+    } else {
+      // Option 2: Fallback, 
+      return `${window.location.origin}${window.location.pathname}?bookmarks=${bookmarkIds.join(',')}`;
+    }
   }
 
   /**

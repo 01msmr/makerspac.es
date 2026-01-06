@@ -762,6 +762,21 @@ function createMarkerForLocation(location) {
   // ✅ OPTIMIERUNG: Speichere Marker im globalen Index für schnellen Zugriff
   window.markerById.set(location.ID, marker);
 
+  // ✅ NEU: Click-Handler für Auto-Zoom-Prevention
+  marker.on('click', () => {
+    // ✅ SAUBERE LÖSUNG: Verhindere Auto-Zoom bei Marker-Klick
+    if (window.searchManager) {
+      window.searchManager._manualSpaceClick = true;
+      clearTimeout(window.searchManager.zoomDebounceTimeout);
+
+      // Reset nach 1000ms
+      setTimeout(() => {
+        window.searchManager._manualSpaceClick = false;
+      }, 1000);
+    }
+    // URL-Update erfolgt automatisch durch popupopen-Event ✅
+  });
+
   marker.bindPopup((layer) => {
     let statusIconHtml = '';
     let nameClass = '';
@@ -845,10 +860,28 @@ function createMarkerForLocation(location) {
                       `;
   });
   marker.on('popupopen', (e) => {
-    if (!marker._openedByHover) {
+    // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!
+    const wasOpenedByHover = marker._openedByHover;
+
+    if (!wasOpenedByHover) {
+      // Popup wurde NICHT durch Hover geöffnet → Sofort sticky
       setStickyPopup(marker);
     }
+
+    // Jetzt clearen (für nächstes Mal)
     marker._openedByHover = false;
+
+    // ✅ URL setzen wenn Popup STICKY ist
+    // Delay damit setStickyPopup() sicher ausgeführt wurde
+    setTimeout(() => {
+      if (currentStickyMarker === marker && isPopupSticky) {
+        // ✅ Popup ist sticky → URL setzen!
+        if (window.routingManager && window.routingManager.navigateToLocations) {
+          window.routingManager.navigateToLocations([location.ID]);
+          marker._hasSetUrl = true;
+        }
+      }
+    }, 50);
 
     const popup = marker.getPopup();
     const popupElement = popup._container;
@@ -888,11 +921,26 @@ function createMarkerForLocation(location) {
         if (currentStickyMarker !== marker) {
           window.markerStateManager.clearTimeouts(marker.locationId);
           setStickyPopup(marker);
+
+          // ✅ NEU: URL setzen nachdem Popup sticky wurde (durch Hover ins Popup)
+          if (window.routingManager && window.routingManager.navigateToLocations) {
+            window.routingManager.navigateToLocations([location.ID]);
+            marker._hasSetUrl = true;
+          }
         }
       };
 
       popupElement.removeEventListener('mouseenter', handlePopupEnter);
       popupElement.addEventListener('mouseenter', handlePopupEnter);
+
+      // ✅ OPTIMALE LÖSUNG: Nutze requestAnimationFrame
+      // Wartet auf nächsten Browser-Frame (wenn Popup garantiert gerendert ist)
+      requestAnimationFrame(() => {
+        if (popupElement.matches(':hover')) {
+          // Maus ist bereits im Popup → Trigger handlePopupEnter
+          handlePopupEnter();
+        }
+      });
     }
 
     const navLink = e.popup._container.querySelector('.navigation-icon');
@@ -913,6 +961,15 @@ function createMarkerForLocation(location) {
   });
   marker.on('popupclose', () => {
     document.querySelector('.title').classList.remove('popup-active');
+
+    // ✅ URL zurücksetzen wenn dieser Marker sticky war und URL gesetzt hatte
+    if (marker._hasSetUrl && currentStickyMarker === marker) {
+      if (window.routingManager && window.routingManager.clearLocationURL) {
+        window.routingManager.clearLocationURL();
+      }
+      marker._hasSetUrl = false;
+    }
+
     if (currentStickyMarker === marker) {
       currentStickyMarker = null;
       isPopupSticky = false;
@@ -950,6 +1007,12 @@ function createMarkerForLocation(location) {
       const currentState = window.markerStateManager.getState(marker.locationId);
       if (currentState.isHovering && marker.isPopupOpen()) {
         setStickyPopup(marker);
+
+        // ✅ NEU: URL setzen nachdem Popup sticky wurde
+        if (window.routingManager && window.routingManager.navigateToLocations) {
+          window.routingManager.navigateToLocations([location.ID]);
+          marker._hasSetUrl = true;
+        }
       }
     }, 1500);
 
@@ -1190,5 +1253,6 @@ const init = async () => {
     console.error('⛔ A critical error occurred during app initialization:', error);
     alert('The application could not be started. Please check the developer console.');
   }
-}
+};
+
 init();

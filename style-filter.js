@@ -205,6 +205,11 @@ class StyleFilterManager {
       }
     });
 
+    // ✅ OPTIMIERUNG #2: Cache gebookmarkte IDs einmal (statt bei jeder Location zu prüfen)
+    const bookmarkedIds = bookmarkFilterActive && window.bookmarkManager
+      ? new Set(window.bookmarkManager.getBookmarkedIds())
+      : null;
+
     // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
     const finalFiltered = baseLocations.filter(location => {
       const locationStyle = location.style || 'unknown';
@@ -230,9 +235,8 @@ class StyleFilterManager {
         (locationCountry && selectedCountries.has(locationCountry));
 
       // Bedingung 4: Bookmark
-      // ✅ OPTIMIERT: Nutze location.ID statt uniqueId
-      const bookmarkMatch = !bookmarkFilterActive ||
-        (window.bookmarkManager && window.bookmarkManager.isBookmarked(location.ID));
+      // ✅ OPTIMIERT: Set-Lookup statt Funktionsaufruf bei jeder Location
+      const bookmarkMatch = !bookmarkFilterActive || (bookmarkedIds && bookmarkedIds.has(location.ID));
 
       return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
@@ -241,6 +245,25 @@ class StyleFilterManager {
 
     // 3. ANWENDUNG AUF MAP UND DROPDOWN
     this.updateMarkers(finalFiltered);
+
+    // ✅ NEU: URL-Update bei Bookmark-Filter → ALLE gebookmarten Spaces in URL
+    if (bookmarkFilterActive && window.bookmarkManager) {
+      // Hole ALLE gebookmarten IDs (unabhängig von anderen Filtern!)
+      const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
+
+      if (allBookmarkedIds.length > 0) {
+        // Setze URL mit allen gebookmarten Spaces
+        // Beispiel: #/location/1,5,12,42
+        if (window.routingManager && window.routingManager.navigateToLocations) {
+          window.routingManager.navigateToLocations(allBookmarkedIds);
+        }
+      }
+    } else if (!bookmarkFilterActive && this.selectedStyles.size === 0 && finalFiltered.length === this.json.length) {
+      // Kein Filter aktiv → URL clearen
+      if (window.routingManager && window.routingManager.clearLocationURL) {
+        window.routingManager.clearLocationURL();
+      }
+    }
 
     if (this.searchManager) {
       // Aktualisiere Dropdown (Liste) und Counter
