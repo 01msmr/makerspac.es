@@ -1,5 +1,5 @@
 // routing.js (ES MODULE)
-// URL-basiertes Routing für Filter + Pills, NEU: **HASH-MODE** mit Hierarchie-Support
+// URL-basiertes Routing für Filter + Pills, NEU: **HASH-MODE**
 
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
@@ -13,10 +13,10 @@ export class RoutingManager {
     this._citiesWithMultipleSpaces = null;
     this._cityRoutes = null;
 
-    // ✅ Flag um hashchange nach eigenem navigateToLocations zu ignorieren
+    // ✅ NEU: Flag um hashchange nach eigenem navigateToLocations zu ignorieren
     this._isNavigating = false;
 
-    // ✨ Übersetzungstabelle für Städte (Deutsch -> Englisch für Slugs)
+    // ✨ NEU: Übersetzungstabelle für Städte (Deutsch -> Englisch für Slugs)
     this._cityTranslationMap = {
       'München': 'Munich',
       'Köln': 'Cologne',
@@ -31,7 +31,7 @@ export class RoutingManager {
       // Weitere Städte könnten hier bei Bedarf hinzugefügt werden
     };
 
-    console.log('✅ RoutingManager constructor called (Hash Mode & Hierarchical Support)');
+    console.log('✅ RoutingManager constructor called (Hash Mode)');
 
     // Init mit Pills-Support
     this.initRoutingListeners();
@@ -43,7 +43,7 @@ export class RoutingManager {
     if (this._countries !== null) return;
 
     // 2. Prüft, ob this.json gefüllt ist. Wenn nicht, brechen wir ab.
-    if (!this.json || this.json.length === 0) {
+    if (this.json.length === 0) {
       return;
     }
 
@@ -56,7 +56,6 @@ export class RoutingManager {
     console.log('--- DEBUG: Routing Data Loaded LAZY ---');
     console.log(`JSON Data Length: ${this.json.length}`);
     console.log(`Countries: ${this._countries.slice(0, 3)}... (${this._countries.length})`);
-    console.log(`Cities with multiple spaces: ${this._citiesWithMultipleSpaces.size}`);
     console.log('--------------------------------------');
   }
 
@@ -118,7 +117,6 @@ export class RoutingManager {
 
     this._citiesWithMultipleSpaces.forEach((_, city) => {
       const slug = this.cityToSlug(city);
-      // Kollisionsprüfung: Wenn Slug bereits vergeben (z.B. durch ein Land)
       if (this._routes[slug]) {
         cityRoutes.set(`city-${slug}`, city);
       } else {
@@ -142,9 +140,8 @@ export class RoutingManager {
   }
 
   normalizeSlug(str) {
-    if (!str) return '';
     return str
-      .trim()
+      .trim() // ✨ HINZUGEFÜGT: Entfernt führende/anhängende Leerzeichen
       .toLowerCase()
       .replace(/ä/g, 'ae')
       .replace(/ö/g, 'oe')
@@ -158,6 +155,8 @@ export class RoutingManager {
   // URL HELPERS (HASH-MODE)
   // ========================================
 
+  // ✨ ENTFERNT: getQueryPath() ist im Hash-Mode nicht mehr nötig
+
   updateURLFromPills(pills) {
     this._ensureDataLoaded();
 
@@ -168,15 +167,18 @@ export class RoutingManager {
     // Format: #/slug1+slug2
     const newHash = slugs.length > 0 ? `#/${slugs.join('+')}` : '';
 
+    // ✅ Nutze window.location.hash statt history.pushState
+    // Das triggert hashchange-Event, sodass handleRouteWithPills() aufgerufen wird
     if (newHash !== window.location.hash) {
-      const newPath = newHash || window.location.pathname;
-      history.pushState(null, '', newPath);
+      this._isNavigating = true; // Verhindere Loop
+      window.location.hash = newHash || ''; // Setze Hash oder lösche ihn
     }
   }
 
   findSlugByPill(pill) {
     this._ensureDataLoaded();
 
+    // Fallback-Listen für sicheren Zugriff
     const cityRoutes = this._cityRoutes || new Map();
     const routes = this._routes || {};
 
@@ -184,15 +186,19 @@ export class RoutingManager {
       return this.countryToSlug(pill.text);
     }
 
+    // City Slug (mit oder ohne "city-" Präfix)
     if (pill.type === 'city') {
+      // Prüfe Kollisionen
       for (const [routeSlug, city] of cityRoutes) {
         if (city === pill.text) {
           return routeSlug;
         }
       }
+      // Fallback über alle Slugs
       return this.cityToSlug(pill.text);
     }
 
+    // Style Slugs
     if (pill.type === 'style') {
       const slug = Object.keys(routes).find(key => routes[key].value === pill.text);
       return slug;
@@ -208,14 +214,15 @@ export class RoutingManager {
   loadPillsFromURL() {
     this._ensureDataLoaded();
 
+    // NEU: Lese den Hash-Teil und entferne das initiale '#/'
     const hash = window.location.hash;
+    // Prüfe auf ein gültiges Hash-Format (z.B. #/germany+open)
     if (!hash || !hash.startsWith('#/')) return [];
 
     // Der Pfad ist nun der Hash-Teil ohne das # und ohne das /
     const path = hash.slice(2);
 
-    // Verhindere Interpretation von Hierarchie-URLs als Pills
-    if (!path || path.includes('/')) return [];
+    if (!path) return [];
 
     const slugs = path.split('+');
     return slugs
@@ -226,6 +233,7 @@ export class RoutingManager {
   findPillBySlug(slug) {
     this._ensureDataLoaded();
 
+    // Fallback auf leere Strukturen
     const countries = this._countries || [];
     const cityRoutes = this._cityRoutes || new Map();
     const routes = this._routes || {};
@@ -243,17 +251,20 @@ export class RoutingManager {
 
     // A. Prüfe CityRoutes (mit Kollisions-Slugs)
     for (const [routeSlug, city] of cityRoutes) {
-      if (routeSlug === slug) {
+      if (routeSlug === slug) { // Prüft auf z.B. 'city-berlin'
         foundCityName = city;
         break;
       }
     }
 
-    // B. Fallback: Prüfe alle Städte direkt
+    // B. Fallback: Prüfe alle Städte direkt (für Slugs ohne Kollisionspräfix)
     if (!foundCityName) {
+      // ✨ KORREKTUR: Direkte Suche über die Rohdaten für den kanonischen Namen
       for (const loc of this.json) {
         if (loc.loc?.city) {
+          // Muss den Slug des *kanonischen* Namens (z.B. "Munich") mit dem Slug aus der URL vergleichen.
           const expectedSlug = this.cityToSlug(loc.loc.city);
+
           if (expectedSlug === slug) {
             foundCityName = loc.loc.city;
             break;
@@ -262,9 +273,11 @@ export class RoutingManager {
       }
     }
 
+    // Wenn ein City-Name gefunden wurde
     if (foundCityName) {
       return { text: foundCityName, type: 'city', count: this._countLocationsByCity(foundCityName) };
     }
+
 
     // 3. Suche nach STYLE
     if (routes[slug]?.type === 'style') {
@@ -281,7 +294,7 @@ export class RoutingManager {
   }
 
   // ========================================
-  // COUNTS (Private)
+  // COUNTS (Private, da sie intern sind)
   // ========================================
 
   _countLocationsByCountry(c) {
@@ -314,9 +327,10 @@ export class RoutingManager {
     meta.content = desc;
   }
 
+  // ✨ NEU: Erzwingt einen erneuten Aufruf der Routenbehandlung
   rerunRouteHandler() {
     console.log('🔄 Rerunning route handler after data load.');
-    this._ensureDataLoaded();
+    this._ensureDataLoaded(); // Stellt sicher, dass die Daten extrahiert werden
     this.handleRouteWithPills();
   }
 
@@ -337,8 +351,9 @@ export class RoutingManager {
   }
 
   handleRouteWithPills() {
-    this._ensureDataLoaded();
+    this._ensureDataLoaded(); // <--- DATEN LADEN BEI ERSTEM AUFRUF
 
+    // ✅ LÖSUNG 2: Ignoriere hashchange wenn WIR die URL gesetzt haben
     if (this._isNavigating) {
       console.log('🔒 Ignoring hashchange - was set by navigateToLocations');
       this._isNavigating = false;
@@ -347,15 +362,25 @@ export class RoutingManager {
 
     const hash = window.location.hash;
 
-    // ✅ HIERARCHISCHES ROUTING DETECTION
-    const hierarchicalMatch = hash.match(/^#\/([^/]+)\/([^/]+)\/(\d+(?:,\d+)*)/);
+    // ✅ BOOKMARK-ROUTING: #/bookmarks/1,5,12
+    if (hash.startsWith('#/bookmarks/')) {
+      this.handleBookmarkRoute(hash);
+      return;
+    }
 
-    if (hierarchicalMatch || hash.startsWith('#/location/')) {
+    // ✅ HIERARCHISCHES ROUTING: #/country/city/ID/name
+    // Format: #/germany/markdorf/1/toolbox-bodensee
+    // Regex: Land/Stadt/ID(s)/optionaler-Name
+    const hierarchicalMatch = hash.match(/^#\/([^/]+)\/([^/]+)\/(\d+(?:,\d+)*)/);
+    if (hierarchicalMatch) {
       this.handleLocationRoute(hash);
       return;
     }
 
     const pills = this.loadPillsFromURL();
+
+    // Debugging-Zeile
+    console.log(`🔎 Route Handler: Hash='${hash}', Pills found: ${pills.length > 0 ? pills.map(p => p.text).join(', ') : 'None'}`);
 
     if (!pills.length) {
       this.clearAllPillsAndFilters();
@@ -372,83 +397,154 @@ export class RoutingManager {
         `Makerspaces in ${pills.map(p => p.text).join(', ')}`,
         `Find makerspaces in ${pills.map(p => p.text).join(', ')}`
       );
+    } else {
+      console.error('❌ FATAL: SearchPillsManager is null during route handling.');
     }
   }
 
   initRoutingListeners() {
+    // Horcht auf Änderungen des Hash-Fragments (z.B. manuelles Ändern oder Back/Forward-Button)
     window.addEventListener('hashchange', () => this.handleRouteWithPills());
+
+    // Initialer Aufruf
     this.handleRouteWithPills();
+
     console.log('✅ RoutingManager initialized with Hash listeners');
   }
 
   // ========================================
-  // ✅ ID-BASIERTES ROUTING (FIXED SYNTAX)
+  // ✅ NEU: ID-BASIERTES ROUTING
   // ========================================
 
-  handleLocationRoute(hash) {
-    let idsString = "";
+  /**
+   * ✅ BOOKMARK ROUTING
+   * Handling für URLs: #/bookmarks/ID1,ID2,ID3
+   * 
+   * Beispiel:
+   * - #/bookmarks/1,5,12 → IDs 1, 5, 12
+   */
+  handleBookmarkRoute(hash) {
+    // Format: #/bookmarks/IDs
+    const idsString = hash.replace('#/bookmarks/', '');
 
-    if (hash.startsWith('#/location/')) {
-      idsString = hash.replace('#/location/', '');
-      const slashIndex = idsString.indexOf('/');
-      if (slashIndex > 0) {
-        idsString = idsString.substring(0, slashIndex);
-      }
-    } else {
-      const parts = hash.substring(2).split('/');
-      idsString = parts[2] || "";
-      console.log(`🌍 Hierarchical route detected: ${parts[0]}/${parts[1]}/${idsString}`);
+    console.log(`🔖 Bookmark route: ${idsString}`);
+
+    // Parse IDs
+    const ids = idsString.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+
+    if (ids.length === 0) {
+      console.warn('⚠️ No valid IDs in bookmark route');
+      return;
     }
+
+    // Hole Locations per ID (✅ O(1) Lookup!)
+    const locations = ids.map(id => window.locationById.get(id)).filter(Boolean);
+
+    if (locations.length === 0) {
+      console.warn('⚠️ No locations found for IDs:', ids);
+      return;
+    }
+
+    console.log(`✅ Found ${locations.length} location(s) for IDs:`, ids);
+
+    // Zeige diese Locations
+    this.showLocations(locations, ids);
+  }
+
+  /**
+   * ✅ HIERARCHISCHES ROUTING
+   * Handling für URLs: #/country/city/ID/name
+   * 
+   * Beispiele:
+   * - #/germany/markdorf/1/toolbox-bodensee → ID 1
+   * - #/germany/berlin/5,12 → IDs 5, 12 (mehrere Spaces)
+   * - #/austria/vienna/42/happylab → ID 42
+   */
+  handleLocationRoute(hash) {
+    // Format: #/country/city/IDs[/name]
+    // Extrahiere IDs aus Position 3
+    const parts = hash.substring(2).split('/'); // Entferne #/
+    const country = parts[0];
+    const city = parts[1];
+    const idsString = parts[2];
+    const name = parts[3]; // optional
+
+    console.log(`🌍 Hierarchical route: ${country}/${city}/${idsString}${name ? '/' + name : ''}`);
 
     const ids = idsString.split(',')
       .map(id => parseInt(id.trim(), 10))
       .filter(id => !isNaN(id) && id > 0);
 
+    console.log('📍 Location route detected:', ids);
+
     if (ids.length === 0) {
+      console.warn('⚠️ No valid IDs found in route');
       this.clearAllPillsAndFilters();
       return;
     }
 
+    // Hole Locations per ID (O(1) Zugriff!)
     const locations = ids
       .map(id => window.locationById.get(id))
       .filter(loc => loc !== undefined);
 
     if (locations.length === 0) {
+      console.warn('⚠️ No locations found for IDs:', ids);
       this.clearAllPillsAndFilters();
       return;
     }
 
+    console.log(`✅ Found ${locations.length} location(s) for IDs:`, ids);
+
+    // Zeige diese Locations
     this.showLocations(locations, ids);
   }
 
+  /**
+   * Zeige spezifische Locations auf der Karte
+   */
   showLocations(locations, ids) {
-    if (!this.searchManager) return;
+    if (!this.searchManager) {
+      console.error('❌ SearchManager not available');
+      return;
+    }
 
+    // Clear Pills (ID-Route hat keine Pills)
     if (this.searchManager.pillsManager) {
       this.searchManager.pillsManager.clear();
     }
 
+    // Clear Style-Filter
     if (this.styleFilterManager) {
       this.styleFilterManager.selectedStyles.clear();
+    }
+
+    // Setze Pre-Filter auf diese Locations
+    if (this.styleFilterManager) {
       this.styleFilterManager.applyPreFilters(locations);
     }
 
+    // ✅ NEU: Bei einem Space → Setze Name in Searchbar
     if (locations.length === 1 && this.searchManager.searchBar) {
       this.searchManager.searchBar.value = locations[0].name;
     }
 
+    // Update Search-Dropdown
     this.searchManager.createSuggestionItems(locations);
     this.searchManager.updateSearchCounter(locations.length);
     this.searchManager.updateDropdownUI(true);
 
+    // Zoom auf diese Locations
     this.zoomToLocations(locations);
 
+    // Wenn nur eine Location: Öffne Popup nach kurzem Delay
     if (locations.length === 1) {
       setTimeout(() => {
         this.openLocationPopup(locations[0]);
-      }, 500);
+      }, 500); // Warte bis Zoom fertig
     }
 
+    // Update Page Meta
     const names = locations.map(l => l.name).join(', ');
     this.updatePageMeta(
       locations.length === 1 ? locations[0].name : `${locations.length} Makerspaces`,
@@ -456,13 +552,18 @@ export class RoutingManager {
     );
   }
 
+  /**
+   * Zoom auf Locations
+   */
   zoomToLocations(locations) {
     if (!window.map || locations.length === 0) return;
 
     if (locations.length === 1) {
+      // Einzelne Location: Direkter Zoom
       const loc = locations[0];
       window.map.setView([loc.loc.lat, loc.loc.long], 15);
     } else {
+      // Mehrere Locations: Fit Bounds
       const bounds = L.latLngBounds(
         locations.map(loc => [loc.loc.lat, loc.loc.long])
       );
@@ -470,43 +571,91 @@ export class RoutingManager {
     }
   }
 
+  /**
+   * Öffne Popup für eine Location
+   */
   openLocationPopup(location) {
     const marker = window.markerById.get(location.ID);
     if (marker) {
       marker.openPopup();
+      console.log('📍 Opened popup for:', location.name);
     }
   }
 
+  /**
+   * ✅ Erstelle Location-URL (hierarchisch oder Bookmark)
+   * 
+   * Einzelner Space: #/country/city/ID/name (hierarchisch)
+   * Mehrere Spaces: #/bookmarks/ID1,ID2,ID3 (flach)
+   * 
+   * Beispiele: 
+   * - createLocationURL([1]) → "#/germany/markdorf/1/toolbox-bodensee"
+   * - createLocationURL([1, 5, 12]) → "#/bookmarks/1,5,12"
+   */
   createLocationURL(locationIds, includeNames = true) {
-    if (!Array.isArray(locationIds) || locationIds.length === 0) return '';
-
-    const firstLocation = window.locationById.get(locationIds[0]);
-    if (!firstLocation) return '';
-
-    const countrySlug = this.normalizeSlug(firstLocation.loc?.country || 'unknown');
-    const citySlug = this.normalizeSlug(firstLocation.loc?.city || 'unknown');
-    const idsString = locationIds.join(',');
-
-    if (includeNames && locationIds.length === 1 && firstLocation.name) {
-      const nameSlug = this.normalizeSlug(firstLocation.name);
-      return `#/${countrySlug}/${citySlug}/${idsString}/${nameSlug}`;
+    if (!Array.isArray(locationIds) || locationIds.length === 0) {
+      return '';
     }
 
-    return `#/${countrySlug}/${citySlug}/${idsString}`;
+    // Mehrere Spaces → Bookmark-URL
+    if (locationIds.length > 1) {
+      return `#/bookmarks/${locationIds.join(',')}`;
+    }
+
+    // Einzelner Space → Hierarchische URL
+    const location = window.locationById.get(locationIds[0]);
+    if (!location) {
+      console.warn('⚠️ Location not found:', locationIds[0]);
+      return '';
+    }
+
+    const country = location.loc?.country;
+    const city = location.loc?.city;
+
+    if (!country || !city) {
+      console.warn('⚠️ Location missing country or city:', location);
+      return '';
+    }
+
+    // Normalisiere zu Slugs
+    const countrySlug = this.normalizeSlug(country);
+    const citySlug = this.normalizeSlug(city);
+    const id = locationIds[0];
+
+    if (includeNames && location.name) {
+      const nameSlug = this.normalizeSlug(location.name);
+      return `#/${countrySlug}/${citySlug}/${id}/${nameSlug}`;
+    }
+
+    // Ohne Namen
+    return `#/${countrySlug}/${citySlug}/${id}`;
   }
 
+  /**
+   * ✅ NEU: Navigiere zu Location(s) per ID
+   * Bei einem Space: URL enthält Namen-Slug
+   * Bei mehreren Spaces: Nur IDs
+   */
   navigateToLocations(locationIds) {
-    const url = this.createLocationURL(locationIds, true);
+    const url = this.createLocationURL(locationIds, true); // true = Namen inkludieren
     if (url) {
+      // ✅ LÖSUNG 2: Setze Flag VOR Hash-Änderung
       this._isNavigating = true;
       window.location.hash = url;
+      // hashchange-Event wird in handleRouteWithPills ignoriert!
     }
   }
 
+  /**
+   * ✅ NEU: Zurücksetzen der Location-URL
+   * Kehrt zurück zu Bookmark-URL, Filter-URL oder Home
+   */
   clearLocationURL() {
+    // ✅ Prüfe zuerst ob Bookmark-Filter aktiv ist
     const isBookmarkFilterActive = this.styleFilterManager?.selectedStyles?.has('bookmarked');
 
     if (isBookmarkFilterActive && window.bookmarkManager) {
+      // Bookmark-Filter aktiv → Zurück zu Bookmark-URLs
       const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
       if (allBookmarkedIds.length > 0) {
         this.navigateToLocations(allBookmarkedIds);
@@ -514,11 +663,14 @@ export class RoutingManager {
       }
     }
 
+    // Prüfe ob Pills aktiv sind
     const pills = this.searchManager?.pillsManager?.getPillsArray() || [];
 
     if (pills.length > 0) {
+      // Zurück zur Filter-URL (Pills)
       this.updateURLFromPills(pills);
     } else {
+      // Zurück zu Home (keine Filter)
       this._isNavigating = true;
       window.location.hash = '';
     }

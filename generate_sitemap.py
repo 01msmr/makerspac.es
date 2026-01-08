@@ -58,6 +58,7 @@ def get_city_url_slug(city, reserved_routes):
     else:
         return slug
 
+
 def find_all_cities_for_sitemap(data):
     """Findet alle Städte mit 1+ Makerspaces für die Sitemap"""
     city_count = {}
@@ -67,16 +68,12 @@ def find_all_cities_for_sitemap(data):
         if city and city != 'CITY_CITY':
             city_count[city] = city_count.get(city, 0) + 1
     
-    # Rückgabe aller Städte, bei denen der Zähler >= 1 ist (also alle gefundenen)
+    # count für citypill autocomplete mit mindestens 2 spaces
     return {city: count for city, count in city_count.items() if count >= 1}
 
-def create_sitemap(base_url='https://makerspac.es', use_hierarchical_urls=False):
+def create_sitemap(base_url='https://makerspac.es'):
     """Erstellt die komplette sitemap.xml
     
-    Args:
-        base_url: Basis-URL der Website
-        use_hierarchical_urls: Wenn True, nutze #/country/city/ID/name Format
-                               Wenn False, nutze #/location/ID/name Format (Default)
     """
     
     # Lade Makerspace-Daten
@@ -148,7 +145,8 @@ def create_sitemap(base_url='https://makerspac.es', use_hierarchical_urls=False)
         for conflict in conflicts_found:
             print(f"  - {conflict}")
     
-    # ✅ NEU: Füge ALLE Makerspaces hinzu
+    # ✅ Füge ALLE EINZELNEN Makerspaces hinzu (hierarchisch)
+    # KEINE Multi-URLs in Sitemap
     makerspace_count = 0
     for location in data:
         # Skip Template
@@ -160,17 +158,12 @@ def create_sitemap(base_url='https://makerspac.es', use_hierarchical_urls=False)
         country = location.get('loc', {}).get('country', '')
         city = location.get('loc', {}).get('city', '')
         
-        if loc_id and name:
+        if loc_id and name and country and city:
+            # Hierarchisch: #/germany/markdorf/1/toolbox-bodensee
+            country_slug = country_to_slug(country)
+            city_slug = city_to_slug(city)
             name_slug = city_to_slug(name)
-            
-            if use_hierarchical_urls and country and city:
-                # Hierarchisch: #/germany/markdorf/1/toolbox-bodensee
-                country_slug = country_to_slug(country)
-                city_slug = city_to_slug(city)
-                url_path = f'{country_slug}/{city_slug}/{loc_id}/{name_slug}'
-            else:
-                # Flach: #/location/1/toolbox-bodensee
-                url_path = f'location/{loc_id}/{name_slug}'
+            url_path = f'{country_slug}/{city_slug}/{loc_id}/{name_slug}'
             
             urls.append({
                 'loc': url_path,
@@ -179,8 +172,7 @@ def create_sitemap(base_url='https://makerspac.es', use_hierarchical_urls=False)
             })
             makerspace_count += 1
     
-    url_format = "hierarchical" if use_hierarchical_urls else "flat"
-    print(f"\n✅ Added {makerspace_count} makerspace URLs to sitemap ({url_format} format)")
+    print(f"\n✅ Added {makerspace_count} makerspace URLs to sitemap (hierarchical format)")
     
     # Erstelle URL-Einträge
     for url_data in urls:
@@ -227,7 +219,6 @@ def save_sitemap(xml_content, filename='sitemap.xml'):
         f.write(xml_content)
 
 def print_stats(data):
-    """Gibt Statistiken über die Sitemap aus"""
     cities = find_all_cities_for_sitemap(data)
     countries = find_all_countries(data)
     makerspaces = len([loc for loc in data if loc.get('ID', 0) != 0])
@@ -248,23 +239,15 @@ def print_stats(data):
     print(f"  - {makerspaces} Makerspaces")
 
 if __name__ == '__main__':
-    import sys
-    
-    # Check für --hierarchical Flag
-    use_hierarchical = '--hierarchical' in sys.argv
-    
-    if use_hierarchical:
-        print("Generiere sitemap.xml mit HIERARCHISCHEN URLs (Land/Stadt/ID/Name)...")
-    else:
-        print("Generiere sitemap.xml mit FLACHEN URLs (location/ID/Name)...")
-        print("Tipp: Nutze --hierarchical für hierarchische URLs\n")
+    print("Generiere sitemap.xml für makerspac.es …")
+    print("Format: Hierarchische URLs (#/country/city/ID/name)\n")
     
     try:
         # Lade Daten
         data = load_makerspaces()
         
         # Erstelle Sitemap
-        xml_content = create_sitemap(use_hierarchical_urls=use_hierarchical)
+        xml_content = create_sitemap()
         
         # Speichere Sitemap
         save_sitemap(xml_content)
