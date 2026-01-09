@@ -289,19 +289,24 @@ class SearchManager {
       filteredLocations = this.filterLocations(searchQuery);
     }
 
-    // Wenn XCR aktiv: Update UI mit den XCR-Ergebnissen
+    // ✨ KORREKTUR: Filter-Sektion (Pills oben) bei jedem Update neu zeichnen.
+    // Das sorgt dafür, dass Country-Filter aus der URL beim Laden sofort als Pill erscheinen.
+    this.createActiveFiltersSection();
+
+    // Update UI mit den Ergebnissen
     this.updateMarkers(filteredLocations);
     this.updateSearchCounter(filteredLocations.length);
     this.createSuggestionItems(filteredLocations);
     this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0);
 
-    // ✅ SAUBERE LÖSUNG: Auto-Zoom nur wenn KEIN manueller Space-Klick
+    // Auto-Zoom nur wenn KEIN manueller Space-Klick
     if (!this._manualSpaceClick) {
       this.triggerAutoZoom(filteredLocations);
     }
 
     return;
   }
+
 
 
   triggerAutoZoom(locations) {
@@ -953,6 +958,11 @@ class SearchManager {
   }
 
   getActiveFilterForCategory(categoryKey) {
+    if (categoryKey === 'country') {
+      // ✅ Country-Filter ist jetzt in routingManager, nicht in Pills!
+      return window.routingManager?._activeCountryFilter || null;
+    }
+
     if (!this.styleFilterManager || !this.styleFilterManager.hasActiveFilters()) {
       return null;
     }
@@ -968,9 +978,6 @@ class SearchManager {
     } else if (categoryKey === 'doorState') {
       const doorOptions = ['open', 'closed'];
       return selectedStyles.find(s => doorOptions.includes(s)) || null;
-    } else if (categoryKey === 'country') {
-      const countries = this.getUniqueCountries();
-      return selectedStyles.find(s => countries.includes(s)) || null;
     }
 
     return null;
@@ -1145,6 +1152,14 @@ class SearchManager {
   }
 
   clearCategoryFilter(categoryKey) {
+    // ✅ Country wird jetzt über routingManager gehandhabt
+    if (categoryKey === 'country') {
+      if (window.routingManager) {
+        window.routingManager.clearAllPillsAndFilters();
+      }
+      return;
+    }
+
     if (!this.styleFilterManager) return;
 
     let categoryOptions = [];
@@ -1154,8 +1169,6 @@ class SearchManager {
       categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
     } else if (categoryKey === 'doorState') {
       categoryOptions = ['open', 'closed'];
-    } else if (categoryKey === 'country') {
-      categoryOptions = this.getUniqueCountries();
     }
 
     categoryOptions.forEach(opt => {
@@ -1170,6 +1183,16 @@ class SearchManager {
   }
 
   selectCategoryOption(categoryKey, option) {
+    // ✅ Country wird jetzt über routingManager gehandhabt
+    if (categoryKey === 'country') {
+      if (window.routingManager) {
+        window.routingManager.applyCountryFilter(option);
+      }
+      this.scrollToTop();
+      this.searchBar.focus();
+      return;
+    }
+
     if (!this.styleFilterManager) return;
 
     if (categoryKey === 'bookmarks' && option === 'bookmarked') {
@@ -1184,8 +1207,6 @@ class SearchManager {
         categoryOptions = ['for all', 'for youth', 'for students', 'commercial'];
       } else if (categoryKey === 'doorState') {
         categoryOptions = ['open', 'closed'];
-      } else if (categoryKey === 'country') {
-        categoryOptions = this.getUniqueCountries();
       }
 
       categoryOptions.forEach(opt => {
@@ -1268,33 +1289,31 @@ class SearchManager {
     const translatedCountry = window.i18n.t(`countries.${country}`);
     const ofText = window.i18n.t('searchResults.of');
 
-    const isFilterActive = this.getActiveFilterForCategory('country') === country;
+    // ✨ KORREKTUR: Prüfe aktiv gegen den routingManager, ob dieses Land gefiltert ist
+    const isFilterActive = window.routingManager?._activeCountryFilter === country;
     const activeClass = isFilterActive ? 'country-filter-active' : '';
 
+    // Wenn gefiltert, blenden wir Counter und Navigation aus, um den Fokus auf den Filter-Status zu legen
     const countClass = isFilterActive ? 'is-hidden' : '';
     const caretsClass = isFilterActive ? 'is-hidden' : '';
 
     header.innerHTML = `
-      <div class="country-title-content">
-        
-        <span class="fi fi-${countryCode} flag-in-header"></span> 
-        
-        <div class="country-filter-button ${activeClass}" data-country="${country}" title="${window.i18n.t('filter.country')} ${translatedCountry}">
-          
-          <i class="fas fa-filter filter-icon-in-header"></i> 
-          
-          <span class="country-filter-name">${translatedCountry}</span>
-
-        </div>
-        
-        <span class="country-count ${countClass}">[${count} ${ofText} ${this.json.filter(loc => loc.loc?.country === country).length}]</span>
+    <div class="country-title-content">
+      <span class="fi fi-${countryCode} flag-in-header"></span> 
+      
+      <div class="country-filter-button ${activeClass}" data-country="${country}" title="${window.i18n.t('filter.country')} ${translatedCountry}">
+        <i class="fas fa-filter filter-icon-in-header"></i> 
+        <span class="country-filter-name">${translatedCountry}</span>
       </div>
       
-      <div class="country-nav-carets ${caretsClass}">
-        <i class="fas fa-caret-up country-nav-caret" data-direction="prev" title="previous country"></i>
-        <i class="fas fa-caret-down country-nav-caret" data-direction="next" title="next country"></i>
-      </div>
-    `;
+      <span class="country-count ${countClass}">[${count} ${ofText} ${this.json.filter(loc => loc.loc?.country === country).length}]</span>
+    </div>
+    
+    <div class="country-nav-carets ${caretsClass}">
+      <i class="fas fa-caret-up country-nav-caret" data-direction="prev" title="previous country"></i>
+      <i class="fas fa-caret-down country-nav-caret" data-direction="next" title="next country"></i>
+    </div>
+  `;
 
     const upCaret = header.querySelector('[data-direction="prev"]');
     const downCaret = header.querySelector('[data-direction="next"]');
@@ -1307,12 +1326,14 @@ class SearchManager {
       filterButton.addEventListener('click', (e) => this.handleCountryFilterClick(e, country));
     }
 
+    // ✨ Zusätzliche CSS-Klasse für das gesamte Header-Element, falls aktiv
     if (isFilterActive) {
       header.classList.add('is-filtered');
     }
 
     return header;
   }
+
 
   handleCountryScroll(e, currentCountry, direction) {
     e.stopPropagation();
@@ -1406,14 +1427,17 @@ class SearchManager {
   handleCountryFilterClick(e, country) {
     e.stopPropagation();
 
-    if (!this.styleFilterManager) return;
+    // ✅ Nutze Country-Filter statt Pills!
+    if (window.routingManager) {
+      const isActive = window.routingManager._activeCountryFilter === country;
 
-    const currentActiveFilter = this.getActiveFilterForCategory('country');
-
-    if (currentActiveFilter === country) {
-      this.clearCategoryFilter('country');
-    } else {
-      this.selectCategoryOption('country', country);
+      if (isActive) {
+        // Deaktiviere Country-Filter
+        window.routingManager.clearAllPillsAndFilters();
+      } else {
+        // Aktiviere Country-Filter
+        window.routingManager.applyCountryFilter(country);
+      }
     }
 
     this.searchBar.focus();
@@ -2050,14 +2074,21 @@ class SearchManager {
    * Setup Callbacks zwischen Komponenten
    */
   setupAutocompleteCallbacks() {
-    // Autocomplete → Pills (bei Ort-Auswahl)
+    // Autocomplete → Pills (bei Ort-Auswahl) ODER Country-Filter
     this.autocompleteManager.onSelect((suggestion) => {
-      // Nur Orte werden zu Pills (Styles werden direkt als Filter aktiviert)
-      if (suggestion.type === 'city' ||
-        suggestion.type === 'zip' ||
-        suggestion.type === 'country') {
+      // ✅ Country wird als FILTER aktiviert (keine Pill!)
+      if (suggestion.type === 'country') {
+        if (window.routingManager) {
+          window.routingManager.applyCountryFilter(suggestion.text);
+          // URL wird in applyCountryFilter() gesetzt
+        }
+        this.searchBar.value = '';
+        return;
+      }
+
+      // Nur Cities und ZIP werden zu Pills
+      if (suggestion.type === 'city' || suggestion.type === 'zip') {
         this.pillsManager.addPill(suggestion);
-        // ✨ FINALER FIX: Leere das Suchfeld nach dem Hinzufügen der Pill
         this.searchBar.value = '';
       }
     });
@@ -2067,7 +2098,8 @@ class SearchManager {
       this.applyPillFilters(pills);
 
       // Update URL (wenn RoutingManager verfügbar)
-      if (window.routingManager) {
+      // ✅ NICHT während Navigation um Loops zu vermeiden
+      if (window.routingManager && !window.routingManager._isNavigating) {
         window.routingManager.updateURLFromPills(pills);
       }
     });

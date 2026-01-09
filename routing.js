@@ -3,6 +3,7 @@
 
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
+    window.routingManager = this; // <--- Das muss ganz oben stehen!
     this.styleFilterManager = styleFilterManager;
     this.searchManager = searchManager;
     this.json = json;
@@ -15,6 +16,9 @@ export class RoutingManager {
 
     // ✅ NEU: Flag um hashchange nach eigenem navigateToLocations zu ignorieren
     this._isNavigating = false;
+
+    // ✅ Aktiver Country-Filter (für URL-Updates)
+    this._activeCountryFilter = null;
 
     // ✨ NEU: Übersetzungstabelle für Städte (Deutsch -> Englisch für Slugs)
     this._cityTranslationMap = {
@@ -91,6 +95,114 @@ export class RoutingManager {
   // ========================================
   // ROUTES & SLUGS
   // ========================================
+
+  /**
+   * ✅ Finde Country-Name anhand von Slug
+   */
+  findCountryBySlug(slug) {
+    this._ensureDataLoaded();
+    const countries = this._countries || [];
+
+    for (const country of countries) {
+      if (this.countryToSlug(country) === slug) {
+        return country;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * ✅ Finde City-Name anhand von Slug (mit Translation-Support)
+   */
+  findCityBySlug(slug) {
+    this._ensureDataLoaded();
+
+    // Prüfe alle Städte in den Daten
+    for (const location of this.json) {
+      const city = location.loc?.city;
+      if (city && city !== 'CITY_CITY') {
+        const citySlug = this.cityToSlug(city);
+        if (citySlug === slug) {
+          return city;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * ✅ Aktiviere Country-Filter (ohne Pill!)
+   */
+  applyCountryFilter(countryName) {
+    console.log(`🌍 Applying country filter: ${countryName}`);
+
+    // ✅ Setze Navigation-Flag VOR Pills löschen
+    this._isNavigating = true;
+
+    // Speichere aktiven Country-Filter
+    this._activeCountryFilter = countryName;
+
+    // Lösche Pills (onChange wird jetzt ignoriert weil _isNavigating = true)
+    if (this.searchManager?.pillsManager) {
+      this.searchManager.pillsManager.clear();
+    }
+
+    // Filtere Locations nach Country
+    const filteredLocations = this.json.filter(loc =>
+      loc.loc?.country === countryName
+    );
+
+    console.log(`✅ Found ${filteredLocations.length} locations in ${countryName}`);
+
+    // Wende Pre-Filter an (zeigt nur diese Locations)
+    if (this.styleFilterManager) {
+      this.styleFilterManager.applyPreFilters(filteredLocations);
+    }
+
+    // Update Search UI
+    if (this.searchManager) {
+      this.searchManager.createSuggestionItems(filteredLocations);
+      this.searchManager.updateSearchCounter(filteredLocations.length);
+      this.searchManager.updateDropdownUI(true); // ✅ Dropdown ÖFFNEN um gefilterte Spaces zu zeigen
+      // createSuggestionItems() erstellt automatisch auch die Country-Headers! ✅
+    }
+
+    // ✅ UPDATE URL zu #/country (NUR wenn noch nicht gesetzt!)
+    const countrySlug = this.countryToSlug(countryName);
+    const expectedHash = `#/${countrySlug}`;
+    if (window.location.hash !== expectedHash) {
+      window.location.hash = expectedHash;
+    }
+
+    // Update Meta
+    this.updatePageMeta(
+      `Makerspaces in ${countryName}`,
+      `Find makerspaces, fablabs and hackerspaces in ${countryName}`
+    );
+  }
+
+  /**
+   * ✅ Aktiviere City-Filter (als Pill!)
+   */
+  applyCityFilter(cityName) {
+    console.log(`🏙️ Applying city filter: ${cityName}`);
+
+    // Lösche Country-Filter
+    this._activeCountryFilter = null;
+
+    // Erstelle City-Pill
+    const cityPill = {
+      text: cityName,
+      type: 'city',
+      count: this.json.filter(loc => loc.loc?.city === cityName).length
+    };
+
+    // Aktiviere Pill
+    if (this.searchManager?.pillsManager) {
+      this.searchManager.pillsManager.clear();
+      this.searchManager.pillsManager.addPill(cityPill);
+    }
+  }
 
   _createRoutes() {
     const routes = {};
@@ -182,20 +294,22 @@ export class RoutingManager {
     const cityRoutes = this._cityRoutes || new Map();
     const routes = this._routes || {};
 
-    if (pill.type === 'country') {
-      return this.countryToSlug(pill.text);
-    }
+    // ✅ COUNTRY ENTFERNT - wird als Filter gehandhabt, nicht als Pill!
 
-    // City Slug (mit oder ohne "city-" Präfix)
+    // ✅ City Slug HIERARCHISCH: country/city
     if (pill.type === 'city') {
-      // Prüfe Kollisionen
-      for (const [routeSlug, city] of cityRoutes) {
-        if (city === pill.text) {
-          return routeSlug;
-        }
+      const cityName = pill.text;
+      const citySlug = this.cityToSlug(cityName);
+
+      // Finde das Land dieser Stadt
+      const location = this.json.find(loc => loc.loc?.city === cityName);
+      if (location && location.loc?.country) {
+        const countrySlug = this.countryToSlug(location.loc.country);
+        return `${countrySlug}/${citySlug}`;  // ✅ Hierarchisch!
       }
-      // Fallback über alle Slugs
-      return this.cityToSlug(pill.text);
+
+      // Fallback: nur City (sollte nicht vorkommen)
+      return citySlug;
     }
 
     // Style Slugs
@@ -214,15 +328,18 @@ export class RoutingManager {
   loadPillsFromURL() {
     this._ensureDataLoaded();
 
-    // NEU: Lese den Hash-Teil und entferne das initiale '#/'
     const hash = window.location.hash;
-    // Prüfe auf ein gültiges Hash-Format (z.B. #/germany+open)
     if (!hash || !hash.startsWith('#/')) return [];
 
-    // Der Pfad ist nun der Hash-Teil ohne das # und ohne das /
-    const path = hash.slice(2);
+    let path = hash.slice(2);
+
+    // ✅ Entferne trailing slash: #/germany/ → germany
+    path = path.replace(/\/$/, '');
 
     if (!path) return [];
+
+    // ✅ Verhindere hierarchische URLs als Pills
+    if (path.includes('/')) return [];
 
     const slugs = path.split('+');
     return slugs
@@ -238,15 +355,9 @@ export class RoutingManager {
     const cityRoutes = this._cityRoutes || new Map();
     const routes = this._routes || {};
 
-    // 1. Suche nach COUNTRY
-    for (const c of countries) {
-      const countrySlug = this.countryToSlug(c);
-      if (countrySlug === slug) {
-        return { text: c, type: 'country', count: this._countLocationsByCountry(c) };
-      }
-    }
+    // ✅ COUNTRY ENTFERNT - wird jetzt als Filter gehandhabt, nicht als Pill!
 
-    // 2. Suche nach CITY: Aggressive Suche über alle Cities
+    // 1. Suche nach CITY
     let foundCityName = null;
 
     // A. Prüfe CityRoutes (mit Kollisions-Slugs)
@@ -278,8 +389,7 @@ export class RoutingManager {
       return { text: foundCityName, type: 'city', count: this._countLocationsByCity(foundCityName) };
     }
 
-
-    // 3. Suche nach STYLE
+    // 2. Suche nach STYLE
     if (routes[slug]?.type === 'style') {
       const style = routes[slug].value;
       return {
@@ -339,6 +449,9 @@ export class RoutingManager {
   // ========================================
 
   clearAllPillsAndFilters() {
+    // ✅ Lösche Country-Filter
+    this._activeCountryFilter = null;
+
     this.styleFilterManager?.selectedStyles?.clear();
     this.styleFilterManager?.applyFilters();
 
@@ -348,6 +461,10 @@ export class RoutingManager {
     } else {
       this.searchManager?.clearSearchAndPills();
     }
+
+    // ✅ URL leeren (zurück zu Home)
+    this._isNavigating = true;
+    window.location.hash = '';
   }
 
   handleRouteWithPills() {
@@ -362,6 +479,17 @@ export class RoutingManager {
 
     const hash = window.location.hash;
 
+    // ✅ KURZ-URL: #/123 → Umleitung zu hierarchischer URL
+    const shortIdMatch = hash.match(/^#\/(\d+)$/);
+    if (shortIdMatch) {
+      const id = parseInt(shortIdMatch[1], 10);
+      const location = window.locationById.get(id);
+      if (location) {
+        this.navigateToLocations([id]);
+        return;
+      }
+    }
+
     // ✅ BOOKMARK-ROUTING: #/bookmarks/1,5,12
     if (hash.startsWith('#/bookmarks/')) {
       this.handleBookmarkRoute(hash);
@@ -375,6 +503,36 @@ export class RoutingManager {
     if (hierarchicalMatch) {
       this.handleLocationRoute(hash);
       return;
+    }
+
+    // ✅ COUNTRY-FILTER: #/germany oder #/germany/
+    // Prüfe ob URL ein einzelnes Land ist (mit optionalem trailing slash)
+    const singleCountryMatch = hash.match(/^#\/([^/+]+)\/?$/);
+    if (singleCountryMatch) {
+      const slug = singleCountryMatch[1];
+      const countryName = this.findCountryBySlug(slug);
+
+      if (countryName) {
+        // Aktiviere Country-Filter (KEIN Pill!)
+        this.applyCountryFilter(countryName);
+        return;
+      }
+    }
+
+    // ✅ CITY-FILTER: #/country/city oder #/country/city/
+    const countryCityMatch = hash.match(/^#\/([^/+]+)\/([^/+]+)\/?$/);
+    if (countryCityMatch) {
+      const countrySlug = countryCityMatch[1];
+      const citySlug = countryCityMatch[2];
+
+      const countryName = this.findCountryBySlug(countrySlug);
+      const cityName = this.findCityBySlug(citySlug);
+
+      if (countryName && cityName) {
+        // Aktiviere City-Filter (als Pill!)
+        this.applyCityFilter(cityName);
+        return;
+      }
     }
 
     const pills = this.loadPillsFromURL();
@@ -392,6 +550,9 @@ export class RoutingManager {
     }
 
     if (this.searchManager?.pillsManager) {
+      // ✅ Lösche aktiven Country-Filter
+      this._activeCountryFilter = null;
+
       this.searchManager.pillsManager.loadPills(pills);
       this.updatePageMeta(
         `Makerspaces in ${pills.map(p => p.text).join(', ')}`,

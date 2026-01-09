@@ -35,9 +35,27 @@ def country_to_slug(country):
     return slug
 
 def city_to_slug(city):
-    """Konvertiert Stadt-Namen zu URL-Slug"""
-    slug = city.lower()
-    # Umlaute ersetzen
+    """Konvertiert Stadt-Namen zu URL-Slug mit Übersetzung"""
+    
+    # ✅ Übersetzungstabelle (Deutsch/Lokal -> Englisch)
+    translation_map = {
+        'München': 'Munich',
+        'Köln': 'Cologne',
+        'Nürnberg': 'Nuremberg',
+        'Wien': 'Vienna',
+        'Zürich': 'Zurich',
+        'Genf': 'Geneva',
+        'Basel': 'Basel',
+        'Graz': 'Graz',
+        'Linz': 'Linz',
+        'Bern': 'Bern'
+    }
+    
+    # Prüfe ob Übersetzung existiert
+    translated_city = translation_map.get(city, city)
+    
+    slug = translated_city.lower()
+    # Umlaute ersetzen (falls noch vorhanden)
     slug = slug.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
     # Leerzeichen zu Bindestrichen
     slug = re.sub(r'\s+', '-', slug)
@@ -105,6 +123,7 @@ def create_sitemap(base_url='https://makerspac.es'):
     ]
     
     # Länder - dynamisch aus Daten (sehr hohe Priorität)
+    # ✅ Country-URLs aktivieren jetzt FILTER (keine Pills mehr!)
     for country in countries:
         slug = country_to_slug(country)
         urls.append({
@@ -123,27 +142,34 @@ def create_sitemap(base_url='https://makerspac.es'):
         {'loc': 'closed', 'priority': '0.6', 'changefreq': 'daily'},
     ])
     
-    # Füge Städte hinzu (mit intelligentem Konflikt-Management)
-    conflicts_found = []
-    for city, count in sorted(cities.items(), key=lambda x: x[1], reverse=True):
-        slug = get_city_url_slug(city, reserved_routes)
-        
-        # Logge Konflikte
-        if slug.startswith('city-'):
-            conflicts_found.append(f"{city} -> {slug}")
-        
-        # Städte mit mehr Spaces bekommen höhere Priorität
-        priority = min(0.85, 0.7 + (count * 0.05))
-        urls.append({
-            'loc': slug,
-            'priority': f'{priority:.2f}',
-            'changefreq': 'weekly'
-        })
+    # ✅ Füge Städte HIERARCHISCH hinzu: #/country/city
+    # Gruppiere Städte nach Land
+    city_by_country = {}
+    for location in data:
+        if location.get('ID') == 0:  # Skip Template
+            continue
+        city = location.get('loc', {}).get('city')
+        country = location.get('loc', {}).get('country')
+        if city and country and city != 'CITY_CITY' and country != 'COUNTRY_COUNTRY':
+            if country not in city_by_country:
+                city_by_country[country] = {}
+            if city not in city_by_country[country]:
+                city_by_country[country][city] = 0
+            city_by_country[country][city] += 1
     
-    if conflicts_found:
-        print("\n⚠️  Conflicts detected (using 'city-' prefix):")
-        for conflict in conflicts_found:
-            print(f"  - {conflict}")
+    # Erstelle hierarchische City-URLs
+    for country, cities_in_country in sorted(city_by_country.items()):
+        country_slug = country_to_slug(country)
+        for city, count in sorted(cities_in_country.items(), key=lambda x: x[1], reverse=True):
+            city_slug = city_to_slug(city)
+            
+            # Städte mit mehr Spaces bekommen höhere Priorität
+            priority = min(0.85, 0.7 + (count * 0.05))
+            urls.append({
+                'loc': f'{country_slug}/{city_slug}',  # ✅ Hierarchisch!
+                'priority': f'{priority:.2f}',
+                'changefreq': 'weekly'
+            })
     
     # ✅ Füge ALLE EINZELNEN Makerspaces hinzu (hierarchisch)
     # KEINE Multi-URLs in Sitemap
