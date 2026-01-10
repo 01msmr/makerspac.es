@@ -17,8 +17,13 @@ def find_all_countries(data):
     countries = set()
     
     for location in data:
+        # ✅ Skip Template/Vorlage
+        if location.get('ID') == 0 or location.get('name') == 'TEMPLATE':
+            continue
+            
         country = location.get('loc', {}).get('country')
-        if country and country != 'COUNTRY_COUNTRY':
+        # ✅ Filtere ungültige Country-Werte
+        if country and country not in ['COUNTRY_COUNTRY', 'COUNTRYCOUNTRYCOUNTRY']:
             countries.add(country)
     
     return sorted(list(countries))
@@ -82,11 +87,16 @@ def find_all_cities_for_sitemap(data):
     city_count = {}
     
     for location in data:
+        # ✅ Skip Template/Vorlage
+        if location.get('ID') == 0 or location.get('name') == 'TEMPLATE':
+            continue
+            
         city = location.get('loc', {}).get('city')
-        if city and city != 'CITY_CITY':
+        # ✅ Filtere ungültige City-Werte
+        if city and city not in ['CITY_CITY', 'CITYCITYCITY']:
             city_count[city] = city_count.get(city, 0) + 1
     
-    # count für citypill autocomplete mit mindestens 2 spaces
+    # count für citypill autocomplete mit mindestens 1 space
     return {city: count for city, count in city_count.items() if count >= 1}
 
 def create_sitemap(base_url='https://makerspac.es'):
@@ -146,11 +156,18 @@ def create_sitemap(base_url='https://makerspac.es'):
     # Gruppiere Städte nach Land
     city_by_country = {}
     for location in data:
-        if location.get('ID') == 0:  # Skip Template
+        # ✅ Skip Template/Vorlage (mehrere Checks für Sicherheit)
+        if (location.get('ID') == 0 or 
+            location.get('name') == 'TEMPLATE'):
             continue
+            
         city = location.get('loc', {}).get('city')
         country = location.get('loc', {}).get('country')
-        if city and country and city != 'CITY_CITY' and country != 'COUNTRY_COUNTRY':
+        
+        # ✅ Filtere ungültige Werte
+        if (city and country and 
+            city not in ['CITY_CITY', 'CITYCITYCITY'] and 
+            country not in ['COUNTRY_COUNTRY', 'COUNTRYCOUNTRYCOUNTRY']):
             if country not in city_by_country:
                 city_by_country[country] = {}
             if city not in city_by_country[country]:
@@ -175,8 +192,9 @@ def create_sitemap(base_url='https://makerspac.es'):
     # KEINE Multi-URLs in Sitemap
     makerspace_count = 0
     for location in data:
-        # Skip Template
-        if location.get('ID') == 0:
+        # ✅ Skip Template/Vorlage (mehrere Checks)
+        if (location.get('ID') == 0 or 
+            location.get('name') == 'TEMPLATE'):
             continue
             
         loc_id = location.get('ID')
@@ -184,7 +202,11 @@ def create_sitemap(base_url='https://makerspac.es'):
         country = location.get('loc', {}).get('country', '')
         city = location.get('loc', {}).get('city', '')
         
-        if loc_id and name and country and city:
+        # ✅ Validiere alle Felder
+        if (loc_id and name and country and city and
+            name != 'TEMPLATE' and
+            city not in ['CITY_CITY', 'CITYCITYCITY'] and
+            country not in ['COUNTRY_COUNTRY', 'COUNTRYCOUNTRYCOUNTRY']):
             # Hierarchisch: #/germany/markdorf/1/toolbox-bodensee
             country_slug = country_to_slug(country)
             city_slug = city_to_slug(city)
@@ -247,7 +269,9 @@ def save_sitemap(xml_content, filename='sitemap.xml'):
 def print_stats(data):
     cities = find_all_cities_for_sitemap(data)
     countries = find_all_countries(data)
-    makerspaces = len([loc for loc in data if loc.get('ID', 0) != 0])
+    # ✅ Filtere Vorlage bei Makerspace-Zählung
+    makerspaces = len([loc for loc in data 
+                       if loc.get('ID', 0) != 0 and loc.get('name') != 'TEMPLATE'])
     
     print("\n=== Sitemap Statistiken ===")
     print(f"Gesamt Makerspaces: {makerspaces}")
