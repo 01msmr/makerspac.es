@@ -1,4 +1,4 @@
-// search-autocomplete.js - Smart Autocomplete mit Filter-Integration
+  // search-autocomplete.js - Smart Autocomplete mit Filter-Integration
 
 class AutocompleteManager {
   constructor(json, searchBar, styleFilterManager) {

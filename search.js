@@ -178,14 +178,18 @@ class SearchManager {
     this.searchBar.addEventListener('input', (e) => {
       const value = e.target.value.trim().toLowerCase();
 
+      // 1. ✨ ZOOM-ANZEIGE BEIBEHALTEN
+      // Wenn "xcr"   getippt wird, erscheint die kleine Zoom-Zahl am Cursor
       if (value.startsWith('xcr')) {
         this.activateZoomIndicator();
       } else {
         this.deactivateZoomIndicator();
       }
 
-      // ✨ FIX: applyPillFilters übernimmt die komplette Filter-Logik
-      // (Text-Suche + Pills + Style-Filter)
+      // 2. ✨ FILTER-LOGIK AKTUALISIEREN
+      // Wir rufen applyPillFilters auf. 
+      // Da diese Funktion intern searchQuery = this.searchBar.value ausliest,
+      // werden Land-Filter und Text-Suche jetzt automatisch kombiniert.
       if (this.pillsManager) {
         this.applyPillFilters(this.pillsManager.getPillsArray());
       }
@@ -272,40 +276,18 @@ class SearchManager {
     });
   }
 
-  updateSearchResults(filteredLocations) {
-    let searchQuery = this.searchBar.value.trim().toLowerCase();
 
-    // ✨ WENN "xcr" am Anfang steht: Entferne es und suche mit dem Rest
-    if (searchQuery === 'xcr') {
-      this.updateSearchCounter(0);
-      this.suggestionsDropdown.innerHTML = '';
-      this.updateDropdownUI(false);
-      return;
-    } else if (searchQuery.startsWith('xcr ')) {
-      searchQuery = searchQuery.substring(4);
-      filteredLocations = this.filterLocations(searchQuery);
-    } else if (searchQuery.startsWith('xcr')) {
-      searchQuery = searchQuery.substring(3);
-      filteredLocations = this.filterLocations(searchQuery);
-    }
 
-    // ✨ KORREKTUR: Filter-Sektion (Pills oben) bei jedem Update neu zeichnen.
-    // Das sorgt dafür, dass Country-Filter aus der URL beim Laden sofort als Pill erscheinen.
-    this.createActiveFiltersSection();
 
-    // Update UI mit den Ergebnissen
-    this.updateMarkers(filteredLocations);
-    this.updateSearchCounter(filteredLocations.length);
-    this.createSuggestionItems(filteredLocations);
-    this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0);
 
-    // Auto-Zoom nur wenn KEIN manueller Space-Klick
-    if (!this._manualSpaceClick) {
-      this.triggerAutoZoom(filteredLocations);
-    }
 
-    return;
-  }
+
+
+
+
+
+
+
 
 
 
@@ -703,19 +685,8 @@ class SearchManager {
 
   updateDropdownIcons() { }
 
-  updateDropdownUI(hasResults) {
-    const hasFilterSection = this.suggestionsDropdown.querySelector('.active-filters-section') !== null;
 
-    // NEU HINZUGEFÜGT: Wenn SearchManager existiert, prüfen wir auf aktive Pills/Filter
-    const hasActiveFiltersOrPills = this.pillsManager?.count() > 0 ||
-      (this.styleFilterManager && this.styleFilterManager.hasActiveFilters());
 
-    // shouldShow ist TRUE, wenn Ergebnisse ODER Filter-Sektion ODER aktive Filter/Pills vorhanden sind.
-    const shouldShow = hasResults || hasFilterSection || hasActiveFiltersOrPills;
-
-    this.suggestionsDropdown.classList.toggle('is-active', shouldShow);
-    this.searchBar.classList.toggle('has-suggestions', shouldShow);
-  }
 
   updateSearchCounter(count) {
     this.searchCounter.textContent = count;
@@ -728,21 +699,37 @@ class SearchManager {
     this.searchCounter.classList.toggle('is-clearable', hasSearchText);
   }
 
+  /**
+ * Klick auf den Such-Counter / Clear-Button im Input-Feld
+ * Soll nur den Text und das Land/Pills lösen, NICHT die Favoriten/Styles
+ */
   clearSearch() {
-    // Wenn Pills da sind, lösche nur den Text und Pill-Filter-Logik übernimmt
-    if (this.pillsManager.count() > 0) {
-      this.searchBar.value = '';
-      this.searchBar.focus();
-      this.applyPillFilters(this.pillsManager.getPillsArray());
-    } else {
-      // Wenn keine Pills da sind, mache den Voll-Reset
-      this.searchBar.value = '';
-      this.searchBar.focus();
+    this.searchBar.value = '';
+    this.searchBar.focus();
 
-      // ✨ KORREKTUR: Rufe die zentrale Filter-Logik auf
-      this.applyPillFilters(this.pillsManager.getPillsArray());
+    // Land im Routing ebenfalls löschen
+    if (window.routingManager) {
+      window.routingManager._activeCountryFilter = null;
+      window.routingManager._isNavigating = true;
+      window.location.hash = '';
     }
+
+    // Pills löschen
+    if (this.pillsManager) {
+      this.pillsManager.clear();
+    }
+
+    // ✨ Filter neu berechnen - Styles bleiben erhalten!
+    this.applyPillFilters([]);
+
+    setTimeout(() => { if (window.routingManager) window.routingManager._isNavigating = false; }, 100);
   }
+
+
+
+
+
+
 
   createActiveFiltersSection() {
     const existingSection = this.suggestionsDropdown.querySelector('.active-filters-section');
@@ -800,20 +787,34 @@ class SearchManager {
     this.suggestionsDropdown.insertBefore(filtersSection, this.suggestionsDropdown.firstChild);
   }
 
+  /**
+ * 💣 NUR HIER wird alles gelöscht!
+ * (Klick auf das große X in der Pill-Leiste)
+ */
   clearAllFilters() {
-    if (!this.styleFilterManager) return;
+    console.log('🗑️ Master Reset: ALLES wird gelöscht.');
 
-    this.styleFilterManager.selectedStyles.clear();
+    this.searchBar.value = '';
+    if (this.pillsManager) this.pillsManager.clear();
 
-    this.styleFilterManager.updateFilterCounter();
-    this.styleFilterManager.updateHeaderState();
+    if (window.routingManager) {
+      window.routingManager._activeCountryFilter = null;
+      window.routingManager._isNavigating = true;
+      window.location.hash = '';
+    }
 
-    // ✨ KORREKTUR: Rufe die zentrale Filter-Logik auf
-    this.applyPillFilters(this.pillsManager.getPillsArray());
+    // ✨ Nur bei diesem händischen Klick löschen wir die Favoriten/Status
+    if (this.styleFilterManager) {
+      this.styleFilterManager.selectedStyles.clear();
+      this.styleFilterManager.updateFilterCounter();
+      this.styleFilterManager.updateHeaderState();
+    }
 
+    this.applyPillFilters([]);
     this.scrollToTop();
-
     this.searchBar.focus();
+
+    setTimeout(() => { if (window.routingManager) window.routingManager._isNavigating = false; }, 100);
   }
 
   getUniqueCountries() {
@@ -1280,59 +1281,44 @@ class SearchManager {
     });
   }
 
+  /**
+   * Erstellt den Header für Ländergruppen in der Liste
+   */
   createCountryHeader(country, count) {
     const header = document.createElement('div');
     header.classList.add('country-group-header');
     header.dataset.countryName = country;
 
-    const countryCode = this.getCountryCode(country);
-    const translatedCountry = window.i18n.t(`countries.${country}`);
-    const ofText = window.i18n.t('searchResults.of');
-
-    // ✨ KORREKTUR: Prüfe aktiv gegen den routingManager, ob dieses Land gefiltert ist
+    // Header ist aktiv, wenn der globale Country-Filter genau dieses Land ist
     const isFilterActive = window.routingManager?._activeCountryFilter === country;
     const activeClass = isFilterActive ? 'country-filter-active' : '';
 
-    // Wenn gefiltert, blenden wir Counter und Navigation aus, um den Fokus auf den Filter-Status zu legen
-    const countClass = isFilterActive ? 'is-hidden' : '';
-    const caretsClass = isFilterActive ? 'is-hidden' : '';
+    const countryCode = this.getCountryCode(country);
+    const translatedCountry = window.i18n.t(`countries.${country}`);
 
     header.innerHTML = `
-    <div class="country-title-content">
-      <span class="fi fi-${countryCode} flag-in-header"></span> 
-      
-      <div class="country-filter-button ${activeClass}" data-country="${country}" title="${window.i18n.t('filter.country')} ${translatedCountry}">
-        <i class="fas fa-filter filter-icon-in-header"></i> 
-        <span class="country-filter-name">${translatedCountry}</span>
+      <div class="country-title-content">
+        <span class="fi fi-${countryCode} flag-in-header"></span> 
+        <div class="country-filter-button ${activeClass}" data-country="${country}">
+          <i class="fas fa-filter filter-icon-in-header"></i> 
+          <span class="country-filter-name">${translatedCountry}</span>
+        </div>
+        <span class="country-count">[${count} ${window.i18n.t('searchResults.of')} ${this.json.filter(loc => loc.loc?.country === country).length}]</span>
       </div>
-      
-      <span class="country-count ${countClass}">[${count} ${ofText} ${this.json.filter(loc => loc.loc?.country === country).length}]</span>
-    </div>
-    
-    <div class="country-nav-carets ${caretsClass}">
-      <i class="fas fa-caret-up country-nav-caret" data-direction="prev" title="previous country"></i>
-      <i class="fas fa-caret-down country-nav-caret" data-direction="next" title="next country"></i>
-    </div>
-  `;
+      <div class="country-nav-carets">
+        <i class="fas fa-caret-up country-nav-caret" onclick="window.searchManager.handleCountryScroll(event, '${country}', 'prev')"></i>
+        <i class="fas fa-caret-down country-nav-caret" onclick="window.searchManager.handleCountryScroll(event, '${country}', 'next')"></i>
+      </div>
+    `;
 
-    const upCaret = header.querySelector('[data-direction="prev"]');
-    const downCaret = header.querySelector('[data-direction="next"]');
-    const filterButton = header.querySelector('.country-filter-button');
+    header.querySelector('.country-filter-button').addEventListener('click', (e) => {
+      this.handleCountryFilterClick(e, country);
+    });
 
-    if (upCaret) upCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'prev'));
-    if (downCaret) downCaret.addEventListener('click', (e) => this.handleCountryScroll(e, country, 'next'));
-
-    if (filterButton) {
-      filterButton.addEventListener('click', (e) => this.handleCountryFilterClick(e, country));
-    }
-
-    // ✨ Zusätzliche CSS-Klasse für das gesamte Header-Element, falls aktiv
-    if (isFilterActive) {
-      header.classList.add('is-filtered');
-    }
-
+    if (isFilterActive) header.classList.add('is-filtered');
     return header;
   }
+
 
 
   handleCountryScroll(e, currentCountry, direction) {
@@ -2048,128 +2034,152 @@ class SearchManager {
 
 
   /**
-   * Initialize Autocomplete & Pills
+   * 1. Initialisierung (Hier wird nur erstellt und der Befehl gegeben)
    */
   initializeAutocompleteAndPills() {
-    // 💡 HINWEIS: styleFilterManager ist hier evtl. noch null, 
-    // muss über setStyleFilterManager nachgeliefert werden.
-
-    // 1. Erstelle Pills-Manager
     this.pillsManager = new SearchPillsManager(this.searchBar);
-
-    // 2. Erstelle Autocomplete-Manager
-    this.autocompleteManager = new window.AutocompleteManager( // KORREKTUR für ReferenceError: Zugriff über window
+    this.autocompleteManager = new window.AutocompleteManager(
       this.json,
       this.searchBar,
-      this.styleFilterManager // Kann null sein, wird später über setStyleFilterManager gesetzt
+      this.styleFilterManager
     );
 
-    // 3. Setup Callbacks
+    // ✨ Wir rufen die Methode unten auf, anstatt den Code hier reinzuschreiben
     this.setupAutocompleteCallbacks();
 
     console.log('✅ Autocomplete & Pills initialized SYNCHRONOUSLY');
   }
 
   /**
-   * Setup Callbacks zwischen Komponenten
+   * 2. Definition der Callbacks (Hier liegt die eigentliche Logik)
    */
   setupAutocompleteCallbacks() {
-    // Autocomplete → Pills (bei Ort-Auswahl) ODER Country-Filter
     this.autocompleteManager.onSelect((suggestion) => {
-      // ✅ Country wird als FILTER aktiviert (keine Pill!)
+      // FALL A: LAND AUSGEWÄHLT
       if (suggestion.type === 'country') {
+        // ✨ Text merken (z.B. die "8")
+        const SearchTerm = this.searchBar.value;
+
         if (window.routingManager) {
           window.routingManager.applyCountryFilter(suggestion.text);
-          // URL wird in applyCountryFilter() gesetzt
         }
-        this.searchBar.value = '';
+
+        // ✨ Wiederherstellung erzwingen
+        setTimeout(() => {
+          this.searchBar.value = SearchTerm;
+          this.searchBar.focus();
+        }, 10);
         return;
       }
 
-      // Nur Cities und ZIP werden zu Pills
+      // FALL B: STADT / PLZ AUSGEWÄHLT
       if (suggestion.type === 'city' || suggestion.type === 'zip') {
         this.pillsManager.addPill(suggestion);
-        this.searchBar.value = '';
+        this.searchBar.value = ''; // Hier ist Leeren gewollt (City ersetzt Text)
+        this.searchBar.focus();
       }
     });
 
-    // Pills → Filter anwenden
     this.pillsManager.onChange((pills) => {
       this.applyPillFilters(pills);
-
-      // Update URL (wenn RoutingManager verfügbar)
-      // ✅ NICHT während Navigation um Loops zu vermeiden
       if (window.routingManager && !window.routingManager._isNavigating) {
         window.routingManager.updateURLFromPills(pills);
       }
+      this.createActiveFiltersSection();
     });
   }
 
+
+
   /**
-   * Filter anwenden basierend auf Pills (AND-Verknüpfung)
-   * WICHTIG: styleFilterManager.applyPreFilters(filtered) wendet die STYLE-FILTER an!
+   * Aktualisiert die Suchergebnisse in der Liste
+   */
+  updateSearchResults(filteredLocations) {
+    const searchQuery = this.searchBar.value.trim().toLowerCase();
+    this.createActiveFiltersSection();
+    this.updateMarkers(filteredLocations);
+    this.updateSearchCounter(filteredLocations.length);
+    this.createSuggestionItems(filteredLocations);
+
+    const hasActivePills = this.pillsManager && this.pillsManager.count() > 0;
+    const hasCountry = window.routingManager && window.routingManager._activeCountryFilter;
+
+    this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0 || hasActivePills || hasCountry);
+
+    if (!this._manualSpaceClick) {
+      this.triggerAutoZoom(filteredLocations);
+    }
+  }
+
+  /**
+   * Steuert die Sichtbarkeit des Dropdowns
+   */
+  updateDropdownUI(shouldShowByResults) {
+    const hasPills = this.pillsManager && this.pillsManager.count() > 0;
+    const hasCountry = window.routingManager && window.routingManager._activeCountryFilter;
+    const hasStyleFilters = this.styleFilterManager && this.styleFilterManager.hasActiveFilters();
+    const hasSearchText = this.searchBar.value.trim().length > 0;
+    const hasFilterSection = this.suggestionsDropdown.querySelector('.active-filters-section') !== null;
+
+    const shouldShow = shouldShowByResults || hasSearchText || hasPills || hasCountry || hasStyleFilters || hasFilterSection;
+
+    this.suggestionsDropdown.classList.toggle('is-active', shouldShow);
+    this.searchBar.classList.toggle('has-suggestions', shouldShow);
+  }
+
+  /**
+   * Die zentrale Filter-Logik (Kombiniert Text, Land und Pills)
    */
   applyPillFilters(pills) {
     const searchQuery = this.searchBar.value.trim().toLowerCase();
+    const router = window.routingManager;
+    const hasCityPill = pills.some(p => p.type === 'city');
 
-    // ✨ WICHTIG: 1. RESET-LOGIK (MUSS ALS ERSTES KOMMEN!)
-    if (pills.length === 0 && searchQuery.length === 0) {
-      if (this.styleFilterManager) {
-        // Setzt preFilteredLocations auf null und triggert den Filter-Reset
-        // Dies wendet AUCH die Style-Filter an, WENN sie aktiv sind!
-        this.styleFilterManager.applyPreFilters(null);
-      }
-      return;
+    if (hasCityPill && router && router._activeCountryFilter) {
+      router._activeCountryFilter = null;
     }
 
-    // ✨ 2. HAUPT-FILTER-LOGIK (Wird nur ausgeführt, wenn Pills ODER Text aktiv sind)
     let filtered = this.json;
 
-    // Text-Suche
-    if (searchQuery.length > 0) {
-      filtered = this.filterLocations(searchQuery);
+    if (router && router._activeCountryFilter && !hasCityPill) {
+      filtered = filtered.filter(loc => loc.loc?.country === router._activeCountryFilter);
     }
 
-    // Pill-Filterung
+    if (searchQuery.length > 0 && searchQuery !== 'xcr') {
+      const normalizedQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(location => {
+        if (!location || !location.loc) return false;
+        const plz = location.loc.plz && this.zfill(location.loc.plz, location.loc.country);
+        if (plz && plz.startsWith(normalizedQuery)) return true;
+        const fieldsToSearch = [location.name, location.loc.city, location.loc.country, location.loc.street?.name].filter(Boolean).map(f => f.toLowerCase());
+        const separators = /[\s,-]/;
+        return fieldsToSearch.some(field => field.startsWith(normalizedQuery) || field.split(separators).some(word => word.startsWith(normalizedQuery)));
+      });
+    }
+
     if (pills.length > 0) {
-      const router = window.routingManager;
-
-      if (router) {
-        pills.forEach(pill => {
-          filtered = filtered.filter(loc => {
-            switch (pill.type) {
-              case 'city':
-                if (loc.loc?.city) {
-                  const locationSlug = router.cityToSlug(loc.loc.city);
-                  const pillSlug = router.cityToSlug(pill.text);
-                  return locationSlug === pillSlug;
-                }
-                return false;
-
-              case 'zip':
-                return loc.loc?.plz?.toString() === pill.text;
-
-              case 'country':
-                return loc.loc?.country === pill.text;
-
-              default:
-                return true;
-            }
-          });
+      pills.forEach(pill => {
+        filtered = filtered.filter(loc => {
+          if (pill.type === 'city' && router) return router.cityToSlug(loc.loc.city) === router.cityToSlug(pill.text);
+          if (pill.type === 'zip') return loc.loc.plz?.toString() === pill.text;
+          return true;
         });
-      }
+      });
     }
 
-    // 3. Übergabe an StyleFilterManager
+    // ✨ WICHTIG: Hier werden Favoriten, Offen-Status etc. angewendet!
     if (this.styleFilterManager) {
-      // Wenn wir hier ankommen, sind Pills ODER Text aktiv ODER Style-Filter sind aktiv.
-      // applyPreFilters filtert die "filtered" Liste (aus Text/Pills) WEITER nach Style-Filtern.
+      // ✨ DIESER BEFEHL WENDET DIE FAVORITEN AN!
+      // Da wir selectedStyles oben NICHT gelöscht haben,
+      // filtert er jetzt die aktuelle Liste nach deinen Bookmarks.
       this.styleFilterManager.applyPreFilters(filtered);
     } else {
-      // Fallback
       this.updateSearchResults(filtered);
     }
   }
+
+
+
 
   /**
    * Update Counter Display
@@ -2213,36 +2223,36 @@ class SearchManager {
   }
 
   /**
-   * Clear Search completely (Pills + Text + Filter)
+   * ✅ ENTSCHÄRFT: Diese Funktion löscht nur Text und Land/Pills.
+   * Sie schont die Favoriten und den Status (Open/Closed)!
    */
   clearSearchAndPills() {
-    // Clear Text
+    console.log("♻️ System-Reset: Lösche Text/Land, schütze Styles.");
+
     this.searchBar.value = '';
 
-    // Clear Pills
     if (this.pillsManager) {
       this.pillsManager.clear();
     }
 
-    // Clear Style-Filter
-    if (this.styleFilterManager) {
-      this.styleFilterManager.selectedStyles.clear();
-      this.styleFilterManager.applyFilters();
+    // Land im Routing löschen (ohne Styles zu killen)
+    if (window.routingManager) {
+      window.routingManager._activeCountryFilter = null;
+      window.routingManager._isNavigating = true;
+      window.location.hash = '';
     }
 
-    // Hide Autocomplete
+    // ✨ WICHTIG: Hier KEIN selectedStyles.clear() mehr!
+    // Wir triggern nur die Filterung neu, damit Favoriten aktiv bleiben.
+    this.applyPillFilters([]);
+
     if (this.autocompleteManager) {
       this.autocompleteManager.hide();
     }
 
-    // Reset URL
-    if (window.routingManager) {
-      window.routingManager.updateURLFromPills([]);
-    }
-
-    console.log('🗑️ Search, Pills and Filters cleared');
-
+    setTimeout(() => { if (window.routingManager) window.routingManager._isNavigating = false; }, 100);
   }
+
 }
 
 window.SearchManager = SearchManager;

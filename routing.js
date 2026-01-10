@@ -130,79 +130,70 @@ export class RoutingManager {
     return null;
   }
 
-  /**
-   * ✅ Aktiviere Country-Filter (ohne Pill!)
-   */
-  applyCountryFilter(countryName) {
-    console.log(`🌍 Applying country filter: ${countryName}`);
 
-    // ✅ Setze Navigation-Flag VOR Pills löschen
+
+  /**
+ * ✅ Schützt Favoriten beim Togglen des Headers.
+ */
+  applyCountryFilter(countryName) {
+    const bar = this.searchManager.searchBar;
+    const SearchTerm = bar.value;
+
     this._isNavigating = true;
 
-    // Speichere aktiven Country-Filter
+    // Deaktivieren wenn schon aktiv
+    if (this._activeCountryFilter === countryName) {
+      this.clearAllPillsAndFilters();
+      return;
+    }
+
+    // Aktivieren
     this._activeCountryFilter = countryName;
 
-    // Lösche Pills (onChange wird jetzt ignoriert weil _isNavigating = true)
     if (this.searchManager?.pillsManager) {
       this.searchManager.pillsManager.clear();
     }
 
-    // Filtere Locations nach Country
-    const filteredLocations = this.json.filter(loc =>
-      loc.loc?.country === countryName
-    );
+    window.location.hash = `#/${this.countryToSlug(countryName)}`;
 
-    console.log(`✅ Found ${filteredLocations.length} locations in ${countryName}`);
-
-    // Wende Pre-Filter an (zeigt nur diese Locations)
-    if (this.styleFilterManager) {
-      this.styleFilterManager.applyPreFilters(filteredLocations);
-    }
-
-    // Update Search UI
-    if (this.searchManager) {
-      this.searchManager.createSuggestionItems(filteredLocations);
-      this.searchManager.updateSearchCounter(filteredLocations.length);
-      this.searchManager.updateDropdownUI(true); // ✅ Dropdown ÖFFNEN um gefilterte Spaces zu zeigen
-      // createSuggestionItems() erstellt automatisch auch die Country-Headers! ✅
-    }
-
-    // ✅ UPDATE URL zu #/country (NUR wenn noch nicht gesetzt!)
-    const countrySlug = this.countryToSlug(countryName);
-    const expectedHash = `#/${countrySlug}`;
-    if (window.location.hash !== expectedHash) {
-      window.location.hash = expectedHash;
-    }
-
-    // Update Meta
-    this.updatePageMeta(
-      `Makerspaces in ${countryName}`,
-      `Find makerspaces, fablabs and hackerspaces in ${countryName}`
-    );
+    setTimeout(() => {
+      bar.value = SearchTerm;
+      if (this.searchManager) {
+        // Hier bleiben Favoriten/Styles aktiv, da wir selectedStyles nicht löschen.
+        this.searchManager.applyPillFilters([]);
+      }
+      this._isNavigating = false;
+    }, 50);
   }
+
+
 
   /**
    * ✅ Aktiviere City-Filter (als Pill!)
    */
   applyCityFilter(cityName) {
-    console.log(`🏙️ Applying city filter: ${cityName}`);
+    console.log(`🏙️ City selected: ${cityName}. Clearing country filter.`);
 
-    // Lösche Country-Filter
+    // 1. Country-Filter explizit deaktivieren
     this._activeCountryFilter = null;
 
-    // Erstelle City-Pill
+    // 2. City-Pill erstellen
     const cityPill = {
       text: cityName,
       type: 'city',
       count: this.json.filter(loc => loc.loc?.city === cityName).length
     };
 
-    // Aktiviere Pill
+    // 3. Pills setzen
     if (this.searchManager?.pillsManager) {
       this.searchManager.pillsManager.clear();
-      this.searchManager.pillsManager.addPill(cityPill);
+      this.searchManager.pillsManager.addPill(cityPill); // Triggert applyPillFilters
     }
+
+    // 4. URL auf City-Ebene aktualisieren (Löscht #/germany und setzt #/germany/berlin)
+    this.updateURLFromPills([cityPill]);
   }
+
 
   _createRoutes() {
     const routes = {};
@@ -448,24 +439,57 @@ export class RoutingManager {
   // ROUTING CORE
   // ========================================
 
+
+
+  /**
+ * ✅ Schützt Favoriten, wenn die URL leer ist.
+ */
   clearAllPillsAndFilters() {
-    // ✅ Lösche Country-Filter
+    console.log("🌍 Routing-Info: Deaktiviere Land. Stadt-Pills und Style-Filter bleiben aktiv.");
+
+    // ✅ FIX: Nur Country-Filter deaktivieren, Pills und Style-Filter NICHT löschen
     this._activeCountryFilter = null;
 
-    this.styleFilterManager?.selectedStyles?.clear();
-    this.styleFilterManager?.applyFilters();
+    // Text retten
+    const bar = this.searchManager?.searchBar;
+    const rescuedText = bar ? bar.value : '';
 
-    if (this.searchManager?.pillsManager) {
-      this.searchManager.pillsManager.clear();
-      this.searchManager.searchBar.value = '';
+    this._isNavigating = true;
+
+    // ✅ FIX: URL-Update berücksichtigt Bookmarks und Pills
+    const currentPills = this.searchManager?.pillsManager?.getPillsArray() || [];
+    const hasBookmarkFilter = this.styleFilterManager?.selectedStyles?.has('bookmarked');
+
+    if (hasBookmarkFilter && window.bookmarkManager) {
+      // Bookmark-Filter aktiv → URL auf Bookmark-IDs setzen
+      const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
+      if (allBookmarkedIds.length > 0) {
+        this.navigateToLocations(allBookmarkedIds);
+      } else {
+        // Keine Bookmarks → URL leeren
+        window.location.hash = '';
+      }
+    } else if (currentPills.length > 0) {
+      // Pills vorhanden → URL auf Pills-Basis setzen
+      this.updateURLFromPills(currentPills);
     } else {
-      this.searchManager?.clearSearchAndPills();
+      // Nichts aktiv → URL komplett leeren
+      window.location.hash = '';
     }
 
-    // ✅ URL leeren (zurück zu Home)
-    this._isNavigating = true;
-    window.location.hash = '';
+    // ✅ FIX: applyPillFilters mit den aktuellen Pills
+    setTimeout(() => {
+      if (bar) bar.value = rescuedText;
+      if (this.searchManager) {
+        this.searchManager.applyPillFilters(currentPills);
+      }
+      this._isNavigating = false;
+    }, 50);
   }
+
+
+
+
 
   handleRouteWithPills() {
     this._ensureDataLoaded(); // <--- DATEN LADEN BEI ERSTEM AUFRUF

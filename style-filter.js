@@ -154,7 +154,7 @@ class StyleFilterManager {
   }
 
   applyFilters() {
-    // ✨ KORREKTUR: Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
+    // ✅ FIX: Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
     const baseLocations = this.preFilteredLocations || this.json;
 
     console.log('🎯 applyFilters called');
@@ -162,17 +162,18 @@ class StyleFilterManager {
     console.log('  - baseLocations:', baseLocations.length);
     console.log('  - hasActiveFilters:', this.hasActiveFilters());
 
-    // 1. VOLL-RESET-LOGIK: Wenn keine aktiven Filter und keine Pre-Filter (Text/Pills) aktiv sind
-    if (!this.hasActiveFilters() && this.preFilteredLocations === null) {
-      this.updateMarkers(baseLocations);
-      if (this.searchManager) {
-        // Aktualisiere alle Sektionen mit der vollen Liste
-        this.searchManager.createActiveFiltersSection();
-        this.searchManager.createSuggestionItems(baseLocations);
-        this.searchManager.updateSearchCounter(baseLocations.length);
-        this.searchManager.triggerAutoZoom(baseLocations);
+    // ✅ FIX: VOLL-RESET nur wenn BEIDE Bedingungen erfüllt sind
+    const hasStyleFilters = this.hasActiveFilters();
+    const hasPillFilters = this.preFilteredLocations !== null;
 
-        // ✨ KORREKTUR: Dropdown ausblenden, da keine aktive Suche/Filterung stattfindet
+    if (!hasStyleFilters && !hasPillFilters) {
+      // Nur wenn wirklich NICHTS aktiv ist, zeige alle Locations
+      this.updateMarkers(this.json);
+      if (this.searchManager) {
+        this.searchManager.createActiveFiltersSection();
+        this.searchManager.createSuggestionItems(this.json);
+        this.searchManager.updateSearchCounter(this.json.length);
+        this.searchManager.triggerAutoZoom(this.json);
         this.searchManager.updateDropdownUI(false);
       }
       return;
@@ -246,24 +247,27 @@ class StyleFilterManager {
     // 3. ANWENDUNG AUF MAP UND DROPDOWN
     this.updateMarkers(finalFiltered);
 
-    // ✅ NEU: URL-Update bei Bookmark-Filter → ALLE gebookmarten Spaces in URL
-    if (bookmarkFilterActive && window.bookmarkManager) {
-      // Hole ALLE gebookmarten IDs (unabhängig von anderen Filtern!)
-      const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
+    // ✅ FIX: URL-Update NUR wenn KEIN Country-Filter aktiv ist UND keine Navigation läuft
+    const hasActiveCountry = window.routingManager && window.routingManager._activeCountryFilter;
+    const isNavigating = window.routingManager && window.routingManager._isNavigating;
 
-      if (allBookmarkedIds.length > 0) {
-        // Setze URL mit allen gebookmarten Spaces
-        // Beispiel: #/location/1,5,12,42
-        if (window.routingManager && window.routingManager.navigateToLocations) {
-          window.routingManager.navigateToLocations(allBookmarkedIds);
+    if (!hasActiveCountry && !isNavigating) {
+      // Nur wenn KEIN Country-Filter aktiv ist und keine Navigation läuft, aktualisiere die URL
+      if (bookmarkFilterActive && window.bookmarkManager) {
+        const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
+        if (allBookmarkedIds.length > 0) {
+          if (window.routingManager && window.routingManager.navigateToLocations) {
+            window.routingManager.navigateToLocations(allBookmarkedIds);
+          }
+        }
+      } else if (!bookmarkFilterActive && this.selectedStyles.size === 0 && finalFiltered.length === this.json.length) {
+        // Kein Filter aktiv → URL clearen
+        if (window.routingManager && window.routingManager.clearLocationURL) {
+          window.routingManager.clearLocationURL();
         }
       }
-    } else if (!bookmarkFilterActive && this.selectedStyles.size === 0 && finalFiltered.length === this.json.length) {
-      // Kein Filter aktiv → URL clearen
-      if (window.routingManager && window.routingManager.clearLocationURL) {
-        window.routingManager.clearLocationURL();
-      }
     }
+    // Wenn Country-Filter aktiv ist oder Navigation läuft: URL bleibt unverändert
 
     if (this.searchManager) {
       // Aktualisiere Dropdown (Liste) und Counter
