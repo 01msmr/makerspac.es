@@ -843,11 +843,15 @@ function createMarkerForLocation(location) {
     return `
             <div style="--status-color: ${statusColor};">
               <h3 id="style">${styleIconHtml}${styleLabel}</h3>
-              <a id="titleurl" href="${linkUrl}" target="_blank">
-                <h3 class="${nameClass}">
-                  ${statusIconHtml}${location.name || 'Unnamed Space'}
-                </h3>${bookmarkIcon}<br><br>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <a id="titleurl" href="${linkUrl}" target="_blank">
+                  <h3 class="${nameClass}">
+                    ${statusIconHtml}${location.name || 'Unnamed Space'}
+                  </h3>
                 </a>
+                ${bookmarkIcon}
+              </div>
+              <br><br>
                   <div class="popup-street-line">
                     <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
                     <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
@@ -858,6 +862,9 @@ function createMarkerForLocation(location) {
                     <span class="country"><span class="fi fi-${getCountryCode(countryName)}" style="margin-right: 4px;"></span>${translatedCountry}</span><br>
                       <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
                       `;
+  }, {
+    maxWidth: 400,    // ← Maximale Breite auf 600px
+    minWidth: 160     // ← Minimale Breite 300px
   });
   marker.on('popupopen', (e) => {
     // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!

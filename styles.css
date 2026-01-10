@@ -433,8 +433,7 @@ a#titleurl {
 
 /* Aktive Filter: Blau */
 .filter-pill-active {
-  background-color: var(--space-hover)
-  color: var(var(--text-color))
+  background-color: var(--space-hover) color: var(var(--text-color))
 }
 
 /* Spezielle Farben für open/closed Filters */
@@ -988,7 +987,7 @@ a#titleurl {
 
 .suggestion-item {
   font-family: 'Lato', sans-serif;
-  padding: 12px 16px;
+  padding: 10px 10px;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   cursor: pointer;
@@ -1161,11 +1160,17 @@ a#titleurl {
   /* Erhöht die maximal erlaubte Breite des Popups.
     Der Standardwert von Leaflet ist 300px. Passen Sie diesen Wert
     nach Bedarf an. */
-  max-width: 360px !important;
+  /* max-width: 380px !important; */
 
   /* Sorgt dafür, dass die Breite flexibel bleibt und sich dem
     Inhalt anpasst, bis die max-width erreicht ist. */
   width: auto !important;
+}
+
+/* Das eigentliche Content-Element mit Padding */
+.leaflet-popup-content {
+  margin: 12px !important;
+  /* Leaflet nutzt margin statt padding für den Innenabstand */
 }
 
 @keyframes popupFadeIn {
@@ -1348,23 +1353,28 @@ hr {
 } */
 
 /* *** Door-Icon Klassen *** */
-.space-name-open, .door-icon-open {
+.space-name-open,
+.door-icon-open {
   color: var(--space-open);
   /* Grün für geöffnet */
 }
 
-.space-name-closed, .door-icon-closed {
+.space-name-closed,
+.door-icon-closed {
   color: var(--space-closed);
   /* Rot für geschlossen */
 }
 
-.space-name-unknown, .door-icon-unknown {
+.space-name-unknown,
+.door-icon-unknown {
   color: var(--space-unknown);
   /* Orange für unbekannt */
 }
 
 /* *** weight 600 für Namen *** */
-.space-name-open, .space-name-closed, .space-name-unknown {
+.space-name-open,
+.space-name-closed,
+.space-name-unknown {
   font-weight: 600;
 }
 
@@ -1405,6 +1415,14 @@ hr {
 }
 
 /* === POPUP NAME HIGHLIGHTING (Open & Closed) === */
+
+/* Allgemeines h3-Style: Name und Bookmark-Icon inline halten */
+a#titleurl h3 {
+  /* display: inline-block; */
+  /* max-width: 100%; */
+  max-width: none;  /* ← Keine Limitierung mehr */
+  white-space: nowrap;  /* ← Name bricht nicht um */
+}
 
 /* Styling für den Makerspace-Namen, WENN der Space offen ist */
 a#titleurl h3.space-open {
@@ -1477,7 +1495,7 @@ a#titleurl:hover h3.space-closed {
 a#titleurl:hover h3.space-unknown {
   background-color: white !important;
   color: var(--space-unknown);
-  border-color:var(--space-unknown);
+  border-color: var(--space-unknown);
 }
 
 /* Icons bei Hover in entsprechender Status-Farbe */
@@ -1525,7 +1543,7 @@ a#titleurl:hover h3.space-unknown .fas {
 .navigation-icon {
   position: absolute;
   top: 50%;
-  right: 0px;
+  right: 28px;
   font-size: 1.4em;
   transform: translateY(-50%);
   text-decoration: none;
@@ -1536,7 +1554,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Navigation Icon Hover Effect */
 .navigation-icon:hover {
-  right: -20px;
+  right: 0px;
   transition: all ease-in-out 0.25s;
   outline: none !important;
   border: none !important;
@@ -1624,7 +1642,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .popup-street-line.status-unknown .navigation-icon:hover {
-  color:var(--space-unknown);
+  color: var(--space-unknown);
 }
 
 .popup-street-line.status-default .navigation-icon:hover {
@@ -1730,9 +1748,12 @@ a#titleurl:hover h3.space-unknown .fas {
 .marker-cluster {
   /* Verwenden von Flexbox zur Zentrierung des Kind-Elements (div) */
   display: flex;
-  align-items: center;  /* Vertikale Zentrierung */
-  justify-content: center;  /* Horizontale Zentrierung */
-  border-radius: 100px;  /* Für runde Cluster */
+  align-items: center;
+  /* Vertikale Zentrierung */
+  justify-content: center;
+  /* Horizontale Zentrierung */
+  border-radius: 100px;
+  /* Für runde Cluster */
 }
 
 /* Styling des inneren Div-Elements (enthält die Zahl) */
@@ -1779,7 +1800,8 @@ a#titleurl:hover h3.space-unknown .fas {
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-  background-color: transparent !important; /* Wichtig, damit keine Standard-Hintergrundfarbe (grün) durchscheint */
+  background-color: transparent !important;
+  /* Wichtig, damit keine Standard-Hintergrundfarbe (grün) durchscheint */
   color: white;
   font-weight: bold;
 }
@@ -1801,49 +1823,73 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Bookmark-Icon im Suggestion-Dropdown */
 .suggestion-bookmark {
-  float: right;
-  margin-left: 8px;
+  flex-shrink: 0;
   cursor: pointer;
   color: var(--status-color, blue);
-  /* transition: color 0.2s ease, transform 0.1s ease; */
-  font-size: 16px;
+  /* Überschreibe .suggestion-item .fas Styles */
+  font-size: 16px !important;
+  margin-right: 0 !important;
+  position: static !important;
+  bottom: auto !important;
+  vertical-align: middle !important;
+  /* Fester Container verhindert Springen zwischen fas/far */
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  margin-left: 4px;
+}
+
+/* Beide FontAwesome Varianten auf gleiche Breite zwingen */
+.suggestion-bookmark::before {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
 }
 
 .suggestion-bookmark:hover {
-  /* color: #FFD700; */
-  /* transform: scale(1.15); */
   opacity: 0.6;
-}
-
-.suggestion-bookmark.fas {
-  /* color: #FFD700; */
 }
 
 /* Bookmark-Icon im Popup */
 .popup-bookmark {
-  color: var(--status-color, blue);
-  margin-left: 8px;
   cursor: pointer;
-  /* color: #888; */
-  /* transition: color 0.2s ease, transform 0.1s ease; */
-  font-size: 1.5em;
+  color: var(--status-color, blue);
+  font-size: 16px;
   vertical-align: middle;
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  /* Überschreibe .suggestion-item .fas Styles */
+  margin-right: 0 !important;
+  position: static !important;
+  bottom: auto !important;
+}
+
+/* Beide FontAwesome Varianten auf gleiche Breite zwingen */
+.popup-bookmark::before {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
 }
 
 .popup-bookmark:hover {
   opacity: 0.4;
 }
 
-/* Item-Name Container mit Flexbox für bessere Ausrichtung */
+/* Item-Name Container mit Flexbox für saubere Icon-Ausrichtung */
 .item-name {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: 8px;
 }
 
 .item-name>span {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 
@@ -2182,4 +2228,3 @@ a#titleurl:hover h3.space-unknown .fas {
   font-family: monospace;
   user-select: none;
 }
-

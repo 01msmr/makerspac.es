@@ -1454,6 +1454,7 @@ class SearchManager {
       'for all': 'fas fa-people-group',
       'for students': 'fas fa-graduation-cap',
       'for youth': 'fas fa-child',
+      'for students & youth': 'fas fa-graduation-cap',
       'commercial': 'fas fa-money-bill-wave',
     };
 
