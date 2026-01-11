@@ -104,7 +104,7 @@ a#titleurl {
   width: 30px;
   height: 30px;
   transition: all 0.15s ease-in;
-  transition-delay: 0.3s;
+  transition-delay: 0.25s;
   /* ✅ Delay für ALLES inkl. text-align */
   overflow: hidden;
   overflow-y: scroll;
@@ -2228,3 +2228,346 @@ a#titleurl:hover h3.space-unknown .fas {
   font-family: monospace;
   user-select: none;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =================================================================
+   NEARBY SPACES - CURSOR HINT (Schwebendes Fadenkreuz)
+   ================================================================= */
+
+.nearby-cursor-hint {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--space-hover);
+  color: white;
+  padding: 0 12px 0 0;
+  border-radius: 20px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  white-space: nowrap;
+  overflow: hidden;
+  height: 28px;
+  /* Snappy Nachzieh-Effekt (0.12s) und Opacity-Übergang */
+  transition: left 0.12s ease-out,
+    top 0.12s ease-out,
+    opacity 0.3s ease-in-out,
+    width 0.3s ease-in-out;
+}
+
+.hint-icon-wrapper {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Zustand: Nur Icon (wird via JS nach 3s oder bei Ruhe aktiviert) */
+.nearby-cursor-hint.icon-only {
+  width: 28px !important;
+  padding-right: 0 !important;
+}
+
+.nearby-cursor-hint.icon-only span {
+  display: none;
+}
+
+/* Cursor-Icon auf der Karte (Rechtsklick-Zentrum) */
+.nearby-cursor-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.nearby-cursor-icon i {
+  font-size: 32px;
+  color: var(--space-hover);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+  animation: nearby-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nearby-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* =================================================================
+   NEARBY SPACES - POPOVER (Das Fenster)
+   ================================================================= */
+
+.nearby-popover {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 10000;
+  width: 320px;
+  background-color: var(--dropdown-bg);
+  border-radius: 16px;
+  box-shadow: 0px 4px 12px 2px var(--shadow-color);
+  overflow: hidden;
+  text-align: left;
+}
+
+/* Zweizeiliger Header */
+.nearby-popover-header {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  display: flex !important;
+  padding: 10px 14px !important;
+  gap: 8px !important;
+  height: auto !important;
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 1px solid var(--dropdown-border);
+}
+
+.nearby-header-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nearby-header-row-bottom {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 5px;
+  border-top: 1px solid var(--dropdown-border);
+}
+
+.nearby-header-text {
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+.nearby-close-btn {
+  color: black;
+  background-color: var(--dropdown-bg);
+  border-color: var(--dropdown-bg);
+}
+
+.nearby-close-btn:hover {
+  color: white;
+  background-color: var(--space-closed) !important;
+  border-color: var(--space-closed);
+}
+
+/* =================================================================
+   LISTE & EINTRÄGE (Linksbündigkeit & Hover)
+   ================================================================= */
+
+.nearby-popover-list {
+  padding: 0;
+  max-height: 167px;
+  /* Exakt 4 Items (4 x 56px) */
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: thin;
+}
+
+.nearby-item {
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: row;
+  /* Spalten-Layout */
+  align-items: flex-start;
+  gap: 12px;
+  /* Abstand zwischen Entfernung und Text */
+  cursor: pointer;
+  border-bottom: 1px solid var(--dropdown-border);
+  min-height: 56px;
+  box-sizing: border-box;
+  scroll-snap-align: start;
+  transition: none !important;
+  /* Sofortiger Farbwechsel ohne Verzögerung */
+}
+
+/* Linke Spalte: Entfernung */
+.nearby-dist-badge {
+  font-size: 0.8em;
+  font-weight: bold;
+  color: black !important;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px;
+  margin: 0 !important;
+  border-radius: 4px;
+  min-width: 36px;
+  /* Garantiert Linksbündigkeit der rechten Spalte */
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Rechte Spalte: Name & Details untereinander */
+.nearby-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.nearby-item-name {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: bold;
+  font-size: 0.95em;
+  line-height: 1.2;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.nearby-name-text {
+  /* HIER passiert die Magie der Kürzung */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* Sorgt dafür, dass der Text den restlichen Platz einnimmt 
+     und bei Bedarf schrumpft */
+  flex: 1;
+}
+
+.nearby-item-details {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* Optisch wie ein Leerzeichen */
+  font-size: 0.82em;
+  color: var(--hover-text-color);
+}
+
+.nearby-item-details .fi {
+  width: 14px;
+  height: 10px;
+  border-radius: 1px;
+}
+
+.nearby-icons-container {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.nearby-icon {
+  font-size: 0.85em;
+  width: 14px;
+  text-align: center;
+}
+
+/* =================================================================
+   HOVER-LOGIK (Invertiert)
+   ================================================================= */
+
+.nearby-item:hover {
+  background-color: var(--item-status-color) !important;
+}
+
+.nearby-item:hover * {
+  color: white !important;
+}
+
+/* AUSNAHME: Die Entfernung bleibt beim Hover schwarz/dunkel */
+.nearby-item:hover .nearby-dist-badge {
+  color: black !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* =================================================================
+   RADIUS BUTTONS
+   ================================================================= */
+
+.nearby-radius-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  padding: 2px 5px;
+  cursor: pointer;
+  font-size: 0.75em;
+  min-width: 24px;
+  margin: 0 1px;
+}
+
+.nearby-radius-btn.active {
+  background: var(--space-hover);
+  color: white;
+  border-color: var(--space-hover);
+}
+
+/* =================================================================
+   MOBILE RESPONSIVE
+   ================================================================= */
+
+@media (max-width: 768px) {
+  .nearby-popover {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 70vh !important;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .nearby-cursor-hint {
+    display: none !important;
+  }
+
+  .nearby-popover-list {
+    max-height: 50vh !important;
+  }
+}
+
+
+/* END NEARBY SPACES FEATURE */

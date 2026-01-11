@@ -1256,6 +1256,11 @@ const init = async () => {
     setupStyleFilter();
     setupRouting();
     setupMapClickHandler();
+    
+    // ✅ NEU: Initialisiere Nearby Spaces (alternativ hier)
+    if (window.nearbySpacesManager) {
+      window.nearbySpacesManager.init(map);
+    }
   } catch (error) {
     console.error('⛔ A critical error occurred during app initialization:', error);
     alert('The application could not be started. Please check the developer console.');
