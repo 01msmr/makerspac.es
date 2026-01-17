@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Embedded Makerspace Map</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
+  <script src="libs/leaflet/leaflet.js"></script>
+
+  <!-- MapLibre GL -->
+  <link href="libs/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
+  <script src="libs/maplibre-gl/maplibre-gl.js"></script>
+  <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
+
+  <!-- Main Styles -->
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+
+  <!-- Font Awesome für Icons -->
+  <link rel="stylesheet" href="libs/fontawesome/css/all.min.css" />
+
+  <!-- Flag Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
+
+  <!-- Embed-Specific CSS -->
+  <link rel="stylesheet" type="text/css" href="embed.css" />
+</head>
+
+<body>
+  <div id="loading" class="loading">🔧 Loading makerspaces...</div>
+  <div id="map"></div>
+  <!-- Dropdowns werden dynamisch von embed.js erstellt -->
+
+  <!-- Icons -->
+  <script src="icons.js"></script>
+
+  <!-- Embed Logic -->
+  <script src="embed.js"></script>
+</body>
+
+</html>

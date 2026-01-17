@@ -584,7 +584,10 @@ function setupMap() {
 
   window.updateMapTiles = updateMapTiles;
 
+  // ✅ FIX: Setze IMMER ein initiales Center/Zoom (verhindert "Set map center first" Fehler)
+  // Im Embed-Mode wird das später durch fitBounds() überschrieben
   map.setView(new L.LatLng(51.0122995, 10.3995537), 7);
+
   updateMapTiles();
 
   darkModeQuery.addEventListener('change', () => {
@@ -1256,7 +1259,7 @@ const init = async () => {
     setupStyleFilter();
     setupRouting();
     setupMapClickHandler();
-    
+
     // ✅ NEU: Initialisiere Nearby Spaces (alternativ hier)
     if (window.nearbySpacesManager) {
       window.nearbySpacesManager.init(map);

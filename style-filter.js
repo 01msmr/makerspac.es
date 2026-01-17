@@ -286,10 +286,8 @@ class StyleFilterManager {
 
       // 4. Map-Neuzechnung erzwingen 
       const clusterGroup = window.clusterGroup;
-      if (clusterGroup) {
-        if (typeof clusterGroup.refreshClusters === 'function') {
-          clusterGroup.refreshClusters(); // Erzwingt Cluster-Update
-        }
+      if (clusterGroup && window.map) {
+        // ✅ FIX: refreshClusters() existiert nicht - das Update passiert bereits durch updateMarkers()
         window.map.invalidateSize(); // Erzwingt Leaflet Map-Update
       }
     }

@@ -1651,6 +1651,12 @@ class SearchManager {
     }
 
     if (newBounds) {
+      // ✅ FIX: Prüfe ob Map ein Center/Zoom hat
+      if (!this.map.getCenter()) {
+        console.warn('⚠️ Map not initialized yet, skipping auto-zoom');
+        return;
+      }
+
       if (!this.previousZoomBounds) {
         this.previousZoomBounds = this.map.getBounds();
       }
