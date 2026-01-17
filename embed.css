@@ -2,15 +2,12 @@
 
 /* ========================================
    EMBED-SPECIFIC OVERRIDES
-   Nutzt styles.css, überschreibt nur wo nötig
    ======================================== */
 
-/* Body & Map - Vollbild */
 body {
   overflow: hidden;
 }
 
-/* ✅ FIX: Map muss sichtbar sein */
 #map {
   position: absolute;
   width: 100vw;
@@ -18,40 +15,29 @@ body {
   z-index: 0;
 }
 
-/* Verstecke Main-Site Elemente die im Embed nicht benötigt werden */
 .search-container,
 .user-guide,
 .add-makerspace {
   display: none !important;
 }
 
-/* Logo bleibt sichtbar - wird von JS erstellt */
 .title {
   z-index: 400;
   position: inherit;
-  /* Position wird vom Container gesteuert */
 }
 
 /* ========================================
-   EMBED DROPDOWNS
-   2 Separate Dropdowns: Target (oben) + Friends (darunter)
-   Im Container mit Logo für exakte Ausrichtung
+   DROPDOWNS
    ======================================== */
 
-/* Base Dropdown Styles */
 .embed-dropdown {
   position: relative;
-  /* ✅ Relativ zum Container */
   width: 300px;
   z-index: 1001;
-
-  /* Nutze Main-Site Styles */
   background-color: var(--dropdown-bg);
   color: var(--text-color);
   border-radius: 20px;
   box-shadow: 0px 4px 8px 1px var(--shadow-color);
-
-  /* WICHTIG: Standardmäßig versteckt */
   display: none;
   overflow: visible;
 }
@@ -61,96 +47,156 @@ body {
   opacity: 1 !important;
 }
 
-/* ✅ Container steuert Abstände via flex gap: 16px */
-.target-dropdown,
-.friends-dropdown {
-  /* Keine top-Position nötig - wird durch Container gap gesteuert */
+.embed-dropdown .space-item.target {
+  position: relative;
+  border-radius: 20px;
 }
 
-/* Header - Wie dropdown-header */
+.suggestion-item {
+  border-radius: inherit;
+}
+
+/* Header */
 .dropdown-header {
   font-family: 'Lato', sans-serif;
-  padding: 14px 16px;
-  background: var(--dropdown-alt-bg);
-  border-radius: 20px 20px 0 0;
-  font-weight: 600;
-  color: var(--text-color);
+  font-weight: normal;
+  padding: 8px 16px;
+  background: black;
+  border-radius: 16px;
+  color: white;
   border-bottom: 1px solid var(--dropdown-border);
   position: sticky;
   top: 0;
   z-index: 10;
+  opacity: 0.4;
 }
 
-/* Space Items - Nutzt suggestion-item Styles aus styles.css */
-.embed-dropdown .space-item {
-  /* Alle Basis-Styles kommen aus styles.css (.suggestion-item) */
-}
+/* ========================================
+   OUR SPACE PILL
+   ======================================== */
 
-/* Target Space - Verwende SpaceAPI-Farbe, nicht fest grün */
-.embed-dropdown .space-item.target {
-  position: relative;
-  border-radius: 20px;
-  /* ✅ Komplett rund, da kein Header */
-  /* Farbe kommt von space-open/closed/unknown Klasse */
-}
-
-.embed-dropdown .space-item.target:hover {
-  background-color: var(--space-hover);
-  color: white;
-}
-
-/* "Our Space" Pill OBERHALB von Style & Name */
-.embed-dropdown .our-space-pill {
+.embed-dropdown .space-item .our-space-pill {
   display: inline-block;
   padding: 4px 10px;
-  background: white;
-  color: var(--space-hover);
   border-radius: 12px;
   font-size: 0.75em;
   font-weight: 600;
   margin-bottom: 6px;
 }
 
-/* Bei Hover: Invertierte Farben */
-.embed-dropdown .space-item.target:hover .our-space-pill {
-  background: white;
-  color: var(--space-hover);
-}
-
-/* Active State - Blau (wie Hover) */
-.embed-dropdown .space-item.active {
-  background-color: var(--space-hover) !important;
-  color: white !important;
-  border-left: 3px solid var(--space-hover);
-}
-
-.embed-dropdown .space-item.active .item-details {
+/* Normal: SpaceAPI-Farbe HG, weißer Text */
+.embed-dropdown .space-item.space-open .our-space-pill {
+  background: var(--space-open) !important;
   color: white !important;
 }
 
-/* "Our Space" Pill OBERHALB von Style & Name */
-.embed-dropdown .our-space-pill {
-  display: inline-block;
-  padding: 4px 10px;
-  background: white;
-  color: var(--space-hover);
-  border-radius: 12px;
-  font-size: 0.75em;
-  font-weight: 600;
-  margin-bottom: 6px;
+.embed-dropdown .space-item.space-closed .our-space-pill {
+  background: var(--space-closed) !important;
+  color: white !important;
 }
 
-/* Bei Hover: Invertierte Farben */
-.embed-dropdown .space-item.target:hover .our-space-pill {
+.embed-dropdown .space-item.space-unknown .our-space-pill {
+  background: var(--space-unknown) !important;
+  color: white !important;
+}
+
+.embed-dropdown .space-item.space-default .our-space-pill {
+  background: var(--space-hover) !important;
+  color: white !important;
+}
+
+/* Active/Hover: Weißer HG, SpaceAPI-Farbe Text */
+.embed-dropdown .space-item.active .our-space-pill,
+.embed-dropdown .space-item:hover:not(.active) .our-space-pill {
   background: white !important;
+}
+
+.embed-dropdown .space-item.space-open.active .our-space-pill,
+.embed-dropdown .space-item.space-open:hover:not(.active) .our-space-pill {
+  color: var(--space-open) !important;
+}
+
+.embed-dropdown .space-item.space-closed.active .our-space-pill,
+.embed-dropdown .space-item.space-closed:hover:not(.active) .our-space-pill {
+  color: var(--space-closed) !important;
+}
+
+.embed-dropdown .space-item.space-unknown.active .our-space-pill,
+.embed-dropdown .space-item.space-unknown:hover:not(.active) .our-space-pill {
+  color: var(--space-unknown) !important;
+}
+
+.embed-dropdown .space-item.space-default.active .our-space-pill,
+.embed-dropdown .space-item.space-default:hover:not(.active) .our-space-pill {
   color: var(--space-hover) !important;
 }
 
 /* ========================================
-   POPUP CUSTOMIZATIONS
+   SPACE-API FARBEN
    ======================================== */
 
-/* Back Link in Friend Popups */
+/* Normal: Name & Icons in SpaceAPI-Farbe */
+.embed-dropdown .space-item.space-open .item-name,
+.embed-dropdown .space-item.space-open .door-icon-open,
+.embed-dropdown .space-item.space-open .style-icon {
+  color: var(--space-open);
+  font-weight: 600;
+}
+
+.embed-dropdown .space-item.space-closed .item-name,
+.embed-dropdown .space-item.space-closed .door-icon-closed,
+.embed-dropdown .space-item.space-closed .style-icon {
+  color: var(--space-closed);
+  font-weight: 600;
+}
+
+.embed-dropdown .space-item.space-unknown .item-name,
+.embed-dropdown .space-item.space-unknown .door-icon-unknown,
+.embed-dropdown .space-item.space-unknown .style-icon {
+  color: var(--space-unknown);
+  font-weight: 600;
+}
+
+.embed-dropdown .space-item.space-default .item-name,
+.embed-dropdown .space-item.space-default .style-icon {
+  color: var(--space-hover);
+  font-weight: 600;
+}
+
+.embed-dropdown .space-item .item-details {
+  color: var(--hover-text-color);
+}
+
+/* Active/Hover: SpaceAPI-Farbe HG, Text weiß */
+.embed-dropdown .space-item.space-open.active,
+.embed-dropdown .space-item.space-open:hover:not(.active) {
+  background-color: var(--space-open) !important;
+}
+
+.embed-dropdown .space-item.space-closed.active,
+.embed-dropdown .space-item.space-closed:hover:not(.active) {
+  background-color: var(--space-closed) !important;
+}
+
+.embed-dropdown .space-item.space-unknown.active,
+.embed-dropdown .space-item.space-unknown:hover:not(.active) {
+  background-color: var(--space-unknown) !important;
+}
+
+.embed-dropdown .space-item.space-default.active,
+.embed-dropdown .space-item.space-default:hover:not(.active) {
+  background-color: var(--space-hover) !important;
+}
+
+.embed-dropdown .space-item.active *,
+.embed-dropdown .space-item:hover:not(.active) * {
+  color: white !important;
+}
+
+/* ========================================
+   POPUP & LOADING
+   ======================================== */
+
 .back-to-target {
   color: var(--space-hover);
   font-size: 0.9em;
@@ -160,16 +206,11 @@ body {
   color: var(--text-color);
 }
 
-/* Dark Mode Override für Back Link */
 @media (prefers-color-scheme: dark) {
   .back-to-target {
     color: #66b3ff;
   }
 }
-
-/* ========================================
-   LOADING & ERROR STATES
-   ======================================== */
 
 .loading,
 .error {
@@ -205,54 +246,18 @@ body {
   color: var(--hover-text-color);
 }
 
-
-
-
-
-
-
-/* Header - Wie dropdown-header */
-.dropdown-header {
-  font-family: 'Lato', sans-serif;
-  font-weight: normal;
-  /* font-size: small; */
-  padding: 8px 16px;
-  padding-top: 12px;
-  background: black;
-  border-radius: 16px;
-  color: white;
-  border-bottom: 1px solid var(--dropdown-border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-/* Space Items - Nutzt suggestion-item Styles aus styles.css */
-.embed-dropdown .space-item {
-  /* Alle Basis-Styles kommen aus styles.css (.suggestion-item) */
-}
-
-.suggestion-item {
-  border-radius: inherit;
-}
-
-
-
-
-
-
 /* ========================================
-   MINIMAP - Zwischen Target und Friends
+   MINIMAP
    ======================================== */
 
 #minimap-container {
   width: 300px;
   height: 225px;
-  /* 4:3 Verhältnis (300 * 0.75) */
   border-radius: 20px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0px 4px 8px 1px var(--shadow-color);
+  box-shadow: 0px 4px 8px 2px var(--shadow-color);
+  /* border: 2px solid gray; */
 }
 
 #minimap {
@@ -260,7 +265,6 @@ body {
   height: 100%;
 }
 
-/* Minimap Marker - Halbe Größe */
 .minimap-marker {
   width: 12.5px !important;
   height: 20.5px !important;
@@ -271,28 +275,35 @@ body {
 .minimap-marker img {
   width: 12.5px !important;
   height: 20.5px !important;
-  transition: filter 0.3s ease;
 }
 
-/* ✅ Active State: Größer + Heller */
+.minimap-marker.active svg,
+.minimap-marker.active img {
+  transform: scale(1.5) !important;
+}
+
 .minimap-marker.active {
-  transform: scale(1.5);
-  transform-origin: center bottom;
   z-index: 1000 !important;
 }
 
 .minimap-marker.active svg path {
-  filter: brightness(1.3);
+  color: black !important;
+  filter: hue-rotate(180);
 }
 
 /* ========================================
-   DEBUG - Temporär zum Testen
+   RESPONSIVE
    ======================================== */
 
-/* Uncomment zum Debuggen: */
-/*
-.embed-dropdown {
-  border: 2px solid red !important;
-  background: yellow !important;
+@media (max-width: 800px) {
+  #embed-sidebar {
+    transform: scale(0.75);
+    transform-origin: top left;
+  }
 }
-*/
+
+@media (max-height: 800px) {
+  #minimap-container {
+    display: none !important;
+  }
+}

@@ -5,7 +5,7 @@
   --bg-color: white;
   --text-color: black;
   --border-color: #ccc;
-  --shadow-color: rgba(0, 0, 0, 0.35);
+  --shadow-color: rgba(0, 0, 0, 0.5);
   --dropdown-bg: white;
   --dropdown-alt-bg: #f6f6f6;
   --dropdown-border: #ddd;
@@ -2299,8 +2299,8 @@ a#titleurl:hover h3.space-unknown .fas {
 .nearby-cursor-icon i {
   font-size: 32px;
   color: var(--space-hover);
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
-  animation: nearby-pulse 2s ease-in-out infinite;
+  /* filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5)); */
+  animation: nearby-pulse 1.25s ease-in-out infinite;
 }
 
 @keyframes nearby-pulse {
@@ -2308,12 +2308,12 @@ a#titleurl:hover h3.space-unknown .fas {
   0%,
   100% {
     transform: scale(1);
-    opacity: 1;
+    opacity: 0.9;
   }
 
   50% {
-    transform: scale(1.1);
-    opacity: 0.8;
+    transform: scale(1.8);
+    opacity: 0.6;
   }
 }
 

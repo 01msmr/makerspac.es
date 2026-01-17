@@ -263,6 +263,9 @@ class EmbedMapExtended {
         statusIcon = '<i class="fas fa-question-circle door-icon-unknown"></i> ';
         statusClass = 'space-unknown';
       }
+    } else {
+      // ✅ FIX: Spaces ohne SpaceAPI bekommen default-Klasse
+      statusClass = 'space-default';
     }
 
     let styleIconHtml = '';
@@ -295,15 +298,22 @@ class EmbedMapExtended {
     // ✅ "Our Space" Pill OBERHALB von Name
     const ourSpacePill = isTarget ? '<div class="our-space-pill">Our Space</div>' : '';
 
+    // ✅ Adresse nur bei Target, bei Friends nur Stadt + Land
+    const addressHtml = isTarget ? `
+      <div class="item-details">${streetName} ${streetNumber} ${streetExt}</div>
+      <div class="item-details">${zip} <b>${city}</b></div>
+      <div class="item-details"><span class="fi fi-${countryCode}"></span> ${country}</div>
+    ` : `
+      <div class="item-details"><b>${city}</b>, ${country}</div>
+    `;
+
     item.innerHTML = `
       <div class="item-content">
         ${ourSpacePill}
         <div class="item-name">
           <span>${styleIconHtml}${statusIcon}${space.name}</span>
         </div>
-        <div class="item-details">${streetName} ${streetNumber} ${streetExt}</div>
-        <div class="item-details">${zip} <b>${city}</b></div>
-        <div class="item-details"><span class="fi fi-${countryCode}"></span> ${country}</div>
+        ${addressHtml}
       </div>
     `;
 
@@ -337,7 +347,7 @@ class EmbedMapExtended {
     logo.href = './';
     logo.innerHTML = `
       <div class="title">
-        🔧maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span>
+        📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span>
       </div>
     `;
 
@@ -504,7 +514,7 @@ class EmbedMapExtended {
 
     const header = document.createElement('div');
     header.className = 'dropdown-header';
-    header.textContent = `Our ${this.friendSpaces.length} Friends`; // ✅ "Our X Friends"
+    header.textContent = `${this.friendSpaces.length} friends of our makerspace`; // ✅ "Our X Friends"
     dropdown.appendChild(header);
 
     this.friendSpaces.forEach(space => {
@@ -555,9 +565,19 @@ class EmbedMapExtended {
     marker.openPopup();
     this.stickyMarker = marker;
 
-    // ✅ FOKUSSIERE NUR auf diesen Marker (Zoom 14)
+    // ✅ FIX: Zentriere OHNE Sidebar (150px Offset nach RECHTS)
     const markerLatLng = marker.getLatLng();
-    this.map.setView(markerLatLng, 14, {
+    const sidebarWidth = 316; // 300px + 16px gap
+
+    // WICHTIG: Sidebar ist LINKS → Marker muss nach RECHTS verschoben werden
+    // Aber setView zentriert auf LatLng, nicht auf Container-Point
+    // Also: Verschiebe Center nach LINKS, damit Marker nach RECHTS kommt
+    const point = this.map.latLngToContainerPoint(markerLatLng);
+    point.x -= sidebarWidth / 2 - 10; // Nach LINKS verschieben
+    point.y -= 120; // Nach UNTEN verschieben (marker zentrieren)
+    const newCenter = this.map.containerPointToLatLng(point);
+
+    this.map.setView(newCenter, 14, {
       animate: true,
       duration: 0.8
     });
