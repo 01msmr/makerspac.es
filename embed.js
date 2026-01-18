@@ -78,6 +78,29 @@ class EmbedMapExtended {
       target: this.targetSpace.name,
       friends: this.friendSpaces.length
     });
+
+    // ✅ Lade SpaceAPI-Status aus status.json (SCHNELL!)
+    try {
+      const statusResponse = await fetch('status.json');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        console.log('📡 Loaded status.json:', statusData.stats);
+
+        // Merge status.json in locations
+        const allData = [this.targetSpace, ...this.friendSpaces];
+        statusData.spaces.forEach(statusEntry => {
+          const space = allData.find(s => s.name === statusEntry.name);
+          if (space && statusEntry.status !== undefined && statusEntry.status !== null) {
+            space.isOpen = statusEntry.status;
+            console.log(`✅ Updated ${space.name}: isOpen=${statusEntry.status}`);
+          }
+        });
+
+        console.log('✅ SpaceAPI status merged from status.json');
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not load status.json, using static data:', error);
+    }
   }
 
   createMap() {
@@ -259,14 +282,17 @@ class EmbedMapExtended {
       } else if (space.isOpen === false) {
         statusIcon = '<i class="fas fa-door-closed door-icon-closed"></i> ';
         statusClass = 'space-closed';
-      } else {
+      } else if (space.isOpen === null || space.isOpen === undefined) {
+        // ✅ FIX: Nur wenn tatsächlich null/undefined
         statusIcon = '<i class="fas fa-question-circle door-icon-unknown"></i> ';
         statusClass = 'space-unknown';
       }
     } else {
-      // ✅ FIX: Spaces ohne SpaceAPI bekommen default-Klasse
+      // Kein SpaceAPI-Endpoint
       statusClass = 'space-default';
     }
+
+    console.log(`🏷️ ${space.name}: hasAPI=${!!space.spaceapi?.endpoint}, isOpen=${space.isOpen}, class=${statusClass}`);
 
     let styleIconHtml = '';
     const styleIconMap = {
@@ -477,7 +503,7 @@ class EmbedMapExtended {
     if (minimapMarkers.length > 0) {
       const bounds = L.latLngBounds(minimapMarkers);
       minimap.fitBounds(bounds, {
-        padding: [20, 20]
+        padding: [5, 5]
       });
     }
 
@@ -514,7 +540,8 @@ class EmbedMapExtended {
 
     const header = document.createElement('div');
     header.className = 'dropdown-header';
-    header.textContent = `${this.friendSpaces.length} friends of our makerspace`; // ✅ "Our X Friends"
+    // header.textContent = `${this.friendSpaces.length} friends of our makerspace`; // ✅ "Our X Friends"
+    header.textContent = `friends of our makerspace`; // ✅ "Our X Friends"
     dropdown.appendChild(header);
 
     this.friendSpaces.forEach(space => {
@@ -573,8 +600,7 @@ class EmbedMapExtended {
     // Aber setView zentriert auf LatLng, nicht auf Container-Point
     // Also: Verschiebe Center nach LINKS, damit Marker nach RECHTS kommt
     const point = this.map.latLngToContainerPoint(markerLatLng);
-    point.x -= sidebarWidth / 2 - 10; // Nach LINKS verschieben
-    point.y -= 120; // Nach UNTEN verschieben (marker zentrieren)
+    point.x -= sidebarWidth / 2; // Nach LINKS verschieben
     const newCenter = this.map.containerPointToLatLng(point);
 
     this.map.setView(newCenter, 14, {
