@@ -102,8 +102,12 @@ class I18n {
       <h2>+ ${this.t('addMakerspace.title')} 💛</h2>
       <br />
       <ul>
-        <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-primary">${this.t('addMakerspace.byGoogleForms')}</a></li>
-        <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-secondary">${this.t('addMakerspace.byGithub')}</a></li>
+        <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-1">${this.t('addMakerspace.byGoogleForms')}</a></li>
+        <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-2">${this.t('addMakerspace.byGithub')}</a></li>
+        </ul>
+        <h2 class="btn-3">${this.t('addMakerspace.embed')}</h2><br />
+        <ul>
+        <li><a href="https://makerspac.es/embed-demo.html" target="_blank">https://makerspac.es/embed-demo.html</a></li>
       </ul>
     `;
   }
