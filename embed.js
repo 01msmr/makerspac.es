@@ -87,7 +87,8 @@ class EmbedMapExtended {
       zoomControl: true,
       attributionControl: true,
       maxZoom: 18,
-      minZoom: 3
+      minZoom: 3,
+      closePopupOnClick: false   // WICHTIG: Klick in die Karte schließt das geöffnete Popup NICHT
     });
 
     // ✅ Initialer Viewport, damit Leaflet ein Koordinatensystem hat
@@ -119,8 +120,9 @@ class EmbedMapExtended {
     }
     if (!icon) icon = window.MapIcons?.defaultIcon;
 
-    const marker = L.marker([space.loc.lat, space.loc.long], { icon, riseOnHover: true });
-    marker.bindPopup(this.createPopupContent(space, isTarget), { maxWidth: 440, minWidth: 160 });
+    const marker = L.marker([space.loc.lat, space.loc.long], {
+      icon, riseOnHover: true, interactive: false});
+    marker.bindPopup(this.createPopupContent(space, isTarget), { maxWidth: 440, minWidth: 160, closeButton: false});
     marker.on('popupopen', () => this.handlePopupOpen(marker, space));
     marker.addTo(this.map);
     this.markers.set(space.ID, marker);
@@ -273,7 +275,7 @@ class EmbedMapExtended {
       this.minimapMarkersBySpaceId.set(space.ID, { marker: m });
       coords.push([space.loc.lat, space.loc.long]);
     });
-    if (coords.length) minimap.fitBounds(L.latLngBounds(coords), { padding: [5, 5] });
+    if (coords.length) minimap.fitBounds(L.latLngBounds(coords), { padding: [2, 2] });
     this.minimap = minimap;
   }
 
