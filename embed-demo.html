@@ -127,10 +127,21 @@
     <h2>2. Einbindung per Iframe (Empfohlen)</h2>
     <p>Kopiere diesen Code an die Stelle in deiner Webseite, an der die Karte erscheinen soll. Dies ist die sicherste Methode, da sie deine restliche Seite nicht beeinflusst.</p>
     
+    <h3>a) Höhe 500px: ohne minimap</h3>
     <pre>
 <button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
 &lt;iframe 
-    src="https://deine-domain.de/embed.html?id=1&friends=2,45,67" 
+    src="https://makerspac.es/embed.html?id=1&friends=2,45,67" 
+    width="100%" 
+    height="500px" 
+    frameborder="0"&gt;
+&lt;/iframe&gt;</pre>
+    
+    <h3>a) Höhe 500px: mit minimap</h3>
+    <pre>
+<button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+&lt;iframe 
+    src="https://makerspac.es/embed.html?id=1&friends=2,45,67" 
     width="100%" 
     height="500px" 
     frameborder="0"&gt;
