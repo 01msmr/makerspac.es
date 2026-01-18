@@ -257,8 +257,8 @@ body {
   border-radius: 16px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0px 4px 8px 2px var(--shadow-color);
-  /* border: 2px solid gray; */
+  box-shadow: 0px 4px 8px 1px var(--shadow-color);
+  border: 2px solid gray;
 }
 
 #minimap {
