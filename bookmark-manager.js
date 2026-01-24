@@ -67,7 +67,12 @@ class BookmarkManager {
   // ✅ OPTIMIERT: Verwendet location.ID (Zahl)
   createBookmarkIcon(locationId, className = '') {
     const isBookmarked = this.isBookmarked(locationId);
-    const iconClass = isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark';
+
+    // ✅ REFACTORED: Nutze MapIcons.uiMap für Icon-Klassen
+    const iconClass = isBookmarked
+      ? window.MapIcons.uiMap.BOOKMARK_FILLED
+      : window.MapIcons.uiMap.BOOKMARK_OUTLINE;
+
     const title = isBookmarked ?
       (window.i18n ? window.i18n.t('tooltips.removeBookmark') : 'Remove bookmark') :
       (window.i18n ? window.i18n.t('tooltips.addBookmark') : 'Add bookmark');
@@ -87,6 +92,7 @@ class BookmarkManager {
       (window.i18n ? window.i18n.t('tooltips.removeBookmark') : 'Remove bookmark') :
       (window.i18n ? window.i18n.t('tooltips.addBookmark') : 'Add bookmark');
 
+    // ✅ REFACTORED: Nutze MapIcons.uiMap
     // Aktualisiere Icon-Klasse
     if (isBookmarked) {
       iconElement.classList.remove('far');

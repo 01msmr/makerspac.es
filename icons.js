@@ -1,136 +1,250 @@
-// icons.js - Alle Icon-Definitionen als SVG
+// icons.js - Zentrale Icon & Farb-Definitionen mit einheitlichem Namespace
 
-// 1. STATISCHE FARBDEFINITIONEN (Kanonische Werte für JS-Icons)
+/* ============================================================================
+   FARBDEFINITIONEN (Kanonische Quelle für JavaScript)
+   ============================================================================ */
+
 const ICON_COLOURS = {
+  // Standard Farben
   DEFAULT: '#2c2c2c',
   HIGHLIGHT: '#2c2c2c',
+
+  // SpaceAPI Status Farben
   OPEN: '#009900',
   CLOSED: '#DD0000',
   UNKNOWN: '#FF8C00',
+
+  // Hover/Interaktive Farben
+  HOVER_LIGHT: '#0000ff',
+  HOVER_DARK: '#66b3ff',
+
+  // Dark Mode
   DARK_MODE_DEFAULT: '#666666',
 
-  // Akzentfarben für dynamische Elemente (Hover/Line)
-  HOVER_LIGHT: '#0000ff',
-  HOVER_DARK: '#66b3ff'
+  // UI Farben (falls in JS benötigt)
+  TEXT_LIGHT: '#2c2c2c',
+  TEXT_DARK: '#e0e0e0',
+  BACKGROUND_LIGHT: '#ffffff',
+  BACKGROUND_DARK: '#2c2c2c'
 };
 
-// KORREKTUR: MACHEN IC GLOBAL VERFÜGBAR
-window.IC = ICON_COLOURS;
-const IC = window.IC; // Lokale Konstante für den Rest des Skripts
+/* ============================================================================
+   ICON-MAPPINGS (Kanonische Quelle für alle Icon-Klassen)
+   ============================================================================ */
 
-// Helper Funktion zur Bestimmung der aktuellen Farbe für das Default-Icon
+const STYLE_ICON_MAP = {
+  'for all': 'fas fa-people-group',
+  'for students': 'fas fa-graduation-cap',
+  'for youth': 'fas fa-child',
+  'for students & youth': 'fas fa-graduation-cap',
+  'commercial': 'fas fa-money-bill-wave'
+};
+
+const STATUS_ICON_MAP = {
+  open: 'fas fa-door-open',
+  closed: 'fas fa-door-closed',
+  unknown: 'fas fa-question-circle'
+};
+
+const UI_ICON_MAP = {
+  BOOKMARK_FILLED: 'fas fa-bookmark',
+  BOOKMARK_OUTLINE: 'far fa-bookmark',
+  CROSSHAIRS: 'fas fa-crosshairs',
+  CLOSE: 'fas fa-times',
+  SETTINGS: 'fas fa-cog',
+  SEARCH: 'fas fa-search'
+};
+
+/* ============================================================================
+   COUNTRY CODE MAPPING (Zentrale Quelle)
+   ============================================================================ */
+
+const COUNTRY_CODE_MAP = {
+  'Germany': 'de',
+  'Austria': 'at',
+  'Switzerland': 'ch',
+  'France': 'fr',
+  'Netherlands': 'nl',
+  'Belgium': 'be',
+  'Italy': 'it',
+  'Spain': 'es',
+  'Ukraine': 'ua',
+  'Denmark': 'dk',
+  'Poland': 'pl',
+  'Luxembourg': 'lu'
+};
+
+/* ============================================================================
+   HILFSFUNKTIONEN
+   ============================================================================ */
+
+/**
+ * Bestimmt die aktuelle Default-Icon-Farbe basierend auf Dark Mode
+ * @returns {string} Hex-Farbcode
+ */
 function getDefaultIconColor() {
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return isDarkMode ? IC.DARK_MODE_DEFAULT : IC.DEFAULT;
+  const isDarkMode = window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return isDarkMode ? ICON_COLOURS.DARK_MODE_DEFAULT : ICON_COLOURS.DEFAULT;
 }
 
-// 2. HILFSFUNKTION FÜR DYNAMISCHE FARBABRUF (wird von search.js verwendet)
-window.getDynamicSpaceColor = function (location) {
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+/**
+ * Bestimmt die dynamische Farbe für einen Space basierend auf Status
+ * @param {Object} location - Location-Objekt mit isOpen und spaceapi
+ * @returns {string} Hex-Farbcode
+ */
+function getDynamicSpaceColor(location) {
+  const isDarkMode = window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   if (location && location.spaceapi && location.spaceapi.endpoint) {
     if (location.isOpen === true) {
-      return window.IC.OPEN; // KORREKTUR: Zugriff über window.IC
+      return ICON_COLOURS.OPEN;
     } else if (location.isOpen === false) {
-      return window.IC.CLOSED; // KORREKTUR: Zugriff über window.IC
+      return ICON_COLOURS.CLOSED;
     } else {
-      return window.IC.UNKNOWN; // KORREKTUR: Zugriff über window.IC
+      return ICON_COLOURS.UNKNOWN;
     }
   } else {
-    // Standard Akzentfarbe (Hover/Line)
-    return isDarkMode ? window.IC.HOVER_DARK : window.IC.HOVER_LIGHT; // KORREKTUR: Zugriff über window.IC
+    // Standard Akzentfarbe (Hover)
+    return isDarkMode ? ICON_COLOURS.HOVER_DARK : ICON_COLOURS.HOVER_LIGHT;
   }
-};
+}
 
+/**
+ * Holt Style-Icon-Klasse für einen Space-Typ
+ * @param {string} style - Style-String (z.B. 'for all')
+ * @returns {string} FontAwesome Klasse oder leerer String
+ */
+function getStyleIcon(style) {
+  const styleKey = style ? style.toLowerCase() : '';
+  return STYLE_ICON_MAP[styleKey] || '';
+}
+
+/**
+ * Holt Status-Icon-Klasse basierend auf isOpen
+ * @param {boolean|null} isOpen - Space Status
+ * @returns {string} FontAwesome Klasse
+ */
+function getStatusIcon(isOpen) {
+  if (isOpen === true) return STATUS_ICON_MAP.open;
+  if (isOpen === false) return STATUS_ICON_MAP.closed;
+  return STATUS_ICON_MAP.unknown;
+}
+
+/**
+ * Holt Country-Code für Flag-Icons
+ * @param {string} country - Ländername
+ * @returns {string} 2-stelliger Country Code (lowercase)
+ */
+function getCountryCode(country) {
+  return COUNTRY_CODE_MAP[country] || 'un';
+}
+
+/* ============================================================================
+   LEAFLET ICON FACTORY
+   ============================================================================ */
+
+/**
+ * Erstellt ein Leaflet Icon mit gegebener Farbe und Größe
+ * @param {string} color - Hex-Farbcode für die Icon-Füllung
+ * @param {number} scale - Skalierungsfaktor (1.0 = normal, 1.5 = groß)
+ * @returns {L.Icon} Leaflet Icon Instanz
+ */
+function createLeafletIcon(color, scale = 1.0) {
+  const baseSize = [25, 41];
+  const iconSize = [baseSize[0] * scale, baseSize[1] * scale];
+  const iconAnchor = [baseSize[0] * scale / 2, baseSize[1] * scale];
+  const popupAnchor = [1 * scale, -34 * scale];
+  const shadowSize = [41 * scale, 41 * scale];
+
+  return new L.Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
+        <path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
+        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
+      </svg>
+    `),
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: iconSize,
+    iconAnchor: iconAnchor,
+    popupAnchor: popupAnchor,
+    shadowSize: shadowSize
+  });
+}
+
+/* ============================================================================
+   LEAFLET ICON DEFINITIONEN (Lazy Loading)
+   ============================================================================ */
+
+// ✅ FIX: Icons werden erst erstellt, wenn Leaflet verfügbar ist
+let LeafletIcons = null;
+
+function initializeLeafletIcons() {
+  if (LeafletIcons || typeof L === 'undefined') {
+    return LeafletIcons;
+  }
+
+  LeafletIcons = {
+    // Standard dunkelgraues/schwarzes Icon (Dark Mode aware)
+    defaultIcon: createLeafletIcon(getDefaultIconColor()),
+
+    // Highlight Icon (identisch zu default für Konsistenz)
+    highlightIcon: createLeafletIcon(getDefaultIconColor()),
+
+    // Hover Icon (vergrößert, blau)
+    hoverIcon: createLeafletIcon(ICON_COLOURS.HOVER_LIGHT, 1.5),
+
+    // Grünes Icon für geöffnete Spaces
+    greenIcon: createLeafletIcon(ICON_COLOURS.OPEN),
+
+    // Rotes Icon für geschlossene Spaces
+    redIcon: createLeafletIcon(ICON_COLOURS.CLOSED),
+
+    // Orange Icon für Spaces mit unbekanntem Status
+    unknownStatusIcon: createLeafletIcon(ICON_COLOURS.UNKNOWN)
+  };
+
+  return LeafletIcons;
+}
+
+// ✅ Auto-initialize wenn Leaflet verfügbar ist
+if (typeof L !== 'undefined') {
+  initializeLeafletIcons();
+}
+
+/* ============================================================================
+   GLOBALER NAMESPACE EXPORT
+   ============================================================================ */
 
 window.MapIcons = {
-  // Standard dunkelgraues/schwarzes Icon (Dark Mode aware)
-  defaultIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${getDefaultIconColor()}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  }),
+  // Leaflet Icon Instanzen (Lazy Loading via Getter)
+  get icons() {
+    return initializeLeafletIcons();
+  },
 
-  // Schwarzes/Graues Icon (Dark Mode aware)
-  highlightIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${getDefaultIconColor()}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  }),
+  // Icon Factory (für dynamische Icon-Erstellung)
+  createIcon: createLeafletIcon,
 
-  // Blaues Hover-Icon (statisch)
-  hoverIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${IC.HOVER_LIGHT}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [37.5, 61.5],
-    iconAnchor: [18.75, 61.5],
-    popupAnchor: [1.5, -51],
-    shadowSize: [61.5, 61.5]
-  }),
+  // Farb-Konstanten
+  colors: ICON_COLOURS,
 
-  // Rotes Icon für geschlossene Spaces
-  redIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${IC.CLOSED}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  }),
+  // Icon-Mappings
+  styleMap: STYLE_ICON_MAP,
+  statusMap: STATUS_ICON_MAP,
+  uiMap: UI_ICON_MAP,
+  countryMap: COUNTRY_CODE_MAP,
 
-  // Grünes Icon für geöffnete Spaces
-  greenIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${IC.OPEN}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  }),
-
-  // Orange Icon für SpaceAPI-Spaces mit unbekanntem Status
-  unknownStatusIcon: new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${IC.UNKNOWN}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>
-    `),
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  })
+  // Helper-Funktionen
+  getDynamicColor: getDynamicSpaceColor,
+  getStyleIcon: getStyleIcon,
+  getStatusIcon: getStatusIcon,
+  getCountryCode: getCountryCode,
+  getDefaultColor: getDefaultIconColor
 };
+
+// Backward Compatibility (für existierenden Code)
+window.IC = ICON_COLOURS;
+window.getDynamicSpaceColor = getDynamicSpaceColor;
+
+console.log('✅ MapIcons namespace loaded:', Object.keys(window.MapIcons));

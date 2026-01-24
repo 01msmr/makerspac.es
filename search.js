@@ -831,41 +831,9 @@ class SearchManager {
       .map(([country]) => country);
   }
 
+  // ✅ REFACTORED: Nutze zentrale Funktion
   getCountryCode(countryName) {
-    const countryCodeMap = {
-      'Germany': 'de',
-      'Austria': 'at',
-      'Switzerland': 'ch',
-      'France': 'fr',
-      'Netherlands': 'nl',
-      'Belgium': 'be',
-      'Italy': 'it',
-      'Spain': 'es',
-      'Portugal': 'pt',
-      'Poland': 'pl',
-      'Czech Republic': 'cz',
-      'Denmark': 'dk',
-      'Sweden': 'se',
-      'Norway': 'no',
-      'Finland': 'fi',
-      'United Kingdom': 'gb',
-      'Ireland': 'ie',
-      'Luxembourg': 'lu',
-      'Liechtenstein': 'li',
-      'Slovenia': 'si',
-      'Croatia': 'hr',
-      'Hungary': 'hu',
-      'Romania': 'ro',
-      'Bulgaria': 'bg',
-      'Greece': 'gr',
-      'Slovakia': 'sk',
-      'Estonia': 'ee',
-      'Latvia': 'lv',
-      'Lithuania': 'lt',
-      'Ukraine': 'ua'
-    };
-
-    return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
+    return window.MapIcons.getCountryCode(countryName);
   }
 
   translateFilterValue(categoryKey, value) {
@@ -896,12 +864,7 @@ class SearchManager {
 
     const activeFilter = this.getActiveFilterForCategory(categoryKey);
 
-    const styleIconMap = {
-      'for all': 'fas fa-people-group',
-      'for youth': 'fas fa-child',
-      'for students': 'fas fa-graduation-cap',
-      'commercial': 'fas fa-money-bill-wave'
-    };
+    // ✅ REFACTORED: Keine lokale styleIconMap mehr nötig
 
     if (activeFilter) {
       pill.classList.add('filter-pill-active');
@@ -923,9 +886,15 @@ class SearchManager {
         const countryCode = this.getCountryCode(activeFilter);
         pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
       }
-      else if (categoryKey === 'style' && styleIconMap[activeFilter]) {
+      else if (categoryKey === 'style') {
+        // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
+        const styleIconClass = window.MapIcons.getStyleIcon(activeFilter);
         const translatedStyle = this.translateFilterValue('style', activeFilter);
-        pill.innerHTML = `<i class="${styleIconMap[activeFilter]}"></i> ${translatedStyle}`;
+        if (styleIconClass) {
+          pill.innerHTML = `<i class="${styleIconClass}"></i> ${translatedStyle}`;
+        } else {
+          pill.innerHTML = `<i class="${config.icon}"></i> ${translatedStyle}`;
+        }
       }
       else {
         const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
@@ -1019,21 +988,7 @@ class SearchManager {
     });
     popover.appendChild(clearOption);
 
-    const styleIconMap = {
-      'for all': 'fas fa-people-group',
-      'for youth': 'fas fa-child',
-      'for students': 'fas fa-graduation-cap',
-      'commercial': 'fas fa-money-bill-wave'
-    };
-
-    const doorStateIconMap = {
-      'open': 'fas fa-door-open',
-      'closed': 'fas fa-door-closed'
-    };
-
-    const bookmarkIconMap = {
-      'bookmarked': 'fas fa-bookmark'
-    };
+    // ✅ REFACTORED: Keine lokalen Icon-Maps mehr nötig
 
     config.options.forEach(option => {
       const optionItem = document.createElement('div');
@@ -1061,29 +1016,39 @@ class SearchManager {
 
         optionItem.style.whiteSpace = 'nowrap';
       }
-      else if (categoryKey === 'style' && styleIconMap[option]) {
-        const iconElement = document.createElement('i');
-        iconElement.className = styleIconMap[option];
-        iconElement.style.marginRight = '8px';
-        iconElement.style.width = '20px';
-        iconElement.style.textAlign = 'center';
-        optionItem.appendChild(iconElement);
+      else if (categoryKey === 'style') {
+        // ✅ REFACTORED: Nutze zentrale getStyleIcon
+        const styleIconClass = window.MapIcons.getStyleIcon(option);
+        if (styleIconClass) {
+          const iconElement = document.createElement('i');
+          iconElement.className = styleIconClass;
+          iconElement.style.marginRight = '8px';
+          iconElement.style.width = '20px';
+          iconElement.style.textAlign = 'center';
+          optionItem.appendChild(iconElement);
+        }
         const translatedStyle = this.translateFilterValue('style', option);
         optionItem.appendChild(document.createTextNode(translatedStyle));
       }
-      else if (categoryKey === 'doorState' && doorStateIconMap[option]) {
-        const iconElement = document.createElement('i');
-        iconElement.className = doorStateIconMap[option];
-        iconElement.style.marginRight = '8px';
-        iconElement.style.width = '20px';
-        iconElement.style.textAlign = 'center';
-        optionItem.appendChild(iconElement);
+      else if (categoryKey === 'doorState') {
+        // ✅ REFACTORED: Nutze zentrale statusMap
+        const statusIconClass = option === 'open' ? window.MapIcons.statusMap.open :
+          option === 'closed' ? window.MapIcons.statusMap.closed : null;
+        if (statusIconClass) {
+          const iconElement = document.createElement('i');
+          iconElement.className = statusIconClass;
+          iconElement.style.marginRight = '8px';
+          iconElement.style.width = '20px';
+          iconElement.style.textAlign = 'center';
+          optionItem.appendChild(iconElement);
+        }
         const translatedDoor = this.translateFilterValue('doorState', option);
         optionItem.appendChild(document.createTextNode(translatedDoor));
       }
-      else if (categoryKey === 'bookmarks' && bookmarkIconMap[option]) {
+      else if (categoryKey === 'bookmarks') {
+        // ✅ REFACTORED: Nutze zentrale uiMap
         const iconElement = document.createElement('i');
-        iconElement.className = bookmarkIconMap[option];
+        iconElement.className = window.MapIcons.uiMap.BOOKMARK_FILLED;
         iconElement.style.marginRight = '8px';
         iconElement.style.width = '20px';
         iconElement.style.textAlign = 'center';
@@ -1449,30 +1414,25 @@ class SearchManager {
       statusColor = 'var(--space-unknown)';
     }
 
+    // ✅ REFACTORED: Nutze zentrale getStyleIcon
     let styleIconHtml = '';
-    const styleIconMap = {
-      'for all': 'fas fa-people-group',
-      'for students': 'fas fa-graduation-cap',
-      'for youth': 'fas fa-child',
-      'for students & youth': 'fas fa-graduation-cap',
-      'commercial': 'fas fa-money-bill-wave',
-    };
-
     const locationStyle = location.style ? location.style.toLowerCase() : '';
+    const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
 
-    if (locationStyle && styleIconMap[locationStyle]) {
-      styleIconHtml = `<i class="${styleIconMap[locationStyle]} style-icon" title="${location.style}"></i> `;
+    if (styleIconClass) {
+      styleIconHtml = `<i class="${styleIconClass} style-icon" title="${location.style}"></i> `;
     }
 
+    // ✅ REFACTORED: Nutze zentrale statusMap
     if (location.spaceapi && location.spaceapi.endpoint) {
       if (location.isOpen === true) {
-        statusIcon = '<i class="fas fa-door-open door-icon-open" title="Space ist geöffnet"></i> ';
+        statusIcon = `<i class="${window.MapIcons.statusMap.open} door-icon-open" title="Space ist geöffnet"></i> `;
         spaceStatusClass = 'space-open'; nameClass = 'space-name-open';
       } else if (location.isOpen === false) {
-        statusIcon = '<i class="fas fa-door-closed door-icon-closed" title="Space ist geschlossen"></i> ';
+        statusIcon = `<i class="${window.MapIcons.statusMap.closed} door-icon-closed" title="Space ist geschlossen"></i> `;
         spaceStatusClass = 'space-closed'; nameClass = 'space-name-closed';
       } else {
-        statusIcon = '<i class="fas fa-question-circle door-icon-unknown" title="Space-Status unbekannt"></i> ';
+        statusIcon = `<i class="${window.MapIcons.statusMap.unknown} door-icon-unknown" title="Space-Status unbekannt"></i> `;
         spaceStatusClass = 'space-unknown'; nameClass = 'space-name-unknown';
       }
     }

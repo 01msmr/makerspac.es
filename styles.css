@@ -15,12 +15,19 @@
   --search-focus-opacity: 0.9;
   --hover-text-color: #666;
   --hover-text-color-active: #ccc;
-  /* Space Status Farben */
 
+  /* ============================================================================
+     SPACE STATUS FARBEN (Kanonische Quelle für CSS)
+     Synchron mit icons.js ICON_COLOURS
+     ============================================================================ */
   --space-hover: #0000ff;
   --space-open: #009900;
   --space-closed: #DD0000;
-  --space-unknown: #EE8800;
+  --space-unknown: #FF8C00;
+
+  /* Zusätzliche Farben für konsistente Nutzung */
+  --color-default: #2c2c2c;
+  --color-highlight: #2c2c2c;
 }
 
 /* *** Dark Mode Variables *** */
@@ -39,6 +46,11 @@
     --search-focus-opacity: 1;
     --hover-text-color: #aaa;
     --hover-text-color-active: #ddd;
+
+    /* Dark Mode spezifische Farben */
+    --space-hover: #66b3ff;
+    --color-default: #666666;
+    --color-highlight: #666666;
   }
 }
 
@@ -1420,8 +1432,10 @@ hr {
 a#titleurl h3 {
   /* display: inline-block; */
   /* max-width: 100%; */
-  max-width: none;  /* ← Keine Limitierung mehr */
-  white-space: nowrap;  /* ← Name bricht nicht um */
+  max-width: none;
+  /* ← Keine Limitierung mehr */
+  white-space: nowrap;
+  /* ← Name bricht nicht um */
 }
 
 /* Styling für den Makerspace-Namen, WENN der Space offen ist */
@@ -2357,6 +2371,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .nearby-header-row-top {
+  font-size: 1.4em;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2418,6 +2433,13 @@ a#titleurl:hover h3.space-unknown .fas {
   /* Sofortiger Farbwechsel ohne Verzögerung */
 }
 
+/* Alternierender Hintergrund für Nearby-Items (wie in der Suche) */
+.nearby-item:nth-child(even) {
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 1px solid var(--dropdown-alt-border);
+}
+
+
 /* Linke Spalte: Entfernung */
 .nearby-dist-badge {
   font-size: 0.8em;
@@ -2444,6 +2466,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .nearby-item-name {
+  color: var(--item-status-color);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -2510,6 +2533,22 @@ a#titleurl:hover h3.space-unknown .fas {
   background: rgba(255, 255, 255, 0.8) !important;
 }
 
+
+
+/* Schriftfarbe beim Hover & Tastatur-Aktivierung auf Weiß zwingen */
+.nearby-item:hover *,
+.nearby-item.keyboard-active * {
+  color: white !important;
+}
+
+/* Ausnahme: Distanz-Badge beim Hover dunkel lassen für besseren Kontrast */
+.nearby-item:hover .nearby-dist-badge,
+.nearby-item.keyboard-active .nearby-dist-badge {
+  color: black !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+
 /* =================================================================
    RADIUS BUTTONS
    ================================================================= */
@@ -2571,4 +2610,11 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* END NEARBY SPACES FEATURE */
+
+
+
+
+
+
+
 

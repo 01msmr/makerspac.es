@@ -78,15 +78,16 @@ window.markerStateManager = {
   }
 };
 
-// Icons aus der globalen icons.js verwenden
+// ✅ REFACTORED: Icons über icons-Namespace (Lazy Loading)
 const icons = {
-  defaultIcon: window.MapIcons.defaultIcon,
-  highlightIcon: window.MapIcons.highlightIcon,
-  hoverIcon: window.MapIcons.hoverIcon,
-  redIcon: window.MapIcons.redIcon,
-  greenIcon: window.MapIcons.greenIcon,
-  unknownStatusIcon: window.MapIcons.unknownStatusIcon
+  get defaultIcon() { return window.MapIcons.icons.defaultIcon; },
+  get highlightIcon() { return window.MapIcons.icons.highlightIcon; },
+  get hoverIcon() { return window.MapIcons.icons.hoverIcon; },
+  get redIcon() { return window.MapIcons.icons.redIcon; },
+  get greenIcon() { return window.MapIcons.icons.greenIcon; },
+  get unknownStatusIcon() { return window.MapIcons.icons.unknownStatusIcon; }
 };
+
 
 // Helper-Funktion, die den Zustand direkt aus der Modul-Variable liest
 function isClusteringCurrentlyEnabled() {
@@ -263,7 +264,15 @@ function removeConnectionLine() {
   }
 }
 
-function createConnectionLine(suggestionItem, targetMarker, color = '#0000ff') {
+// ✅ REFACTORED: Nutze MapIcons.colors für Default-Farbe
+function createConnectionLine(suggestionItem, targetMarker, color = null) {
+  // Wenn keine Farbe übergeben, nutze HOVER-Farbe (Dark Mode aware)
+  if (!color) {
+    const isDarkMode = window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+    color = isDarkMode ? window.MapIcons.colors.HOVER_DARK : window.MapIcons.colors.HOVER_LIGHT;
+  }
+
   removeConnectionLine();
 
   const suggestionRect = suggestionItem.getBoundingClientRect();
@@ -466,41 +475,10 @@ function zfill(plz, country) {
   return plzStr.padStart(expectedLength, "0");
 }
 
+// ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
+// ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
 function getCountryCode(countryName) {
-  const countryCodeMap = {
-    'Germany': 'de',
-    'Austria': 'at',
-    'Switzerland': 'ch',
-    'France': 'fr',
-    'Netherlands': 'nl',
-    'Belgium': 'be',
-    'Italy': 'it',
-    'Spain': 'es',
-    'Portugal': 'pt',
-    'Poland': 'pl',
-    'Czech Republic': 'cz',
-    'Denmark': 'dk',
-    'Sweden': 'se',
-    'Norway': 'no',
-    'Finland': 'fi',
-    'United Kingdom': 'gb',
-    'Ireland': 'ie',
-    'Luxembourg': 'lu',
-    'Liechtenstein': 'li',
-    'Slovenia': 'si',
-    'Croatia': 'hr',
-    'Hungary': 'hu',
-    'Romania': 'ro',
-    'Bulgaria': 'bg',
-    'Greece': 'gr',
-    'Slovakia': 'sk',
-    'Estonia': 'ee',
-    'Latvia': 'lv',
-    'Lithuania': 'lt',
-    'Ukraine': 'ua'
-  };
-
-  return countryCodeMap[countryName] || countryName.toLowerCase().substring(0, 2);
+  return window.MapIcons.getCountryCode(countryName);
 }
 
 // Füge updateMarkerIcon zu mapUtils hinzu
@@ -617,8 +595,9 @@ function initializeClustering() {
     chunkInterval: 200,
     chunkDelay: 50,
     polygonOptions: {
-      fillColor: '#0000ff',
-      color: '#0000ff',
+      // ✅ REFACTORED: Nutze MapIcons.colors (dynamisch für Dark Mode)
+      fillColor: window.MapIcons.colors.HOVER_LIGHT,
+      color: window.MapIcons.colors.HOVER_LIGHT,
       weight: 3,
       opacity: 0.8,
       fillOpacity: 0.2
@@ -810,20 +789,14 @@ function createMarkerForLocation(location) {
       nameClass = 'space-unknown';
     }
 
+    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
     let styleIconHtml = '';
-    const styleIconMap = {
-      'for all': 'fas fa-people-group',
-      'for students': 'fas fa-graduation-cap',
-      'for youth': 'fas fa-child',
-      'for students & youth': 'fas fa-graduation-cap',
-      'commercial': 'fas fa-money-bill-wave',
-    };
-
     const locationStyle = location.style ? location.style.toLowerCase() : '';
+    const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
 
-    if (locationStyle && styleIconMap[locationStyle]) {
+    if (styleIconClass) {
       const translatedStyle = window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style;
-      styleIconHtml = `<i class="${styleIconMap[locationStyle]}" title="${translatedStyle}"></i> `;
+      styleIconHtml = `<i class="${styleIconClass}" title="${translatedStyle}"></i> `;
     }
 
     const streetName = location.loc?.street?.name || '';

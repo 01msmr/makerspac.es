@@ -121,8 +121,9 @@ class EmbedMapExtended {
     if (!icon) icon = window.MapIcons?.defaultIcon;
 
     const marker = L.marker([space.loc.lat, space.loc.long], {
-      icon, riseOnHover: true, interactive: false});
-    marker.bindPopup(this.createPopupContent(space, isTarget), { maxWidth: 440, minWidth: 160, closeButton: false});
+      icon, riseOnHover: true, interactive: false
+    });
+    marker.bindPopup(this.createPopupContent(space, isTarget), { maxWidth: 440, minWidth: 160, closeButton: false });
     marker.on('popupopen', () => this.handlePopupOpen(marker, space));
     marker.addTo(this.map);
     this.markers.set(space.ID, marker);
@@ -178,23 +179,25 @@ class EmbedMapExtended {
     let nameClass = '';
     let statusColor = 'blue';
 
+    // ✅ REFACTORED: Nutze MapIcons.statusMap für Icon-Klassen
     if (space.isOpen === true) {
-      statusIconHtml = '<i class="fas fa-door-open"></i> ';
+      statusIconHtml = `<i class="${window.MapIcons.statusMap.open}"></i> `;
       nameClass = 'space-open';
       statusColor = 'var(--space-open)';
     } else if (space.isOpen === false) {
-      statusIconHtml = '<i class="fas fa-door-closed"></i> ';
+      statusIconHtml = `<i class="${window.MapIcons.statusMap.closed}"></i> `;
       nameClass = 'space-closed';
       statusColor = 'var(--space-closed)';
     } else if (space.spaceapi?.endpoint) {
-      statusIconHtml = '<i class="fas fa-question-circle"></i> ';
+      statusIconHtml = `<i class="${window.MapIcons.statusMap.unknown}"></i> `;
       nameClass = 'space-unknown';
       statusColor = 'var(--space-unknown)';
     }
 
-    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
+    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
     const locationStyle = space.style?.toLowerCase() || '';
-    const styleIconHtml = styleIconMap[locationStyle] ? `<i class="${styleIconMap[locationStyle]}"></i> ` : '';
+    const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
+    const styleIconHtml = styleIconClass ? `<i class="${styleIconClass}"></i> ` : '';
     const countryCode = this.getCountryCode(space.loc?.country || '');
 
     return `
@@ -218,13 +221,27 @@ class EmbedMapExtended {
   createDropdownItem(space, isTarget) {
     let statusIcon = '';
     let statusClass = 'space-default';
+
+    // ✅ REFACTORED: Nutze MapIcons.statusMap
     if (space.spaceapi?.endpoint) {
-      if (space.isOpen === true) { statusIcon = '<i class="fas fa-door-open door-icon-open"></i> '; statusClass = 'space-open'; }
-      else if (space.isOpen === false) { statusIcon = '<i class="fas fa-door-closed door-icon-closed"></i> '; statusClass = 'space-closed'; }
-      else { statusIcon = '<i class="fas fa-question-circle door-icon-unknown"></i> '; statusClass = 'space-unknown'; }
+      if (space.isOpen === true) {
+        statusIcon = `<i class="${window.MapIcons.statusMap.open} door-icon-open"></i> `;
+        statusClass = 'space-open';
+      }
+      else if (space.isOpen === false) {
+        statusIcon = `<i class="${window.MapIcons.statusMap.closed} door-icon-closed"></i> `;
+        statusClass = 'space-closed';
+      }
+      else {
+        statusIcon = `<i class="${window.MapIcons.statusMap.unknown} door-icon-unknown"></i> `;
+        statusClass = 'space-unknown';
+      }
     }
-    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
-    const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
+
+    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
+    const styleIconClass = window.MapIcons.getStyleIcon(space.style?.toLowerCase());
+    const styleIconHtml = styleIconClass ? `<i class="${styleIconClass} style-icon"></i> ` : '';
+
     const item = document.createElement('div');
     item.className = `space-item suggestion-item ${statusClass} ${isTarget ? 'target' : ''}`;
     item.dataset.spaceId = space.ID;
@@ -310,9 +327,9 @@ class EmbedMapExtended {
     return str;
   }
 
+  // ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
   getCountryCode(country) {
-    const countryMap = { 'Germany': 'de', 'Austria': 'at', 'Switzerland': 'ch', 'Ukraine': 'ua', 'Netherlands': 'nl', 'Belgium': 'be' };
-    return countryMap[country] || 'un';
+    return window.MapIcons.getCountryCode(country);
   }
 
   showError(message) {
