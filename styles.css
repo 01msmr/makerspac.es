@@ -726,7 +726,7 @@ a#titleurl {
   color: var(--text-color);
   font-size: 0.85em;
   border-radius: 4px;
-  transition: all 0.15s ease;
+  /* transition: all 0.15s ease; */
   flex-shrink: 0;
   text-align: center;
   vertical-align: middle !important;
@@ -2267,6 +2267,8 @@ a#titleurl:hover h3.space-unknown .fas {
   pointer-events: none;
   background: var(--space-hover);
   color: white;
+
+  /* WICHTIG: Padding nur rechts, damit das Icon links fest sitzt */
   padding: 0 12px 0 0;
   border-radius: 20px;
   font-family: 'Lato', sans-serif;
@@ -2276,13 +2278,20 @@ a#titleurl:hover h3.space-unknown .fas {
   gap: 5px;
   box-shadow: 0 2px 8px var(--shadow-color);
   white-space: nowrap;
+
+  /* WICHTIG für die Animation */
   overflow: hidden;
   height: 28px;
-  /* Snappy Nachzieh-Effekt (0.12s) und Opacity-Übergang */
-  transition: left 0.12s ease-out,
-    top 0.12s ease-out,
+
+  /* Hier definieren wir den Spielraum für die Animation */
+  min-width: 28px;
+  max-width: 350px;
+
+  /* Snappy Nachzieh-Effekt (optional) und flüssige Breitenänderung */
+  transition:
     opacity 0.3s ease-in-out,
-    width 0.3s ease-in-out;
+    max-width 0.3s ease-in-out,
+    padding 0.3s ease-in-out;
 }
 
 .hint-icon-wrapper {
@@ -2292,16 +2301,28 @@ a#titleurl:hover h3.space-unknown .fas {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* Verhindert, dass das Icon beim Schrumpfen gequetscht wird */
 }
 
-/* Zustand: Nur Icon (wird via JS nach 3s oder bei Ruhe aktiviert) */
+/* Zustand: Nur Icon */
 .nearby-cursor-hint.icon-only {
-  width: 28px !important;
+  /* Wir animieren die max-width auf die Breite des Icons herunter */
+  max-width: 28px;
   padding-right: 0 !important;
+  transition:
+      opacity 0.15s ease-in-out,
+      max-width 0.15s ease-in-out,
+      padding 0.15s ease-in-out;
+}
+
+/* Optional: Den Text zusätzlich ausfaden lassen für weicheren Übergang */
+.nearby-cursor-hint span {
+  transition: opacity 0.3s ease-in-out;
+  opacity: 1;
 }
 
 .nearby-cursor-hint.icon-only span {
-  display: none;
+  opacity: 0;
 }
 
 /* Cursor-Icon auf der Karte (Rechtsklick-Zentrum) */
@@ -2367,11 +2388,12 @@ a#titleurl:hover h3.space-unknown .fas {
   gap: 8px !important;
   height: auto !important;
   background-color: var(--dropdown-alt-bg);
+  background-color: rgba(111, 233, 166, .66);
   border-bottom: 1px solid var(--dropdown-border);
 }
 
 .nearby-header-row-top {
-  font-size: 1.4em;
+  font-size: 1.8em;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2392,15 +2414,20 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .nearby-close-btn {
+  font-size: 0.55em;
   color: black;
-  background-color: var(--dropdown-bg);
-  border-color: var(--dropdown-bg);
+  background-color: transparent;
+  /* border-color: var(--dropdown-bg); */
+  border: none;
+  width: 18px !important;
+  height: 18px !important;
+
 }
 
 .nearby-close-btn:hover {
   color: white;
   background-color: var(--space-closed) !important;
-  border-color: var(--space-closed);
+  /* border-color: var(--space-closed); */
 }
 
 /* =================================================================
@@ -2610,11 +2637,3 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* END NEARBY SPACES FEATURE */
-
-
-
-
-
-
-
-
