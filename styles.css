@@ -2310,9 +2310,9 @@ a#titleurl:hover h3.space-unknown .fas {
   max-width: 28px;
   padding-right: 0 !important;
   transition:
-      opacity 0.15s ease-in-out,
-      max-width 0.15s ease-in-out,
-      padding 0.15s ease-in-out;
+    opacity 0.15s ease-in-out,
+    max-width 0.15s ease-in-out,
+    padding 0.15s ease-in-out;
 }
 
 /* Optional: Den Text zusätzlich ausfaden lassen für weicheren Übergang */
@@ -2374,6 +2374,7 @@ a#titleurl:hover h3.space-unknown .fas {
   width: 320px;
   background-color: var(--dropdown-bg);
   border-radius: 16px;
+  border: none;
   box-shadow: 0px 4px 12px 2px var(--shadow-color);
   overflow: hidden;
   text-align: left;
@@ -2540,6 +2541,12 @@ a#titleurl:hover h3.space-unknown .fas {
   font-size: 0.85em;
   width: 14px;
   text-align: center;
+}
+
+/* ✅ NEU: Icon-Klassen statt Inline-Styles */
+.nearby-header-icon {
+  color: var(--space-hover);
+  margin-right: 6px;
 }
 
 /* =================================================================
