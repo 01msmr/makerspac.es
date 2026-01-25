@@ -48,7 +48,17 @@ class NearbySpacesManager {
     }
 
     document.addEventListener('languageChanged', () => {
+      // Update Popup wenn offen
       if (this.popoverElement && this.popoverElement.parentElement) this.showPopover();
+
+      // ✅ Update Hint-Text bei Sprachwechsel
+      if (this.hintElement && this.hintElement.parentElement) {
+        const hintText = window.i18n ?
+          window.i18n.t('nearbySpaces.hint') :
+          'Rechtsklick für lokale Makerspaces';
+        const span = this.hintElement.querySelector('span');
+        if (span) span.textContent = hintText;
+      }
     });
   }
 
@@ -63,7 +73,13 @@ class NearbySpacesManager {
     if (this.hintElement) this.hintElement.remove();
     this.hintElement = document.createElement('div');
     this.hintElement.className = 'nearby-cursor-hint';
-    this.hintElement.innerHTML = `<div class="hint-icon-wrapper"><i class="fas fa-crosshairs"></i></div><span>Rechtsklick für makerspaces in der Nähe</span>`;
+
+    // ✅ Übersetzter Hint-Text
+    const hintText = window.i18n ?
+      window.i18n.t('nearbySpaces.hint') :
+      'Rechtsklick für lokale Makerspaces';
+
+    this.hintElement.innerHTML = `<div class="hint-icon-wrapper"><i class="fas fa-crosshairs"></i></div><span>${hintText}</span>`;
     document.body.appendChild(this.hintElement);
     this.startHintAutoShrink();
   }
