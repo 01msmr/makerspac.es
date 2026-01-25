@@ -265,7 +265,7 @@ function removeConnectionLine() {
 }
 
 // ✅ REFACTORED: Nutze MapIcons.colors für Default-Farbe
-function createConnectionLine(suggestionItem, targetMarker, color = null) {
+function createConnectionLine(suggestionItem, targetMarker, color = null, weight = 6) {
   // Wenn keine Farbe übergeben, nutze HOVER-Farbe (Dark Mode aware)
   if (!color) {
     const isDarkMode = window.matchMedia &&
@@ -374,13 +374,15 @@ function createConnectionLine(suggestionItem, targetMarker, color = null) {
 
   connectionLine = L.polyline(curvePoints, {
     color: color,
-    weight: 6,
+    weight: weight,  // ✅ Jetzt konfigurierbar (default: 6, nearby: 5)
     opacity: 1,
     interactive: false,
     bubblingMouseEvents: false,
     smoothFactor: 0.0,
     noClip: true,
   }).addTo(map);
+
+  console.log('🔍 Connection Line created with weight:', weight);  // DEBUG
 
   connectionLine.bringToFront();
 

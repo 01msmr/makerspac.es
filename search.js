@@ -9,6 +9,7 @@ class SearchManager {
     this.zfill = zfill;
     this.zoomDebounceTimeout = null;
     this.connectionLine = null;
+    this.connectionWeight = 6;  // ✅ weight=6 - Default für Search-Dropdown
     this.previousZoomBounds = null;
     this.overlapCheckInterval = null;
     this.overlapCheckFunction = null;
@@ -389,7 +390,9 @@ class SearchManager {
   }
 
 
-  applyHoverEffects(item, location) {
+  applyHoverEffects(item, location, weight = 6) {
+    this.connectionWeight = weight;  // ✅ Speichere für spätere Verwendung
+
     this.suggestionsDropdown.querySelectorAll('.js-hover').forEach(el => {
       el.classList.remove('js-hover');
     });
@@ -428,7 +431,7 @@ class SearchManager {
       }
 
       targetMarker.setIcon(this.createHoverIcon(hoverColor));
-      this.createConnectionLine(item, targetMarker, hoverColor);
+      this.createConnectionLine(item, targetMarker, hoverColor);  // ✅ Nutzt this.connectionWeight
 
       this.popupTimeout = setTimeout(() => {
         if (this.isDropdownHovering) {
@@ -1919,7 +1922,8 @@ class SearchManager {
 
   createConnectionLine(item, targetMarker, color = '#0000ff') {
     if (window.mapUtils && window.mapUtils.createConnectionLine) {
-      this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker, color);
+      // ✅ Nutze this.connectionWeight (gesetzt in applyHoverEffects)
+      this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);
     }
   }
 

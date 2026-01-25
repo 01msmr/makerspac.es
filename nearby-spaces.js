@@ -48,11 +48,7 @@ class NearbySpacesManager {
     }
 
     document.addEventListener('languageChanged', () => {
-      // Update Popup wenn offen
       if (this.popoverElement && this.popoverElement.parentElement) this.showPopover();
-
-      // ✅ NEU: Update Hint-Text bei Sprachwechsel
-      if (this.hintElement && this.hintElement.parentElement) this.createHint();
     });
   }
 
@@ -67,13 +63,7 @@ class NearbySpacesManager {
     if (this.hintElement) this.hintElement.remove();
     this.hintElement = document.createElement('div');
     this.hintElement.className = 'nearby-cursor-hint';
-
-    // ✅ Übersetzter Hint-Text
-    const hintText = window.i18n ?
-      window.i18n.t('nearbySpaces.hint') :
-      'Rechtsklick für Makerspaces in der Nähe';
-
-    this.hintElement.innerHTML = `<div class="hint-icon-wrapper"><i class="fas fa-crosshairs"></i></div><span>${hintText}</span>`;
+    this.hintElement.innerHTML = `<div class="hint-icon-wrapper"><i class="fas fa-crosshairs"></i></div><span>Rechtsklick für makerspaces in der Nähe</span>`;
     document.body.appendChild(this.hintElement);
     this.startHintAutoShrink();
   }
@@ -197,8 +187,8 @@ class NearbySpacesManager {
     const headerHTML = `
       <div class="nearby-header-row-top">
         <div class="settings-header-content">
-          <i class="fas fa-map-marker-alt nearby-header-icon"></i>
-          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}</span>
+          <i class="fas fa-map-marker-alt" style="color: var(--space-hover); margin-right: 6px;"></i>
+          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}:</span>
         </div>
         <button class="settings-icon-btn nearby-close-btn"><i class="fas fa-times"></i></button>
       </div>
@@ -250,7 +240,7 @@ class NearbySpacesManager {
       window.searchManager.removeHoverEffects(prevLoc);
     }
     this.currentHoverItem = item;
-    window.searchManager.applyHoverEffects(item, location);
+    window.searchManager.applyHoverEffects(item, location, 5);  // ✅ weight=5 für nearby-spaces!
   }
 
   clearAllHoverEffects() {
@@ -359,9 +349,15 @@ class NearbySpacesManager {
     this.popoverElement.querySelectorAll('.nearby-item').forEach(item => {
       item.addEventListener('click', () => {
         const marker = window.markerById.get(parseInt(item.dataset.locationId));
-        if (marker) { window.map.flyTo(marker.getLatLng(), 15); setTimeout(() => marker.openPopup(), 500); this.hide(); }
+        if (marker) {
+          window.map.flyTo(marker.getLatLng(), 15);
+          setTimeout(() => {
+            marker.openPopup();
+            this.hide();
+          }, 500);
+        }
       });
-      item.addEventListener('mouseenter', () => { this.keyboardIndex = -1; this.applyMarkerHighlight(item); });
+      item.addEventListener('mouseenter', () => { this.keyboardIndex = -1; this.applyMarkerHighlight(item); });  // ✅ Das zeichnet die Connection Line!
       item.addEventListener('mouseleave', () => { this.clearAllHoverEffects(); });
     });
   }

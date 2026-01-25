@@ -2394,12 +2394,14 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .nearby-header-row-top {
-  font-size: 1.8em;
+  font-size: 1.33em;
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
+
+
 
 .nearby-header-row-bottom {
   display: flex;
@@ -2409,10 +2411,10 @@ a#titleurl:hover h3.space-unknown .fas {
   border-top: 1px solid var(--dropdown-border);
 }
 
-.nearby-header-text {
+/* .nearby-header-text {
   white-space: nowrap;
   font-size: 0.85em;
-}
+} */
 
 .nearby-close-btn {
   font-size: 0.55em;
