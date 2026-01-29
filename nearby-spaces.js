@@ -185,11 +185,6 @@ class NearbySpacesManager {
     const currentSpaces = this.resultsCache[this.currentRadius] || [];
     const isFirstTime = !this.popoverElement;
 
-    // ✅ Leere Searchbar und deaktiviere alle Filter beim Öffnen
-    if (window.searchManager && window.searchManager.clearAllFilters) {
-      window.searchManager.clearAllFilters();
-    }
-
     if (isFirstTime) {
       this.popoverElement = document.createElement('div');
       this.popoverElement.className = 'nearby-popover settings-popover';
@@ -209,7 +204,7 @@ class NearbySpacesManager {
       <div class="nearby-header-row-top">
         <div class="settings-header-content">
           <i class="fas fa-map-marker-alt" style="color: var(--space-hover); margin-right: 6px;"></i>
-          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}:</span>
+          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}</span>
         </div>
         <button class="settings-icon-btn nearby-close-btn"><i class="fas fa-times"></i></button>
       </div>
