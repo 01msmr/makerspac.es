@@ -112,13 +112,14 @@ class EmbedMapExtended {
   }
 
   createMarker(space, isTarget) {
-    let icon = window.MapIcons?.highlightIcon;
+    // ✅ KORRIGIERT: Zugriff über window.MapIcons.icons (lazy loaded getters)
+    let icon = window.MapIcons?.icons?.highlightIcon;
     if (space.spaceapi && space.spaceapi.endpoint) {
-      if (space.isOpen === true) icon = window.MapIcons?.greenIcon;
-      else if (space.isOpen === false) icon = window.MapIcons?.redIcon;
-      else icon = window.MapIcons?.unknownStatusIcon;
+      if (space.isOpen === true) icon = window.MapIcons?.icons?.greenIcon;
+      else if (space.isOpen === false) icon = window.MapIcons?.icons?.redIcon;
+      else icon = window.MapIcons?.icons?.unknownStatusIcon;
     }
-    if (!icon) icon = window.MapIcons?.defaultIcon;
+    if (!icon) icon = window.MapIcons?.icons?.defaultIcon;
 
     const marker = L.marker([space.loc.lat, space.loc.long], {
       icon, riseOnHover: true, interactive: false
@@ -179,25 +180,23 @@ class EmbedMapExtended {
     let nameClass = '';
     let statusColor = 'blue';
 
-    // ✅ REFACTORED: Nutze MapIcons.statusMap für Icon-Klassen
     if (space.isOpen === true) {
-      statusIconHtml = `<i class="${window.MapIcons.statusMap.open}"></i> `;
+      statusIconHtml = '<i class="fas fa-door-open"></i> ';
       nameClass = 'space-open';
       statusColor = 'var(--space-open)';
     } else if (space.isOpen === false) {
-      statusIconHtml = `<i class="${window.MapIcons.statusMap.closed}"></i> `;
+      statusIconHtml = '<i class="fas fa-door-closed"></i> ';
       nameClass = 'space-closed';
       statusColor = 'var(--space-closed)';
     } else if (space.spaceapi?.endpoint) {
-      statusIconHtml = `<i class="${window.MapIcons.statusMap.unknown}"></i> `;
+      statusIconHtml = '<i class="fas fa-question-circle"></i> ';
       nameClass = 'space-unknown';
       statusColor = 'var(--space-unknown)';
     }
 
-    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
+    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
     const locationStyle = space.style?.toLowerCase() || '';
-    const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
-    const styleIconHtml = styleIconClass ? `<i class="${styleIconClass}"></i> ` : '';
+    const styleIconHtml = styleIconMap[locationStyle] ? `<i class="${styleIconMap[locationStyle]}"></i> ` : '';
     const countryCode = this.getCountryCode(space.loc?.country || '');
 
     return `
@@ -221,27 +220,13 @@ class EmbedMapExtended {
   createDropdownItem(space, isTarget) {
     let statusIcon = '';
     let statusClass = 'space-default';
-
-    // ✅ REFACTORED: Nutze MapIcons.statusMap
     if (space.spaceapi?.endpoint) {
-      if (space.isOpen === true) {
-        statusIcon = `<i class="${window.MapIcons.statusMap.open} door-icon-open"></i> `;
-        statusClass = 'space-open';
-      }
-      else if (space.isOpen === false) {
-        statusIcon = `<i class="${window.MapIcons.statusMap.closed} door-icon-closed"></i> `;
-        statusClass = 'space-closed';
-      }
-      else {
-        statusIcon = `<i class="${window.MapIcons.statusMap.unknown} door-icon-unknown"></i> `;
-        statusClass = 'space-unknown';
-      }
+      if (space.isOpen === true) { statusIcon = '<i class="fas fa-door-open door-icon-open"></i> '; statusClass = 'space-open'; }
+      else if (space.isOpen === false) { statusIcon = '<i class="fas fa-door-closed door-icon-closed"></i> '; statusClass = 'space-closed'; }
+      else { statusIcon = '<i class="fas fa-question-circle door-icon-unknown"></i> '; statusClass = 'space-unknown'; }
     }
-
-    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
-    const styleIconClass = window.MapIcons.getStyleIcon(space.style?.toLowerCase());
-    const styleIconHtml = styleIconClass ? `<i class="${styleIconClass} style-icon"></i> ` : '';
-
+    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
+    const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
     const item = document.createElement('div');
     item.className = `space-item suggestion-item ${statusClass} ${isTarget ? 'target' : ''}`;
     item.dataset.spaceId = space.ID;
@@ -327,9 +312,9 @@ class EmbedMapExtended {
     return str;
   }
 
-  // ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
   getCountryCode(country) {
-    return window.MapIcons.getCountryCode(country);
+    const countryMap = { 'Germany': 'de', 'Austria': 'at', 'Switzerland': 'ch', 'Ukraine': 'ua', 'Netherlands': 'nl', 'Belgium': 'be' };
+    return countryMap[country] || 'un';
   }
 
   showError(message) {
