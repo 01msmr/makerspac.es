@@ -272,7 +272,7 @@ class EmbedMapExtended {
     [this.targetSpace, ...this.friendSpaces].forEach(space => {
       let color = space.spaceapi ? (space.isOpen === true ? '#009900' : (space.isOpen === false ? '#DD0000' : '#FF8C00')) : '#666666';
       const icon = L.divIcon({ className: 'minimap-marker', html: `<svg viewBox="0 0 25 41" width="12" height="20"><path fill="${color}" stroke="#000" d="M12.5,1 C6,1 1,6 1,12.5 C1,21 12.5,39 12.5,39 C12.5,39 24,21 24,12.5 C24,6 19,1 12.5,1 Z"/><circle fill="#fff" cx="12.5" cy="12.5" r="3"/></svg>`, iconSize: [12, 20], iconAnchor: [6, 20] });
-      const m = L.marker([space.loc.lat, space.loc.long], { icon }).addTo(minimap);
+      const m = L.marker([space.loc.lat, space.loc.long], { icon, title: space.name }).addTo(minimap);  // ✅ title hinzugefügt
       m.on('click', () => this.selectSpace(space.ID));
       this.minimapMarkersBySpaceId.set(space.ID, { marker: m });
       coords.push([space.loc.lat, space.loc.long]);
