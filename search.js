@@ -706,9 +706,13 @@ class SearchManager {
  * Klick auf den Such-Counter / Clear-Button im Input-Feld
  * Soll nur den Text und das Land/Pills lösen, NICHT die Favoriten/Styles
  */
-  clearSearch() {
+  clearSearch(shouldFocus = true) {
     this.searchBar.value = '';
-    this.searchBar.focus();
+
+    // ✅ Focus nur wenn erwünscht (bei Rechtsklick NICHT fokussieren!)
+    if (shouldFocus) {
+      this.searchBar.focus();
+    }
 
     // Land im Routing ebenfalls löschen
     if (window.routingManager) {
@@ -726,6 +730,44 @@ class SearchManager {
     this.applyPillFilters([]);
 
     setTimeout(() => { if (window.routingManager) window.routingManager._isNavigating = false; }, 100);
+  }
+
+  /**
+   * ✅ Dedizierte Methode für Rechtsklick - Führt ESC-Logik aus (ohne Auto-Zoom)
+   * Wird von map.js aufgerufen
+   */
+  executeRightClickCleanup() {
+    console.log('🖱️ Right-click cleanup: Executing ESC logic (Auto-Zoom suppressed)');
+
+    // Blockiere Auto-Zoom während des Rechtsklicks
+    this._manualSpaceClick = true;
+
+    // Exakt die gleiche Logik wie ESC-Handler (Zeilen 77-96):
+
+    // 1. Schließe Filter-Dropdown, falls aktiv
+    if (this.styleFilterManager &&
+      typeof this.styleFilterManager.isDropdownOpen === 'function' &&
+      this.styleFilterManager.isDropdownOpen()) {
+      this.styleFilterManager.closeDropdown();
+    }
+
+    // 2. Leere die Suche, wenn Text vorhanden ist (OHNE zu fokussieren!)
+    if (this.searchBar.value.length > 0) {
+      this.clearSearch(false); // ✅ false = kein Focus!
+    }
+
+    // 3. Schließe Such-Dropdown
+    this.closeDropdown();
+
+    // 4. Entferne Fokus von Searchbar
+    if (document.activeElement === this.searchBar) {
+      this.searchBar.blur();
+    }
+
+    // Reset Flag nach kurzer Verzögerung
+    setTimeout(() => {
+      this._manualSpaceClick = false;
+    }, 100);
   }
 
 

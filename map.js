@@ -1124,10 +1124,30 @@ function setStickyPopup(marker) {
   isPopupSticky = true;
 }
 function setupMapClickHandler() {
+  // ✅ LINKSKLICK - Schließe sticky Popup
   map.on('click', (e) => {
     if (e.originalEvent && e.originalEvent.target &&
       !e.originalEvent.target.closest('.leaflet-marker-icon')) {
       clearStickyPopup();
+    }
+  });
+
+  // ✅ RECHTSKLICK - Schließe sticky Popup UND führe ESC-Logik aus
+  map.on('contextmenu', (e) => {
+    // Nur wenn NICHT auf Marker geklickt wurde
+    if (e.originalEvent && e.originalEvent.target &&
+      !e.originalEvent.target.closest('.leaflet-marker-icon')) {
+
+      // Schließe Popup
+      clearStickyPopup();
+
+      // ✅ Verzögere ESC-Logik um 50ms, damit nearby-spaces zuerst reagieren kann
+      setTimeout(() => {
+        // Führe ESC-Logik aus (leert Searchbar, schließt Dropdown, ohne Auto-Zoom)
+        if (window.searchManager && typeof window.searchManager.executeRightClickCleanup === 'function') {
+          window.searchManager.executeRightClickCleanup();
+        }
+      }, 50);
     }
   });
 }
