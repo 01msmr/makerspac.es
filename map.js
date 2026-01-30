@@ -118,11 +118,25 @@ function toggleClustering(enable) {
     console.log('❌ Clustering deaktiviert.');
   }
 
+  // ✅ WICHTIG: Blockiere Auto-Zoom beim Clustering-Toggle IMMER!
+  if (window.searchManager) {
+    console.log('🚫 Clustering-Toggle - Auto-Zoom wird blockiert');
+    window.searchManager._manualSpaceClick = true;
+  }
+
   // 3. Filter-Kette neu starten
   if (window.searchManager && typeof window.searchManager.applyPillFilters === 'function') {
     const pills = window.searchManager.pillsManager.getPillsArray();
     setTimeout(() => {
       window.searchManager.applyPillFilters(pills);
+
+      // ✅ Reset Flag nach Filter-Anwendung
+      setTimeout(() => {
+        if (window.searchManager) {
+          window.searchManager._manualSpaceClick = false;
+          console.log('✅ Auto-Zoom-Blockade aufgehoben');
+        }
+      }, 100);
     }, 50);
   }
 }
@@ -1124,7 +1138,6 @@ function setStickyPopup(marker) {
   isPopupSticky = true;
 }
 function setupMapClickHandler() {
-  // ✅ LINKSKLICK - Schließe sticky Popup
   map.on('click', (e) => {
     if (e.originalEvent && e.originalEvent.target &&
       !e.originalEvent.target.closest('.leaflet-marker-icon')) {
@@ -1132,24 +1145,94 @@ function setupMapClickHandler() {
     }
   });
 
-  // ✅ RECHTSKLICK - Schließe sticky Popup UND führe ESC-Logik aus
+  // ✅ RECHTSKLICK - Führe ESC-Logik direkt aus (OHNE nearby-popover zu stören)
   map.on('contextmenu', (e) => {
     // Nur wenn NICHT auf Marker geklickt wurde
     if (e.originalEvent && e.originalEvent.target &&
       !e.originalEvent.target.closest('.leaflet-marker-icon')) {
 
-      // Schließe Popup
+      console.log('🖱️ RECHTSKLICK auf Karte erkannt');
+
+      // Schließe sticky Popup
       clearStickyPopup();
 
-      // ✅ Verzögere ESC-Logik um 50ms, damit nearby-spaces zuerst reagieren kann
+      // ✅ PHASE 1: SOFORT - Leere Searchbar und blur
+      if (window.searchManager) {
+        console.log('   Searchbar VORHER:', window.searchManager.searchBar.value);
+        window.searchManager.searchBar.value = '';
+        window.searchManager.searchBar.blur();
+        console.log('   Searchbar NACHHER:', window.searchManager.searchBar.value);
+        console.log('   Searchbar blur:', document.activeElement !== window.searchManager.searchBar);
+      }
+
+      // ✅ PHASE 2: Nach kurzer Verzögerung - Führe REST-Cleanup IMMER aus!
       setTimeout(() => {
-        // Führe ESC-Logik aus (leert Searchbar, schließt Dropdown, ohne Auto-Zoom)
-        if (window.searchManager && typeof window.searchManager.executeRightClickCleanup === 'function') {
-          window.searchManager.executeRightClickCleanup();
-        }
-      }, 50);
+        console.log('   Phase 2: Führe Rest-Cleanup aus (IMMER!)');
+        executeEscapeLogicRest();
+      }, 100);
     }
   });
+}
+
+/**
+ * ✅ Rest der ESC-Logik (wird nur ausgeführt wenn KEIN nearby-popover)
+ */
+function executeEscapeLogicRest() {
+  if (!window.searchManager) return;
+
+  const searchManager = window.searchManager;
+
+  console.log('🧹 executeEscapeLogicRest: START');
+
+  // Blockiere Auto-Zoom
+  searchManager._manualSpaceClick = true;
+
+  // 1. Schließe Filter-Dropdown, falls aktiv
+  if (searchManager.styleFilterManager &&
+    typeof searchManager.styleFilterManager.isDropdownOpen === 'function' &&
+    searchManager.styleFilterManager.isDropdownOpen()) {
+    searchManager.styleFilterManager.closeDropdown();
+    console.log('   ✅ Filter-Dropdown geschlossen');
+  }
+
+  // 2. Leere Pills
+  if (searchManager.pillsManager) {
+    searchManager.pillsManager.clear();
+    console.log('   ✅ Pills geleert');
+  }
+
+  // 3. Routing clearen
+  if (window.routingManager) {
+    window.routingManager._activeCountryFilter = null;
+    window.routingManager._isNavigating = true;
+    window.location.hash = '';
+    console.log('   ✅ Routing geleert');
+  }
+
+  // 4. Filter neu anwenden
+  searchManager.applyPillFilters([]);
+  console.log('   ✅ Filter neu angewendet');
+
+  // 5. Schließe Such-Dropdown
+  searchManager.closeDropdown();
+  console.log('   ✅ Dropdown geschlossen');
+
+  // Reset Flags
+  setTimeout(() => {
+    if (window.routingManager) window.routingManager._isNavigating = false;
+    searchManager._manualSpaceClick = false;
+    console.log('   ✅ Flags zurückgesetzt');
+  }, 100);
+
+  console.log('🧹 executeEscapeLogicRest: ENDE');
+}
+
+/**
+ * ✅ VERALTET - wird nicht mehr verwendet
+ * Searchbar-Leerung passiert jetzt direkt im contextmenu Handler
+ */
+function executeEscapeLogic() {
+  executeEscapeLogicRest();
 }
 function setupRouting() {
   const routingManager = new RoutingManager(
