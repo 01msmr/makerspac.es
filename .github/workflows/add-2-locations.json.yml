@@ -1,0 +1,105 @@
+name: add-makerspace-2-locations.json.yml
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  update-json:
+    if: contains(github.event.issue.labels.*.name, 'add-space')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @github/issue-parser
+
+      - name: Process Issue and Update JSON
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { parseIssue } = require('@github/issue-parser');
+            
+            // 1. Issue parsen
+            const issueBody = context.payload.issue.body;
+            const template = fs.readFileSync('.github/ISSUE_TEMPLATE/add-makerspace.yml', 'utf8');
+            const parsed = parseIssue(issueBody, template);
+            
+            // 2. locations.json laden
+            let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
+            
+            // 3. ID aus Template (Index 0) holen und erhöhen
+            const nextId = parseInt(locations[0].ID);
+            locations[0].ID = nextId + 1;
+            
+            // 4. Neues Objekt bauen
+            const newEntry = {
+              name: parsed.name,
+              ID: nextId,
+              loc: {
+                lat: parseFloat(parsed.lat),
+                long: parseFloat(parsed.long),
+                plz: parseInt(parsed.plz),
+                city: parsed.city,
+                street: {
+                  name: parsed.street_name,
+                  number: parsed.street_number,
+                  ext: parsed.street_ext || ""
+                },
+                country: parsed.country
+              },
+              style: parsed.style,
+              link: {
+                url: parsed.url,
+                text: parsed.url_text
+              },
+              dates: {
+                "space.init": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, '')),
+                "datacheck.latest": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''))
+              }
+            };
+            
+            // SpaceAPI nur hinzufügen wenn URL vorhanden
+            if (parsed.spaceapi && parsed.spaceapi.startsWith('http')) {
+              newEntry.spaceapi = { endpoint: parsed.spaceapi };
+            }
+            
+            // 5. Daten-Array extrahieren, neuen Eintrag rein und SORTIEREN
+            let dataOnly = locations.slice(1);
+            dataOnly.push(newEntry);
+            
+            dataOnly.sort((a, b) => {
+              // 1. Land
+              if (a.loc.country !== b.loc.country) return a.loc.country.localeCompare(b.loc.country);
+              // 2. PLZ
+              if (a.loc.plz !== b.loc.plz) return a.loc.plz - b.loc.plz;
+              // 3. Name
+              return a.name.localeCompare(b.name);
+            });
+            
+            // 6. Finales Array (Template + sortierte Daten) speichern
+            const finalData = [locations[0], ...dataOnly];
+            fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add locations.json
+          git commit -m "auto-add makerspace from Issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: "✅ Makerspace wurde erfolgreich hinzugefügt und die Karte wird aktualisiert!"
