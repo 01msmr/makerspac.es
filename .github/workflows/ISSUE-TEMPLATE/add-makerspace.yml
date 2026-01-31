@@ -1,0 +1,98 @@
+name: "➕ einen neuen Makerspace hinzufügen"
+description: "Trage hier die Daten für einen neuen Makerspace ein."
+title: "[ADD]: "
+labels: ["add-space"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Danke für den neuen Eintrag! 💛
+        Bitte fülle die Felder so genau wie möglich aus.
+  - type: input
+    id: name
+    attributes:
+      label: Name des Makerspaces
+      placeholder: "z.B. Toolbox Bodensee"
+    validations:
+      required: true
+  - type: input
+    id: country
+    attributes:
+      label: Land
+      placeholder: "Germany, Austria, Switzerland, ..."
+    validations:
+      required: true
+  - type: input
+    id: city
+    attributes:
+      label: Stadt
+    validations:
+      required: true
+  - type: input
+    id: plz
+    attributes:
+      label: PLZ
+    validations:
+      required: true
+  - type: input
+    id: street_name
+    attributes:
+      label: Straße
+    validations:
+      required: true
+  - type: input
+    id: street_number
+    attributes:
+      label: Hausnummer
+    validations:
+      required: true
+  - type: input
+    id: street_ext
+    attributes:
+      label: Adress-Zusatz
+      placeholder: "z.B. Hinterhaus, Etage 2"
+  - type: input
+    id: lat
+    attributes:
+      label: Latitude (Breitengrad)
+      placeholder: "47.7126816"
+    validations:
+      required: true
+  - type: input
+    id: long
+    attributes:
+      label: Longitude (Längengrad)
+      placeholder: "9.3995537"
+    validations:
+      required: true
+  - type: dropdown
+    id: style
+    attributes:
+      label: Kategorie / Style
+      options:
+        - "for all"
+        - "for youth"
+        - "for students"
+        - "commercial"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Webseite (URL)
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: input
+    id: url_text
+    attributes:
+      label: Link-Anzeigetext
+      placeholder: "z.B. toolbox-bodensee.de"
+    validations:
+      required: true
+  - type: input
+    id: spaceapi
+    attributes:
+      label: SpaceAPI Endpoint (Optional)
+      description: "Falls vorhanden, die URL zur JSON-Datei des Space-Status."
+      placeholder: "https://..."

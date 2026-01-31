@@ -2449,7 +2449,7 @@ a#titleurl:hover h3.space-unknown .fas {
 /* Flicker-Animation wenn Liste nicht weiter erweiterbar */
 @keyframes nearby-limit-flicker {
   0%, 100% { background-color: var(--dropdown-bg); }
-  25%, 75% { background-color: rgba(220, 53, 69, 0.3); }
+  25%, 75% { background-color: var(--space-closed)}
   50% { background-color: var(--dropdown-bg); }
 }
 
@@ -2815,4 +2815,4 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 
-/* END NEARBY SPACES FEATURE */nearv
+/* END NEARBY SPACES FEATURE */
