@@ -230,7 +230,11 @@ class NearbySpacesManager {
     }
 
     if (this.map) this.map.keyboard.disable();
-    this.keyboardIndex = -1;
+
+    // ✅ keyboardIndex nur bei neuem Popover zurücksetzen (nicht bei Radius-Wechsel)
+    if (isFirstTime) {
+      this.keyboardIndex = -1;
+    }
 
     const makerspaceText = window.i18n ? window.i18n.t('nearbySpaces.makerspaces') : 'Makerspaces';
     const emptyText = window.i18n ? window.i18n.t('nearbySpaces.empty') : 'keine makerspaces … Umkreis erweitern';
@@ -299,6 +303,45 @@ class NearbySpacesManager {
         this.popoverElement.querySelector('.nearby-popover-header').innerHTML = headerHTML;
         this.popoverElement.querySelector('.nearby-popover-list').innerHTML = listHTML;
         this.reattachRadiusAndItemListeners();
+
+        // ✅ Aktiven Makerspace nach Radius-Wechsel reaktivieren
+        // requestAnimationFrame stellt sicher, dass DOM vollständig gerendert ist
+        if (this._pendingReactivationId !== null && this._pendingReactivationId !== undefined) {
+          const reactivationId = this._pendingReactivationId;
+          this._pendingReactivationId = null;
+
+          requestAnimationFrame(() => {
+            const items = this.popoverElement?.querySelectorAll('.nearby-item');
+            if (!items) {
+              // Fallback: Map-Dragging trotzdem aktivieren
+              if (this.map) this.map.dragging.enable();
+              return;
+            }
+
+            let foundIndex = -1;
+            items.forEach((item, idx) => {
+              if (parseInt(item.dataset.locationId) === reactivationId) {
+                foundIndex = idx;
+              }
+            });
+
+            if (foundIndex !== -1) {
+              // Makerspace gefunden - Index setzen und aktivieren
+              this.keyboardIndex = foundIndex;
+              this.updateKeyboardSelection(items);
+            } else {
+              // Makerspace nicht mehr in der Liste - Effekte entfernen
+              this.clearAllHoverEffects();
+              this.keyboardIndex = -1;
+            }
+
+            // ✅ Map-Dragging erst NACH Reaktivierung der Connection Line wieder aktivieren
+            if (this.map) this.map.dragging.enable();
+          });
+        } else {
+          // Kein Makerspace war aktiv - Map-Dragging sofort wieder aktivieren
+          if (this.map) this.map.dragging.enable();
+        }
       }
     }
   }
@@ -320,6 +363,9 @@ class NearbySpacesManager {
 
   clearAllHoverEffects() {
     if (!window.searchManager) return;
+    // ✅ Nicht während Popover-Drag ausführen (mouseleave wird fälschlicherweise getriggert)
+    if (this._isPopoverDragging) return;
+
     this.popoverElement?.querySelectorAll('.keyboard-active').forEach(i => {
       i.classList.remove('keyboard-active');
       i.style.backgroundColor = '';
@@ -365,43 +411,54 @@ class NearbySpacesManager {
   }
 
   changeRadius(newRadius) {
-    if (this.currentRadius === newRadius) {
-      return;
+    if (this.currentRadius === newRadius) return;
+
+    // ✅ Aktiven Makerspace speichern BEVOR wir etwas ändern
+    this._pendingReactivationId = null;
+    if (this.currentHoverItem) {
+      this._pendingReactivationId = parseInt(this.currentHoverItem.dataset.locationId);
+      // ✅ currentHoverItem auf null setzen - verhindert dass removeHoverEffects
+      // aufgerufen wird (Connection Line bleibt erhalten)
+      this.currentHoverItem = null;
     }
 
     const pill = this.popoverElement?.querySelector('.nearby-radius-pill');
+    const oldRadius = this.currentRadius;
+    const oldIndex = this.radii.indexOf(oldRadius);
+    const newIndex = this.radii.indexOf(newRadius);
 
-    // Animiere die Pill zur neuen Position
     if (pill) {
-      const newIndex = this.radii.indexOf(newRadius);
       const fraction = newIndex / (this.radii.length - 1);
       const newPosition = `calc(28px + (100% - 56px) * ${fraction})`;
 
-      // Setze neue Position (CSS transition wird automatisch angewendet)
+      // 1. Richtung setzen
+      pill.textContent = newIndex > oldIndex ? '>>>' : '<<<';
+
       pill.style.left = newPosition;
-      pill.textContent = newRadius + 'km';
       pill.dataset.currentIndex = newIndex;
 
-      // Update active class auf Labels
+      // Labels aktualisieren
       this.popoverElement.querySelectorAll('.nearby-radius-label').forEach((label, idx) => {
-        if (idx === newIndex) {
-          label.classList.add('active');
-        } else {
-          label.classList.remove('active');
-        }
+        label.classList.toggle('active', idx === newIndex);
       });
+
+      // 2. Nach der CSS-Transition (200ms) den Wert wieder anzeigen
+      setTimeout(() => {
+        if (pill) pill.textContent = newRadius + 'km';
+      }, 200);
     }
 
-    this.clearAllHoverEffects();
+    // ✅ Hover-Effekte NICHT entfernen - Connection Line bleibt erhalten
+    // this.clearAllHoverEffects();
     this.currentRadius = newRadius;
-    this.keyboardIndex = -1;
+    // ✅ keyboardIndex wird später in showPopover gesetzt
     if (this.clickLocation) this.drawSearchCircle(this.clickLocation.lat, this.clickLocation.lon, true);
 
-    // Aktualisiere Popover nach kurzer Verzögerung (nach Animation)
-    setTimeout(() => {
-      this.showPopover();
-    }, 250);
+    // Der restliche showPopover Aufruf bleibt für das Laden der neuen Liste
+    setTimeout(() => { this.showPopover(); }, 250);
   }
+
+
 
   escapeHtml(text) { const div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
   positionPopover(mouseX, mouseY) {
@@ -425,149 +482,177 @@ class NearbySpacesManager {
     this.popoverElement.querySelector('.nearby-close-btn').addEventListener('click', () => this.hide());
     const header = this.popoverElement.querySelector('.nearby-popover-header');
     header.style.cursor = 'grab';
-    let isDragging = false, startPos = { x: 0, y: 0 };
+
+    let isDraggingPopover = false, startPos = { x: 0, y: 0 };
+
     this.popoverElement.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.nearby-radius-btn, .nearby-close-btn, .nearby-item')) return;
-      isDragging = true;
+      // ERWEITERT: Ignoriere Fenster-Verschiebung, wenn auf Radius-Elemente geklickt wird
+      if (e.target.closest('.nearby-radius-track, .nearby-radius-pill, .nearby-radius-clickarea, .nearby-close-btn, .nearby-item')) {
+        return;
+      }
+
+      isDraggingPopover = true;
+      this._isPopoverDragging = true;  // ✅ Flag für clearAllHoverEffects
       this.popoverElement.style.cursor = 'grabbing';
       header.style.cursor = 'grabbing';
       e.preventDefault();
+      e.stopPropagation();
       startPos = { x: e.clientX - this.popoverElement.offsetLeft, y: e.clientY - this.popoverElement.offsetTop };
       this.popoverElement.setPointerCapture(e.pointerId);
+
+      // ✅ Map-Dragging deaktivieren während Popover-Drag (verhindert movestart Events)
+      if (this.map) this.map.dragging.disable();
     });
+
     this.popoverElement.addEventListener('pointermove', (e) => {
-      if (!isDragging) return;
+      if (!isDraggingPopover) return;
       this.popoverElement.style.left = Math.max(0, Math.min(e.clientX - startPos.x, window.innerWidth - this.popoverElement.offsetWidth)) + 'px';
       this.popoverElement.style.top = Math.max(0, Math.min(e.clientY - startPos.y, window.innerHeight - this.popoverElement.offsetHeight)) + 'px';
       if (window.searchManager) window.searchManager.updateHoverSVGPosition();
     });
+
     this.popoverElement.addEventListener('pointerup', () => {
-      isDragging = false;
+      if (!isDraggingPopover) return;
+      isDraggingPopover = false;
       this.popoverElement.style.cursor = '';
       header.style.cursor = 'grab';
+
+      // ✅ Connection Line nach dem Drag NEU ERSTELLEN (mit minimaler Verzögerung)
+      setTimeout(() => {
+        // ✅ Connection Line komplett neu erstellen über applyMarkerHighlight
+        if (this.currentHoverItem) {
+          const item = this.currentHoverItem;
+          this.currentHoverItem = null;
+          this.applyMarkerHighlight(item);
+        }
+
+        // ✅ Flag und Map-Dragging erst NACH dem Neu-Erstellen zurücksetzen
+        this._isPopoverDragging = false;
+        if (this.map) this.map.dragging.enable();
+      }, 1);
     });
+
     this.reattachRadiusAndItemListeners();
   }
 
   reattachRadiusAndItemListeners() {
-    // ✅ Draggable Pill Setup
     const pill = this.popoverElement.querySelector('.nearby-radius-pill');
     const track = this.popoverElement.querySelector('.nearby-radius-track');
 
     if (pill && track) {
-      let isDragging = false;
+      this.isPillDragging = false;
 
+      // --- 1. PILL DRAGGING LOGIK ---
       pill.addEventListener('pointerdown', (e) => {
-        // Ignoriere pointerdown auf Buttons
-        if (e.target.classList.contains('nearby-radius-clickarea')) {
-          return;
-        }
+        // Verhindert, dass das Popover-Fenster mitzieht
+        e.stopPropagation();
 
-        isDragging = true;
+        this.isPillDragging = true;
         pill.classList.add('dragging');
         pill.setPointerCapture(e.pointerId);
+
+        // Karte einfrieren während des Draggens
+        if (this.map) this.map.dragging.disable();
+
         e.preventDefault();
-        e.stopPropagation();
       });
 
       pill.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
+        if (!this.isPillDragging) return;
+        e.stopPropagation();
 
         const trackRect = track.getBoundingClientRect();
-        const pillHalfWidth = 25; // halbe Pill-Breite (50px / 2)
+        const pillWidth = 50;
+        const pillHalfWidth = pillWidth / 2;
         const trackPadding = 3;
+
+        // Nutzbaren Bereich berechnen (identisch mit CSS calc-Logik)
         const leftLimit = trackPadding + pillHalfWidth; // 28px
         const rightLimit = trackRect.width - trackPadding - pillHalfWidth;
-        const innerWidth = rightLimit - leftLimit; // nutzbarer Bereich
-        const relativeX = e.clientX - trackRect.left - leftLimit;
-        const percentage = Math.max(0, Math.min(100, (relativeX / innerWidth) * 100));
+        const innerWidth = rightLimit - leftLimit;
 
-        // Finde nächsten Snap-Punkt
-        const snapIndex = Math.round(percentage / (100 / (this.radii.length - 1)));
-        const snapFraction = snapIndex / (this.radii.length - 1);
+        // Position des Cursors relativ zum Track
+        const mouseX = e.clientX - trackRect.left;
+        const clampedX = Math.max(leftLimit, Math.min(mouseX, rightLimit));
 
-        // Update visuell während des Draggings
-        pill.style.left = `calc(${leftLimit}px + ${innerWidth}px * ${snapFraction})`;
-        pill.dataset.currentIndex = snapIndex;
-        pill.textContent = this.radii[snapIndex] + 'km';
+        // PILL FOLGT DEM CURSOR (Echtzeit)
+        pill.style.left = `${clampedX}px`;
+
+        // LOGIK FÜR TEXT (Pfeile vs. km-Wert)
+        const currentPct = ((clampedX - leftLimit) / innerWidth) * 100;
+        const snapIdx = Math.round(currentPct / (100 / (this.radii.length - 1)));
+        const snapPct = (snapIdx / (this.radii.length - 1)) * 100;
+
+        // Threshold: Wenn wir näher als 10% am Snap-Punkt sind, km zeigen
+        const threshold = 10;
+        if (Math.abs(currentPct - snapPct) < threshold) {
+          pill.textContent = this.radii[snapIdx] + 'km';
+        } else {
+          // Richtung bestimmen im Vergleich zum aktuell aktiven Radius
+          const startIdx = this.radii.indexOf(this.currentRadius);
+          pill.textContent = snapIdx > startIdx ? '>>>' : '<<<';
+        }
+
+        // Index für das Snapping beim Loslassen speichern
+        pill.dataset.currentIndex = snapIdx;
       });
 
       pill.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
+        if (!this.isPillDragging) return;
+        e.stopPropagation();
+
+        this.isPillDragging = false;
         pill.classList.remove('dragging');
+        pill.releasePointerCapture(e.pointerId);
 
+        // ✅ Map-Dragging NICHT hier aktivieren - wird später in changeRadius gemacht
+        // damit kein versehentlicher movestart die Connection Line entfernt
+
+        // Finales Snapping über changeRadius (inkl. Animation)
         const newIndex = parseInt(pill.dataset.currentIndex);
-        const newRadius = this.radii[newIndex];
+        this.changeRadius(this.radii[newIndex]);
+      });
 
-        if (newRadius !== this.currentRadius) {
-          this.changeRadius(newRadius);
-        }
-
-        e.preventDefault();
+      // --- 2. TRACK & LABEL KLICKS ---
+      track.addEventListener('pointerdown', (e) => {
+        // Verhindert Fenster-Drag wenn man auf den Track klickt
         e.stopPropagation();
       });
 
-      // Klick auf Track oder Labels
       track.addEventListener('click', (e) => {
-        // Prüfe ob es ein Label ist
+        if (this.isPillDragging) return;
+
+        // Klick auf ein Label (z.B. "15km", "40km")
         if (e.target.classList.contains('nearby-radius-label')) {
           const index = parseInt(e.target.dataset.index);
           this.changeRadius(this.radii[index]);
           return;
         }
 
-        // Ignoriere Klicks auf Pill
-        if (e.target === pill || pill.contains(e.target)) {
-          return;
-        }
+        // Klick auf den Track (Pill springt zum Punkt)
+        if (e.target === pill || pill.contains(e.target)) return;
 
-        // Track-Click
         const trackRect = track.getBoundingClientRect();
-        const pillHalfWidth = 25;
-        const trackPadding = 3;
-        const leftLimit = trackPadding + pillHalfWidth;
-        const rightLimit = trackRect.width - trackPadding - pillHalfWidth;
-        const innerWidth = rightLimit - leftLimit;
-        const relativeX = e.clientX - trackRect.left - leftLimit;
+        const relativeX = e.clientX - trackRect.left - 28;
+        const innerWidth = trackRect.width - 56;
         const percentage = (relativeX / innerWidth) * 100;
         const snapIndex = Math.round(percentage / (100 / (this.radii.length - 1)));
+        const safeIndex = Math.max(0, Math.min(snapIndex, this.radii.length - 1));
 
-        this.changeRadius(this.radii[snapIndex]);
+        this.changeRadius(this.radii[safeIndex]);
       });
     }
 
-    // ✅ Transparente Klick-Buttons
-    const clickButtons = this.popoverElement.querySelectorAll('.nearby-radius-clickarea');
-    clickButtons.forEach((button) => {
+    // --- 3. TRANSPARENTE KLICK-AREAS (Buttons unter der Pill) ---
+    this.popoverElement.querySelectorAll('.nearby-radius-clickarea').forEach((button) => {
       button.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
-        e.preventDefault();
         const index = parseInt(e.target.dataset.index);
         this.changeRadius(this.radii[index]);
       });
     });
 
-    // Klickbare Labels (Fallback - werden normalerweise über Track-Click gehandhabt)
-    const labels = this.popoverElement.querySelectorAll('.nearby-radius-label');
-    labels.forEach((label) => {
-      label.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const index = parseInt(e.target.dataset.index);
-        this.changeRadius(this.radii[index]);
-      });
-    });
-
-    // Klickbare Marker (die Punkte)
-    this.popoverElement.querySelectorAll('.nearby-radius-marker').forEach(marker => {
-      marker.addEventListener('click', (e) => {
-        const index = parseInt(e.target.dataset.index);
-        this.changeRadius(this.radii[index]);
-      });
-    });
-
-    // Items
+    // --- 4. LISTE DER MAKERSPACES (Items) ---
     this.popoverElement.querySelectorAll('.nearby-item').forEach(item => {
       item.addEventListener('click', () => {
         const marker = window.markerById.get(parseInt(item.dataset.locationId));
@@ -579,10 +664,18 @@ class NearbySpacesManager {
           }, 500);
         }
       });
-      item.addEventListener('mouseenter', () => { this.keyboardIndex = -1; this.applyMarkerHighlight(item); });
-      item.addEventListener('mouseleave', () => { this.clearAllHoverEffects(); });
+
+      item.addEventListener('mouseenter', () => {
+        this.keyboardIndex = -1;
+        this.applyMarkerHighlight(item);
+      });
+
+      item.addEventListener('mouseleave', () => {
+        this.clearAllHoverEffects();
+      });
     });
   }
+
 
 }
 

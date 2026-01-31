@@ -2626,23 +2626,34 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: translate(-50%, -50%);
   background: var(--space-hover);
   color: var(--search-bg);
-  padding: 5px 0px;
   border-radius: 30px;
   font-size: 0.7em;
   font-weight: 600;
   cursor: grab;
   user-select: none;
+  /* Wichtig: Sanftes Snapping beim Klicken/Tastatur */
   transition: transform 0.2s ease, box-shadow 0.2s ease, left 0.2s ease;
-  z-index: 10;
-  white-space: nowrap;
-  text-align: center;
+  z-index: 15;
+  min-width: 50px;
+  width: 50px;
+  height: 20px;
+  /* Falls nötig */
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  min-width: 50px;
-  width: 50px;
-  pointer-events: auto;
+  touch-action: none;  /* Verhindert Browser-Interferenz beim Ziehen */
+  user-select: none;
+  transition: left 0.2s ease, transform 0.2s ease;
+}
+
+/* WICHTIG: Keine Verzögerung beim manuellen Draggen! */
+.nearby-radius-pill.dragging {
+  cursor: grabbing;
+  transition: none !important;
+  transform: translate(-50%, -50%) scale(1.1);
+  /* Optional: leicht vergrößern beim Ziehen */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  background: var(--space-hover);
 }
 
 .nearby-radius-pill:hover {
@@ -2651,9 +2662,6 @@ a#titleurl:hover h3.space-unknown .fas {
   transition: all 0.1s ease-in;
 }
 
-.nearby-radius-pill.dragging {
-  cursor: grabbing;
-}
 
 /* Transparente Klick-Bereiche über den Labels */
 .nearby-radius-clickarea {
