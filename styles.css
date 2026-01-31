@@ -2,6 +2,7 @@
 
 /* *** CSS Variables für Light/Dark Mode *** */
 :root {
+  --title-background: rgba(111, 233, 166, 1);
   --bg-color: white;
   --text-color: black;
   --border-color: #ccc;
@@ -73,7 +74,7 @@ body {
   left: 2.5em;
   top: 1em;
   color: blue;
-  background-color: rgba(111, 233, 166, 1);
+  background-color: var(--title-background);
   padding: .25em .75em .25em .50em;
   border-radius: .6em;
   border: .30em dashed rgba(256, 256, 256, .77);
@@ -2390,7 +2391,7 @@ a#titleurl:hover h3.space-unknown .fas {
   height: auto !important;
   background-color: var(--dropdown-alt-bg);
   background-color: rgba(111, 233, 166, .66);
-  border-bottom: 1px solid var(--dropdown-border);
+  /* border-bottom: 1px solid var(--dropdown-border); */
 }
 
 .nearby-header-row-top {
@@ -2408,7 +2409,7 @@ a#titleurl:hover h3.space-unknown .fas {
   justify-content: flex-start;
   align-items: center;
   padding-top: 5px;
-  border-top: 1px solid var(--dropdown-border);
+  /* border-top: 1px solid var(--dropdown-border); */
 }
 
 /* .nearby-header-text {
@@ -2429,8 +2430,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .nearby-close-btn:hover {
   color: white;
-  background-color: var(--space-closed) !important;
-  /* border-color: var(--space-closed); */
+  background-color: var(--text-color) !important;
 }
 
 /* =================================================================
@@ -2586,25 +2586,153 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* =================================================================
-   RADIUS BUTTONS
+   RADIUS SLIDER (Draggable Pill)
    ================================================================= */
 
-.nearby-radius-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: 4px;
-  padding: 2px 5px;
-  cursor: pointer;
-  font-size: 0.75em;
-  min-width: 24px;
-  margin: 0 1px;
+.nearby-radius-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 8px;
+  width: 100%;
+  margin: -1px 0;
 }
 
-.nearby-radius-btn.active {
+/* Row mit Umkreis-Label und Track */
+.nearby-radius-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* "Umkreis:" Text */
+.nearby-radius-label-prefix {
+  font-size: 0.85em;
+  font-weight: normal;
+  color: var(--text-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 48px;
+  width: 48px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Track (die Schiene) */
+.nearby-radius-track {
+  position: relative;
+  height: 26px;
+  background: white;
+  border: 1px solid rgba(88, 160, 122, 1);
+  border-radius: 16px;
+  margin: 0;
+  padding: 0 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) inset;
+  flex: 1;
+}
+
+/* Dark Mode Track */
+@media (prefers-color-scheme: dark) {
+  .nearby-radius-track {
+    background: var(--dropdown-alt-border)
+  }
+}
+
+/* Die Pill (draggable) */
+.nearby-radius-pill {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
   background: var(--space-hover);
-  color: white;
-  border-color: var(--space-hover);
+  color: var(--search-bg);
+  padding: 5px 0px;
+  border-radius: 30px;
+  font-size: 0.7em;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, left 0.2s ease;
+  z-index: 10;
+  white-space: nowrap;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  min-width: 50px;
+  width: 50px;
+}
+
+.nearby-radius-pill:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.05);
+  transition: all 0.1s ease-in;
+}
+
+.nearby-radius-pill.dragging {
+  cursor: grabbing;
+}
+
+/* Labels IM Track */
+.nearby-radius-labels {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  right: 3px;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--hover-text-color);
+  user-select: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nearby-radius-label {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 3px 8px;
+  border-radius: 4px;
+  pointer-events: auto;
+  color: #666;
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nearby-radius-label:hover {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.nearby-radius-label.active {
+  color: #666;
+  font-weight: 600;
+  z-index: 5;
+}
+
+/* Dark Mode Anpassungen */
+@media (prefers-color-scheme: dark) {
+  .nearby-radius-label {
+    color: #999;
+  }
+
+  .nearby-radius-label:hover {
+    color: var(--text-color);
+  }
+
+  .nearby-radius-label.active {
+    color: #999;
+  }
 }
 
 /* =================================================================

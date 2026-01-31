@@ -9,7 +9,7 @@ class NearbySpacesManager {
     this.nearbySpaces = [];
     this.currentRadius = 25;
     this.searchCircle = null;
-    this.radii = [15, 25, 50, 75];
+    this.radii = [15, 25, 40, 65];
 
     this.shrinkTimer = null;
     this.inactivityTimer = null;
@@ -130,10 +130,42 @@ class NearbySpacesManager {
     });
   }
 
-  drawSearchCircle(lat, lon) {
-    if (this.searchCircle) this.map.removeLayer(this.searchCircle);
+  drawSearchCircle(lat, lon, animate = false) {
+    const targetRadius = this.currentRadius * 1000;
     const circleColor = window.matchMedia('(prefers-color-scheme: dark)').matches ? window.MapIcons.colors.HOVER_DARK : window.MapIcons.colors.HOVER_LIGHT;
-    this.searchCircle = L.circle([lat, lon], { radius: this.currentRadius * 1000, color: circleColor, weight: 1, fillOpacity: 0.05, interactive: false, pane: 'overlayPane' }).addTo(this.map);
+
+    if (!this.searchCircle) {
+      // Neuer Kreis
+      this.searchCircle = L.circle([lat, lon], { radius: targetRadius, color: circleColor, weight: 2, fillOpacity: 0.15, interactive: false, pane: 'overlayPane' }).addTo(this.map);
+    } else if (animate) {
+      // Animiere Radius-Änderung
+      const startRadius = this.searchCircle.getRadius();
+      const radiusDiff = targetRadius - startRadius;
+      const duration = 200; // ms
+      const startTime = performance.now();
+
+      const animateRadius = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function (easeInOutQuad)
+        const eased = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        const newRadius = startRadius + radiusDiff * eased;
+        this.searchCircle.setRadius(newRadius);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateRadius);
+        }
+      };
+
+      requestAnimationFrame(animateRadius);
+    } else {
+      // Sofort ändern
+      this.searchCircle.setRadius(targetRadius);
+    }
   }
 
   showAtCursor(lat, lon, mouseX, mouseY) {
@@ -185,9 +217,6 @@ class NearbySpacesManager {
     const currentSpaces = this.resultsCache[this.currentRadius] || [];
     const isFirstTime = !this.popoverElement;
 
-    // ✅ ENTFERNT: clearAllFilters() fokussiert die Searchbar - das wollen wir NICHT!
-    // Die ESC-Logik in map.js kümmert sich darum
-
     if (isFirstTime) {
       this.popoverElement = document.createElement('div');
       this.popoverElement.className = 'nearby-popover settings-popover';
@@ -200,21 +229,36 @@ class NearbySpacesManager {
     this.keyboardIndex = -1;
 
     const makerspaceText = window.i18n ? window.i18n.t('nearbySpaces.makerspaces') : 'Makerspaces';
-    const radiusText = window.i18n ? window.i18n.t('nearbySpaces.radius') : 'Umkreis';
     const emptyText = window.i18n ? window.i18n.t('nearbySpaces.empty') : 'keine makerspaces … Umkreis erweitern';
+
+    const currentIndex = this.radii.indexOf(this.currentRadius);
+    // Berechne Position: Track-Padding (3px) + halbe Pill-Breite (25px) = 28px an den Rändern
+    const fraction = currentIndex / (this.radii.length - 1);
+    const pillPosition = `calc(28px + (100% - 56px) * ${fraction})`;
 
     const headerHTML = `
       <div class="nearby-header-row-top">
         <div class="settings-header-content">
           <i class="fas fa-map-marker-alt" style="color: var(--space-hover); margin-right: 6px;"></i>
-          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}:</span>
+          <span class="nearby-header-text"><b>${currentSpaces.length}</b> ${makerspaceText}</span>
         </div>
         <button class="settings-icon-btn nearby-close-btn"><i class="fas fa-times"></i></button>
       </div>
       <div class="nearby-header-row-bottom">
-        <div class="settings-header-icons">
-          <span class="nearby-header-text">${radiusText}:</span>
-          ${this.radii.map(r => `<button class="nearby-radius-btn ${this.currentRadius === r ? 'active' : ''}" data-radius="${r}">${r}km</button>`).join('')}
+        <div class="nearby-radius-slider-container">
+          <div class="nearby-radius-slider-row">
+            <span class="nearby-radius-label-prefix">${window.i18n ? window.i18n.t('nearbySpaces.radius') : 'Umkreis'}:</span>
+            <div class="nearby-radius-track">
+              <div class="nearby-radius-labels">
+                ${this.radii.map((r, idx) =>
+                  `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}km</span>`
+                ).join('')}
+              </div>
+              <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
+                ${this.currentRadius}km
+              </div>
+            </div>
+          </div>
         </div>
       </div>`;
 
@@ -313,11 +357,39 @@ class NearbySpacesManager {
 
   changeRadius(newRadius) {
     if (this.currentRadius === newRadius) return;
+
+    const pill = this.popoverElement?.querySelector('.nearby-radius-pill');
+
+    // Animiere die Pill zur neuen Position
+    if (pill) {
+      const newIndex = this.radii.indexOf(newRadius);
+      const fraction = newIndex / (this.radii.length - 1);
+      const newPosition = `calc(28px + (100% - 56px) * ${fraction})`;
+
+      // Setze neue Position (CSS transition wird automatisch angewendet)
+      pill.style.left = newPosition;
+      pill.textContent = newRadius + 'km';
+      pill.dataset.currentIndex = newIndex;
+
+      // Update active class auf Labels
+      this.popoverElement.querySelectorAll('.nearby-radius-label').forEach((label, idx) => {
+        if (idx === newIndex) {
+          label.classList.add('active');
+        } else {
+          label.classList.remove('active');
+        }
+      });
+    }
+
     this.clearAllHoverEffects();
     this.currentRadius = newRadius;
     this.keyboardIndex = -1;
-    if (this.clickLocation) this.drawSearchCircle(this.clickLocation.lat, this.clickLocation.lon);
-    this.showPopover();
+    if (this.clickLocation) this.drawSearchCircle(this.clickLocation.lat, this.clickLocation.lon, true);
+
+    // Aktualisiere Popover nach kurzer Verzögerung (nach Animation)
+    setTimeout(() => {
+      this.showPopover();
+    }, 250);
   }
 
   escapeHtml(text) { const div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
@@ -367,7 +439,98 @@ class NearbySpacesManager {
   }
 
   reattachRadiusAndItemListeners() {
-    this.popoverElement.querySelectorAll('.nearby-radius-btn').forEach(btn => btn.addEventListener('click', (e) => this.changeRadius(parseInt(e.target.dataset.radius))));
+    // ✅ Draggable Pill Setup
+    const pill = this.popoverElement.querySelector('.nearby-radius-pill');
+    const track = this.popoverElement.querySelector('.nearby-radius-track');
+
+    if (pill && track) {
+      let isDragging = false;
+
+      pill.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        pill.classList.add('dragging');
+        pill.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      pill.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+
+        const trackRect = track.getBoundingClientRect();
+        const pillHalfWidth = 25; // halbe Pill-Breite (50px / 2)
+        const trackPadding = 3;
+        const leftLimit = trackPadding + pillHalfWidth; // 28px
+        const rightLimit = trackRect.width - trackPadding - pillHalfWidth;
+        const innerWidth = rightLimit - leftLimit; // nutzbarer Bereich
+        const relativeX = e.clientX - trackRect.left - leftLimit;
+        const percentage = Math.max(0, Math.min(100, (relativeX / innerWidth) * 100));
+
+        // Finde nächsten Snap-Punkt
+        const snapIndex = Math.round(percentage / (100 / (this.radii.length - 1)));
+        const snapFraction = snapIndex / (this.radii.length - 1);
+
+        // Update visuell während des Draggings
+        pill.style.left = `calc(${leftLimit}px + ${innerWidth}px * ${snapFraction})`;
+        pill.dataset.currentIndex = snapIndex;
+        pill.textContent = this.radii[snapIndex] + 'km';
+      });
+
+      pill.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        pill.classList.remove('dragging');
+
+        const newIndex = parseInt(pill.dataset.currentIndex);
+        const newRadius = this.radii[newIndex];
+
+        if (newRadius !== this.currentRadius) {
+          this.changeRadius(newRadius);
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      // Klick auf Track springt zur Position
+      track.addEventListener('click', (e) => {
+        // Ignoriere Klicks auf Pill und Labels
+        if (e.target === pill || pill.contains(e.target) ||
+            e.target.classList.contains('nearby-radius-label')) return;
+
+        const trackRect = track.getBoundingClientRect();
+        const pillHalfWidth = 25;
+        const trackPadding = 3;
+        const leftLimit = trackPadding + pillHalfWidth;
+        const rightLimit = trackRect.width - trackPadding - pillHalfWidth;
+        const innerWidth = rightLimit - leftLimit;
+        const relativeX = e.clientX - trackRect.left - leftLimit;
+        const percentage = (relativeX / innerWidth) * 100;
+        const snapIndex = Math.round(percentage / (100 / (this.radii.length - 1)));
+
+        this.changeRadius(this.radii[snapIndex]);
+      });
+    }
+
+    // Klickbare Labels
+    this.popoverElement.querySelectorAll('.nearby-radius-label').forEach(label => {
+      label.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const index = parseInt(e.target.dataset.index);
+        this.changeRadius(this.radii[index]);
+      });
+    });
+
+    // Klickbare Marker (die Punkte)
+    this.popoverElement.querySelectorAll('.nearby-radius-marker').forEach(marker => {
+      marker.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        this.changeRadius(this.radii[index]);
+      });
+    });
+
+    // Items
     this.popoverElement.querySelectorAll('.nearby-item').forEach(item => {
       item.addEventListener('click', () => {
         const marker = window.markerById.get(parseInt(item.dataset.locationId));
@@ -379,7 +542,7 @@ class NearbySpacesManager {
           }, 500);
         }
       });
-      item.addEventListener('mouseenter', () => { this.keyboardIndex = -1; this.applyMarkerHighlight(item); });  // ✅ Das zeichnet die Connection Line!
+      item.addEventListener('mouseenter', () => { this.keyboardIndex = -1; this.applyMarkerHighlight(item); });
       item.addEventListener('mouseleave', () => { this.clearAllHoverEffects(); });
     });
   }
