@@ -290,7 +290,7 @@ class NearbySpacesManager {
       }).join('');
 
     if (isFirstTime) {
-      this.popoverElement.innerHTML = `<div class="nearby-popover-header settings-header">${headerHTML}</div><div class="nearby-popover-list">${listHTML}</div>`;
+      this.popoverElement.innerHTML = `<div class="nearby-popover-header settings-header">${headerHTML}</div><div class="nearby-popover-list">${listHTML}</div><div class="nearby-resize-handle"><i class="fas fa-grip-lines"></i></div>`;
       document.body.appendChild(this.popoverElement);
       this.attachEventListeners();
       this.popoverElement.querySelector('.nearby-popover-list').addEventListener('scroll', () => {
@@ -330,9 +330,13 @@ class NearbySpacesManager {
               this.keyboardIndex = foundIndex;
               this.updateKeyboardSelection(items);
             } else {
-              // Makerspace nicht mehr in der Liste - Effekte entfernen
-              this.clearAllHoverEffects();
+              // Makerspace nicht mehr in der Liste - Connection Line explizit entfernen
               this.keyboardIndex = -1;
+              this.currentHoverItem = null;
+              if (window.searchManager) {
+                window.searchManager.removeConnectionLine();
+                window.searchManager.cleanupHoverSVG();
+              }
             }
 
             // ✅ Map-Dragging erst NACH Reaktivierung der Connection Line wieder aktivieren
@@ -486,8 +490,8 @@ class NearbySpacesManager {
     let isDraggingPopover = false, startPos = { x: 0, y: 0 };
 
     this.popoverElement.addEventListener('pointerdown', (e) => {
-      // ERWEITERT: Ignoriere Fenster-Verschiebung, wenn auf Radius-Elemente geklickt wird
-      if (e.target.closest('.nearby-radius-track, .nearby-radius-pill, .nearby-radius-clickarea, .nearby-close-btn, .nearby-item')) {
+      // ERWEITERT: Ignoriere Fenster-Verschiebung, wenn auf bestimmte Elemente geklickt wird
+      if (e.target.closest('.nearby-radius-track, .nearby-radius-pill, .nearby-radius-clickarea, .nearby-close-btn, .nearby-item, .nearby-resize-handle')) {
         return;
       }
 
@@ -531,6 +535,70 @@ class NearbySpacesManager {
         if (this.map) this.map.dragging.enable();
       }, 1);
     });
+
+    // ✅ RESIZE-HANDLE LOGIK
+    const resizeHandle = this.popoverElement.querySelector('.nearby-resize-handle');
+    const list = this.popoverElement.querySelector('.nearby-popover-list');
+    const ITEM_HEIGHT = 56;
+    const MIN_ITEMS = 3;
+    const MAX_ITEMS = 8;
+
+    if (resizeHandle && list) {
+      let isResizing = false;
+      let startY = 0;
+      let startHeight = 0;
+
+      resizeHandle.addEventListener('pointerdown', (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = list.offsetHeight;
+        resizeHandle.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (this.map) this.map.dragging.disable();
+      });
+
+      resizeHandle.addEventListener('pointermove', (e) => {
+        if (!isResizing) return;
+
+        const deltaY = e.clientY - startY;
+        const newHeight = startHeight + deltaY;
+
+        // Auf ITEM_HEIGHT-Schritte runden
+        const itemCount = Math.round(newHeight / ITEM_HEIGHT);
+        const actualItemCount = list.querySelectorAll('.nearby-item').length;
+
+        // Prüfen ob Nutzer versucht zu erweitern aber nicht genug Items da sind
+        const currentMaxItems = Math.round(list.offsetHeight / ITEM_HEIGHT);
+        const wantsMore = itemCount > currentMaxItems;
+        const cantExpand = actualItemCount <= currentMaxItems;
+
+        if (wantsMore && cantExpand && !resizeHandle.classList.contains('limit-reached')) {
+          // Flicker-Animation auslösen
+          resizeHandle.classList.add('limit-reached');
+          setTimeout(() => resizeHandle.classList.remove('limit-reached'), 300);
+        }
+
+        // Clamp auf tatsächlich verfügbare Items oder MIN/MAX
+        const maxPossible = Math.min(MAX_ITEMS, actualItemCount);
+        const clampedCount = Math.max(MIN_ITEMS, Math.min(maxPossible, itemCount));
+        const snappedHeight = clampedCount * ITEM_HEIGHT;
+
+        list.style.maxHeight = snappedHeight + 'px';
+
+        // Connection Line Position aktualisieren
+        if (window.searchManager) window.searchManager.updateHoverSVGPosition();
+      });
+
+      resizeHandle.addEventListener('pointerup', (e) => {
+        if (!isResizing) return;
+        isResizing = false;
+        resizeHandle.releasePointerCapture(e.pointerId);
+
+        if (this.map) this.map.dragging.enable();
+      });
+    }
 
     this.reattachRadiusAndItemListeners();
   }

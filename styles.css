@@ -2413,11 +2413,48 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .nearby-popover-list {
   padding: 0;
-  max-height: 167px !important;
-  /* Exakt 3 Items (3 x 56px) */
-  overflow-y: hidden;
+  max-height: 168px;
+  /* Default: 3 Items (3 x 56px), kann per JS geändert werden */
+  overflow-y: auto;
   scroll-snap-type: y mandatory;
   scrollbar-width: thin;
+}
+
+/* Resize-Handle am unteren Rand */
+.nearby-resize-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16px;
+  cursor: ns-resize;
+  color: var(--text-muted, #888);
+  background: var(--dropdown-bg);
+  border-top: 1px solid var(--dropdown-border);
+  border-radius: 0 0 12px 12px;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.nearby-resize-handle:hover {
+  background: var(--dropdown-hover-bg, #f0f0f0);
+  color: var(--text-color, #333);
+}
+
+.nearby-resize-handle i {
+  font-size: 10px;
+  pointer-events: none;
+  transform: scaleX(5);
+}
+
+/* Flicker-Animation wenn Liste nicht weiter erweiterbar */
+@keyframes nearby-limit-flicker {
+  0%, 100% { background-color: var(--dropdown-bg); }
+  25%, 75% { background-color: rgba(220, 53, 69, 0.3); }
+  50% { background-color: var(--dropdown-bg); }
+}
+
+.nearby-resize-handle.limit-reached {
+  animation: nearby-limit-flicker 0.3s ease-out;
 }
 
 .nearby-item {
@@ -2772,6 +2809,10 @@ a#titleurl:hover h3.space-unknown .fas {
 
   .nearby-popover-list {
     max-height: 50vh !important;
+  }
+
+  .nearby-resize-handle {
+    display: none !important;
   }
 }
 
