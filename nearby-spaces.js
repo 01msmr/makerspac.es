@@ -136,7 +136,7 @@ class NearbySpacesManager {
 
     if (!this.searchCircle) {
       // Neuer Kreis
-      this.searchCircle = L.circle([lat, lon], { radius: targetRadius, color: circleColor, weight: 2, fillOpacity: 0.15, interactive: false, pane: 'overlayPane' }).addTo(this.map);
+      this.searchCircle = L.circle([lat, lon], { radius: targetRadius, color: circleColor, weight: 3, fillOpacity: 0.15, interactive: false, pane: 'overlayPane' }).addTo(this.map);
     } else if (animate) {
       // Animiere Radius-Änderung
       const startRadius = this.searchCircle.getRadius();
@@ -257,6 +257,11 @@ class NearbySpacesManager {
               <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
                 ${this.currentRadius}km
               </div>
+              ${this.radii.map((r, idx) => {
+                const fraction = idx / (this.radii.length - 1);
+                const position = `calc(28px + (100% - 56px) * ${fraction})`;
+                return `<button class="nearby-radius-clickarea" data-index="${idx}" style="left: ${position}"></button>`;
+              }).join('')}
             </div>
           </div>
         </div>
@@ -356,7 +361,9 @@ class NearbySpacesManager {
   }
 
   changeRadius(newRadius) {
-    if (this.currentRadius === newRadius) return;
+    if (this.currentRadius === newRadius) {
+      return;
+    }
 
     const pill = this.popoverElement?.querySelector('.nearby-radius-pill');
 
@@ -447,6 +454,11 @@ class NearbySpacesManager {
       let isDragging = false;
 
       pill.addEventListener('pointerdown', (e) => {
+        // Ignoriere pointerdown auf Buttons
+        if (e.target.classList.contains('nearby-radius-clickarea')) {
+          return;
+        }
+
         isDragging = true;
         pill.classList.add('dragging');
         pill.setPointerCapture(e.pointerId);
@@ -492,12 +504,21 @@ class NearbySpacesManager {
         e.stopPropagation();
       });
 
-      // Klick auf Track springt zur Position
+      // Klick auf Track oder Labels
       track.addEventListener('click', (e) => {
-        // Ignoriere Klicks auf Pill und Labels
-        if (e.target === pill || pill.contains(e.target) ||
-            e.target.classList.contains('nearby-radius-label')) return;
+        // Prüfe ob es ein Label ist
+        if (e.target.classList.contains('nearby-radius-label')) {
+          const index = parseInt(e.target.dataset.index);
+          this.changeRadius(this.radii[index]);
+          return;
+        }
 
+        // Ignoriere Klicks auf Pill
+        if (e.target === pill || pill.contains(e.target)) {
+          return;
+        }
+
+        // Track-Click
         const trackRect = track.getBoundingClientRect();
         const pillHalfWidth = 25;
         const trackPadding = 3;
@@ -512,8 +533,20 @@ class NearbySpacesManager {
       });
     }
 
-    // Klickbare Labels
-    this.popoverElement.querySelectorAll('.nearby-radius-label').forEach(label => {
+    // ✅ Transparente Klick-Buttons
+    const clickButtons = this.popoverElement.querySelectorAll('.nearby-radius-clickarea');
+    clickButtons.forEach((button) => {
+      button.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const index = parseInt(e.target.dataset.index);
+        this.changeRadius(this.radii[index]);
+      });
+    });
+
+    // Klickbare Labels (Fallback - werden normalerweise über Track-Click gehandhabt)
+    const labels = this.popoverElement.querySelectorAll('.nearby-radius-label');
+    labels.forEach((label) => {
       label.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();

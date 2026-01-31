@@ -2630,7 +2630,7 @@ a#titleurl:hover h3.space-unknown .fas {
   border-radius: 16px;
   margin: 0;
   padding: 0 3px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) inset;
+  box-shadow: 1px 3px 9px rgba(0, 0, 0, 0.4) inset;
   flex: 1;
 }
 
@@ -2664,6 +2664,7 @@ a#titleurl:hover h3.space-unknown .fas {
   line-height: 1;
   min-width: 50px;
   width: 50px;
+  pointer-events: auto;
 }
 
 .nearby-radius-pill:hover {
@@ -2674,6 +2675,22 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .nearby-radius-pill.dragging {
   cursor: grabbing;
+}
+
+/* Transparente Klick-Bereiche über den Labels */
+.nearby-radius-clickarea {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 26px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 11;
+  padding: 0;
+  margin: 0;
+  pointer-events: all;
 }
 
 /* Labels IM Track */
@@ -2690,8 +2707,8 @@ a#titleurl:hover h3.space-unknown .fas {
   font-weight: 600;
   color: var(--hover-text-color);
   user-select: none;
-  pointer-events: none;
-  z-index: 1;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .nearby-radius-label {
