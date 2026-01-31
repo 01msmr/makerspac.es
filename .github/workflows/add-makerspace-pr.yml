@@ -6,7 +6,6 @@ on:
 
 jobs:
   create-pr:
-    # Der Workflow startet nur, wenn du das Label 'add-space' vergibst
     if: github.event.label.name == 'add-space'
     runs-on: ubuntu-latest
     permissions:
@@ -35,25 +34,17 @@ jobs:
             const { parseIssue } = require('@github/issue-parser');
             
             try {
-              // 1. Issue Daten parsen
               const issueBody = context.payload.issue.body;
               const template = fs.readFileSync('.github/ISSUE_TEMPLATE/add-makerspace.yml', 'utf8');
               const parsed = parseIssue(issueBody, template);
               
-              // 2. locations.json laden
               let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
               
-              // 3. ID aus Template (Index 0) holen
               const nextId = parseInt(locations[0].ID);
-              
-              // WICHTIG: Die ID für die nachfolgenden YAML-Schritte exportieren
               core.setOutput('next_id', nextId);
               
-              // ID im Template für den NÄCHSTEN Eintrag erhöhen
               locations[0].ID = nextId + 1;
               
-              // 4. Neues Objekt erstellen
-              // Hinweis: .text wird genutzt, um den reinen String aus dem Parser-Objekt zu erhalten
               const newEntry = {
                 name: parsed.name.text,
                 ID: nextId,
@@ -80,30 +71,24 @@ jobs:
                 }
               };
               
-              // Optionaler SpaceAPI Check
               if (parsed.spaceapi && parsed.spaceapi.text && parsed.spaceapi.text.startsWith('http')) {
                 newEntry.spaceapi = { endpoint: parsed.spaceapi.text };
               }
               
-              // 5. Array Management (Template behalten, Rest sortieren)
               let dataOnly = locations.slice(1);
               dataOnly.push(newEntry);
               
               dataOnly.sort((a, b) => {
-                // Sortierung: Land -> PLZ -> Name
                 if (a.loc.country !== b.loc.country) return a.loc.country.localeCompare(b.loc.country);
                 if (a.loc.plz !== b.loc.plz) return a.loc.plz - b.loc.plz;
                 return a.name.localeCompare(b.name);
               });
               
-              // 6. Finales Array speichern
               const finalData = [locations[0], ...dataOnly];
               fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
               
-              console.log(`Erfolgreich verarbeitet. Neue ID: ${nextId}`);
-              
             } catch (error) {
-              core.setFailed("Fehler beim Verarbeiten des Issues: " + error.message);
+              core.setFailed("Fehler: " + error.message);
             }
 
       - name: Create Pull Request
@@ -112,28 +97,22 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Add makerspace ID ${{ steps.update_script.outputs.next_id }}"
           title: "➕ Neuer Space: ${{ github.event.issue.title }} (ID: ${{ steps.update_script.outputs.next_id }})"
-          # Hier wird die next_id für den Branch-Namen verwendet:
           branch: "add-space-id-${{ steps.update_script.outputs.next_id }}"
           base: main
           delete-branch: true
           body: |
             Dieser Pull Request wurde automatisch erstellt.
-            
-            **Details:**
             - **Makerspace:** ${{ github.event.issue.title }}
-            - **Zugewiesene ID:** ${{ steps.update_script.outputs.next_id }}
+            - **ID:** ${{ steps.update_script.outputs.next_id }}
             - **Quelle:** Issue #${{ github.event.issue.number }}
-            
-            Bitte prüfe die Änderungen in der `locations.json` und merge diesen PR, um die Karte zu aktualisieren.
           labels: |
             automated-pr
             id-${{ steps.update_script.outputs.next_id }}
 
-      - name: Add Feedback Comment to Issue
+      - name: Add Feedback Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
             🚀 **Aktion gestartet!**
-            Ich habe soeben einen Pull Request mit der **ID ${{ steps.update_script.outputs.next_id }}** erstellt.
-            Sobald dieser gemergt wird, erscheint der Space auf der Karte.
+            PR mit der **ID ${{ steps.update_script.outputs.next_id }}** wurde erstellt.
