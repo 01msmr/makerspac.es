@@ -19,7 +19,15 @@ body:
     id: country
     attributes:
       label: Land
-      placeholder: "Germany, Austria, Switzerland, ..."
+      options:
+        - "Germany"
+        - "Austria"
+        - "Switzerland"
+        - "Netherlands"
+        - "Belgium"
+        - "Denmark"
+        - "Ukraine"
+        - "other"
     validations:
       required: true
   - type: input
