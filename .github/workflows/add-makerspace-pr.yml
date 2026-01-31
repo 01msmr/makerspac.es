@@ -1,0 +1,139 @@
+name: "➕ Makerspace PR Generator"
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  create-pr:
+    # Der Workflow startet nur, wenn du das Label 'add-space' vergibst
+    if: github.event.label.name == 'add-space'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Issue Parser
+        run: npm install @github/issue-parser
+
+      - name: Process Issue and Update JSON
+        id: update_script
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { parseIssue } = require('@github/issue-parser');
+            
+            try {
+              // 1. Issue Daten parsen
+              const issueBody = context.payload.issue.body;
+              const template = fs.readFileSync('.github/ISSUE_TEMPLATE/add-makerspace.yml', 'utf8');
+              const parsed = parseIssue(issueBody, template);
+              
+              // 2. locations.json laden
+              let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
+              
+              // 3. ID aus Template (Index 0) holen
+              const nextId = parseInt(locations[0].ID);
+              
+              // WICHTIG: Die ID für die nachfolgenden YAML-Schritte exportieren
+              core.setOutput('next_id', nextId);
+              
+              // ID im Template für den NÄCHSTEN Eintrag erhöhen
+              locations[0].ID = nextId + 1;
+              
+              // 4. Neues Objekt erstellen
+              // Hinweis: .text wird genutzt, um den reinen String aus dem Parser-Objekt zu erhalten
+              const newEntry = {
+                name: parsed.name.text,
+                ID: nextId,
+                loc: {
+                  lat: parseFloat(parsed.lat.text),
+                  long: parseFloat(parsed.long.text),
+                  plz: parseInt(parsed.plz.text),
+                  city: parsed.city.text,
+                  street: {
+                    name: parsed.street_name.text,
+                    number: parsed.street_number.text,
+                    ext: parsed.street_ext ? parsed.street_ext.text : ""
+                  },
+                  country: parsed.country.text
+                },
+                style: parsed.style.text,
+                link: {
+                  url: parsed.url.text,
+                  text: parsed.url_text.text
+                },
+                dates: {
+                  "space.init": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, '')),
+                  "datacheck.latest": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''))
+                }
+              };
+              
+              // Optionaler SpaceAPI Check
+              if (parsed.spaceapi && parsed.spaceapi.text && parsed.spaceapi.text.startsWith('http')) {
+                newEntry.spaceapi = { endpoint: parsed.spaceapi.text };
+              }
+              
+              // 5. Array Management (Template behalten, Rest sortieren)
+              let dataOnly = locations.slice(1);
+              dataOnly.push(newEntry);
+              
+              dataOnly.sort((a, b) => {
+                // Sortierung: Land -> PLZ -> Name
+                if (a.loc.country !== b.loc.country) return a.loc.country.localeCompare(b.loc.country);
+                if (a.loc.plz !== b.loc.plz) return a.loc.plz - b.loc.plz;
+                return a.name.localeCompare(b.name);
+              });
+              
+              // 6. Finales Array speichern
+              const finalData = [locations[0], ...dataOnly];
+              fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
+              
+              console.log(`Erfolgreich verarbeitet. Neue ID: ${nextId}`);
+              
+            } catch (error) {
+              core.setFailed("Fehler beim Verarbeiten des Issues: " + error.message);
+            }
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Add makerspace ID ${{ steps.update_script.outputs.next_id }}"
+          title: "➕ Neuer Space: ${{ github.event.issue.title }} (ID: ${{ steps.update_script.outputs.next_id }})"
+          # Hier wird die next_id für den Branch-Namen verwendet:
+          branch: "add-space-id-${{ steps.update_script.outputs.next_id }}"
+          base: main
+          delete-branch: true
+          body: |
+            Dieser Pull Request wurde automatisch erstellt.
+            
+            **Details:**
+            - **Makerspace:** ${{ github.event.issue.title }}
+            - **Zugewiesene ID:** ${{ steps.update_script.outputs.next_id }}
+            - **Quelle:** Issue #${{ github.event.issue.number }}
+            
+            Bitte prüfe die Änderungen in der `locations.json` und merge diesen PR, um die Karte zu aktualisieren.
+          labels: |
+            automated-pr
+            id-${{ steps.update_script.outputs.next_id }}
+
+      - name: Add Feedback Comment to Issue
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            🚀 **Aktion gestartet!**
+            Ich habe soeben einen Pull Request mit der **ID ${{ steps.update_script.outputs.next_id }}** erstellt.
+            Sobald dieser gemergt wird, erscheint der Space auf der Karte.
