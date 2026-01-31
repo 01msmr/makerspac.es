@@ -1,5 +1,5 @@
 - name: Process Issue and Update JSON
-        id: update_script  # <-- WICHTIG: Eine ID vergeben
+        id: update_script
         uses: actions/github-script@v7
         with:
           script: |
