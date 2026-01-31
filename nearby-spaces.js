@@ -137,41 +137,45 @@ class NearbySpacesManager {
     if (!this.searchCircle) {
       // Neuer Kreis
       this.searchCircle = L.circle([lat, lon], { radius: targetRadius, color: circleColor, weight: 3, fillOpacity: 0.15, interactive: false, pane: 'overlayPane' }).addTo(this.map);
-    } else if (animate) {
-      // Animiere Radius-Änderung
-      const startRadius = this.searchCircle.getRadius();
-      const radiusDiff = targetRadius - startRadius;
-      const duration = 200; // ms
-      const startTime = performance.now();
-
-      const animateRadius = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        // Easing function (easeInOutQuad)
-        const eased = progress < 0.5
-          ? 2 * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-        const newRadius = startRadius + radiusDiff * eased;
-        this.searchCircle.setRadius(newRadius);
-
-        if (progress < 1) {
-          requestAnimationFrame(animateRadius);
-        }
-      };
-
-      requestAnimationFrame(animateRadius);
     } else {
-      // Sofort ändern
-      this.searchCircle.setRadius(targetRadius);
+      // Aktualisiere Position
+      this.searchCircle.setLatLng([lat, lon]);
+
+      if (animate) {
+        // Animiere Radius-Änderung
+        const startRadius = this.searchCircle.getRadius();
+        const radiusDiff = targetRadius - startRadius;
+        const duration = 200; // ms
+        const startTime = performance.now();
+
+        const animateRadius = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // Easing function (easeInOutQuad)
+          const eased = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+          const newRadius = startRadius + radiusDiff * eased;
+          this.searchCircle.setRadius(newRadius);
+
+          if (progress < 1) {
+            requestAnimationFrame(animateRadius);
+          }
+        };
+
+        requestAnimationFrame(animateRadius);
+      } else {
+        // Sofort ändern
+        this.searchCircle.setRadius(targetRadius);
+      }
     }
   }
 
   showAtCursor(lat, lon, mouseX, mouseY) {
     this.lastPixels = { x: mouseX, y: mouseY };
     this.clickLocation = { lat, lon };
-    this.showCursorIcon(lat, lon);
     this.updateNearbyData(lat, lon);
 
     let bestIndex = this.radii.indexOf(this.currentRadius);
@@ -247,7 +251,7 @@ class NearbySpacesManager {
       <div class="nearby-header-row-bottom">
         <div class="nearby-radius-slider-container">
           <div class="nearby-radius-slider-row">
-            <span class="nearby-radius-label-prefix">${window.i18n ? window.i18n.t('nearbySpaces.radius') : 'Umkreis'}:</span>
+            <span class="nearby-radius-label-prefix">${window.i18n ? window.i18n.t('nearbySpaces.radius') : 'Umkreis'}</span>
             <div class="nearby-radius-track">
               <div class="nearby-radius-labels">
                 ${this.radii.map((r, idx) =>
@@ -580,10 +584,6 @@ class NearbySpacesManager {
     });
   }
 
-  showCursorIcon(lat, lon) {
-    if (this.cursorIcon) this.map.removeLayer(this.cursorIcon);
-    this.cursorIcon = L.marker([lat, lon], { icon: L.divIcon({ html: `<div class="nearby-cursor-icon"><i class="${window.MapIcons.uiMap.CROSSHAIRS}"></i></div>`, className: 'nearby-cursor-marker', iconSize: [40, 40], iconAnchor: [20, 20] }), interactive: false, zIndexOffset: 1000 }).addTo(this.map);
-  }
 }
 
 window.nearbySpacesManager = new NearbySpacesManager();

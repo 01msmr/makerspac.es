@@ -2326,32 +2326,6 @@ a#titleurl:hover h3.space-unknown .fas {
   opacity: 0;
 }
 
-/* Cursor-Icon auf der Karte (Rechtsklick-Zentrum) */
-.nearby-cursor-marker {
-  background: transparent !important;
-  border: none !important;
-}
-
-.nearby-cursor-icon i {
-  font-size: 32px;
-  color: var(--space-hover);
-  /* filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5)); */
-  animation: nearby-pulse 2s ease-in-out infinite;
-}
-
-@keyframes nearby-pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.9;
-  }
-
-  50% {
-    transform: scale(1.8);
-    opacity: 0.6;
-  }
-}
 
 
 
@@ -2439,9 +2413,9 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .nearby-popover-list {
   padding: 0;
-  max-height: 167px;
-  /* Exakt 4 Items (4 x 56px) */
-  overflow-y: auto;
+  max-height: 167px !important;
+  /* Exakt 3 Items (3 x 56px) */
+  overflow-y: hidden;
   scroll-snap-type: y mandatory;
   scrollbar-width: thin;
 }
@@ -2461,6 +2435,10 @@ a#titleurl:hover h3.space-unknown .fas {
   scroll-snap-align: start;
   transition: none !important;
   /* Sofortiger Farbwechsel ohne Verzögerung */
+}
+
+.nearby-item:last-child {
+  border-bottom: none;
 }
 
 /* Alternierender Hintergrund für Nearby-Items (wie in der Suche) */
@@ -2790,4 +2768,4 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 
-/* END NEARBY SPACES FEATURE */
+/* END NEARBY SPACES FEATURE */nearv
