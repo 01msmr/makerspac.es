@@ -12,10 +12,10 @@ body:
     id: name
     attributes:
       label: Name des Makerspaces
-      placeholder: "z.B. Toolbox Bodensee"
+      placeholder: "z. B. Toolbox Bodensee"
     validations:
       required: true
-  - type: input
+  - type: dropdown
     id: country
     attributes:
       label: Land
