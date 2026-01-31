@@ -5,7 +5,7 @@ on:
 
 jobs:
   update-json:
-    if: contains(github.event.issue.labels.*.name, 'add-space')
+####    if: contains(github.event.issue.labels.*.name, 'add-space')
     runs-on: ubuntu-latest
     permissions:
       contents: write
