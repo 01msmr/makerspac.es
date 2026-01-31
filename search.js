@@ -45,6 +45,12 @@ class SearchManager {
     this.initializeEventListeners();
     setTimeout(() => { this.setupSpaceAPIEvents(); }, 100);
 
+    // pointer-events der Items während der Tastaturnavigation deaktivieren - und umgekehrt
+    this.lastInputMethod = null;
+    this._mouseHasMoved = false;
+    this._lastMousePos = { x: 0, y: 0 };
+
+
     // ✨ Event-Listener für Bookmark-Änderungen
     window.addEventListener('bookmarksChanged', () => {
       // Aktualisiere Filter-Pills wenn Bookmarks sich ändern
@@ -79,26 +85,24 @@ class SearchManager {
         e.preventDefault();
 
         // 1. Schließe zuerst den Filter-Popover/Dropdown, wenn aktiv
-        // ✨ KORREKTUR: Prüfe, ob die Methode existiert UND aufgerufen werden kann
         if (this.styleFilterManager && typeof this.styleFilterManager.isDropdownOpen === 'function' && this.styleFilterManager.isDropdownOpen()) {
           this.styleFilterManager.closeDropdown();
           return;
         }
 
-        // 2. Leere die Suche, wenn Text vorhanden ist (schließt implizit das Dropdown über applyFilters)
+        // 2. Leere die Suche, wenn Text vorhanden ist
         if (this.searchBar.value.length > 0) {
           this.clearSearch();
           return;
         }
 
-        // 3. Wenn die Suche leer ist (und kein Filter-Dropdown aktiv war), schließe das Such-Dropdown.
+        // 3. Wenn die Suche leer ist, schließe das Such-Dropdown.
         this.closeDropdown();
         return;
       }
 
       // ✨ NEU: LINKS/RECHTS-Pfeile für Navigation zwischen Filter und Suche
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
-        // Nur wenn NICHT in einer Dropdown-Liste navigiert wird
         const inDropdownNavigation = this.suggestionsDropdown.classList.contains('is-active') ||
           (filterDropdownHasFocus && this.styleFilterManager?.isDropdownOpen());
 
@@ -111,18 +115,14 @@ class SearchManager {
               this.styleFilterManager.closeDropdown();
               this.searchBar.focus();
               this.searchBar.select();
-              // ✨ Öffne Such-Dropdown direkt beim Betreten
               if (this.styleFilterManager) this.styleFilterManager.applyFilters();
             }
           } else if (e.code === 'ArrowLeft') {
             // Nach links: Suche → Filter
             if (searchBarHasFocus) {
-              // Schließe Suggestions-Dropdown
               this.closeDropdown();
-
               if (this.styleFilterManager?.filterHeader) {
                 this.styleFilterManager.filterHeader.focus();
-                // ✨ Öffne Filter-Dropdown direkt beim Betreten
                 this.styleFilterManager.openDropdown();
               }
             }
@@ -131,29 +131,26 @@ class SearchManager {
         }
       }
 
-      // TAB-Navigation (wie bisher, aber mit verbesserter Dropdown-Logik)
+      // TAB-Navigation
       if (e.code === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
         if (searchBarHasFocus && !e.shiftKey) {
           e.preventDefault();
-          this.closeDropdown(); // ✨ Schließe Suggestions
+          this.closeDropdown();
           if (this.styleFilterManager?.filterHeader) {
             this.styleFilterManager.filterHeader.focus();
-            // ✨ Öffne Filter-Dropdown direkt beim Betreten
             this.styleFilterManager.openDropdown();
           }
         } else if (filterHeaderHasFocus && e.shiftKey) {
           e.preventDefault();
-          this.styleFilterManager.closeDropdown(); // ✨ Schließe Filter
+          this.styleFilterManager.closeDropdown();
           this.searchBar.focus();
           this.searchBar.select();
-          // ✨ Öffne Such-Dropdown direkt beim Betreten
           if (this.styleFilterManager) this.styleFilterManager.applyFilters();
         } else if ((filterHeaderHasFocus || filterDropdownHasFocus) && !e.shiftKey) {
           e.preventDefault();
-          this.styleFilterManager.closeDropdown(); // ✨ Schließe Filter
+          this.styleFilterManager.closeDropdown();
           this.searchBar.focus();
           this.searchBar.select();
-          // ✨ Öffne Such-Dropdown direkt beim Betreten
           if (this.styleFilterManager) this.styleFilterManager.applyFilters();
         }
         return;
@@ -179,56 +176,38 @@ class SearchManager {
     this.searchBar.addEventListener('input', (e) => {
       const value = e.target.value.trim().toLowerCase();
 
-      // 1. ✨ ZOOM-ANZEIGE BEIBEHALTEN
-      // Wenn "xcr"   getippt wird, erscheint die kleine Zoom-Zahl am Cursor
       if (value.startsWith('xcr')) {
         this.activateZoomIndicator();
       } else {
         this.deactivateZoomIndicator();
       }
 
-      // 2. ✨ FILTER-LOGIK AKTUALISIEREN
-      // Wir rufen applyPillFilters auf. 
-      // Da diese Funktion intern searchQuery = this.searchBar.value ausliest,
-      // werden Land-Filter und Text-Suche jetzt automatisch kombiniert.
       if (this.pillsManager) {
         this.applyPillFilters(this.pillsManager.getPillsArray());
       }
     });
 
-
-    // Bestehende Event Listener (unverändert)
     this.searchBar.addEventListener('keyup', (e) => {
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return;
-      // if (this.styleFilterManager) this.styleFilterManager.applyFilters(); // <-- AUSKOMMENTIEREN / ENTFERNEN
     });
 
-    // ✨ Zeige Filter-Pills beim Focus (auch ohne Suche)
+    // ✨ Zeige Filter-Pills beim Focus
     this.searchBar.addEventListener('focus', () => {
       if (!this.styleFilterManager) return;
 
-      // ✅ NEU: Clearer alten Hover-Status
       this.cleanupHoverSVG();
       if (this.currentHoverItem) {
         this.currentHoverItem.classList.remove('js-hover');
         this.currentHoverItem = null;
       }
 
-      // 1. Erstelle Filter-Section
       this.createActiveFiltersSection();
-
-      // 2. Öffne Dropdown SOFORT (auch ohne Suchergebnisse)
       this.suggestionsDropdown.classList.add('is-active');
       this.searchBar.classList.add('has-suggestions');
 
-      // 3. Optional: Zeige alle Locations nur wenn keine Suche/Pills aktiv
-      // (Auskommentiert, damit nicht alle Ergebnisse angezeigt werden)
-      /*
-      if (this.searchBar.value.trim() === '' && 
-          (!this.pillsManager || this.pillsManager.count() === 0)) {
-        this.styleFilterManager.applyFilters();
-      }
-      */
+      // ✅ FIX: Triggere Filter-Logik beim Focus, damit der Auto-Zoom 
+      // basierend auf den aktuellen Inhalten (Text/Pills) ausgeführt wird.
+      this.applyPillFilters(this.pillsManager.getPillsArray());
     });
 
     document.addEventListener('click', (e) => {
@@ -238,6 +217,21 @@ class SearchManager {
     // ✨ SCROLL-FIX: Hier findet die Positionsaktualisierung statt
     this.suggestionsDropdown.addEventListener('scroll', () => {
       this.updateHoverSVGPosition();
+    });
+
+    // ✅ Mousemove-Erkennung auf Dropdown (Mutual Exclusion)
+    this.suggestionsDropdown.addEventListener('mousemove', (e) => {
+      if (e.clientX !== this._lastMousePos.x || e.clientY !== this._lastMousePos.y) {
+        this._lastMousePos = { x: e.clientX, y: e.clientY };
+        this._mouseHasMoved = true;
+
+        // ✅ pointer-events wieder aktivieren wenn Maus sich bewegt
+        this.suggestionsDropdown.querySelectorAll('.suggestion-item').forEach(item => {
+          if (item.style.pointerEvents === 'none') {
+            item.style.pointerEvents = '';
+          }
+        });
+      }
     });
 
     // ✨ Verhindere Fokusverlust beim Scrollen im Dropdown
@@ -264,14 +258,11 @@ class SearchManager {
         this.clearSearch();
       }
     });
+
     // ✨ KORREKTUR: Listener für Sprachwechsel hinzufügen
     document.addEventListener('languageChanged', () => {
-      // Filter-Sektion (Pills) muss neu erstellt werden, um die Übersetzungen zu aktualisieren
       this.createActiveFiltersSection();
-
-      // Wenn das Dropdown aktiv ist oder Pills/Text aktiv sind, muss die Filterung neu ausgelöst werden.
       if (this.suggestionsDropdown.classList.contains('is-active') || this.pillsManager.count() > 0 || this.searchBar.value.length > 0) {
-        // Führe eine Filterung aus, um die Vorschlagselemente neu zu rendern
         this.applyPillFilters(this.pillsManager.getPillsArray());
       }
     });
@@ -496,6 +487,15 @@ class SearchManager {
   navigateDropdown(direction) {
     if (this.dropdownItems.length === 0) return;
 
+    // ✅ Tastatur übernimmt Kontrolle
+    this.lastInputMethod = 'keyboard';
+    this._mouseHasMoved = false;
+
+    // ✅ pointer-events auf Items deaktivieren um CSS :hover zu unterdrücken
+    this.suggestionsDropdown.querySelectorAll('.suggestion-item').forEach(item => {
+      item.style.pointerEvents = 'none';
+    });
+
     this.lastKeypressTime = Date.now();
 
     let newIndex = this.currentDropdownIndex;
@@ -514,6 +514,7 @@ class SearchManager {
     this.updateActiveDropdownItem();
     this.scrollToActiveItem();
   }
+
 
   updateActiveDropdownItem() {
     const previousActive = this.suggestionsDropdown.querySelector('.keyboard-active');
@@ -1511,6 +1512,13 @@ class SearchManager {
 
   setupSuggestionItemEvents(item, location) {
     item.addEventListener('mouseenter', () => {
+      // ✅ Nur übernehmen wenn Maus sich tatsächlich bewegt hat (nicht bei DOM-Rebuild)
+      if (!this._mouseHasMoved) {
+        return;
+      }
+
+      // ✅ Maus übernimmt Kontrolle
+      this.lastInputMethod = 'mouse';
       this.currentDropdownIndex = -1;
 
       if (this.currentHoverItem && this.currentHoverItem !== item) {
@@ -1546,9 +1554,9 @@ class SearchManager {
       this.removeHoverEffects(location);
     });
 
-    // ✨ WICHTIG: Wenn der Click-Handler entfernt wurde, muss hier die Navigation zur Karte erfolgen
     item.addEventListener('click', () => this.handleSuggestionClick(location));
   }
+
 
   // WIEDERHERGESTELLTE Methode handleSuggestionClick (Original)
   handleSuggestionClick(location) {

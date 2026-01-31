@@ -20,6 +20,9 @@ class NearbySpacesManager {
     this.keyboardIndex = -1;
     this.currentHoverItem = null;
     this._keyboardHandler = this.handleKeyDown.bind(this);
+    this.lastInputMethod = null;  // 'mouse' oder 'keyboard' - letztes aktives Eingabemedium
+    this._mouseHasMoved = false;  // Wird auf true gesetzt wenn Maus sich tatsächlich bewegt
+    this._lastMousePos = { x: 0, y: 0 };  // Letzte bekannte Mausposition
     this.styleIconMap = window.MapIcons.styleMap;
   }
 
@@ -221,6 +224,9 @@ class NearbySpacesManager {
     const currentSpaces = this.resultsCache[this.currentRadius] || [];
     const isFirstTime = !this.popoverElement;
 
+    // ✅ FEHLER BEHOBEN: _mouseHasMoved = false hier entfernt! 
+    // Das Flag wird jetzt nur noch in handleKeyDown auf false gesetzt.
+
     if (isFirstTime) {
       this.popoverElement = document.createElement('div');
       this.popoverElement.className = 'nearby-popover settings-popover';
@@ -231,7 +237,6 @@ class NearbySpacesManager {
 
     if (this.map) this.map.keyboard.disable();
 
-    // ✅ keyboardIndex nur bei neuem Popover zurücksetzen (nicht bei Radius-Wechsel)
     if (isFirstTime) {
       this.keyboardIndex = -1;
     }
@@ -240,7 +245,6 @@ class NearbySpacesManager {
     const emptyText = window.i18n ? window.i18n.t('nearbySpaces.empty') : 'keine makerspaces … Umkreis erweitern';
 
     const currentIndex = this.radii.indexOf(this.currentRadius);
-    // Berechne Position: Track-Padding (3px) + halbe Pill-Breite (25px) = 28px an den Rändern
     const fraction = currentIndex / (this.radii.length - 1);
     const pillPosition = `calc(28px + (100% - 56px) * ${fraction})`;
 
@@ -259,17 +263,17 @@ class NearbySpacesManager {
             <div class="nearby-radius-track">
               <div class="nearby-radius-labels">
                 ${this.radii.map((r, idx) =>
-                  `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}km</span>`
-                ).join('')}
+      `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}km</span>`
+    ).join('')}
               </div>
               <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
                 ${this.currentRadius}km
               </div>
               ${this.radii.map((r, idx) => {
-                const fraction = idx / (this.radii.length - 1);
-                const position = `calc(28px + (100% - 56px) * ${fraction})`;
-                return `<button class="nearby-radius-clickarea" data-index="${idx}" style="left: ${position}"></button>`;
-              }).join('')}
+      const fraction = idx / (this.radii.length - 1);
+      const position = `calc(28px + (100% - 56px) * ${fraction})`;
+      return `<button class="nearby-radius-clickarea" data-index="${idx}" style="left: ${position}"></button>`;
+    }).join('')}
             </div>
           </div>
         </div>
@@ -293,19 +297,30 @@ class NearbySpacesManager {
       this.popoverElement.innerHTML = `<div class="nearby-popover-header settings-header">${headerHTML}</div><div class="nearby-popover-list">${listHTML}</div><div class="nearby-resize-handle"><i class="fas fa-grip-lines"></i></div>`;
       document.body.appendChild(this.popoverElement);
       this.attachEventListeners();
+
       this.popoverElement.querySelector('.nearby-popover-list').addEventListener('scroll', () => {
         if (window.searchManager) window.searchManager.updateHoverSVGPosition();
       });
+
+      // ✅ Mousemove-Erkennung auf Popover
+      this.popoverElement.addEventListener('mousemove', (e) => {
+        if (e.clientX !== this._lastMousePos.x || e.clientY !== this._lastMousePos.y) {
+          this._lastMousePos = { x: e.clientX, y: e.clientY };
+          this._mouseHasMoved = true;
+
+          // ✅ WICHTIG: pointer-events auf allen Items wieder freigeben
+          this.popoverElement.querySelectorAll('.nearby-item').forEach(item => {
+            item.style.pointerEvents = '';
+          });
+        }
+      });
       this.positionPopover(x, y);
     } else {
-      // ✅ NULL-CHECK: Falls popoverElement zwischenzeitlich entfernt wurde
       if (this.popoverElement && this.popoverElement.parentElement) {
         this.popoverElement.querySelector('.nearby-popover-header').innerHTML = headerHTML;
         this.popoverElement.querySelector('.nearby-popover-list').innerHTML = listHTML;
         this.reattachRadiusAndItemListeners();
 
-        // ✅ Aktiven Makerspace nach Radius-Wechsel reaktivieren
-        // requestAnimationFrame stellt sicher, dass DOM vollständig gerendert ist
         if (this._pendingReactivationId !== null && this._pendingReactivationId !== undefined) {
           const reactivationId = this._pendingReactivationId;
           this._pendingReactivationId = null;
@@ -313,7 +328,6 @@ class NearbySpacesManager {
           requestAnimationFrame(() => {
             const items = this.popoverElement?.querySelectorAll('.nearby-item');
             if (!items) {
-              // Fallback: Map-Dragging trotzdem aktivieren
               if (this.map) this.map.dragging.enable();
               return;
             }
@@ -326,11 +340,9 @@ class NearbySpacesManager {
             });
 
             if (foundIndex !== -1) {
-              // Makerspace gefunden - Index setzen und aktivieren
               this.keyboardIndex = foundIndex;
               this.updateKeyboardSelection(items);
             } else {
-              // Makerspace nicht mehr in der Liste - Connection Line explizit entfernen
               this.keyboardIndex = -1;
               this.currentHoverItem = null;
               if (window.searchManager) {
@@ -338,17 +350,15 @@ class NearbySpacesManager {
                 window.searchManager.cleanupHoverSVG();
               }
             }
-
-            // ✅ Map-Dragging erst NACH Reaktivierung der Connection Line wieder aktivieren
             if (this.map) this.map.dragging.enable();
           });
         } else {
-          // Kein Makerspace war aktiv - Map-Dragging sofort wieder aktivieren
           if (this.map) this.map.dragging.enable();
         }
       }
     }
   }
+
 
   // --- LOGIK-VERKNÜPFUNG MIT SEARCH.JS ---
   applyMarkerHighlight(item) {
@@ -387,6 +397,16 @@ class NearbySpacesManager {
     const navKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'];
     if (!navKeys.includes(e.key)) return;
     e.preventDefault(); e.stopImmediatePropagation();
+
+    // ✅ Tastatur übernimmt Kontrolle
+    this.lastInputMethod = 'keyboard';
+    this._mouseHasMoved = false;  // Maus muss sich erst bewegen bevor sie übernehmen kann
+
+    // ✅ pointer-events auf Items deaktivieren um CSS :hover zu unterdrücken (Liste bleibt scrollbar)
+    this.popoverElement.querySelectorAll('.nearby-item').forEach(item => {
+      item.style.pointerEvents = 'none';
+    });
+
     const items = this.popoverElement.querySelectorAll('.nearby-item');
     if (e.key === 'ArrowDown') this.keyboardIndex = (this.keyboardIndex + 1) % (items.length || 1);
     else if (e.key === 'ArrowUp') this.keyboardIndex = (this.keyboardIndex <= 0) ? (items.length - 1) : this.keyboardIndex - 1;
@@ -436,7 +456,7 @@ class NearbySpacesManager {
       const newPosition = `calc(28px + (100% - 56px) * ${fraction})`;
 
       // 1. Richtung setzen
-      pill.textContent = newIndex > oldIndex ? '>>>' : '<<<';
+      pill.textContent = newIndex > oldIndex ? '>' : '<';
 
       pill.style.left = newPosition;
       pill.dataset.currentIndex = newIndex;
@@ -446,10 +466,10 @@ class NearbySpacesManager {
         label.classList.toggle('active', idx === newIndex);
       });
 
-      // 2. Nach der CSS-Transition (200ms) den Wert wieder anzeigen
+      // 2. Nach der CSS-Transition (300ms) den Wert wieder anzeigen
       setTimeout(() => {
         if (pill) pill.textContent = newRadius + 'km';
-      }, 200);
+      }, 300);
     }
 
     // ✅ Hover-Effekte NICHT entfernen - Connection Line bleibt erhalten
@@ -459,7 +479,8 @@ class NearbySpacesManager {
     if (this.clickLocation) this.drawSearchCircle(this.clickLocation.lat, this.clickLocation.lon, true);
 
     // Der restliche showPopover Aufruf bleibt für das Laden der neuen Liste
-    setTimeout(() => { this.showPopover(); }, 250);
+    // ✅ Muss länger als die CSS-Transition (300ms) sein
+    setTimeout(() => { this.showPopover(); }, 320);
   }
 
 
@@ -646,19 +667,14 @@ class NearbySpacesManager {
         // PILL FOLGT DEM CURSOR (Echtzeit)
         pill.style.left = `${clampedX}px`;
 
-        // LOGIK FÜR TEXT (Pfeile vs. km-Wert)
+        // LOGIK FÜR TEXT - beim Draggen immer nur Richtung zeigen
         const currentPct = ((clampedX - leftLimit) / innerWidth) * 100;
         const snapIdx = Math.round(currentPct / (100 / (this.radii.length - 1)));
-        const snapPct = (snapIdx / (this.radii.length - 1)) * 100;
 
-        // Threshold: Wenn wir näher als 10% am Snap-Punkt sind, km zeigen
-        const threshold = 10;
-        if (Math.abs(currentPct - snapPct) < threshold) {
-          pill.textContent = this.radii[snapIdx] + 'km';
-        } else {
-          // Richtung bestimmen im Vergleich zum aktuell aktiven Radius
-          const startIdx = this.radii.indexOf(this.currentRadius);
-          pill.textContent = snapIdx > startIdx ? '>>>' : '<<<';
+        // Richtung bestimmen im Vergleich zum aktuell aktiven Radius
+        const startIdx = this.radii.indexOf(this.currentRadius);
+        if (snapIdx !== startIdx) {
+          pill.textContent = snapIdx > startIdx ? '>' : '<';
         }
 
         // Index für das Snapping beim Loslassen speichern
@@ -734,13 +750,27 @@ class NearbySpacesManager {
       });
 
       item.addEventListener('mouseenter', () => {
-        this.keyboardIndex = -1;
+        // ✅ Nur übernehmen wenn Maus sich tatsächlich bewegt hat (nicht bei DOM-Rebuild)
+        if (!this._mouseHasMoved) {
+          return;  // Maus muss sich erst bewegen um Kontrolle zu übernehmen
+        }
+
+        // ✅ Maus übernimmt Kontrolle
+        this.lastInputMethod = 'mouse';
+
+        // Keyboard-Styling entfernen wenn Maus übernimmt
+        if (this.keyboardIndex !== -1) {
+          this.popoverElement?.querySelectorAll('.keyboard-active').forEach(i => {
+            i.classList.remove('keyboard-active');
+            i.style.backgroundColor = '';
+          });
+          this.keyboardIndex = -1;
+        }
+
         this.applyMarkerHighlight(item);
       });
 
-      item.addEventListener('mouseleave', () => {
-        this.clearAllHoverEffects();
-      });
+      // ✅ Kein mouseleave-Handler: Letztes Element bleibt aktiv beim Verlassen der Liste
     });
   }
 

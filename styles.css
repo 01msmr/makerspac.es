@@ -2668,19 +2668,17 @@ a#titleurl:hover h3.space-unknown .fas {
   font-weight: 600;
   cursor: grab;
   user-select: none;
-  /* Wichtig: Sanftes Snapping beim Klicken/Tastatur */
-  transition: transform 0.2s ease, box-shadow 0.2s ease, left 0.2s ease;
+  /* Wichtig: Sanftes Snapping beim Klicken/Tastatur - ease-out für dynamischen Start */
+  transition: left 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
   z-index: 15;
   min-width: 50px;
   width: 50px;
   height: 20px;
-  /* Falls nötig */
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: none;  /* Verhindert Browser-Interferenz beim Ziehen */
   user-select: none;
-  transition: left 0.2s ease, transform 0.2s ease;
 }
 
 /* WICHTIG: Keine Verzögerung beim manuellen Draggen! */
