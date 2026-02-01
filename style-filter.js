@@ -244,8 +244,18 @@ class StyleFilterManager {
 
     console.log('  - finalFiltered:', finalFiltered.length);
 
+    // ✅ ID-Match in Marker- und Zoom-Berechnung einbeziehen
+    let locationsWithIdMatch = finalFiltered;
+    if (this.searchManager && this.searchManager._currentIdMatch) {
+      const idMatchId = this.searchManager._currentIdMatch.ID;
+      const alreadyIncluded = finalFiltered.some(loc => loc.ID === idMatchId);
+      if (!alreadyIncluded) {
+        locationsWithIdMatch = [this.searchManager._currentIdMatch, ...finalFiltered];
+      }
+    }
+
     // 3. ANWENDUNG AUF MAP UND DROPDOWN
-    this.updateMarkers(finalFiltered);
+    this.updateMarkers(locationsWithIdMatch);
 
     // ✅ FIX: URL-Update NUR wenn KEIN Country-Filter aktiv ist UND keine Navigation läuft
     const hasActiveCountry = window.routingManager && window.routingManager._activeCountryFilter;
@@ -274,7 +284,8 @@ class StyleFilterManager {
       this.searchManager.createActiveFiltersSection();
       this.searchManager.createSuggestionItems(finalFiltered);
       this.searchManager.updateSearchCounter(finalFiltered.length);
-      this.searchManager.triggerAutoZoom(finalFiltered);
+      // ✅ Zoom mit ID-Match
+      this.searchManager.triggerAutoZoom(locationsWithIdMatch);
 
       // ✨ KORREKTUR: Explizites Update des Dropdown-Zustands
       const hasResults = finalFiltered.length > 0;
