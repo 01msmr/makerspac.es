@@ -63,14 +63,14 @@ body:
     id: lat
     attributes:
       label: Latitude (Breitengrad)
-      placeholder: 47.7126816
+      placeholder: "47.7126816"
     validations:
       required: true
   - type: input
     id: long
     attributes:
       label: Longitude (Längengrad)
-      placeholder: 9.3995537
+      placeholder: "9.3995537"
     validations:
       required: true
   - type: dropdown
