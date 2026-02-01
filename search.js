@@ -2141,7 +2141,18 @@ class SearchManager {
   updateSearchResults(filteredLocations) {
     const searchQuery = this.searchBar.value.trim().toLowerCase();
     this.createActiveFiltersSection();
-    this.updateMarkers(filteredLocations);
+
+    // ✅ ID-Match in Marker- und Zoom-Berechnung einbeziehen
+    let locationsWithIdMatch = filteredLocations;
+    if (this._currentIdMatch) {
+      const idMatchId = this._currentIdMatch.ID;
+      const alreadyIncluded = filteredLocations.some(loc => loc.ID === idMatchId);
+      if (!alreadyIncluded) {
+        locationsWithIdMatch = [this._currentIdMatch, ...filteredLocations];
+      }
+    }
+
+    this.updateMarkers(locationsWithIdMatch);
     this.updateSearchCounter(filteredLocations.length);
     this.createSuggestionItems(filteredLocations);
 
@@ -2151,7 +2162,7 @@ class SearchManager {
     this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0 || hasActivePills || hasCountry);
 
     if (!this._manualSpaceClick) {
-      this.triggerAutoZoom(filteredLocations);
+      this.triggerAutoZoom(locationsWithIdMatch);
     }
   }
 

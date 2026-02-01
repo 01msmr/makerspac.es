@@ -746,8 +746,8 @@ export class RoutingManager {
     const names = locations.map(l => l.name).join(', ');
     if (locations.length === 1) {
       const loc = locations[0];
-      const countryCode = getCountryCode(loc.loc?.country).toUpperCase();
-      const plz = loc.loc?.plz || '';
+      const countryCode = window.MapIcons.getCountryCode(loc.loc?.country).toUpperCase();
+      const plz = loc.loc?.plz ? window.zfill(loc.loc.plz, loc.loc.country) : '';
       const city = loc.loc?.city || '';
       // Format: makerspac.es > CC-PLZ City > Makerspace Name
       this.updatePageMeta(
@@ -858,8 +858,8 @@ export class RoutingManager {
       if (locationIds.length === 1) {
         const location = window.locationById.get(locationIds[0]);
         if (location) {
-          const countryCode = getCountryCode(location.loc?.country).toUpperCase();
-          const plz = location.loc?.plz || '';
+          const countryCode = window.MapIcons.getCountryCode(location.loc?.country).toUpperCase();
+          const plz = location.loc?.plz ? window.zfill(location.loc.plz, location.loc.country) : '';
           const city = location.loc?.city || '';
           document.title = `makerspac.es > ${countryCode}-${plz} ${city} > ${location.name}`;
         }

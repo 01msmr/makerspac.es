@@ -86,7 +86,8 @@ class NearbySpacesManager {
       }
     }, true);
     document.addEventListener('mouseleave', (e) => {
-      if (e.target.closest('.leaflet-popup')) {
+      // ✅ Prüfe ob e.target ein Element ist (nicht document/window)
+      if (e.target && typeof e.target.closest === 'function' && e.target.closest('.leaflet-popup')) {
         this.isOverSearchUI = false;
       }
     }, true);

@@ -490,6 +490,7 @@ function zfill(plz, country) {
   let expectedLength = expectedLengths[country] || plzStr.length;
   return plzStr.padStart(expectedLength, "0");
 }
+window.zfill = zfill;
 
 // ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
 // ✅ REFACTORED: Nutze zentrale Funktion aus MapIcons
