@@ -50,6 +50,47 @@ class NearbySpacesManager {
       dropdown.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
     }
 
+    // ✅ Home-Button/Logo (.title)
+    const titleElement = document.querySelector('.title');
+    if (titleElement) {
+      titleElement.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
+      titleElement.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
+    }
+
+    // ✅ User Guide
+    const userGuide = document.querySelector('.user-guide');
+    if (userGuide) {
+      userGuide.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
+      userGuide.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
+    }
+
+    // ✅ Add Makerspace
+    const addMakerspace = document.querySelector('.add-makerspace');
+    if (addMakerspace) {
+      addMakerspace.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
+      addMakerspace.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
+    }
+
+    // ✅ Leaflet Controls (Zoom-Buttons etc.)
+    const leafletControls = document.querySelectorAll('.leaflet-control');
+    leafletControls.forEach(control => {
+      control.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
+      control.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
+    });
+
+    // ✅ Marker-Popups (dynamisch, da sie erst bei Klick erstellt werden)
+    document.addEventListener('mouseenter', (e) => {
+      if (e.target.closest('.leaflet-popup')) {
+        this.isOverSearchUI = true;
+        this.updateHintState();
+      }
+    }, true);
+    document.addEventListener('mouseleave', (e) => {
+      if (e.target.closest('.leaflet-popup')) {
+        this.isOverSearchUI = false;
+      }
+    }, true);
+
     document.addEventListener('languageChanged', () => {
       // Update Popup wenn offen
       if (this.popoverElement && this.popoverElement.parentElement) this.showPopover();
