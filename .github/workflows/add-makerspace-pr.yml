@@ -17,114 +17,123 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Issue Parser
-        run: npm install @github/issue-parser
-
       - name: Process Issue and Update JSON
         id: update_script
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const { parseIssue } = require('@github/issue-parser');
             
             try {
-              // 1. Issue parsen
-              const issueBody = context.payload.issue.body;
-              const template = fs.readFileSync('.github/ISSUE_TEMPLATE/add-makerspace.yml', 'utf8');
-              const parsed = parseIssue(issueBody, template);
-              
-              // Hilfsfunktion: Holt Text sicher ab oder gibt Leerstring zurück
-              const getVal = (id) => (parsed[id] && parsed[id].text) ? parsed[id].text.trim() : "";
+              const body = context.payload.issue.body;
 
-              // 2. locations.json laden
+              // 1. Hilfsfunktion zur Extraktion der Daten aus dem Issue
+              function extract(label) {
+                const regex = new RegExp(`### ${label}\\s*\\r?\\n\\r?\\n?([\\s\\S]*?)(?:\\r?\\n\\r?\\n###|$)`, 'i');
+                const match = body.match(regex);
+                if (match && match[1]) {
+                  const result = match[1].trim();
+                  return (result === "_No response_" || result === "None") ? "" : result;
+                }
+                return "";
+              }
+
+              // 2. Rohdaten sammeln
+              const raw = {
+                name: extract("Name des Makerspaces"),
+                country: extract("Land"),
+                city: extract("Stadt"),
+                plz: extract("PLZ"),
+                street_name: extract("Straße"),
+                street_number: extract("Hausnummer"),
+                street_ext: extract("Adress-Zusatz"),
+                lat: extract("Latitude \\(Breitengrad\\)"),
+                long: extract("Longitude \\(Längengrad\\)"),
+                style: extract("Kategorie / Style"),
+                url: extract("Webseite \\(URL\\)"),
+                url_text: extract("Link-Anzeigetext"),
+                spaceapi: extract("SpaceAPI Endpoint \\(Optional\\)")
+              };
+
+              // 3. locations.json laden
               let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
               
-              // 3. ID Management
+              // 4. ID Management (Template an Index 0 nutzen)
               const nextId = parseInt(locations[0].ID);
               core.setOutput('next_id', nextId);
-              locations[0].ID = nextId + 1;
-              
-              // 4. Neues Objekt bauen
+              locations[0].ID = nextId + 1; // ID im Template für das nächste Mal erhöhen
+
+              // 5. Das neue Objekt nach deiner sauberen Struktur bauen
               const newEntry = {
-                name: getVal('name') || "Unbenannter Space",
-                ID: nextId,
-                loc: {
-                  lat: parseFloat(getVal('lat')) || 0,
-                  long: parseFloat(getVal('long')) || 0,
-                  plz: parseInt(getVal('plz')) || 0,
-                  city: getVal('city'),
-                  street: {
-                    name: getVal('street_name'),
-                    number: getVal('street_number'),
-                    ext: getVal('street_ext')
+                "name": raw.name || "Unbekannter Space",
+                "ID": nextId,
+                "loc": {
+                  "lat": parseFloat(raw.lat.replace(',', '.')) || 1.0,
+                  "long": parseFloat(raw.long.replace(',', '.')) || 1.0,
+                  "plz": parseInt(raw.plz) || 0,
+                  "city": raw.city,
+                  "street": {
+                    "name": raw.street_name,
+                    "number": raw.street_number,
+                    "ext": raw.street_ext
                   },
-                  country: getVal('country')
+                  "country": raw.country || "Germany"
                 },
-                style: getVal('style'),
-                link: {
-                  url: getVal('url'),
-                  text: getVal('url_text')
-                },
-                dates: {
-                  "space.init": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, '')),
-                  "datacheck.latest": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''))
+                "style": raw.style,
+                "link": {
+                  "url": raw.url,
+                  "text": raw.url_text
                 }
               };
               
-              const sApi = getVal('spaceapi');
-              if (sApi.startsWith('http')) {
-                newEntry.spaceapi = { endpoint: sApi };
+              // SpaceAPI nur hinzufügen, wenn URL vorhanden
+              if (raw.spaceapi && raw.spaceapi.startsWith('http')) {
+                newEntry.spaceapi = { "endpoint": raw.spaceapi };
               }
 
-              // 5. Daten extrahieren (ohne Template)
+              // Aktuelle Datums-Werte (Format: YYYYMMDD)
+              const today = parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''));
+              newEntry.dates = {
+                "space.init": today,
+                "datacheck.latest": today
+              };
+
+              // 6. Die richtige Stelle suchen (Splicing)
+              // Wir arbeiten auf dem Array ab Index 1 (nach dem Template)
               let dataOnly = locations.slice(1);
-              
-              // 6. Die richtige Position finden (Splicing-Logik)
-              let insertIndex = dataOnly.length; // Standard: am Ende einfügen
-              
+              let insertIndex = dataOnly.length; // Default: ganz ans Ende
+
               for (let i = 0; i < dataOnly.length; i++) {
                 const item = dataOnly[i];
                 
-                // Vergleichswerte (Normalisiert auf Kleinbuchstaben für sauberes Sortieren)
+                // Kriterium 1: Land (Alphabetisch)
                 const cComp = (item.loc?.country || "").localeCompare(newEntry.loc.country);
+                if (cComp > 0) { insertIndex = i; break; }
                 
-                if (cComp > 0) { 
-                  insertIndex = i; 
-                  break; 
-                } else if (cComp === 0) {
-                  // Wenn Land gleich, prüfe PLZ
+                if (cComp === 0) {
+                  // Kriterium 2: PLZ (Numerisch)
                   const pComp = (item.loc?.plz || 0) - newEntry.loc.plz;
-                  if (pComp > 0) { 
-                    insertIndex = i; 
-                    break; 
-                  } else if (pComp === 0) {
-                    // Wenn PLZ auch gleich, prüfe Name
-                    if ((item.name || "").localeCompare(newEntry.name) > 0) {
-                      insertIndex = i;
-                      break;
-                    }
+                  if (pComp > 0) { insertIndex = i; break; }
+                  
+                  if (pComp === 0) {
+                    // Kriterium 3: Name (Alphabetisch)
+                    const nComp = (item.name || "").localeCompare(newEntry.name);
+                    if (nComp > 0) { insertIndex = i; break; }
                   }
                 }
               }
 
-              // 7. Einfügen
+              // 7. An der exakten Stelle einfügen
               dataOnly.splice(insertIndex, 0, newEntry);
 
-              // 8. Final speichern
+              // 8. Zusammenbauen und speichern
               const finalData = [locations[0], ...dataOnly];
               fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
               
-              console.log(`✅ Erfolgreich an Index ${insertIndex} eingefügt.`);
+              console.log(`✅ Space "${newEntry.name}" mit ID ${nextId} an Position ${insertIndex + 1} eingefügt.`);
               
             } catch (error) {
-              console.error(error);
-              core.setFailed("Skriptfehler: " + error.message);
+              core.setFailed("Fehler: " + error.message);
             }
 
       - name: Create Pull Request
@@ -137,12 +146,12 @@ jobs:
           base: main
           delete-branch: true
           body: |
-            Automatischer PR für Issue #${{ github.event.issue.number }}.
-            ID: ${{ steps.update_script.outputs.next_id }}
+            Automatischer PR für den Makerspace: **${{ github.event.issue.title }}**
+            Zugewiesene ID: `${{ steps.update_script.outputs.next_id }}`
           labels: automated-pr
 
-      - name: Add Feedback Comment
+      - name: Feedback Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
-          body: "🚀 Pull Request mit der ID **${{ steps.update_script.outputs.next_id }}** wurde erstellt!"
+          body: "🚀 Ein Pull Request mit der ID **${{ steps.update_script.outputs.next_id }}** wurde erstellt!"
