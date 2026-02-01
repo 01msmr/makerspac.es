@@ -417,7 +417,8 @@ export class RoutingManager {
   // ========================================
 
   updatePageMeta(title, desc) {
-    document.title = `${title} | makerspac.es`;
+    // Wenn Titel schon mit "map of makerspac.es" beginnt, nicht nochmal anhängen
+    document.title = title.startsWith('map of makerspac.es') ? title : `${title} | makerspac.es`;
 
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -731,10 +732,20 @@ export class RoutingManager {
 
     // Update Page Meta
     const names = locations.map(l => l.name).join(', ');
-    this.updatePageMeta(
-      locations.length === 1 ? locations[0].name : `${locations.length} Makerspaces`,
-      `View ${names} on the map`
-    );
+    if (locations.length === 1) {
+      const loc = locations[0];
+      const city = loc.loc?.city || '';
+      // Format: map of makerspac.es > City > Makerspace Name
+      this.updatePageMeta(
+        `map of makerspac.es > ${city} > ${loc.name}`,
+        `View ${loc.name} in ${city} on the map`
+      );
+    } else {
+      this.updatePageMeta(
+        `${locations.length} Makerspaces`,
+        `View ${names} on the map`
+      );
+    }
   }
 
   /**
