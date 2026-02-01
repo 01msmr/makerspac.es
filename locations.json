@@ -1,7 +1,7 @@
 [
   {
     "name": "TEMPLATE",
-    "ID": 275,
+    "ID": 276,
     "loc": {
       "lat": 1,
       "long": 1,
@@ -6743,6 +6743,34 @@
       "space.init": 20010000,
       "blog.latest": 20010000,
       "datacheck.latest": 20251115
+    }
+  },
+  {
+    "name": "MakerSpace Leiden",
+    "ID": 275,
+    "loc": {
+      "lat": 52.162699,
+      "long": 4.4939511,
+      "plz": 2312,
+      "city": "PG Leiden",
+      "street": {
+        "name": "Volmolengracht",
+        "number": "13",
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://makerspaceleiden.nl",
+      "text": "makerspaceleiden.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://makerspaceleiden.nl/crm/spaceapi/0.13"
+    },
+    "dates": {
+      "space.init": 20260201,
+      "datacheck.latest": 20260201
     }
   },
   {
