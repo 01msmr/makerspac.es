@@ -34,36 +34,42 @@ jobs:
             const { parseIssue } = require('@github/issue-parser');
             
             try {
+              // 1. Issue parsen
               const issueBody = context.payload.issue.body;
               const template = fs.readFileSync('.github/ISSUE_TEMPLATE/add-makerspace.yml', 'utf8');
               const parsed = parseIssue(issueBody, template);
               
+              // Hilfsfunktion: Holt Text sicher ab oder gibt Leerstring zurück
+              const getVal = (id) => (parsed[id] && parsed[id].text) ? parsed[id].text.trim() : "";
+
+              // 2. locations.json laden
               let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
               
+              // 3. ID Management
               const nextId = parseInt(locations[0].ID);
               core.setOutput('next_id', nextId);
-              
               locations[0].ID = nextId + 1;
               
+              // 4. Neues Objekt bauen
               const newEntry = {
-                name: parsed.name.text,
+                name: getVal('name') || "Unbenannter Space",
                 ID: nextId,
                 loc: {
-                  lat: parseFloat(parsed.lat.text),
-                  long: parseFloat(parsed.long.text),
-                  plz: parseInt(parsed.plz.text),
-                  city: parsed.city.text,
+                  lat: parseFloat(getVal('lat')) || 0,
+                  long: parseFloat(getVal('long')) || 0,
+                  plz: parseInt(getVal('plz')) || 0,
+                  city: getVal('city'),
                   street: {
-                    name: parsed.street_name.text,
-                    number: parsed.street_number.text,
-                    ext: parsed.street_ext ? parsed.street_ext.text : ""
+                    name: getVal('street_name'),
+                    number: getVal('street_number'),
+                    ext: getVal('street_ext')
                   },
-                  country: parsed.country.text
+                  country: getVal('country')
                 },
-                style: parsed.style.text,
+                style: getVal('style'),
                 link: {
-                  url: parsed.url.text,
-                  text: parsed.url_text.text
+                  url: getVal('url'),
+                  text: getVal('url_text')
                 },
                 dates: {
                   "space.init": parseInt(new Date().toISOString().slice(0,10).replace(/-/g, '')),
@@ -71,24 +77,54 @@ jobs:
                 }
               };
               
-              if (parsed.spaceapi && parsed.spaceapi.text && parsed.spaceapi.text.startsWith('http')) {
-                newEntry.spaceapi = { endpoint: parsed.spaceapi.text };
+              const sApi = getVal('spaceapi');
+              if (sApi.startsWith('http')) {
+                newEntry.spaceapi = { endpoint: sApi };
               }
-              
+
+              // 5. Daten extrahieren (ohne Template)
               let dataOnly = locations.slice(1);
-              dataOnly.push(newEntry);
               
-              dataOnly.sort((a, b) => {
-                if (a.loc.country !== b.loc.country) return a.loc.country.localeCompare(b.loc.country);
-                if (a.loc.plz !== b.loc.plz) return a.loc.plz - b.loc.plz;
-                return a.name.localeCompare(b.name);
-              });
+              // 6. Die richtige Position finden (Splicing-Logik)
+              let insertIndex = dataOnly.length; // Standard: am Ende einfügen
               
+              for (let i = 0; i < dataOnly.length; i++) {
+                const item = dataOnly[i];
+                
+                // Vergleichswerte (Normalisiert auf Kleinbuchstaben für sauberes Sortieren)
+                const cComp = (item.loc?.country || "").localeCompare(newEntry.loc.country);
+                
+                if (cComp > 0) { 
+                  insertIndex = i; 
+                  break; 
+                } else if (cComp === 0) {
+                  // Wenn Land gleich, prüfe PLZ
+                  const pComp = (item.loc?.plz || 0) - newEntry.loc.plz;
+                  if (pComp > 0) { 
+                    insertIndex = i; 
+                    break; 
+                  } else if (pComp === 0) {
+                    // Wenn PLZ auch gleich, prüfe Name
+                    if ((item.name || "").localeCompare(newEntry.name) > 0) {
+                      insertIndex = i;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              // 7. Einfügen
+              dataOnly.splice(insertIndex, 0, newEntry);
+
+              // 8. Final speichern
               const finalData = [locations[0], ...dataOnly];
               fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
               
+              console.log(`✅ Erfolgreich an Index ${insertIndex} eingefügt.`);
+              
             } catch (error) {
-              core.setFailed("Fehler: " + error.message);
+              console.error(error);
+              core.setFailed("Skriptfehler: " + error.message);
             }
 
       - name: Create Pull Request
@@ -101,18 +137,12 @@ jobs:
           base: main
           delete-branch: true
           body: |
-            Dieser Pull Request wurde automatisch erstellt.
-            - **Makerspace:** ${{ github.event.issue.title }}
-            - **ID:** ${{ steps.update_script.outputs.next_id }}
-            - **Quelle:** Issue #${{ github.event.issue.number }}
-          labels: |
-            automated-pr
-            id-${{ steps.update_script.outputs.next_id }}
+            Automatischer PR für Issue #${{ github.event.issue.number }}.
+            ID: ${{ steps.update_script.outputs.next_id }}
+          labels: automated-pr
 
       - name: Add Feedback Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
-          body: |
-            🚀 **Aktion gestartet!**
-            PR mit der **ID ${{ steps.update_script.outputs.next_id }}** wurde erstellt.
+          body: "🚀 Pull Request mit der ID **${{ steps.update_script.outputs.next_id }}** wurde erstellt!"
