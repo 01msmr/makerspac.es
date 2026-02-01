@@ -98,18 +98,18 @@ class I18n {
     const addMakerspace = document.querySelector('.add-makerspace');
     if (!addMakerspace) return;
 
-    addMakerspace.innerHTML = `
-      <h2>+ ${this.t('addMakerspace.title')} 💛</h2>
-      <br />
-      <ul>
-        <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-1">${this.t('addMakerspace.byGoogleForms')}</a></li>
-        <li><a href="https://github.com/01msmr/makerspac.es/blob/main/add-makerspace.md" target="_blank" class="btn-2">${this.t('addMakerspace.byGithub')}</a></li>
-        </ul>
-        <h2 class="btn-3">${this.t('addMakerspace.embed')}</h2><br />
-        <ul>
-        <li><a href="https://makerspac.es/embed-demo.html" target="_blank">https://makerspac.es/embed-demo.html</a></li>
-      </ul>
-    `;
+    // Nur Texte übersetzen, URLs bleiben im HTML
+    const h2Title = addMakerspace.querySelector('h2');
+    if (h2Title) h2Title.innerHTML = `+ ${this.t('addMakerspace.title')} 💛`;
+
+    const btn1 = addMakerspace.querySelector('.btn-1');
+    if (btn1) btn1.textContent = this.t('addMakerspace.byGoogleForms');
+
+    const btn2 = addMakerspace.querySelector('.btn-2');
+    if (btn2) btn2.textContent = this.t('addMakerspace.byGithub');
+
+    const btn3 = addMakerspace.querySelector('.btn-3');
+    if (btn3) btn3.textContent = this.t('addMakerspace.embed');
   }
 
   getLanguage() {
