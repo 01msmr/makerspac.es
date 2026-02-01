@@ -17,6 +17,9 @@ export class RoutingManager {
     // ✅ NEU: Flag um hashchange nach eigenem navigateToLocations zu ignorieren
     this._isNavigating = false;
 
+    // ✅ Flag: Zeigt an, dass wir gerade eine Location-Route anzeigen
+    this._isOnLocationRoute = false;
+
     // ✅ Aktiver Country-Filter (für URL-Updates)
     this._activeCountryFilter = null;
 
@@ -417,8 +420,8 @@ export class RoutingManager {
   // ========================================
 
   updatePageMeta(title, desc) {
-    // Wenn Titel schon mit "map of makerspac.es" beginnt, nicht nochmal anhängen
-    document.title = title.startsWith('map of makerspac.es') ? title : `${title} | makerspac.es`;
+    // Wenn Titel schon mit "makerspac.es" beginnt, nicht nochmal anhängen
+    document.title = title.startsWith('makerspac.es') ? title : `${title} | makerspac.es`;
 
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -530,6 +533,9 @@ export class RoutingManager {
       return;
     }
 
+    // ✅ Kein Location-Route Match → Flag zurücksetzen
+    this._isOnLocationRoute = false;
+
     // ✅ COUNTRY-FILTER: #/germany oder #/germany/
     // Prüfe ob URL ein einzelnes Land ist (mit optionalem trailing slash)
     const singleCountryMatch = hash.match(/^#\/([^/+]+)\/?$/);
@@ -567,10 +573,13 @@ export class RoutingManager {
 
     if (!pills.length) {
       this.clearAllPillsAndFilters();
-      this.updatePageMeta(
-        'Makerspace Map',
-        'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland'
-      );
+      // ✅ Titel nur setzen wenn NICHT auf einer Location-Route
+      if (!this._isOnLocationRoute) {
+        this.updatePageMeta(
+          'Makerspace Map',
+          'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland'
+        );
+      }
       return;
     }
 
@@ -695,6 +704,9 @@ export class RoutingManager {
       return;
     }
 
+    // ✅ Flag setzen BEVOR pillsManager.clear() Events triggert
+    this._isOnLocationRoute = true;
+
     // Clear Pills (ID-Route hat keine Pills)
     if (this.searchManager.pillsManager) {
       this.searchManager.pillsManager.clear();
@@ -734,11 +746,12 @@ export class RoutingManager {
     const names = locations.map(l => l.name).join(', ');
     if (locations.length === 1) {
       const loc = locations[0];
+      const plz = loc.loc?.plz || '';
       const city = loc.loc?.city || '';
-      // Format: map of makerspac.es > City > Makerspace Name
+      // Format: makerspac.es > PLZ City > Makerspace Name
       this.updatePageMeta(
-        `map of makerspac.es > ${city} > ${loc.name}`,
-        `View ${loc.name} in ${city} on the map`
+        `makerspac.es > ${plz} ${city} > ${loc.name}`,
+        `View ${loc.name} in ${plz} ${city} on the map`
       );
     } else {
       this.updatePageMeta(
@@ -837,8 +850,20 @@ export class RoutingManager {
     if (url) {
       // ✅ LÖSUNG 2: Setze Flag VOR Hash-Änderung
       this._isNavigating = true;
+      this._isOnLocationRoute = true;
       window.location.hash = url;
-      // hashchange-Event wird in handleRouteWithPills ignoriert!
+
+      // ✅ Titel sofort setzen (für Lesezeichen)
+      if (locationIds.length === 1) {
+        const location = window.locationById.get(locationIds[0]);
+        if (location) {
+          const plz = location.loc?.plz || '';
+          const city = location.loc?.city || '';
+          document.title = `makerspac.es > ${plz} ${city} > ${location.name}`;
+        }
+      } else {
+        document.title = `${locationIds.length} Makerspaces | makerspac.es`;
+      }
     }
   }
 
