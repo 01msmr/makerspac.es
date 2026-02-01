@@ -23,135 +23,209 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
-            try {
-              const body = context.payload.issue.body;
 
-              // 1. Hilfsfunktion zur Extraktion der Daten aus dem Issue
-              function extract(label) {
-                const regex = new RegExp(`### ${label}\\s*\\r?\\n\\r?\\n?([\\s\\S]*?)(?:\\r?\\n\\r?\\n###|$)`, 'i');
-                const match = body.match(regex);
-                if (match && match[1]) {
-                  const result = match[1].trim();
-                  return (result === "_No response_" || result === "None") ? "" : result;
-                }
-                return "";
-              }
+            const body = context.payload.issue.body || "";
 
-              // 2. Rohdaten sammeln
-              const raw = {
-                name: extract("Name des Makerspaces"),
-                country: extract("Land"),
-                city: extract("Stadt"),
-                plz: extract("PLZ"),
-                street_name: extract("Straße"),
-                street_number: extract("Hausnummer"),
-                street_ext: extract("Adress-Zusatz"),
-                lat: extract("Latitude \\(Breitengrad\\)"),
-                long: extract("Longitude \\(Längengrad\\)"),
-                style: extract("Kategorie / Style"),
-                url: extract("Webseite \\(URL\\)"),
-                url_text: extract("Link-Anzeigetext"),
-                spaceapi: extract("SpaceAPI Endpoint \\(Optional\\)")
-              };
+            // Debug: Log the entire body
+            console.log("=== ISSUE BODY START ===");
+            console.log(body);
+            console.log("=== ISSUE BODY END ===");
 
-              // 3. locations.json laden
-              let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
-              
-              // 4. ID Management (Template an Index 0 nutzen)
-              const nextId = parseInt(locations[0].ID);
-              core.setOutput('next_id', nextId);
-              locations[0].ID = nextId + 1; // ID im Template für das nächste Mal erhöhen
+            // Einfaches, zuverlässiges Parsing ohne Regex
+            // GitHub Issue Forms erzeugen: "### Label\n\nWert\n\n### Nächstes Label..."
 
-              // 5. Das neue Objekt nach deiner sauberen Struktur bauen
-              const newEntry = {
-                "name": raw.name || "Unbekannter Space",
-                "ID": nextId,
-                "loc": {
-                  "lat": parseFloat(raw.lat.replace(',', '.')) || 1.0,
-                  "long": parseFloat(raw.long.replace(',', '.')) || 1.0,
-                  "plz": parseInt(raw.plz) || 0,
-                  "city": raw.city,
-                  "street": {
-                    "name": raw.street_name,
-                    "number": raw.street_number,
-                    "ext": raw.street_ext
-                  },
-                  "country": raw.country || "Germany"
-                },
-                "style": raw.style,
-                "link": {
-                  "url": raw.url,
-                  "text": raw.url_text
-                }
-              };
-              
-              // SpaceAPI nur hinzufügen, wenn URL vorhanden
-              if (raw.spaceapi && raw.spaceapi.startsWith('http')) {
-                newEntry.spaceapi = { "endpoint": raw.spaceapi };
-              }
+            function parseFormFields(body) {
+              const fields = {};
+              const lines = body.split('\n');
 
-              // Aktuelle Datums-Werte (Format: YYYYMMDD)
-              const today = parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''));
-              newEntry.dates = {
-                "space.init": today,
-                "datacheck.latest": today
-              };
+              let currentLabel = null;
+              let currentValue = [];
 
-              // 6. Die richtige Stelle suchen (Splicing)
-              // Wir arbeiten auf dem Array ab Index 1 (nach dem Template)
-              let dataOnly = locations.slice(1);
-              let insertIndex = dataOnly.length; // Default: ganz ans Ende
-
-              for (let i = 0; i < dataOnly.length; i++) {
-                const item = dataOnly[i];
-                
-                // Kriterium 1: Land (Alphabetisch)
-                const cComp = (item.loc?.country || "").localeCompare(newEntry.loc.country);
-                if (cComp > 0) { insertIndex = i; break; }
-                
-                if (cComp === 0) {
-                  // Kriterium 2: PLZ (Numerisch)
-                  const pComp = (item.loc?.plz || 0) - newEntry.loc.plz;
-                  if (pComp > 0) { insertIndex = i; break; }
-                  
-                  if (pComp === 0) {
-                    // Kriterium 3: Name (Alphabetisch)
-                    const nComp = (item.name || "").localeCompare(newEntry.name);
-                    if (nComp > 0) { insertIndex = i; break; }
+              for (const line of lines) {
+                // Neuer Header gefunden?
+                if (line.startsWith('### ')) {
+                  // Vorherigen Wert speichern
+                  if (currentLabel) {
+                    fields[currentLabel] = currentValue.join('\n').trim();
                   }
+                  // Neuen Header starten
+                  currentLabel = line.substring(4).trim();
+                  currentValue = [];
+                } else if (currentLabel) {
+                  // Zeile zum aktuellen Wert hinzufügen
+                  currentValue.push(line);
                 }
               }
 
-              // 7. An der exakten Stelle einfügen
-              dataOnly.splice(insertIndex, 0, newEntry);
+              // Letzten Wert speichern
+              if (currentLabel) {
+                fields[currentLabel] = currentValue.join('\n').trim();
+              }
 
-              // 8. Zusammenbauen und speichern
-              const finalData = [locations[0], ...dataOnly];
-              fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
-              
-              console.log(`✅ Space "${newEntry.name}" mit ID ${nextId} an Position ${insertIndex + 1} eingefügt.`);
-              
-            } catch (error) {
-              core.setFailed("Fehler: " + error.message);
+              return fields;
             }
+
+            const fields = parseFormFields(body);
+
+            // Debug: Alle gefundenen Felder ausgeben
+            console.log("=== PARSED FIELDS ===");
+            for (const [key, value] of Object.entries(fields)) {
+              console.log(`[${key}] = "${value}"`);
+            }
+            console.log("=== END PARSED FIELDS ===");
+
+            // Felder direkt auslesen (exakte Label-Namen aus dem Formular)
+            function getField(label, fallback = "") {
+              const value = fields[label];
+              if (!value || value === "_No response_" || value === "None") {
+                return fallback;
+              }
+              return value;
+            }
+
+            function getNumber(label, fallback = 0) {
+              const value = getField(label, "");
+              if (!value) return fallback;
+              // Komma zu Punkt für deutsche Zahlenformate
+              const num = parseFloat(value.replace(',', '.'));
+              return isNaN(num) ? fallback : num;
+            }
+
+            function getInt(label, fallback = 0) {
+              const value = getField(label, "");
+              if (!value) return fallback;
+              const num = parseInt(value, 10);
+              return isNaN(num) ? fallback : num;
+            }
+
+            // Pflichtfelder prüfen
+            const name = getField("Name des Makerspaces");
+            const country = getField("Land");
+            const city = getField("Stadt");
+            const lat = getNumber("Latitude (Breitengrad)");
+            const long = getNumber("Longitude (Längengrad)");
+
+            if (!name) {
+              core.setFailed("Fehler: Name des Makerspaces fehlt!");
+              return;
+            }
+            if (!country) {
+              core.setFailed("Fehler: Land fehlt!");
+              return;
+            }
+            if (!city) {
+              core.setFailed("Fehler: Stadt fehlt!");
+              return;
+            }
+            if (lat === 0 || long === 0) {
+              core.setFailed("Fehler: Koordinaten fehlen oder sind ungültig! (lat=" + lat + ", long=" + long + ")");
+              return;
+            }
+
+            // locations.json laden
+            let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
+
+            // ID Management (Template an Index 0)
+            const nextId = parseInt(locations[0].ID);
+            core.setOutput('next_id', nextId);
+            locations[0].ID = nextId + 1;
+
+            // Neuen Eintrag erstellen
+            const newEntry = {
+              "name": name,
+              "ID": nextId,
+              "loc": {
+                "lat": lat,
+                "long": long,
+                "plz": getInt("PLZ"),
+                "city": city,
+                "street": {
+                  "name": getField("Straße"),
+                  "number": getField("Hausnummer"),
+                  "ext": getField("Adress-Zusatz")
+                },
+                "country": country
+              },
+              "style": getField("Kategorie / Style", "for all"),
+              "link": {
+                "url": getField("Webseite (URL)"),
+                "text": getField("Link-Anzeigetext")
+              }
+            };
+
+            // SpaceAPI nur hinzufügen, wenn URL vorhanden
+            const spaceapi = getField("SpaceAPI Endpoint (Optional)");
+            if (spaceapi && spaceapi.startsWith('http')) {
+              newEntry.spaceapi = { "endpoint": spaceapi };
+            }
+
+            // Datum (Format: YYYYMMDD)
+            const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+            newEntry.dates = {
+              "space.init": today,
+              "datacheck.latest": today
+            };
+
+            // Debug: Neuen Eintrag ausgeben
+            console.log("=== NEW ENTRY ===");
+            console.log(JSON.stringify(newEntry, null, 2));
+            console.log("=== END NEW ENTRY ===");
+
+            // Einfügeposition finden (sortiert nach Land > PLZ > Name)
+            let dataOnly = locations.slice(1);
+            let insertIndex = dataOnly.length;
+
+            for (let i = 0; i < dataOnly.length; i++) {
+              const item = dataOnly[i];
+
+              const cComp = (item.loc?.country || "").localeCompare(newEntry.loc.country);
+              if (cComp > 0) { insertIndex = i; break; }
+
+              if (cComp === 0) {
+                const pComp = (item.loc?.plz || 0) - newEntry.loc.plz;
+                if (pComp > 0) { insertIndex = i; break; }
+
+                if (pComp === 0) {
+                  const nComp = (item.name || "").localeCompare(newEntry.name);
+                  if (nComp > 0) { insertIndex = i; break; }
+                }
+              }
+            }
+
+            // Einfügen
+            dataOnly.splice(insertIndex, 0, newEntry);
+
+            // Speichern
+            const finalData = [locations[0], ...dataOnly];
+            fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
+
+            // Ausgabe für Titel
+            core.setOutput('space_name', name);
+
+            console.log(`✅ Space "${name}" mit ID ${nextId} an Position ${insertIndex + 1} eingefügt.`);
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Add makerspace ID ${{ steps.update_script.outputs.next_id }}"
-          title: "➕ Neuer Space: ${{ github.event.issue.title }} (ID: ${{ steps.update_script.outputs.next_id }})"
+          commit-message: "Add makerspace: ${{ steps.update_script.outputs.space_name }} (ID ${{ steps.update_script.outputs.next_id }})"
+          title: "➕ Neuer Space: ${{ steps.update_script.outputs.space_name }} (ID: ${{ steps.update_script.outputs.next_id }})"
           branch: "add-space-id-${{ steps.update_script.outputs.next_id }}"
           base: main
           delete-branch: true
           body: |
-            Automatischer PR für den Makerspace: **${{ github.event.issue.title }}**
+            Automatischer PR für den Makerspace: **${{ steps.update_script.outputs.space_name }}**
             Zugewiesene ID: `${{ steps.update_script.outputs.next_id }}`
+
+            Basierend auf Issue #${{ github.event.issue.number }}
           labels: automated-pr
 
       - name: Feedback Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
-          body: "🚀 Ein Pull Request mit der ID **${{ steps.update_script.outputs.next_id }}** wurde erstellt!"
+          body: |
+            🚀 Ein Pull Request wurde erstellt!
+
+            **Space:** ${{ steps.update_script.outputs.space_name }}
+            **ID:** ${{ steps.update_script.outputs.next_id }}
