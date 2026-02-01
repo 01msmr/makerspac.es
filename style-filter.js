@@ -154,7 +154,7 @@ class StyleFilterManager {
   }
 
   applyFilters() {
-    // ✅ FIX: Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
+    // Basisliste ist entweder die vorgefilterte Liste ODER alle Locations
     const baseLocations = this.preFilteredLocations || this.json;
 
     console.log('🎯 applyFilters called');
@@ -162,12 +162,10 @@ class StyleFilterManager {
     console.log('  - baseLocations:', baseLocations.length);
     console.log('  - hasActiveFilters:', this.hasActiveFilters());
 
-    // ✅ FIX: VOLL-RESET nur wenn BEIDE Bedingungen erfüllt sind
     const hasStyleFilters = this.hasActiveFilters();
     const hasPillFilters = this.preFilteredLocations !== null;
 
     if (!hasStyleFilters && !hasPillFilters) {
-      // Nur wenn wirklich NICHTS aktiv ist, zeige alle Locations
       this.updateMarkers(this.json);
       if (this.searchManager) {
         this.searchManager.createActiveFiltersSection();
@@ -179,9 +177,8 @@ class StyleFilterManager {
       return;
     }
 
-    // --- FILTER-LOGIK (Nur ausgeführt, wenn Style-Filter ODER Pre-Filter aktiv sind) ---
+    // --- FILTER-LOGIK ---
 
-    // 1. Trenne die aktiven Filter in Kategorien
     const selectedNormalStyles = new Set();
     const selectedStateFilters = new Set();
     const selectedCountries = new Set();
@@ -206,100 +203,94 @@ class StyleFilterManager {
       }
     });
 
-    // ✅ OPTIMIERUNG #2: Cache gebookmarkte IDs einmal (statt bei jeder Location zu prüfen)
     const bookmarkedIds = bookmarkFilterActive && window.bookmarkManager
       ? new Set(window.bookmarkManager.getBookmarkedIds())
       : null;
 
-    // 2. Wende die Filter nacheinander an (AND-Verknüpfung)
     const finalFiltered = baseLocations.filter(location => {
       const locationStyle = location.style || 'unknown';
       const locationCountry = location.loc && location.loc.country ? location.loc.country : null;
 
-      // Bedingung 1: Style
       const styleMatch = selectedNormalStyles.size === 0 || selectedNormalStyles.has(locationStyle);
 
-      // Bedingung 2: Status
       let stateMatch = true;
       if (selectedStateFilters.size > 0) {
         stateMatch = false;
-        if (selectedStateFilters.has('open') && location.isOpen === true) {
-          stateMatch = true;
-        }
-        if (selectedStateFilters.has('closed') && location.isOpen === false) {
-          stateMatch = true;
-        }
+        if (selectedStateFilters.has('open') && location.isOpen === true) stateMatch = true;
+        if (selectedStateFilters.has('closed') && location.isOpen === false) stateMatch = true;
       }
 
-      // Bedingung 3: Land
       const countryMatch = selectedCountries.size === 0 ||
         (locationCountry && selectedCountries.has(locationCountry));
 
-      // Bedingung 4: Bookmark
-      // ✅ OPTIMIERT: Set-Lookup statt Funktionsaufruf bei jeder Location
       const bookmarkMatch = !bookmarkFilterActive || (bookmarkedIds && bookmarkedIds.has(location.ID));
 
       return styleMatch && stateMatch && countryMatch && bookmarkMatch;
     });
 
-    console.log('  - finalFiltered:', finalFiltered.length);
+    console.log('  - finalFiltered (geografisch/style):', finalFiltered.length);
 
-    // ✅ ID-Match in Marker- und Zoom-Berechnung einbeziehen
-    let locationsWithIdMatch = finalFiltered;
+    // -------------------------------------------------------------------------
+    // NEU: Trennung zwischen Anzeige (Display) und Kamera-Fokus (Zoom)
+    // -------------------------------------------------------------------------
+
+    // 1. Liste für Marker & Dropdown (Hier darf der ID-Match mit rein)
+    let locationsForDisplay = finalFiltered;
     if (this.searchManager && this.searchManager._currentIdMatch) {
       const idMatchId = this.searchManager._currentIdMatch.ID;
       const alreadyIncluded = finalFiltered.some(loc => loc.ID === idMatchId);
       if (!alreadyIncluded) {
-        locationsWithIdMatch = [this.searchManager._currentIdMatch, ...finalFiltered];
+        locationsForDisplay = [this.searchManager._currentIdMatch, ...finalFiltered];
       }
     }
 
-    // 3. ANWENDUNG AUF MAP UND DROPDOWN
-    this.updateMarkers(locationsWithIdMatch);
+    // 2. Liste für den automatischen Zoom (Priorisierung)
+    // Ziel: Verhindern, dass ein weit entfernter ID-Match den PLZ-Zoom zerreißt.
+    let locationsForZoom;
+    if (finalFiltered.length > 0) {
+      // Wenn wir Ergebnisse aus der Textsuche/PLZ haben, fokussieren wir NUR diese.
+      locationsForZoom = finalFiltered;
+    } else if (this.searchManager && this.searchManager._currentIdMatch) {
+      // NUR wenn sonst absolut nichts gefunden wurde, zoomen wir auf den ID-Match.
+      locationsForZoom = [this.searchManager._currentIdMatch];
+    } else {
+      locationsForZoom = [];
+    }
 
-    // ✅ FIX: URL-Update NUR wenn KEIN Country-Filter aktiv ist UND keine Navigation läuft
+    // 3. ANWENDUNG AUF MAP
+    this.updateMarkers(locationsForDisplay);
+
+    // URL-Update Logik
     const hasActiveCountry = window.routingManager && window.routingManager._activeCountryFilter;
     const isNavigating = window.routingManager && window.routingManager._isNavigating;
 
     if (!hasActiveCountry && !isNavigating) {
-      // Nur wenn KEIN Country-Filter aktiv ist und keine Navigation läuft, aktualisiere die URL
       if (bookmarkFilterActive && window.bookmarkManager) {
         const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
-        if (allBookmarkedIds.length > 0) {
-          if (window.routingManager && window.routingManager.navigateToLocations) {
-            window.routingManager.navigateToLocations(allBookmarkedIds);
-          }
+        if (allBookmarkedIds.length > 0 && window.routingManager?.navigateToLocations) {
+          window.routingManager.navigateToLocations(allBookmarkedIds);
         }
       } else if (!bookmarkFilterActive && this.selectedStyles.size === 0 && finalFiltered.length === this.json.length) {
-        // Kein Filter aktiv → URL clearen
-        if (window.routingManager && window.routingManager.clearLocationURL) {
-          window.routingManager.clearLocationURL();
-        }
+        if (window.routingManager?.clearLocationURL) window.routingManager.clearLocationURL();
       }
     }
-    // Wenn Country-Filter aktiv ist oder Navigation läuft: URL bleibt unverändert
 
     if (this.searchManager) {
-      // Aktualisiere Dropdown (Liste) und Counter
       this.searchManager.createActiveFiltersSection();
       this.searchManager.createSuggestionItems(finalFiltered);
       this.searchManager.updateSearchCounter(finalFiltered.length);
-      // ✅ Zoom mit ID-Match
-      this.searchManager.triggerAutoZoom(locationsWithIdMatch);
 
-      // ✨ KORREKTUR: Explizites Update des Dropdown-Zustands
+      // ✅ Fokus auf die geografisch relevanten Treffer
+      this.searchManager.triggerAutoZoom(locationsForZoom);
+
       const hasResults = finalFiltered.length > 0;
       const hasSearchQuery = this.searchManager.searchBar.value.trim().length > 0;
       const hasActivePills = this.searchManager.pillsManager.count() > 0;
 
-      // Das Dropdown ist sichtbar, wenn IRGENDEIN Filter-Zustand aktiv ist
       this.searchManager.updateDropdownUI(hasResults || hasSearchQuery || hasActivePills || this.hasActiveFilters());
 
-      // 4. Map-Neuzechnung erzwingen 
-      const clusterGroup = window.clusterGroup;
-      if (clusterGroup && window.map) {
-        // ✅ FIX: refreshClusters() existiert nicht - das Update passiert bereits durch updateMarkers()
-        window.map.invalidateSize(); // Erzwingt Leaflet Map-Update
+      if (window.clusterGroup && window.map) {
+        window.map.invalidateSize();
       }
     }
   }

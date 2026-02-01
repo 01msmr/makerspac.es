@@ -2142,29 +2142,44 @@ class SearchManager {
     const searchQuery = this.searchBar.value.trim().toLowerCase();
     this.createActiveFiltersSection();
 
-    // ✅ ID-Match in Marker- und Zoom-Berechnung einbeziehen
-    let locationsWithIdMatch = filteredLocations;
+    // 1. Liste für die Anzeige (Marker & Dropdown): Hier bleibt der ID-Match drin!
+    let locationsForDisplay = filteredLocations;
     if (this._currentIdMatch) {
       const idMatchId = this._currentIdMatch.ID;
       const alreadyIncluded = filteredLocations.some(loc => loc.ID === idMatchId);
       if (!alreadyIncluded) {
-        locationsWithIdMatch = [this._currentIdMatch, ...filteredLocations];
+        locationsForDisplay = [this._currentIdMatch, ...filteredLocations];
       }
     }
 
-    this.updateMarkers(locationsWithIdMatch);
+    // 2. Liste für den Zoom (Logik zur Vermeidung von "Sinnlos-Zooms"):
+    let locationsForZoom;
+    if (filteredLocations.length > 0) {
+      // Wenn wir PLZ/Namens-Treffer haben, fokussieren wir NUR diese.
+      // Der ID-Match ist zwar da, "zieht" aber die Kamera nicht weg.
+      locationsForZoom = filteredLocations;
+    } else if (this._currentIdMatch) {
+      // NUR wenn es keine Text-Treffer gibt, zoomen wir auf die ID.
+      locationsForZoom = [this._currentIdMatch];
+    } else {
+      locationsForZoom = [];
+    }
+
+    this.updateMarkers(locationsForDisplay);
     this.updateSearchCounter(filteredLocations.length);
     this.createSuggestionItems(filteredLocations);
 
     const hasActivePills = this.pillsManager && this.pillsManager.count() > 0;
     const hasCountry = window.routingManager && window.routingManager._activeCountryFilter;
 
-    this.updateDropdownUI(filteredLocations.length > 0 || searchQuery.length > 0 || hasActivePills || hasCountry);
+    this.updateDropdownUI(locationsForDisplay.length > 0 || searchQuery.length > 0 || hasActivePills || hasCountry);
 
+    // ✅ Auto-Zoom nutzt jetzt die bereinigte locationsForZoom Liste
     if (!this._manualSpaceClick) {
-      this.triggerAutoZoom(locationsWithIdMatch);
+      this.triggerAutoZoom(locationsForZoom);
     }
   }
+
 
   /**
    * Steuert die Sichtbarkeit des Dropdowns
