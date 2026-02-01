@@ -16,6 +16,7 @@ class NearbySpacesManager {
     this.opacityTimer = null;
     this.isInactive = false;
     this.isOverSearchUI = false; // Flag für UI-Hover
+    this._isOverPopup = false;   // Flag für Marker-Popup-Hover
 
     this.keyboardIndex = -1;
     this.currentHoverItem = null;
@@ -78,19 +79,7 @@ class NearbySpacesManager {
       control.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
     });
 
-    // ✅ Marker-Popups (dynamisch, da sie erst bei Klick erstellt werden)
-    document.addEventListener('mouseenter', (e) => {
-      if (e.target.closest('.leaflet-popup')) {
-        this.isOverSearchUI = true;
-        this.updateHintState();
-      }
-    }, true);
-    document.addEventListener('mouseleave', (e) => {
-      // ✅ Prüfe ob e.target ein Element ist (nicht document/window)
-      if (e.target && typeof e.target.closest === 'function' && e.target.closest('.leaflet-popup')) {
-        this.isOverSearchUI = false;
-      }
-    }, true);
+    // ✅ Marker-Popups: Popup-Zustand wird im mousemove Handler geprüft (siehe setupEventListeners)
 
     document.addEventListener('languageChanged', () => {
       // Update Popup wenn offen
@@ -142,8 +131,12 @@ class NearbySpacesManager {
       this.hintElement.style.left = (e.clientX + 8) + 'px';
       this.hintElement.style.top = (e.clientY + 8) + 'px';
 
-      // ✅ Logik für Sichtbarkeit: Ausblenden wenn Fenster offen ODER über UI
-      if (this.popoverElement || this.isOverSearchUI) {
+      // ✅ Popup-Zustand direkt prüfen (zuverlässiger als mouseenter/mouseleave)
+      this._isOverPopup = e.target && typeof e.target.closest === 'function' &&
+                          !!e.target.closest('.leaflet-popup');
+
+      // ✅ Logik für Sichtbarkeit: Ausblenden wenn Fenster offen ODER über UI ODER über Popup
+      if (this.popoverElement || this.isOverSearchUI || this._isOverPopup) {
         this.hintElement.style.opacity = "0";
         return;
       }
@@ -152,7 +145,7 @@ class NearbySpacesManager {
 
       clearTimeout(this.opacityTimer);
       this.opacityTimer = setTimeout(() => {
-        if (this.hintElement && !this.popoverElement && !this.isOverSearchUI) {
+        if (this.hintElement && !this.popoverElement && !this.isOverSearchUI && !this._isOverPopup) {
           this.hintElement.style.opacity = "0.3";
         }
       }, 1200);
