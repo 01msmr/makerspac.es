@@ -310,6 +310,13 @@ class SearchManager {
     return this.json.filter(location => {
       if (!location || !location.loc || !location.name || !location.loc.city) return false;
 
+      // ✅ ID-Match (nur exakte Treffer) - wird später für Sortierung genutzt
+      const idString = String(location.ID || '');
+      if (idString === normalizedQuery) {
+        location._isIdMatch = true; // Markiere für spätere Sortierung
+        return true;
+      }
+
       const fieldsToSearch = [
         location.name,
         location.loc.city,
@@ -1242,21 +1249,37 @@ class SearchManager {
   }
 
   createSuggestionItems(locations) {
-    const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header');
+    const existingSuggestions = this.suggestionsDropdown.querySelectorAll('.suggestion-item, .country-group-header, .id-match-separator');
     existingSuggestions.forEach(item => item.remove());
 
     this.currentDropdownIndex = -1;
     this.clearActiveDropdownItem();
 
-    if (!locations || locations.length === 0) {
+    // ✅ Prüfen ob wir überhaupt etwas anzeigen können
+    const hasIdMatch = !!this._currentIdMatch;
+    const hasLocations = locations && locations.length > 0;
+
+    if (!hasIdMatch && !hasLocations) {
       this.dropdownItems = [];
       return;
     }
 
     const fragment = document.createDocumentFragment();
 
+    // ✅ ID-Match zuerst anzeigen (falls vorhanden)
+    if (this._currentIdMatch) {
+      const idHeader = document.createElement('div');
+      idHeader.classList.add('country-group-header', 'id-match-header');
+      idHeader.innerHTML = `<span class="country-title-content">exact ID found:</span>`;
+      fragment.appendChild(idHeader);
+
+      const item = this.createSuggestionItem(this._currentIdMatch);
+      fragment.appendChild(item);
+    }
+
+    // Normale Ergebnisse nach Land gruppiert
     const groupedByCountry = new Map();
-    locations.forEach(location => {
+    (locations || []).forEach(location => {
       const country = location.loc?.country || 'Unknown';
       if (!groupedByCountry.has(country)) {
         groupedByCountry.set(country, []);
@@ -2168,6 +2191,21 @@ class SearchManager {
 
     if (searchQuery.length > 0 && searchQuery !== 'xcr') {
       const normalizedQuery = searchQuery.toLowerCase();
+
+      // ✅ Speichere ID-Match separat (falls Eingabe eine exakte ID ist)
+      if (/^\d+$/.test(normalizedQuery)) {
+        const idNum = parseInt(normalizedQuery, 10);
+        const idMatchLocation = window.locationById?.get(idNum);
+        if (idMatchLocation) {
+          this._currentIdMatch = idMatchLocation;
+        } else {
+          this._currentIdMatch = null;
+        }
+      } else {
+        this._currentIdMatch = null;
+      }
+
+      // Normale Suche (PLZ, Name, City, Street)
       filtered = filtered.filter(location => {
         if (!location || !location.loc) return false;
         const plz = location.loc.plz && this.zfill(location.loc.plz, location.loc.country);
@@ -2176,6 +2214,8 @@ class SearchManager {
         const separators = /[\s,-]/;
         return fieldsToSearch.some(field => field.startsWith(normalizedQuery) || field.split(separators).some(word => word.startsWith(normalizedQuery)));
       });
+    } else {
+      this._currentIdMatch = null;
     }
 
     if (pills.length > 0) {
