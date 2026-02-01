@@ -1581,23 +1581,21 @@ class SearchManager {
   }
 
 
-  // WIEDERHERGESTELLTE Methode handleSuggestionClick (Original)
   handleSuggestionClick(location) {
-    // ✅ SAUBERE LÖSUNG: Verhindere alle Auto-Zoom-Mechanismen
-    // 1. Clearer Debounce-Timeout (verhindert verzögerten Auto-Zoom)
-    clearTimeout(this.zoomDebounceTimeout);
+    // ✅ FIX: ID-Status sofort leeren, da wir jetzt den Namen/Einzelansicht fokussieren
+    this._currentIdMatch = null;
 
-    // 2. Setze Flag um triggerAutoZoom zu blockieren
+    // Verhindere Auto-Zoom-Mechanismen während des manuellen Klicks
+    clearTimeout(this.zoomDebounceTimeout);
     this._manualSpaceClick = true;
 
-    // 3. Direkter Zoom auf Space
+    // Karte auf den Space ausrichten
     this.map.flyTo([location.loc.lat, location.loc.long], 15);
 
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
       targetMarker._openedByHover = false;
 
-      // ✅ OPTIMIERT: Nutze locationId statt uniqueId
       if (window.markerStateManager) {
         window.markerStateManager.clearTimeouts(targetMarker.locationId);
         window.markerStateManager.setState(targetMarker.locationId, {
@@ -1612,28 +1610,28 @@ class SearchManager {
         if (window.mapUtils && window.mapUtils.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
         }
-        // URL-Update erfolgt automatisch durch popupopen-Event ✅
       });
     }
 
-    // ✅ NEU: Setze Pre-Filter auf diesen EINEN Space
+    // Pre-Filter im StyleFilterManager auf diesen einen Space einschränken
     if (window.styleFilterManager) {
       window.styleFilterManager.applyPreFilters([location]);
     }
 
-    // Setze Name im Suchfeld
+    // Name des gewählten Spaces in das Suchfeld schreiben
     this.searchBar.value = location.name;
 
-    // ✅ NEU: Zeige Dropdown mit diesem einen Space
+    // UI aktualisieren (Dropdown zeigt nur diesen einen Space, ohne ID-Header)
     this.createSuggestionItems([location]);
     this.updateSearchCounter(1);
-    this.updateDropdownUI(true); // Dropdown bleibt offen
+    this.updateDropdownUI(true);
 
-    // ✅ WICHTIG: Reset Flag nach 1000ms (sicher nach allen Events)
+    // Flag nach Verzögerung zurücksetzen
     setTimeout(() => {
       this._manualSpaceClick = false;
     }, 1000);
   }
+
 
 
   isStickyMarker(marker) {
@@ -2142,7 +2140,7 @@ class SearchManager {
     const searchQuery = this.searchBar.value.trim().toLowerCase();
     this.createActiveFiltersSection();
 
-    // 1. Liste für die Anzeige (Marker & Dropdown): Hier bleibt der ID-Match drin!
+    // 1. Liste für Marker & Dropdown (Display): Hier ist der ID-Match als Bonus dabei
     let locationsForDisplay = filteredLocations;
     if (this._currentIdMatch) {
       const idMatchId = this._currentIdMatch.ID;
@@ -2152,21 +2150,25 @@ class SearchManager {
       }
     }
 
-    // 2. Liste für den Zoom (Logik zur Vermeidung von "Sinnlos-Zooms"):
+    // 2. Liste für den Zoom (Priorisierung): 
+    // Geografische Treffer (PLZ/Name) haben Vorrang vor dem ID-Match, 
+    // um Weitwinkel-Zooms zu vermeiden.
     let locationsForZoom;
     if (filteredLocations.length > 0) {
-      // Wenn wir PLZ/Namens-Treffer haben, fokussieren wir NUR diese.
-      // Der ID-Match ist zwar da, "zieht" aber die Kamera nicht weg.
       locationsForZoom = filteredLocations;
     } else if (this._currentIdMatch) {
-      // NUR wenn es keine Text-Treffer gibt, zoomen wir auf die ID.
       locationsForZoom = [this._currentIdMatch];
     } else {
       locationsForZoom = [];
     }
 
+    // Marker-Update (mit ID-Match)
     this.updateMarkers(locationsForDisplay);
+
+    // Zähler (basiert auf geografischen Treffern)
     this.updateSearchCounter(filteredLocations.length);
+
+    // Dropdown-Liste bauen
     this.createSuggestionItems(filteredLocations);
 
     const hasActivePills = this.pillsManager && this.pillsManager.count() > 0;
@@ -2174,11 +2176,12 @@ class SearchManager {
 
     this.updateDropdownUI(locationsForDisplay.length > 0 || searchQuery.length > 0 || hasActivePills || hasCountry);
 
-    // ✅ Auto-Zoom nutzt jetzt die bereinigte locationsForZoom Liste
+    // Auto-Zoom nur auf geografisch relevante Ziele
     if (!this._manualSpaceClick) {
       this.triggerAutoZoom(locationsForZoom);
     }
   }
+
 
 
   /**
@@ -2218,20 +2221,17 @@ class SearchManager {
     if (searchQuery.length > 0 && searchQuery !== 'xcr') {
       const normalizedQuery = searchQuery.toLowerCase();
 
-      // ✅ Speichere ID-Match separat (falls Eingabe eine exakte ID ist)
+      // ✅ FIX: Prüfen, ob die aktuelle Eingabe eine ID ist (reiner Zahlen-String)
+      // Wenn nicht, wird der ID-Match Status gelöscht (State-Leak-Fix)
       if (/^\d+$/.test(normalizedQuery)) {
         const idNum = parseInt(normalizedQuery, 10);
         const idMatchLocation = window.locationById?.get(idNum);
-        if (idMatchLocation) {
-          this._currentIdMatch = idMatchLocation;
-        } else {
-          this._currentIdMatch = null;
-        }
+        this._currentIdMatch = idMatchLocation || null;
       } else {
         this._currentIdMatch = null;
       }
 
-      // Normale Suche (PLZ, Name, City, Street)
+      // Normale geografische Suche
       filtered = filtered.filter(location => {
         if (!location || !location.loc) return false;
         const plz = location.loc.plz && this.zfill(location.loc.plz, location.loc.country);
@@ -2241,6 +2241,7 @@ class SearchManager {
         return fieldsToSearch.some(field => field.startsWith(normalizedQuery) || field.split(separators).some(word => word.startsWith(normalizedQuery)));
       });
     } else {
+      // Falls Suche leer -> ID-Status löschen
       this._currentIdMatch = null;
     }
 
@@ -2254,11 +2255,8 @@ class SearchManager {
       });
     }
 
-    // ✨ WICHTIG: Hier werden Favoriten, Offen-Status etc. angewendet!
+    // Weitergabe an StyleFilterManager (dort wird final gefiltert und updateSearchResults aufgerufen)
     if (this.styleFilterManager) {
-      // ✨ DIESER BEFEHL WENDET DIE FAVORITEN AN!
-      // Da wir selectedStyles oben NICHT gelöscht haben,
-      // filtert er jetzt die aktuelle Liste nach deinen Bookmarks.
       this.styleFilterManager.applyPreFilters(filtered);
     } else {
       this.updateSearchResults(filtered);
