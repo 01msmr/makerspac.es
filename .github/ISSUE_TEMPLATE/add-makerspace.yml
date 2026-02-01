@@ -6,13 +6,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Danke für den neuen Eintrag! 💛
-        Bitte fülle die Felder so genau wie möglich aus.
+        ### Thanks for the new entry. 💛
+        Please fill all fields correctly - SpaceAPI is helpful, but optional
   - type: input
     id: name
     attributes:
       label: Name des Makerspaces
-      placeholder: "z. B. Toolbox Bodensee"
+      placeholder: "title of your makerspace"
     validations:
       required: true
   - type: dropdown
@@ -58,19 +58,19 @@ body:
     id: street_ext
     attributes:
       label: Adress-Zusatz
-      placeholder: "z.B. Hinterhaus, Etage 2"
+      placeholder: "additional address details"
   - type: input
     id: lat
     attributes:
       label: Latitude (Breitengrad)
-      placeholder: "47.7126816"
+      placeholder: "47.7126816 - latitude w/ point"
     validations:
       required: true
   - type: input
     id: long
     attributes:
       label: Longitude (Längengrad)
-      placeholder: "9.3995537"
+      placeholder: "9.3995537 - longitude w/ point"
     validations:
       required: true
   - type: dropdown
@@ -88,14 +88,14 @@ body:
     id: url
     attributes:
       label: Webseite (URL)
-      placeholder: "https://..."
+      placeholder: "your makerspace homepage url"
     validations:
       required: true
   - type: input
     id: url_text
     attributes:
       label: Link-Anzeigetext
-      placeholder: "z.B. toolbox-bodensee.de"
+      placeholder: "short form of url - e.g. toolbox-bodensee.de"
     validations:
       required: true
   - type: input
@@ -103,4 +103,4 @@ body:
     attributes:
       label: SpaceAPI Endpoint (Optional)
       description: "Falls vorhanden, die URL zur JSON-Datei des Space-Status."
-      placeholder: "https://..."
+      placeholder: "full url of. SpaceAPI endpoint"

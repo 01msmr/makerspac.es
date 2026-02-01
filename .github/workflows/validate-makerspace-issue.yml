@@ -1,0 +1,166 @@
+name: "🔍 Validate Makerspace Issue"
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  validate:
+    # Nur Issues vom Makerspace-Template validieren
+    if: contains(github.event.issue.title, 'Makerspace') || contains(github.event.issue.body, 'Name des Makerspaces')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Validate Issue Fields
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || "";
+            const errors = [];
+            const warnings = [];
+
+            // Felder parsen
+            function parseFormFields(body) {
+              const fields = {};
+              const lines = body.split('\n');
+              let currentLabel = null;
+              let currentValue = [];
+
+              for (const line of lines) {
+                if (line.startsWith('### ')) {
+                  if (currentLabel) {
+                    fields[currentLabel] = currentValue.join('\n').trim();
+                  }
+                  currentLabel = line.substring(4).trim();
+                  currentValue = [];
+                } else if (currentLabel) {
+                  currentValue.push(line);
+                }
+              }
+              if (currentLabel) {
+                fields[currentLabel] = currentValue.join('\n').trim();
+              }
+              return fields;
+            }
+
+            const fields = parseFormFields(body);
+
+            function getField(label) {
+              const value = fields[label];
+              if (!value || value === "_No response_" || value === "None") {
+                return "";
+              }
+              return value.trim();
+            }
+
+            // === VALIDIERUNGEN ===
+
+            // 1. URL-Validierung
+            const urlPattern = /^https?:\/\/[^\s]+\.[^\s]+$/;
+
+            const websiteUrl = getField("Webseite (URL)");
+            if (websiteUrl) {
+              if (!urlPattern.test(websiteUrl)) {
+                errors.push(`**Webseite (URL)**: Ungültiges URL-Format. Erwartet: \`https://example.com\`\n  Eingabe: \`${websiteUrl}\``);
+              }
+            }
+
+            const spaceapiUrl = getField("SpaceAPI Endpoint (Optional)");
+            if (spaceapiUrl) {
+              if (!urlPattern.test(spaceapiUrl)) {
+                errors.push(`**SpaceAPI Endpoint**: Ungültiges URL-Format. Erwartet: \`https://example.com/spaceapi.json\`\n  Eingabe: \`${spaceapiUrl}\``);
+              }
+            }
+
+            // 2. Latitude/Longitude Validierung (genau 7 Nachkommastellen)
+            const coordPattern = /^-?\d{1,3}\.\d{7}$/;
+
+            const lat = getField("Latitude (Breitengrad)");
+            if (lat) {
+              const latNormalized = lat.replace(',', '.');
+              if (!coordPattern.test(latNormalized)) {
+                errors.push(`**Latitude**: Muss genau 7 Nachkommastellen haben. Erwartet: \`XX.XXXXXXX\`\n  Eingabe: \`${lat}\``);
+              } else {
+                const latNum = parseFloat(latNormalized);
+                if (latNum < -90 || latNum > 90) {
+                  errors.push(`**Latitude**: Wert muss zwischen -90 und 90 liegen.\n  Eingabe: \`${lat}\``);
+                }
+              }
+            }
+
+            const long = getField("Longitude (Längengrad)");
+            if (long) {
+              const longNormalized = long.replace(',', '.');
+              if (!coordPattern.test(longNormalized)) {
+                errors.push(`**Longitude**: Muss genau 7 Nachkommastellen haben. Erwartet: \`XX.XXXXXXX\`\n  Eingabe: \`${long}\``);
+              } else {
+                const longNum = parseFloat(longNormalized);
+                if (longNum < -180 || longNum > 180) {
+                  errors.push(`**Longitude**: Wert muss zwischen -180 und 180 liegen.\n  Eingabe: \`${long}\``);
+                }
+              }
+            }
+
+            // 3. PLZ - nur Zahlen (optional, da manche Länder alphanumerische PLZ haben)
+            const plz = getField("PLZ");
+            if (plz) {
+              if (!/^\d+$/.test(plz)) {
+                warnings.push(`**PLZ**: Enthält nicht-numerische Zeichen: \`${plz}\` (OK für manche Länder)`);
+              }
+            }
+
+            // === ERGEBNIS-KOMMENTAR ===
+
+            let commentBody = "";
+
+            if (errors.length > 0) {
+              commentBody = `## ❌ Validierungsfehler\n\nBitte korrigiere folgende Fehler:\n\n`;
+              errors.forEach(err => {
+                commentBody += `- ${err}\n`;
+              });
+              commentBody += `\n---\n*Bitte das Issue bearbeiten, um die Fehler zu beheben. Die Validierung läuft dann automatisch erneut.*`;
+            } else {
+              commentBody = `## ✅ Validierung erfolgreich\n\nAlle Pflichtfelder sind korrekt ausgefüllt.\n`;
+              if (warnings.length > 0) {
+                commentBody += `\n### ⚠️ Hinweise\n`;
+                warnings.forEach(warn => {
+                  commentBody += `- ${warn}\n`;
+                });
+              }
+              commentBody += `\n---\n*Ein Maintainer kann jetzt das Label \`add-space\` setzen, um den PR zu erstellen.*`;
+            }
+
+            // Vorherige Bot-Kommentare suchen und aktualisieren oder neuen erstellen
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              (c.body.includes('Validierungsfehler') || c.body.includes('Validierung erfolgreich'))
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+            // Workflow fehlschlagen lassen bei Validierungsfehlern
+            if (errors.length > 0) {
+              core.setFailed(`${errors.length} Validierungsfehler gefunden`);
+            }
