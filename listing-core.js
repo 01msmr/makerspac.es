@@ -284,6 +284,17 @@
       this.isDropdownHovering = true;
       this.currentHoverItem = item;
 
+      // ✨ Keyboard-Index synchronisieren mit Mausposition (nur bei echter Mausbewegung)
+      if (this._mouseHasMoved && this.lastInputMethod !== 'keyboard') {
+        this.lastInputMethod = 'mouse';
+        const items = document.querySelectorAll('.listing-item');
+        const itemsArray = Array.from(items);
+        const hoverIndex = itemsArray.indexOf(item);
+        if (hoverIndex !== -1) {
+          this.keyboardIndex = hoverIndex;
+        }
+      }
+
       const hoverColor = CONFIG.getDynamicSpaceColor(location);
       this.createHoverSVG(item, location, hoverColor);
 
