@@ -1093,10 +1093,18 @@ function updateMarkerIconForLocation(location) {
     marker.openPopup();
   }
 }
-// Style Filter Setup
+// Style Filter Setup - wird jetzt von AppMain.init() erledigt
 function setupStyleFilter() {
+  // ✨ NEU: SearchFilter ersetzt StyleFilterManager
+  if (window.styleFilterManager) {
+    styleFilterManager = window.styleFilterManager;
+    console.log('✅ StyleFilter already initialized by AppMain');
+    return;
+  }
+
+  // Fallback für alte StyleFilterManager (falls noch geladen)
   if (!window.StyleFilterManager) {
-    console.error('StyleFilterManager not available');
+    console.log('ℹ️ StyleFilterManager not needed (using SearchFilter)');
     return;
   }
   styleFilterManager = new StyleFilterManager(window.json, allMarkers, icons, searchManager);
@@ -1122,9 +1130,21 @@ function setupSearch() {
     console.error('mapUtils not available when setting up search');
     return;
   }
-  searchManager = new SearchManager(map, allMarkers, window.json, icons, zfill);
-  window.searchManager = searchManager;
-  console.log('SearchManager initialized successfully');
+
+  // ✨ NEU: Verwende AppMain.init() statt altem SearchManager
+  if (window.AppMain) {
+    window.AppMain.init({
+      map,
+      json: window.json,
+      allMarkers,
+      zfill
+    });
+    // searchManager wird von AppMain.init() gesetzt (Backward Compatibility)
+    searchManager = window.searchManager;
+    console.log('✅ AppMain initialized successfully');
+  } else {
+    console.error('❌ AppMain not available');
+  }
 }
 function clearStickyPopup() {
   if (currentStickyMarker && isPopupSticky) {
@@ -1146,31 +1166,14 @@ function setupMapClickHandler() {
     }
   });
 
-  // ✅ RECHTSKLICK - Führe ESC-Logik direkt aus (OHNE nearby-popover zu stören)
+  // ✅ RECHTSKLICK - Nearby-Popover wird in nearby-header.js gehandhabt
+  // Hier nur sticky Popup schließen, KEIN ESC-Cleanup mehr
   map.on('contextmenu', (e) => {
     // Nur wenn NICHT auf Marker geklickt wurde
     if (e.originalEvent && e.originalEvent.target &&
       !e.originalEvent.target.closest('.leaflet-marker-icon')) {
-
-      console.log('🖱️ RECHTSKLICK auf Karte erkannt');
-
-      // Schließe sticky Popup
+      // Schließe nur sticky Popup - Rest macht nearby-header.js
       clearStickyPopup();
-
-      // ✅ PHASE 1: SOFORT - Leere Searchbar und blur
-      if (window.searchManager) {
-        console.log('   Searchbar VORHER:', window.searchManager.searchBar.value);
-        window.searchManager.searchBar.value = '';
-        window.searchManager.searchBar.blur();
-        console.log('   Searchbar NACHHER:', window.searchManager.searchBar.value);
-        console.log('   Searchbar blur:', document.activeElement !== window.searchManager.searchBar);
-      }
-
-      // ✅ PHASE 2: Nach kurzer Verzögerung - Führe REST-Cleanup IMMER aus!
-      setTimeout(() => {
-        console.log('   Phase 2: Führe Rest-Cleanup aus (IMMER!)');
-        executeEscapeLogicRest();
-      }, 100);
     }
   });
 }
@@ -1339,10 +1342,7 @@ const init = async () => {
     setupRouting();
     setupMapClickHandler();
 
-    // ✅ NEU: Initialisiere Nearby Spaces (alternativ hier)
-    if (window.nearbySpacesManager) {
-      window.nearbySpacesManager.init(map);
-    }
+    // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {
     console.error('⛔ A critical error occurred during app initialization:', error);
     alert('The application could not be started. Please check the developer console.');

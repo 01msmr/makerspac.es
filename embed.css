@@ -58,7 +58,7 @@ a {
   box-shadow: none !important;
 }
 
-.suggestion-item {
+.listing-item {
   border-radius: inherit;
 }
 
@@ -142,35 +142,35 @@ a {
    ======================================== */
 
 /* Normal: Name & Icons in SpaceAPI-Farbe */
-.embed-dropdown .space-item.space-open .item-name,
+.embed-dropdown .space-item.space-open .listing-item-name,
 .embed-dropdown .space-item.space-open .door-icon-open,
 .embed-dropdown .space-item.space-open .style-icon {
   color: var(--space-open);
   font-weight: 600;
 }
 
-.embed-dropdown .space-item.space-closed .item-name,
+.embed-dropdown .space-item.space-closed .listing-item-name,
 .embed-dropdown .space-item.space-closed .door-icon-closed,
 .embed-dropdown .space-item.space-closed .style-icon {
   color: var(--space-closed);
   font-weight: 600;
 }
 
-.embed-dropdown .space-item.space-unknown .item-name,
+.embed-dropdown .space-item.space-unknown .listing-item-name,
 .embed-dropdown .space-item.space-unknown .door-icon-unknown,
 .embed-dropdown .space-item.space-unknown .style-icon {
   color: var(--space-unknown);
   font-weight: 600;
 }
 
-/* Default (kein API): Schwarz */
-.embed-dropdown .space-item.space-default .item-name,
+/* Default (kein API): Blau */
+.embed-dropdown .space-item.space-default .listing-item-name,
 .embed-dropdown .space-item.space-default .style-icon {
-  color: var(--text-color);
+  color: var(--space-hover);
   font-weight: 600;
 }
 
-.embed-dropdown .space-item .item-details {
+.embed-dropdown .space-item .listing-item-details {
   color: var(--hover-text-color);
 }
 

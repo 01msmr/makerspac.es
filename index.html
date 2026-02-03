@@ -29,9 +29,8 @@
 
   <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
 
-  <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="styles.css" />
-  <link rel="stylesheet" type="text/css" href="styles-autocomplete.css" />
+  <!-- CSS (main.css imports: listing-core.css, search.css, nearby.css, styles-autocomplete.css) -->
+  <link rel="stylesheet" type="text/css" href="main.css" />
 
   <!-- Flag Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
@@ -98,7 +97,11 @@
 
   <!-- JavaScript-Dateien -->
   <script src="utils.js"></script>
-  <script src="icons.js"></script>
+
+  <!-- ✨ NEU: Zentrale Konfiguration (muss VOR icons.js geladen werden) -->
+  <script src="config.js"></script>
+
+  <!-- <script src="icons.js"></script> --> <!-- DEAKTIVIERT: In config.js integriert -->
   <!-- <script src="spaceapi-detect.js"></script> -->
   <script src="spaceapi-static.js"></script>
   <script src="i18n.js"></script>
@@ -114,17 +117,24 @@
   <script src="datasync.js"></script> <!-- MUSS nach bookmark-manager.js kommen -->
 
   <script src="language-switcher.js"></script>
-  <script src="search-autocomplete.js"></script>
-  <script src="search-pills.js"></script>
 
-  <script src="style-filter.js"></script>
-  <script src="search.js"></script>
+  <!-- ✨ NEU: Refaktorisierte Module -->
+  <script src="listing-core.js"></script>
+  <script src="zoom-manager.js"></script>
+  <script src="search-filter.js"></script>   <!-- Filter-Logik -->
+  <script src="search-header.js"></script>   <!-- Pills, Autocomplete, Header -->
+  <script src="nearby-header.js"></script>
 
-  <!-- ✅ NEU: Nearby Spaces Manager -->
-  <script src="nearby-spaces.js"></script>
+  <!-- ALT: DEAKTIVIERT für Test der Refaktorisierung -->
+  <!-- <script src="style-filter.js"></script> -->
+  <!-- <script src="search.js"></script> -->
+  <!-- <script src="nearby-spaces.js"></script> -->
 
-  <!-- ✅ NEU: Embed-Modus Handler (muss VOR map.js geladen werden) -->
+  <!-- ✅ Embed-Modus Handler (muss VOR map.js geladen werden) -->
   <script src="embed.js"></script>
+
+  <!-- ✨ NEU: Orchestrator (muss VOR map.js geladen werden) -->
+  <script src="main.js"></script>
 
   <script type="module" src="map.js"></script>
 

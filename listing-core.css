@@ -1,0 +1,177 @@
+/* =================================================================
+   LISTING-CORE.CSS - Unified Item Styling (ListingCore Module)
+   Einheitliches Styling für Such- und Nearby-Items
+   ================================================================= */
+
+.listing-item {
+  font-family: 'Lato', sans-serif;
+  padding: 10px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  cursor: pointer;
+  position: relative;
+  border-bottom: 1px solid var(--dropdown-border);
+  color: var(--text-color);
+  scroll-margin-top: 119px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  transition: none !important;
+  min-height: 70px;
+  box-sizing: border-box;
+}
+
+.listing-item:nth-child(2n) {
+  background-color: var(--dropdown-alt-bg);
+  border-bottom: 1px solid var(--dropdown-alt-border);
+}
+
+.listing-item:last-child {
+  border-bottom: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIFIED HOVER STATE - nur via .active Klasse (JS setzt diese)
+   Keine CSS :hover mehr - alles über JS für einheitliches Verhalten
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.listing-item.active {
+  background-color: var(--status-color, var(--space-hover));
+  color: white;
+}
+
+/* Alle Kindelemente weiß beim Hover - AUSSER Distanz-Badge und Bookmark */
+.listing-item.active .listing-item-content,
+.listing-item.active .listing-item-name,
+.listing-item.active .listing-item-name > span,
+.listing-item.active .listing-item-details,
+.listing-item.active .style-icon,
+.listing-item.active .space-name-default,
+.listing-item.active .door-icon-open,
+.listing-item.active .door-icon-closed,
+.listing-item.active .door-icon-unknown {
+  color: white !important;
+}
+
+/* Invisible hitbox für bessere Hover-Area */
+.listing-item::before {
+  content: '';
+  position: absolute;
+  left: -40px;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  opacity: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Content Container */
+.listing-item-content {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* Name-Zeile */
+.listing-item-name {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.listing-item-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Detail-Zeile */
+.listing-item-details {
+  font-size: 0.8em;
+  color: var(--hover-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listing-item.active .listing-item-details {
+  color: var(--hover-text-color-active);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DISTANCE BADGE (km-Anzeige für Nearby)
+   Schwarz auf hellgrau, bleibt beim Hover unverändert
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.listing-dist-badge {
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 3px 1px;
+  background: rgba(222, 222, 222, 0.9);
+  border-radius: 20px;
+  white-space: nowrap;
+  min-width: 48px;
+  text-align: center;
+  flex-shrink: 0;
+  color: #333 !important;
+  margin-top: 2px;
+}
+
+/* Hover: BLEIBT UNVERÄNDERT - kein Invertieren! */
+.listing-item.active .listing-dist-badge {
+  color: #333 !important;
+}
+
+/* Dark Mode Distance Badge */
+@media (prefers-color-scheme: dark) {
+  .listing-dist-badge {
+    background: rgba(100, 100, 100, 0.8);
+    color: #eee !important;
+  }
+
+  .listing-item.active .listing-dist-badge {
+    background: rgba(100, 100, 100, 0.8) !important;
+    color: #eee !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOKMARK ICON - Farbe wie Text (invertiert beim Hover)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.listing-bookmark {
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: transform 0.15s ease;
+  color: var(--status-color, var(--text-color));
+}
+
+/* Bookmark invertiert beim Hover wie alle anderen Elemente */
+.listing-item.active .listing-bookmark {
+  color: white !important;
+}
+
+.listing-bookmark:hover {
+  transform: scale(1.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE & STATUS ICONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.listing-item .style-icon {
+  margin-right: 4px;
+  opacity: 0.8;
+}
+
+.listing-item .door-icon-open,
+.listing-item .door-icon-closed,
+.listing-item .door-icon-unknown {
+  margin-right: 4px;
+}

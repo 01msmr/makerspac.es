@@ -228,17 +228,17 @@ class EmbedMapExtended {
     const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
     const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
     const item = document.createElement('div');
-    item.className = `space-item suggestion-item ${statusClass} ${isTarget ? 'target' : ''}`;
+    item.className = `space-item listing-item ${statusClass} ${isTarget ? 'target' : ''}`;
     item.dataset.spaceId = space.ID;
     const addressHtml = isTarget ? `
-      <div class="item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
-      <div class="item-details">${this.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
-      <div class="item-details"><span class="fi fi-${this.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
-      <div class="item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
+      <div class="listing-item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
+      <div class="listing-item-details">${this.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
+      <div class="listing-item-details"><span class="fi fi-${this.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
+      <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
     item.innerHTML = `
-      <div class="item-content">
+      <div class="listing-item-content">
         ${isTarget ? '<div class="our-space-pill">Our Space</div>' : ''}
-        <div class="item-name"><span>${styleIconHtml}${statusIcon}${space.name}</span></div>
+        <div class="listing-item-name"><span>${styleIconHtml}${statusIcon}${space.name}</span></div>
         ${addressHtml}
       </div>`;
     return item;
