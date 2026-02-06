@@ -524,6 +524,9 @@
         this.listingCore.setupMouseTracking(this.suggestionsDropdown);
       }
 
+      // Container-Klasse für einheitliche Listing-Navigation
+      this.suggestionsDropdown.classList.add('listing-container');
+
       this.suggestionsDropdown.addEventListener('wheel', (e) => {
         e.stopPropagation();
         setTimeout(() => this.searchBar.focus(), 0);
@@ -549,6 +552,12 @@
       document.addEventListener('languageChanged', () => {
         this.createActiveFiltersSection();
         this.triggerFilterUpdate();
+      });
+
+      window.addEventListener('resize', () => {
+        if (this.suggestionsDropdown.classList.contains('is-active')) {
+          this.adjustDropdownHeight();
+        }
       });
     }
 
@@ -1042,38 +1051,22 @@
 
       this.suggestionsDropdown.appendChild(fragment);
       this.dropdownItems = Array.from(this.suggestionsDropdown.querySelectorAll('.listing-item'));
+
+      // Zentrale Item-Listener
+      this.listingCore?.setupItemListeners(this.suggestionsDropdown, {
+        onItemClick: (location) => this.handleItemClick(location),
+        connectionWeight: CONFIG.settings.connectionWeightSearch
+      });
     }
 
     createSearchItem(location) {
-      const item = this.listingCore.createItem(location, {
+      return this.listingCore.createItem(location, {
         showDistance: false,
         showBookmark: true,
         showStreet: true,
         showFlag: false,
         zfill: this.zfill
       });
-
-      item.addEventListener('mouseenter', () => {
-        if (!this.listingCore?.hasMouseMoved()) return;
-
-        this.listingCore.setMouseInput();
-        this.listingCore.keyboardIndex = -1;
-        this.listingCore.clearActiveItem();
-        this.listingCore.applyHoverEffects(item, location, CONFIG.settings.connectionWeightSearch);
-      });
-
-      item.addEventListener('mouseleave', (e) => {
-        if (e.relatedTarget?.closest('.listing-item')) return;
-        this.listingCore?.removeHoverEffects(location);
-      });
-
-      item.addEventListener('click', () => this.handleItemClick(location));
-
-      if (window.bookmarkManager) {
-        window.bookmarkManager.initializeBookmarkListeners(item);
-      }
-
-      return item;
     }
 
     createCountryHeader(country, count) {
@@ -1206,6 +1199,7 @@
     updateDropdownUI(shouldShow) {
       this.suggestionsDropdown.classList.toggle('is-active', shouldShow);
       this.searchBar.classList.toggle('has-suggestions', shouldShow);
+      if (shouldShow) this.adjustDropdownHeight();
     }
 
     closeDropdown() {
@@ -1244,6 +1238,29 @@
           window.routingManager._isNavigating = false;
         }
       }, 100);
+    }
+
+    adjustDropdownHeight() {
+      const dropdown = this.suggestionsDropdown;
+      if (!dropdown) return;
+
+      const dropdownTop = dropdown.getBoundingClientRect().top;
+      const paddingTop = parseFloat(getComputedStyle(dropdown).paddingTop) || 0;
+      const maxBottom = window.innerHeight * 0.7;
+
+      // Max content-area height (content-box: element height = max-height + padding)
+      const maxContentHeight = maxBottom - dropdownTop - paddingTop;
+
+      // overhead = scrollPaddingTop - paddingTop (sticky-Header-Bereich)
+      const scrollPaddingTop = parseFloat(getComputedStyle(dropdown).scrollPaddingTop) || 0;
+      const overhead = scrollPaddingTop - paddingTop;
+
+      // Max 6 Items, reduzieren bis 30% Bildschirm unten frei bleibt
+      const itemHeight = 70;
+      let items = Math.min(6, Math.floor((maxContentHeight - overhead) / itemHeight));
+      items = Math.max(1, items);
+
+      dropdown.style.maxHeight = (overhead + items * itemHeight) + 'px';
     }
 
     scrollToTop() {

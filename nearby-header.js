@@ -381,7 +381,7 @@
       if (isFirstTime) {
         this.popoverElement.innerHTML = `
           <div class="nearby-popover-header">${headerHTML}</div>
-          <div class="nearby-popover-list">${listHTML}</div>
+          <div class="nearby-popover-list listing-container">${listHTML}</div>
           <div class="nearby-resize-handle"><i class="${CONFIG.icons.ui.grip}"></i></div>
         `;
         document.body.appendChild(this.popoverElement);
@@ -523,8 +523,10 @@
         this.listingCore?.updateHoverSVGPosition();
       });
 
-      // Mouse-Tracking
+      // Mouse-Tracking (nicht während Drag!)
       this.popoverElement.addEventListener('mousemove', (e) => {
+        if (this._isPopoverDragging) return;
+
         if (e.clientX !== this.listingCore?._lastMousePos?.x || e.clientY !== this.listingCore?._lastMousePos?.y) {
           this.listingCore._lastMousePos = { x: e.clientX, y: e.clientY };
           this.listingCore._mouseHasMoved = true;
@@ -533,6 +535,31 @@
             item.style.pointerEvents = '';
           });
         }
+      });
+
+      // Beim Verlassen des Popovers: Aktiven State sicherstellen
+      this.popoverElement.addEventListener('mouseleave', () => {
+        if (this._isPopoverDragging) return;
+
+        // Aktiven State aktiv wiederherstellen (Sicherheitsnetz)
+        if (this.listingCore?.currentHoverItem) {
+          const item = this.listingCore.currentHoverItem;
+          // Sicherstellen dass .active Klasse vorhanden ist
+          if (!item.classList.contains('active')) {
+            item.classList.add('active');
+          }
+          // keyboardIndex synchronisieren
+          const items = this.popoverElement?.querySelectorAll('.listing-item');
+          if (items) {
+            const idx = Array.from(items).indexOf(item);
+            if (idx !== -1) {
+              this.listingCore.keyboardIndex = idx;
+            }
+          }
+        }
+
+        // Mouse-Tracking zurücksetzen damit nachfolgende Events den State nicht ändern
+        this.listingCore?.resetMouseTracking();
       });
 
       this.reattachListeners();
@@ -544,6 +571,7 @@
 
       let isDragging = false;
       let startPos = { x: 0, y: 0 };
+      let savedDragState = null;
 
       this.popoverElement.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.nearby-radius-track, .nearby-radius-pill, .nearby-radius-clickarea, .nearby-close-btn, .listing-item, .nearby-resize-handle')) {
@@ -556,6 +584,20 @@
         header.style.cursor = 'grabbing';
         e.preventDefault();
         e.stopPropagation();
+
+        // Aktiven State VOR dem Drag sichern (Maus-Bewegung zum Header kann ihn verändert haben)
+        savedDragState = null;
+        if (this.listingCore) {
+          const items = this.popoverElement?.querySelectorAll('.listing-item');
+          const savedIndex = this.listingCore.keyboardIndex;
+          const savedItem = (savedIndex >= 0 && items?.[savedIndex]) ? items[savedIndex] : this.listingCore.currentHoverItem;
+          if (savedItem) {
+            savedDragState = {
+              locationId: parseInt(savedItem.dataset.locationId),
+              keyboardIndex: savedIndex
+            };
+          }
+        }
 
         startPos = {
           x: e.clientX - this.popoverElement.offsetLeft,
@@ -586,12 +628,39 @@
         header.style.cursor = 'grab';
 
         setTimeout(() => {
-          if (this.listingCore?.currentHoverItem) {
-            const item = this.listingCore.currentHoverItem;
-            this.listingCore.currentHoverItem = null;
-            this.applyMarkerHighlight(item);
+          // Gesicherten State wiederherstellen
+          if (savedDragState && this.listingCore) {
+            const items = this.popoverElement?.querySelectorAll('.listing-item');
+            if (items) {
+              // Alle active-Klassen entfernen
+              items.forEach(item => item.classList.remove('active'));
+
+              // Gespeichertes Item anhand locationId finden (DOM-Referenz könnte stale sein)
+              let targetItem = null;
+              let targetIndex = -1;
+              items.forEach((item, idx) => {
+                if (parseInt(item.dataset.locationId) === savedDragState.locationId) {
+                  targetItem = item;
+                  targetIndex = idx;
+                }
+              });
+
+              if (targetItem) {
+                const location = window.locationById?.get(savedDragState.locationId);
+                if (location) {
+                  // keyboardIndex wiederherstellen
+                  this.listingCore.keyboardIndex = targetIndex;
+                  // Active-Klasse setzen
+                  targetItem.classList.add('active');
+                  // Visuelle Effekte neu anwenden
+                  this.listingCore.applyHoverEffects(targetItem, location, CONFIG.settings.connectionWeightNearby);
+                }
+              }
+            }
           }
 
+          // Mouse-Tracking zurücksetzen damit mouseenter nicht sofort feuert
+          this.listingCore?.resetMouseTracking();
           this._isPopoverDragging = false;
           if (this.map) this.map.dragging.enable();
         }, 1);
@@ -659,11 +728,11 @@
       // Radius Controls
       this.setupRadiusControls();
 
-      // Item Listeners
-      this.popoverElement.querySelectorAll('.listing-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const locationId = parseInt(item.dataset.locationId);
-          const marker = window.markerById?.get(locationId);
+      // Zentrale Item-Listener (wie Search, nur mit Nearby-spezifischem connectionWeight)
+      const listContainer = this.popoverElement.querySelector('.nearby-popover-list');
+      this.listingCore?.setupItemListeners(listContainer, {
+        onItemClick: (location) => {
+          const marker = window.markerById?.get(location.id);
           if (marker) {
             window.map.flyTo(marker.getLatLng(), CONFIG.settings.defaultZoomLevel);
             setTimeout(() => {
@@ -671,30 +740,10 @@
               this.hide();
             }, 500);
           }
-        });
-
-        item.addEventListener('mouseenter', () => {
-          if (!this.listingCore?.hasMouseMoved()) return;
-
-          this.listingCore.setMouseInput();
-
-          if (this.listingCore.keyboardIndex !== -1) {
-            this.popoverElement?.querySelectorAll('.listing-item').forEach(i => {
-              i.classList.remove('active');
-            });
-            this.listingCore.keyboardIndex = -1;
-          }
-
-          this.applyMarkerHighlight(item);
-        });
+        },
+        connectionWeight: CONFIG.settings.connectionWeightNearby,
+        keepHoverOnLeave: true
       });
-
-      // Bookmark Listeners
-      if (window.bookmarkManager) {
-        this.popoverElement.querySelectorAll('.listing-item').forEach(item => {
-          window.bookmarkManager.initializeBookmarkListeners(item);
-        });
-      }
     }
 
     setupRadiusControls() {
@@ -841,62 +890,41 @@
       e.preventDefault();
       e.stopImmediatePropagation();
 
-      this.listingCore?.setKeyboardInput();
+      const listContainer = this.popoverElement.querySelector('.nearby-popover-list');
+      const items = listContainer?.querySelectorAll('.listing-item');
 
-      // pointer-events deaktivieren
-      this.popoverElement.querySelectorAll('.listing-item').forEach(item => {
-        item.style.pointerEvents = 'none';
-      });
+      // ArrowUp/Down: Zentrale Navigation nutzen (wie Search-Dropdown)
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+        this.listingCore?.navigateDropdown(direction, listContainer);
+        return;
+      }
 
-      const items = this.popoverElement.querySelectorAll('.listing-item');
-
-      if (e.key === 'ArrowDown') {
-        this.listingCore.keyboardIndex = (this.listingCore.keyboardIndex + 1) % (items.length || 1);
-      } else if (e.key === 'ArrowUp') {
-        this.listingCore.keyboardIndex = this.listingCore.keyboardIndex <= 0
-          ? items.length - 1
-          : this.listingCore.keyboardIndex - 1;
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      // ArrowLeft/Right: Radius ändern (Nearby-spezifisch)
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         let idx = this.radii.indexOf(this.currentRadius);
         const newIdx = e.key === 'ArrowRight'
           ? Math.min(idx + 1, this.radii.length - 1)
           : Math.max(idx - 1, 0);
         this.changeRadius(this.radii[newIdx]);
         return;
-      } else if (e.key === 'Enter') {
-        if (this.listingCore.keyboardIndex >= 0 && items[this.listingCore.keyboardIndex]) {
+      }
+
+      // Enter: Item anklicken
+      if (e.key === 'Enter') {
+        if (this.listingCore?.keyboardIndex >= 0 && items?.[this.listingCore.keyboardIndex]) {
           items[this.listingCore.keyboardIndex].click();
         }
         return;
-      } else if (e.key === 'Escape') {
+      }
+
+      // Escape: Schließen
+      if (e.key === 'Escape') {
         this.hide();
         return;
       }
-
-      this.listingCore.updateKeyboardSelection(items);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // MARKER-HIGHLIGHT (nutzt SearchManager falls vorhanden)
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    applyMarkerHighlight(item) {
-      const locationId = parseInt(item.dataset.locationId);
-      const location = window.locationById?.get(locationId);
-
-      if (!location) return;
-
-      if (this.listingCore?.currentHoverItem && this.listingCore.currentHoverItem !== item) {
-        const prevId = parseInt(this.listingCore.currentHoverItem.dataset.locationId);
-        const prevLoc = window.locationById?.get(prevId);
-        if (prevLoc) {
-          this.listingCore.removeHoverEffects(prevLoc);
-        }
-      }
-
-      this.listingCore.currentHoverItem = item;
-      this.listingCore.applyHoverEffects(item, location, CONFIG.settings.connectionWeightNearby);
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

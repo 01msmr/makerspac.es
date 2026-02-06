@@ -68,7 +68,7 @@
   flex-direction: column;
   position: fixed;
   z-index: 10000;
-  width: 320px;
+  width: 350px;
   background-color: var(--dropdown-bg);
   border-radius: 16px;
   border: none;
@@ -127,6 +127,10 @@
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scrollbar-width: thin;
+}
+
+.nearby-popover-list .listing-item {
+  scroll-snap-align: start;
 }
 
 /* Resize-Handle am unteren Rand */

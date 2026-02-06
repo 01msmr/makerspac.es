@@ -12,11 +12,11 @@
   position: relative;
   border-bottom: 1px solid var(--dropdown-border);
   color: var(--text-color);
-  scroll-margin-top: 119px;
+  scroll-snap-align: none;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 12px;
+  gap: 4px;
   transition: none !important;
   min-height: 70px;
   box-sizing: border-box;
@@ -109,13 +109,14 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .listing-dist-badge {
-  font-size: 0.8em;
+  font-size: 0.7em;
   font-weight: bold;
-  padding: 3px 1px;
-  background: rgba(222, 222, 222, 0.9);
+  padding: 3px 6px;
+  margin: 0.5em !important;
+  background: rgba(248, 248, 248, 0.85);
   border-radius: 20px;
   white-space: nowrap;
-  min-width: 48px;
+  /* min-width: 30px; */
   text-align: center;
   flex-shrink: 0;
   color: #333 !important;

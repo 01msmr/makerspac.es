@@ -171,78 +171,68 @@
       if (items.length === 0) return;
 
       // Tastatur übernimmt Kontrolle
-      this.lastInputMethod = 'keyboard';
-      this._mouseHasMoved = false;
+      this.setKeyboardInput();
 
       // pointer-events deaktivieren um CSS :hover zu unterdrücken
       items.forEach(item => {
         item.style.pointerEvents = 'none';
       });
 
-      let newIndex = this.keyboardIndex;
-
-      // ✨ NEU: Bei Wechsel von Maus zu Tastatur, übernehme aktuelle Mausposition
-      if (this.keyboardIndex === -1 && this.currentHoverItem) {
-        const itemsArray = Array.from(items);
-        const hoverIndex = itemsArray.indexOf(this.currentHoverItem);
-        if (hoverIndex !== -1) {
-          // Übernehme die Mausposition als Startpunkt
-          newIndex = hoverIndex;
-          // Bei 'down' bleiben wir dort, bei 'up' gehen wir eins hoch
-          if (direction === 'up' && newIndex > 0) {
-            newIndex = newIndex - 1;
-          } else if (direction === 'down' && newIndex < items.length - 1) {
-            newIndex = newIndex + 1;
-          }
-          this.keyboardIndex = newIndex;
-          this.updateKeyboardSelection(items);
-          return;
-        }
-      }
-
+      // Einfache Index-Berechnung (wie Nearby)
       if (direction === 'down') {
-        newIndex = (this.keyboardIndex + 1) % items.length;
+        this.keyboardIndex = (this.keyboardIndex + 1) % items.length;
       } else if (direction === 'up') {
-        if (this.keyboardIndex === -1) {
-          newIndex = items.length - 1;
-        } else {
-          newIndex = (this.keyboardIndex - 1 + items.length) % items.length;
-        }
+        this.keyboardIndex = this.keyboardIndex <= 0
+          ? items.length - 1
+          : this.keyboardIndex - 1;
       }
 
-      this.keyboardIndex = newIndex;
       this.updateKeyboardSelection(items);
     }
 
     /**
      * Aktualisiert die visuelle Keyboard-Selektion
+     * Verwendet die GLEICHEN Methoden wie Maus-Navigation!
      */
     updateKeyboardSelection(items) {
-      items.forEach((item, idx) => {
-        if (idx === this.keyboardIndex) {
-          item.classList.add('active');
-          // Kein Inline-Style! CSS .active übernimmt das Styling
-          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const newIndex = this.keyboardIndex;
+      const newItem = items[newIndex];
+      if (!newItem) return;
 
-          // Hover-Effekte anwenden
-          const locationId = parseInt(item.dataset.locationId);
-          const location = window.locationById?.get(locationId);
-          if (location) {
-            this.applyHoverEffects(item, location);
-          }
-        } else {
-          item.classList.remove('active');
+      const newLocationId = parseInt(newItem.dataset.locationId);
+      const newLocation = window.locationById?.get(newLocationId);
 
-          // Vorherige Hover-Effekte entfernen
-          if (this.currentHoverItem === item) {
-            const locationId = parseInt(item.dataset.locationId);
-            const location = window.locationById?.get(locationId);
-            if (location) {
-              this.removeHoverEffects(location);
-            }
-          }
+      // 1. Altes Item: Effekte entfernen (wenn unterschiedlich)
+      if (this.currentHoverItem && this.currentHoverItem !== newItem) {
+        const oldLocationId = parseInt(this.currentHoverItem.dataset.locationId);
+        const oldLocation = window.locationById?.get(oldLocationId);
+        const oldIndex = Array.from(items).indexOf(this.currentHoverItem);
+
+        // CSS-Klassen entfernen (Item + Nachbarn)
+        for (let i = oldIndex - 1; i <= oldIndex + 1; i++) {
+          if (items[i]) items[i].classList.remove('active');
         }
-      });
+
+        // Alle visuellen Effekte entfernen (SVG, Marker, Line) - GLEICHE Methode wie Maus!
+        if (oldLocation) {
+          this.removeHoverEffects(oldLocation);
+        }
+      }
+
+      // 2. Neues Item: CSS-Klassen setzen (Item + Nachbarn bereinigen)
+      for (let i = newIndex - 1; i <= newIndex + 1; i++) {
+        if (items[i]) items[i].classList.remove('active');
+      }
+      newItem.classList.add('active');
+      this.scrollItemIntoContainer(newItem);
+
+      // 3. Neues Item: Alle visuellen Effekte anwenden - GLEICHE Methode wie Maus!
+      if (newLocation) {
+        this.applyHoverEffects(newItem, newLocation);
+
+        // SVG-Position nach Scroll-Animation aktualisieren
+        setTimeout(() => this.updateHoverSVGPosition(), 150);
+      }
     }
 
     /**
@@ -274,27 +264,10 @@
      */
     applyHoverEffects(item, location, weight = CONFIG.settings.connectionWeightSearch) {
       this.connectionWeight = weight;
-
-      // Vorherige Hover-Klassen entfernen
-      document.querySelectorAll('.listing-item.active').forEach(el => {
-        el.classList.remove('active');
-      });
-
-      item.classList.add('active');
       this.isDropdownHovering = true;
       this.currentHoverItem = item;
 
-      // ✨ Keyboard-Index synchronisieren mit Mausposition (nur bei echter Mausbewegung)
-      if (this._mouseHasMoved && this.lastInputMethod !== 'keyboard') {
-        this.lastInputMethod = 'mouse';
-        const items = document.querySelectorAll('.listing-item');
-        const itemsArray = Array.from(items);
-        const hoverIndex = itemsArray.indexOf(item);
-        if (hoverIndex !== -1) {
-          this.keyboardIndex = hoverIndex;
-        }
-      }
-
+      // NUR visuelle Effekte - CSS-Klassen werden woanders verwaltet!
       const hoverColor = CONFIG.getDynamicSpaceColor(location);
       this.createHoverSVG(item, location, hoverColor);
 
@@ -343,10 +316,7 @@
      * @param {Object} location - Location-Objekt
      */
     removeHoverEffects(location) {
-      if (this.currentHoverItem) {
-        this.currentHoverItem.classList.remove('active');
-      }
-
+      // NUR visuelle Effekte entfernen - CSS-Klassen werden woanders verwaltet!
       this.isDropdownHovering = false;
       this.currentHoverItem = null;
       this.cleanupHoverSVG();
@@ -387,6 +357,40 @@
     }
 
     /**
+     * Setzt nur Marker-Effekte zurück (ohne currentHoverItem/SVG zu ändern)
+     * Wird verwendet beim Wechsel zwischen Items
+     */
+    resetMarkerEffects(location) {
+      const targetMarker = this.findMarkerByLocation(location);
+      if (!targetMarker) return;
+
+      // Marker zurück ins Cluster
+      if (targetMarker._isTemporarilyUnclustered) {
+        window.map.removeLayer(targetMarker);
+        targetMarker._isTemporarilyUnclustered = false;
+      }
+
+      // Marker-State zurücksetzen
+      if (window.markerStateManager) {
+        window.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: false });
+      }
+
+      if (window.mapUtils?.clearMarkerDropdownHover) {
+        window.mapUtils.clearMarkerDropdownHover(targetMarker);
+      }
+
+      // Popup schließen (außer sticky)
+      if (!this.isStickyMarker(targetMarker)) {
+        targetMarker.closePopup();
+      }
+
+      // Original-Icon wiederherstellen
+      if (window.mapUtils?.updateMarkerIcon) {
+        window.mapUtils.updateMarkerIcon(targetMarker, location);
+      }
+    }
+
+    /**
      * Entfernt alle Hover-Effekte (für Cleanup)
      */
     clearAllHoverEffects() {
@@ -410,13 +414,15 @@
 
     /**
      * Erstellt das Hover-SVG für ein Item
+     * SVG im Body mit position:fixed - wird bei Scroll/Navigation aktualisiert
      */
     createHoverSVG(item, location, color = 'blue') {
       this.cleanupHoverSVG();
+
       const itemRect = item.getBoundingClientRect();
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.id = 'current-connector';
-      svg.style.cssText = `position: fixed; left: ${itemRect.left - 50}px; top: ${itemRect.top - 0.5}px; width: 80px; height: ${itemRect.height}px; z-index: 999; pointer-events: none;`;
+      svg.style.cssText = `position: fixed; left: ${itemRect.left - 50}px; top: ${itemRect.top}px; width: 80px; height: ${itemRect.height}px; z-index: 999; pointer-events: none;`;
       svg.setAttribute('viewBox', '65 0 570 620');
       svg.setAttribute('preserveAspectRatio', 'none');
 
@@ -442,18 +448,22 @@
     }
 
     /**
-     * Aktualisiert die Position des Hover-SVG (beim Scrollen)
+     * Aktualisiert SVG-Position und Connection Line (beim Scrollen)
      */
     updateHoverSVGPosition() {
-      if (this.currentHoverSVG && this.currentHoverItem) {
+      if (this.currentHoverItem) {
         const location = this.getLocationFromItem(this.currentHoverItem);
         if (location) {
           const hoverColor = CONFIG.getDynamicSpaceColor(location);
           const itemRect = this.currentHoverItem.getBoundingClientRect();
           const targetMarker = this.findMarkerByLocation(location);
 
-          this.currentHoverSVG.style.left = `${itemRect.left - 50}px`;
-          this.currentHoverSVG.style.top = `${itemRect.top - 0.5}px`;
+          // SVG-Position aktualisieren
+          if (this.currentHoverSVG) {
+            this.currentHoverSVG.style.left = `${itemRect.left - 50}px`;
+            this.currentHoverSVG.style.top = `${itemRect.top}px`;
+            this.currentHoverSVG.style.height = `${itemRect.height}px`;
+          }
 
           // Connection Line neu zeichnen
           this.removeConnectionLine();
@@ -484,6 +494,43 @@
       if (window.mapUtils?.removeConnectionLine) {
         window.mapUtils.removeConnectionLine();
         this.connectionLine = null;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SCROLL-HELFER
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Scrollt ein Item sichtbar innerhalb seines Scroll-Containers.
+     * Ersetzt scrollIntoView — vermeidet Konflikte mit scroll-margin und scroll-snap.
+     * Nutzt scroll-padding-top aus CSS (deckt sticky-Elemente ab).
+     */
+    scrollItemIntoContainer(item) {
+      const container = item.closest('.nearby-popover-list, #suggestions-dropdown');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const itemRect = item.getBoundingClientRect();
+
+      // scroll-padding-top aus CSS lesen (deckt sticky-Header ab), Fallback auf padding-top
+      const style = getComputedStyle(container);
+      const scrollPadding = parseFloat(style.scrollPaddingTop);
+      const topOffset = (!isNaN(scrollPadding) && scrollPadding > 0)
+        ? scrollPadding
+        : (parseFloat(style.paddingTop) || 0);
+      const visibleTop = containerRect.top + topOffset;
+
+      if (itemRect.top < visibleTop) {
+        container.scrollTo({
+          top: container.scrollTop + (itemRect.top - visibleTop),
+          behavior: 'smooth'
+        });
+      } else if (itemRect.bottom > containerRect.bottom) {
+        container.scrollTo({
+          top: container.scrollTop + (itemRect.bottom - containerRect.bottom),
+          behavior: 'smooth'
+        });
       }
     }
 
@@ -549,6 +596,11 @@
           this._lastMousePos = { x: e.clientX, y: e.clientY };
           this._mouseHasMoved = true;
 
+          // ✨ Maus übernimmt Kontrolle zurück von Tastatur
+          if (this.lastInputMethod === 'keyboard') {
+            this.lastInputMethod = 'mouse';
+          }
+
           // pointer-events wieder aktivieren
           container.querySelectorAll('.listing-item').forEach(item => {
             if (item.style.pointerEvents === 'none') {
@@ -586,6 +638,89 @@
     setKeyboardInput() {
       this.lastInputMethod = 'keyboard';
       this._mouseHasMoved = false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ZENTRALE ITEM-LISTENER (für Search UND Nearby)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Setup Event-Listener für alle Items in einem Container
+     * @param {HTMLElement} container - Der Container mit .listing-item Elementen
+     * @param {Object} options - Konfiguration
+     * @param {Function} options.onItemClick - Click-Handler (location, item) => void
+     * @param {number} options.connectionWeight - Liniendicke (default: connectionWeightSearch)
+     * @param {boolean} options.keepHoverOnLeave - Hover-Effekte beim Verlassen behalten (für Nearby)
+     */
+    setupItemListeners(container, options = {}) {
+      const {
+        onItemClick,
+        connectionWeight = CONFIG.settings.connectionWeightSearch,
+        keepHoverOnLeave = false
+      } = options;
+
+      container.querySelectorAll('.listing-item').forEach(item => {
+        const locationId = parseInt(item.dataset.locationId);
+        const location = window.locationById?.get(locationId);
+        if (!location) return;
+
+        // Mouseenter
+        item.addEventListener('mouseenter', () => {
+          if (!this.hasMouseMoved()) return;
+          this.setMouseInput();
+
+          // Altes Item: CSS-Klasse und Marker-Effekte entfernen
+          if (this.currentHoverItem && this.currentHoverItem !== item) {
+            this.currentHoverItem.classList.remove('active');
+            const oldLocation = this.getLocationFromItem(this.currentHoverItem);
+            if (oldLocation) {
+              this.resetMarkerEffects(oldLocation);
+            }
+          }
+
+          // CSS-Klasse: Neues Item aktivieren
+          item.classList.add('active');
+
+          // Index synchronisieren
+          const items = container.querySelectorAll('.listing-item');
+          this.keyboardIndex = Array.from(items).indexOf(item);
+
+          // Visuelle Effekte
+          this.applyHoverEffects(item, location, connectionWeight);
+        });
+
+        // Mouseleave
+        item.addEventListener('mouseleave', (e) => {
+          // Ignorieren wenn wir zu einem anderen Item wechseln
+          if (e.relatedTarget?.closest('.listing-item')) return;
+
+          // Nearby-Modus: Alles beim Verlassen behalten
+          if (keepHoverOnLeave) {
+            return;
+          }
+
+          // Nicht aufräumen wenn Tastatur die Kontrolle übernommen hat
+          // (pointer-events: none löst verzögertes mouseleave aus, das sonst
+          // das frisch erstellte SVG des neuen Keyboard-Items zerstören würde)
+          if (this.lastInputMethod === 'keyboard') {
+            return;
+          }
+
+          // Standard (Dropdown): Alles entfernen
+          item.classList.remove('active');
+          this.removeHoverEffects(location);
+        });
+
+        // Click
+        if (onItemClick) {
+          item.addEventListener('click', () => onItemClick(location, item));
+        }
+
+        // Bookmarks
+        if (window.bookmarkManager) {
+          window.bookmarkManager.initializeBookmarkListeners(item);
+        }
+      });
     }
   }
 
