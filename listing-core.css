@@ -39,9 +39,6 @@
 .listing-item.active {
   background-color: var(--status-color, var(--space-hover));
   color: white;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  overflow-x: visible !important;
 }
 
 /* #suggestions-dropdown.listing-container {

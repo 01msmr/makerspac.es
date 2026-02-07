@@ -218,19 +218,19 @@ class EmbedMapExtended {
   }
 
   createDropdownItem(space, isTarget) {
-    let statusIcon = '';
+    let statusIconHtml = '<i class="fas fa-question-circle door-icon-unknown" style="opacity:0"></i>';
     let statusClass = 'space-default';
     if (space.spaceapi?.endpoint) {
-      if (space.isOpen === true) { statusIcon = '<i class="fas fa-door-open door-icon-open"></i> '; statusClass = 'space-open'; }
-      else if (space.isOpen === false) { statusIcon = '<i class="fas fa-door-closed door-icon-closed"></i> '; statusClass = 'space-closed'; }
-      else { statusIcon = '<i class="fas fa-question-circle door-icon-unknown"></i> '; statusClass = 'space-unknown'; }
+      if (space.isOpen === true) { statusIconHtml = '<i class="fas fa-door-open door-icon-open"></i>'; statusClass = 'space-open'; }
+      else if (space.isOpen === false) { statusIconHtml = '<i class="fas fa-door-closed door-icon-closed"></i>'; statusClass = 'space-closed'; }
+      else { statusIconHtml = '<i class="fas fa-question-circle door-icon-unknown"></i>'; statusClass = 'space-unknown'; }
     }
     const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
     const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
     const item = document.createElement('div');
     item.className = `space-item listing-item ${statusClass} ${isTarget ? 'target' : ''}`;
     item.dataset.spaceId = space.ID;
-    const addressHtml = isTarget ? `
+    const addressLines = isTarget ? `
       <div class="listing-item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
       <div class="listing-item-details">${this.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
       <div class="listing-item-details"><span class="fi fi-${this.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
@@ -238,8 +238,13 @@ class EmbedMapExtended {
     item.innerHTML = `
       <div class="listing-item-content">
         ${isTarget ? '<div class="our-space-pill">Our Space</div>' : ''}
-        <div class="listing-item-name"><span>${styleIconHtml}${statusIcon}${space.name}</span></div>
-        ${addressHtml}
+        <div class="listing-item-name"><span>${styleIconHtml}${space.name}</span></div>
+        <div class="listing-item-address">
+          <span class="listing-status-icon">${statusIconHtml}</span>
+          <div class="listing-item-address-lines">
+            ${addressLines}
+          </div>
+        </div>
       </div>`;
     return item;
   }
