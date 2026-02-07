@@ -204,7 +204,7 @@ class EmbedMapExtended {
         <h3 id="style">${styleIconHtml}${space.style || ''}</h3>
         <div style="display: flex; align-items: center; gap: 8px;">
           <a id="titleurl" href="${space.link?.url || '#'}" target="_blank">
-            <h3 class="${nameClass}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
+            <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
           </a>
         </div>
         <br><br>
