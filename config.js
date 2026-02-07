@@ -284,19 +284,54 @@
   // SCHWEIF SVG (Connector zwischen Liste und Karte)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const SCHWEIF_PATH = 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 276.615,526.112 287.858,544.008C302.534,560.527 319.618,573.988 336.703,587.45C356.196,597.856 376.225,604.6 396.254,611.345C416.818,614.43 436.232,614.412 436.232,614.412L632.86,614.412L632.86,6.618Z';
+  // const SCHWEIF_PATH = 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 276.615,526.112 287.858,544.008C302.534,560.527 319.618,573.988 336.703,587.45C356.196,597.856 376.225,604.6 396.254,611.345C416.818,614.43 436.232,614.412 436.232,614.412L632.86,614.412L632.86,6.618Z';
+  // schweif3-erw.svg
+  const SCHWEIF_PATH = 'M1387.99,414.821C1344.24,414.778 1297.9,421.73 1252.77,436.929C1207.64,452.128 1163.71,475.574 1125.21,505.909C1086.72,536.244 1053.65,573.467 1028.31,613.793C1002.98,654.118 985.382,697.547 975.191,740.09C956.386,819.552 914.422,896.452 844.896,952.282C810.133,980.198 768.48,1002.85 721.184,1018.21C673.888,1033.58 620.949,1041.66 564.569,1041.62L564.569,1157.61C620.949,1157.57 673.888,1165.65 721.184,1181.02C768.48,1196.38 810.133,1219.03 844.896,1246.95C914.422,1302.78 956.386,1379.68 975.191,1459.14C985.382,1501.68 1002.98,1545.11 1028.31,1585.44C1053.65,1625.76 1086.72,1662.99 1125.21,1693.32C1163.71,1723.65 1207.64,1747.1 1252.77,1762.3C1297.9,1777.5 1344.24,1784.45 1387.99,1784.41L1387.99,786.606L1831.07,414.821L1387.99,414.821Z';
+  const SCHWEIF_TRANSFORM = 'matrix(4.16667,0,0,-4.16667,0,9163.45)';
+
+  const CONNECTOR_OFFSET_LEFT = -50;
+  const CONNECTOR_OFFSET_TOP = -0.0;
+
+  function updateConnectorPosition(svg, itemRect, topOffset = 0) {
+    svg.style.left = `${itemRect.left + CONNECTOR_OFFSET_LEFT}px`;
+    svg.style.top = `${itemRect.top + topOffset + CONNECTOR_OFFSET_TOP}px`;
+    svg.style.height = `${itemRect.height - 1}px`;
+  }
+
+  // function createConnectorSVG(itemRect, color, topOffset = 0) {
+  //   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  //   svg.id = 'current-connector';
+  //   updateConnectorPosition(svg, itemRect, topOffset);
+  //   svg.setAttribute('viewBox', '65 0 570 620');
+  //   svg.setAttribute('preserveAspectRatio', 'none');
+  //
+  //   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  //   path.setAttribute('d', SCHWEIF_PATH);
+  //   path.setAttribute('fill', color);
+  //   svg.appendChild(path);
+  //
+  //   document.body.appendChild(svg);
+  //   return svg;
+  // }
 
   function createConnectorSVG(itemRect, color, topOffset = 0) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'current-connector';
-    svg.style.cssText = `position: fixed; left: ${itemRect.left - 50}px; top: ${itemRect.top + topOffset}px; width: 80px; height: ${itemRect.height}px; z-index: 999; pointer-events: none;`;
-    svg.setAttribute('viewBox', '65 0 570 620');
+    updateConnectorPosition(svg, itemRect, topOffset);
+    svg.setAttribute('viewBox', '2350 1725 5280 5710');
     svg.setAttribute('preserveAspectRatio', 'none');
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('transform', SCHWEIF_TRANSFORM);
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', SCHWEIF_PATH);
     path.setAttribute('fill', color);
-    svg.appendChild(path);
+    // path.setAttribute('stroke', 'black');
+    // path.setAttribute('stroke-width', '2');
+    // path.setAttribute('vector-effect', 'non-scaling-stroke');
+    g.appendChild(path);
+    svg.appendChild(g);
 
     document.body.appendChild(svg);
     return svg;
@@ -334,7 +369,9 @@
     escapeHtml,
     schweifPath: SCHWEIF_PATH,
     createConnectorSVG,
-    cleanupConnectorSVG
+    updateConnectorPosition,
+    cleanupConnectorSVG,
+    connectorOffsetLeft: CONNECTOR_OFFSET_LEFT
   };
 
   // Backward Compatibility (für existierenden Code während Migration)

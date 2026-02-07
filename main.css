@@ -310,7 +310,7 @@ a#titleurl {
   border-radius: 16px;
   box-shadow: 0 4px 12px 2px var(--shadow-color);
   min-width: 280px;
-  z-index: 10001;
+  z-index: 1001;
   overflow: hidden;
   animation: fadeIn 0.15s ease-out;
 }
@@ -527,6 +527,14 @@ a#titleurl {
 
 
 
+
+/* Connector SVG (Schweif zwischen Liste und Karte) */
+#current-connector {
+  position: fixed;
+  width: 80px;
+  z-index: 1001;
+  pointer-events: none;
+}
 
 /* Connection Line Styling */
 .connection-line {

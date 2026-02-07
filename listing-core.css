@@ -39,7 +39,22 @@
 .listing-item.active {
   background-color: var(--status-color, var(--space-hover));
   color: white;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  overflow-x: visible !important;
 }
+
+/* #suggestions-dropdown.listing-container {
+  border-top-left-radius: 0px !important;
+  border-bottom-left-radius: 0px !important;
+  overflow-x: visible !important;
+}
+
+.suggestions-dropdown {
+  border-bottom-left-radius: 0 !important;
+  overflow-x: visible !important;
+} */
+
 
 /* Alle Kindelemente weiß beim Hover - AUSSER Distanz-Badge und Bookmark */
 .listing-item.active .listing-item-content,
@@ -53,6 +68,7 @@
 .listing-item.active .door-icon-unknown {
   color: white !important;
 }
+
 
 /* Invisible hitbox für bessere Hover-Area */
 .listing-item::before {
@@ -71,6 +87,8 @@
 .listing-item-content {
   flex-grow: 1;
   min-width: 0;
+  position: relative;
+  /* z-index: 1020; */
 }
 
 /* Name-Zeile */

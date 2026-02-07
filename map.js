@@ -293,8 +293,8 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   const mapContainer = document.getElementById('map');
   const mapRect = mapContainer.getBoundingClientRect();
 
-  const connectionEndX = suggestionRect.left - 50 - mapRect.left;
-  const connectionEndY = suggestionRect.top + 0.5 + (suggestionRect.height / 2) - mapRect.top;
+  const connectionEndX = suggestionRect.left + window.AppConfig.connectorOffsetLeft - mapRect.left;
+  const connectionEndY = suggestionRect.top - 0.8 + (suggestionRect.height / 2) - mapRect.top;
   const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
   const endLatLng = targetMarker.getLatLng();

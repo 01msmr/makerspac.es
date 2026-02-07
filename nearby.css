@@ -66,14 +66,15 @@
 .nearby-popover {
   display: flex;
   flex-direction: column;
-  position: fixed;
-  z-index: 10000;
+  position: absolute;
+  /* z-index: 10000; */
+  z-index: 1000;
   width: 350px;
   background-color: var(--dropdown-bg);
   border-radius: 16px;
   border: none;
   box-shadow: 0px 4px 12px 2px var(--shadow-color);
-  overflow: hidden;
+  overflow: visible;
   text-align: left;
 }
 

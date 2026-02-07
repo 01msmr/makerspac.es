@@ -451,9 +451,7 @@
 
           // SVG-Position aktualisieren
           if (this.currentHoverSVG) {
-            this.currentHoverSVG.style.left = `${itemRect.left - 50}px`;
-            this.currentHoverSVG.style.top = `${itemRect.top}px`;
-            this.currentHoverSVG.style.height = `${itemRect.height}px`;
+            CONFIG.updateConnectorPosition(this.currentHoverSVG, itemRect);
           }
 
           // Connection Line neu zeichnen
