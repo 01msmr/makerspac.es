@@ -30,7 +30,7 @@
           <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
         </svg>
       `),
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      shadowUrl: 'libs/leaflet/images/marker-shadow.png',
       iconSize: iconSize,
       iconAnchor: iconAnchor,
       popupAnchor: popupAnchor,

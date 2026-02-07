@@ -294,7 +294,7 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   const mapRect = mapContainer.getBoundingClientRect();
 
   const connectionEndX = suggestionRect.left - 50 - mapRect.left;
-  const connectionEndY = suggestionRect.top - 0.5 + (suggestionRect.height / 2) - mapRect.top;
+  const connectionEndY = suggestionRect.top + 0.5 + (suggestionRect.height / 2) - mapRect.top;
   const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
   const endLatLng = targetMarker.getLatLng();
@@ -838,7 +838,7 @@ function createMarkerForLocation(location) {
               <h3 id="style">${styleIconHtml}${styleLabel}</h3>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <a id="titleurl" href="${linkUrl}" target="_blank">
-                  <h3 class="${nameClass}">
+                  <h3 class="${nameClass}" data-id="${location.ID}">
                     ${statusIconHtml}${location.name || 'Unnamed Space'}
                   </h3>
                 </a>
@@ -892,6 +892,14 @@ function createMarkerForLocation(location) {
         if (!event.target.closest('.leaflet-popup-close-button')) {
           event.stopPropagation();
         }
+      });
+      popupElement.addEventListener('click', (event) => {
+        if (!event.target.closest('.leaflet-popup-close-button')) {
+          event.stopPropagation();
+        }
+      });
+      popupElement.addEventListener('dblclick', (event) => {
+        event.stopPropagation();
       });
     }
 

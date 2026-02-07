@@ -717,25 +717,48 @@ a#url:hover {
 }
 
 a h3 {
-  padding: 0.2em 0.3em 0.2em 2em;
+  padding: 0.2em 0.3em 0.2em 2.4em;
   display: inline;
   color: white !important;
   text-decoration: none !important;
   border-radius: .36em;
-  background: blue;
-  border: .12em solid transparent;
+  background-color: white;
+  background-image: linear-gradient(to bottom, var(--status-color, blue) 50%, transparent 50%);
+  background-size: 100% 400%;
+  background-position: 0 0;
+  border: .12em solid var(--status-color, blue);
   cursor: none;
+  transition: background-position 130ms ease-in-out, color 130ms ease-in-out;
 }
 
 a:hover h3 {
-  color: blue !important;
-  background: white;
-  border-color: blue;
+  color: var(--status-color, blue) !important;
+  background-position: 0 100%;
 }
 
 a#titleurl {
   padding: .2em .1em .2em 0;
   text-decoration: none;
+}
+
+/* ID-Anzeige im Namensfeld: unsichtbar (gleiche Farbe wie Hintergrund), sichtbar beim Hover */
+a#titleurl h3 {
+  position: relative;
+}
+
+a#titleurl h3::before {
+  content: '#' attr(data-id);
+  position: absolute;
+  left: 0.7em;
+  bottom: 0.5px;
+  padding-bottom: inherit;
+  color: var(--status-color, blue);
+  opacity: 0.7;
+  font-size: 0.7em;
+  font-weight: normal;
+  font-style: italic;
+  z-index: 1;
+  pointer-events: none;
 }
 
 hr {
@@ -827,91 +850,37 @@ a#titleurl h3 {
   /* ← Name bricht nicht um */
 }
 
-/* Styling für den Makerspace-Namen, WENN der Space offen ist */
-a#titleurl h3.space-open {
-  background-color: var(--space-open);
-  /* Grüner Hintergrund */
-}
+/* Styling für den Makerspace-Namen nach SpaceAPI-Status */
+/* background-color entfernt — Farbe kommt über den Diagonal-Gradient via --status-color */
+a#titleurl h3.space-unknown { border-color: var(--space-unknown); }
 
-/* Stellt sicher, dass das Icon im grünen Namen weiß ist und korrekt ausgerichtet ist */
-a#titleurl h3.space-open .fas {
-  color: white !important;
+/* Icon im Namen: weiß, korrekt ausgerichtet */
+a#titleurl h3.space-open .fas,
+a#titleurl h3.space-closed .fas,
+a#titleurl h3.space-unknown .fas {
+  color: white;
   position: relative;
   bottom: 1px;
-  margin-right: 0.0em;
+  transition: color 130ms ease-in-out;
 }
-
-/* Styling für den Makerspace-Namen, WENN der Space geschlossen ist */
-a#titleurl h3.space-closed {
-  background-color: var(--space-closed);
-  /* Roter Hintergrund */
-}
-
-/* Stellt sicher, dass das Icon im roten Namen weiß ist und korrekt ausgerichtet ist */
-a#titleurl h3.space-closed .fas {
-  color: white !important;
-  position: relative;
-  bottom: 1px;
-  margin-right: 0.0em;
-}
-
-
-
 
 
 
 /* === POPUP NAME HIGHLIGHTING (Unknown Status) === */
 
-/* Styling für den Makerspace-Namen, WENN der Space-Status unbekannt ist */
-a#titleurl h3.space-unknown {
-  background-color: var(--space-unknown);
-  /* Gelber Hintergrund */
-  border-color: var(--space-unknown);
-  /* Gelber Rand */
-}
-
-/* Stellt sicher, dass das Icon im gelben Namen weiß ist und korrekt ausgerichtet ist */
-a#titleurl h3.space-unknown .fas {
-  color: white !important;
-  position: relative;
-  bottom: 1px;
-  margin-right: 0.0em;
-}
-
 /* === POPUP NAME HOVER-EFFEKTE === */
 
-/* Hover-Effekt für offenen Spaces: weißer Hintergrund, grüne Schrift */
-a#titleurl:hover h3.space-open {
-  background-color: white !important;
-  color: var(--space-open);
-  border-color: var(--space-open);
-}
-
-/* Hover-Effekt für geschlossene Spaces: weißer Hintergrund, rote Schrift */
-a#titleurl:hover h3.space-closed {
-  background-color: white !important;
-  color: var(--space-closed);
-  border-color: var(--space-closed);
-}
-
-/* Hover-Effekt für unbekannte Spaces: weißer Hintergrund, gelbe Schrift */
+a#titleurl:hover h3.space-open,
+a#titleurl:hover h3.space-closed,
 a#titleurl:hover h3.space-unknown {
-  background-color: white !important;
-  color: var(--space-unknown);
-  border-color: var(--space-unknown);
+  color: var(--status-color);
+  border-color: var(--status-color);
 }
 
-/* Icons bei Hover in entsprechender Status-Farbe */
-a#titleurl:hover h3.space-open .fas {
-  color: var(--space-open);
-}
-
-a#titleurl:hover h3.space-closed .fas {
-  color: var(--space-closed);
-}
-
+a#titleurl:hover h3.space-open .fas,
+a#titleurl:hover h3.space-closed .fas,
 a#titleurl:hover h3.space-unknown .fas {
-  color: var(--space-unknown);
+  color: var(--status-color);
 }
 
 /* +++ START: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
@@ -1225,6 +1194,7 @@ a#titleurl:hover h3.space-unknown .fas {
   display: inline-block;
   width: 16px;
   text-align: center;
+  transition: transform 0.15s ease;
   /* Popup-spezifische Resets */
   margin-right: 0 !important;
   position: static !important;
@@ -1239,7 +1209,7 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .popup-bookmark:hover {
-  opacity: 0.4;
+  transform: scale(1.2);
 }
 
 /* ===================================

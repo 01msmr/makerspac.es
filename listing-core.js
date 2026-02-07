@@ -86,16 +86,24 @@
         ? `<div class="listing-item-details">${CONFIG.escapeHtml(location.loc.street.name || '')} ${CONFIG.escapeHtml(location.loc.street.number || '')} ${CONFIG.escapeHtml(location.loc.street.ext || '')}</div>`
         : '';
 
+      // Status icon placeholder (always rendered for consistent indentation)
+      const addressStatusIcon = `<span class="listing-status-icon">${statusIconHtml}</span>`;
+
       // Item-HTML zusammenbauen
       item.innerHTML = `
         ${distanceBadgeHtml}
         <div class="listing-item-content">
           <div class="listing-item-name">
-            <span class="${nameClass}">${styleIconHtml}${statusIconHtml}${CONFIG.escapeHtml(location.name)}</span>
+            <span class="${nameClass}">${styleIconHtml}${CONFIG.escapeHtml(location.name)}</span>
             ${bookmarkIcon}
           </div>
-          ${streetHtml}
-          <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${CONFIG.escapeHtml(location.loc.city)}</b></div>
+          <div class="listing-item-address">
+            ${addressStatusIcon}
+            <div class="listing-item-address-lines">
+              ${streetHtml}
+              <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${CONFIG.escapeHtml(location.loc.city)}</b></div>
+            </div>
+          </div>
         </div>
       `;
 
@@ -133,7 +141,7 @@
      */
     getStatusIconHtml(location) {
       if (!location.spaceapi || !location.spaceapi.endpoint) {
-        return '';
+        return `<i class="${CONFIG.icons.status.unknown} door-icon-unknown" style="opacity:0"></i> `;
       }
 
       if (location.isOpen === true) {
@@ -418,33 +426,16 @@
      */
     createHoverSVG(item, location, color = 'blue') {
       this.cleanupHoverSVG();
-
       const itemRect = item.getBoundingClientRect();
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.id = 'current-connector';
-      svg.style.cssText = `position: fixed; left: ${itemRect.left - 50}px; top: ${itemRect.top}px; width: 80px; height: ${itemRect.height}px; z-index: 999; pointer-events: none;`;
-      svg.setAttribute('viewBox', '65 0 570 620');
-      svg.setAttribute('preserveAspectRatio', 'none');
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M632.86,6.618L436.232,6.618C416.818,6.599 396.254,9.684 376.225,16.429C356.196,23.174 336.703,33.579 319.618,47.041C302.534,60.503 287.858,77.022 276.615,94.918C265.373,112.813 257.563,132.086 253.041,150.966C244.69,186.193 226.089,220.425 195.188,245.142C164.286,269.858 121.084,285.059 70.815,284.779L70.815,336.251C121.084,335.971 164.286,351.172 195.188,375.888C226.089,400.604 244.69,434.836 253.041,470.064C257.563,488.944 276.615,526.112 287.858,544.008C302.534,560.527 319.618,573.988 336.703,587.45C356.196,597.856 376.225,604.6 396.254,611.345C416.818,614.43 436.232,614.412 436.232,614.412L632.86,614.412L632.86,6.618Z');
-      path.setAttribute('fill', color);
-      svg.appendChild(path);
-
-      document.body.appendChild(svg);
-      this.currentHoverSVG = svg;
+      this.currentHoverSVG = CONFIG.createConnectorSVG(itemRect, color);
     }
 
     /**
      * Entfernt das Hover-SVG
      */
     cleanupHoverSVG() {
-      if (this.currentHoverSVG) {
-        this.currentHoverSVG.remove();
-        this.currentHoverSVG = null;
-      }
-      const svg = document.getElementById('current-connector');
-      if (svg) svg.remove();
+      CONFIG.cleanupConnectorSVG(this.currentHoverSVG);
+      this.currentHoverSVG = null;
     }
 
     /**

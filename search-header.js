@@ -1296,7 +1296,10 @@
     setupBookmarkEvents() {
       window.addEventListener('bookmarksChanged', () => {
         this.createActiveFiltersSection();
-        this.triggerFilterUpdate();
+        // Filter nur aktualisieren wenn Bookmark-Filter aktiv ist
+        if (this.searchFilter?.selectedStyles?.has('bookmarked')) {
+          this.triggerFilterUpdate();
+        }
       });
     }
   }
