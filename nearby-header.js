@@ -120,7 +120,7 @@
         if (e.originalEvent.target.classList?.contains('nearby-circle-draggable')) return;
 
         const isMap = e.originalEvent.target.classList.contains('leaflet-container') ||
-                      e.originalEvent.target.classList.contains('maplibregl-canvas');
+          e.originalEvent.target.classList.contains('maplibregl-canvas');
         if (isMap) {
           this.showAtCursor(
             e.latlng.lat,
@@ -135,6 +135,9 @@
 
       // Sprachwechsel
       document.addEventListener('languageChanged', () => {
+        // NEU: Adresse sofort neu berechnen (für das Label "rund um")
+        this.updateAddressHTML();
+
         if (this.popoverElement?.parentElement) {
           this.showPopover();
         }
@@ -266,12 +269,16 @@
     }
 
     reverseGeocode(lat, lon) {
-      // const icon = `<i class="${CONFIG.icons.ui.crosshairs} nearby-address-icon"></i>`;
-      const icon = '';
-      const nearText = window.i18n?.t('nearbySpaces.nearLocation') || 'nahe';
-      this._lastAddressHTML = `${nearText} &ensp;${icon} ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-      const addr = this.popoverElement?.querySelector('.nearby-click-address');
-      if (addr) addr.innerHTML = this._lastAddressHTML;
+      // 1. Initialzustand (Koordinaten) speichern
+      this._currentAddressData = {
+        lat: lat.toFixed(4),
+        lon: lon.toFixed(4),
+        street: null,
+        cityPart: null
+      };
+
+      // Sofortige Anzeige der Koordinaten (während die API lädt)
+      this.updateAddressHTML();
 
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`, {
         headers: { 'Accept-Language': navigator.language || 'en' }
@@ -279,15 +286,42 @@
         .then(r => r.json())
         .then(data => {
           const a = data.address || {};
-          const street = [a.road, a.house_number].filter(Boolean).join(' ');
-          const cityPart = [a.postcode, a.city || a.town || a.village].filter(Boolean).join(' ');
-          const location = [street, cityPart].filter(Boolean).join(', ');
-          this._lastAddressHTML = location ? `${nearText} &ensp;${icon}<b>${street ? street + ', ' : ''}</b><b style="color:var(--text-color)">${cityPart}</b>` : '';
-          const addr = this.popoverElement?.querySelector('.nearby-click-address');
-          if (addr) addr.innerHTML = this._lastAddressHTML;
+          // Daten speichern statt fertigem String
+          this._currentAddressData.street = [a.road, a.house_number].filter(Boolean).join(' ');
+          this._currentAddressData.cityPart = [a.postcode, a.city || a.town || a.village].filter(Boolean).join(' ');
+
+          // Anzeige aktualisieren
+          this.updateAddressHTML();
         })
-        .catch(() => {});
+        .catch(() => {
+          // Im Fehlerfall bleiben die Koordinaten stehen
+          this.updateAddressHTML();
+        });
     }
+
+
+    updateAddressHTML() {
+      if (!this._currentAddressData) return;
+
+      const nearText = window.i18n?.t('nearbySpaces.nearLocation') || 'nahe';
+      const { lat, lon, street, cityPart } = this._currentAddressData;
+
+      if (street || cityPart) {
+        // Format mit Adresse
+        this._lastAddressHTML = `${nearText} &ensp;<b>${street ? street + ', ' : ''}</b><b style="color:var(--text-color)">${cityPart}</b>`;
+      } else {
+        // Fallback auf Koordinaten
+        this._lastAddressHTML = `${nearText} &ensp;${lat}, ${lon}`;
+      }
+
+      // Falls das Popover offen ist, das Element direkt im DOM aktualisieren
+      const addrElement = this.popoverElement?.querySelector('.nearby-click-address');
+      if (addrElement) {
+        addrElement.innerHTML = this._lastAddressHTML;
+      }
+    }
+
+
 
     updateNearbyData(lat, lon) {
       if (!window.json) return;
