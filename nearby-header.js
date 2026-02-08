@@ -116,6 +116,9 @@
 
       // Linksklick auf Karte: Nearby anzeigen
       this.map.on('click', (e) => {
+        // Klick auf den Search-Circle ignorieren
+        if (e.originalEvent.target.classList?.contains('nearby-circle-draggable')) return;
+
         const isMap = e.originalEvent.target.classList.contains('leaflet-container') ||
                       e.originalEvent.target.classList.contains('maplibregl-canvas');
         if (isMap) {
@@ -257,6 +260,32 @@
       if (this.hintElement) {
         this.hintElement.style.opacity = '0';
       }
+
+      this.reverseGeocode(lat, lon);
+    }
+
+    reverseGeocode(lat, lon) {
+      // const icon = `<i class="${CONFIG.icons.ui.crosshairs} nearby-address-icon"></i>`;
+      const icon = '';
+      const nearText = window.i18n?.t('nearbySpaces.nearLocation') || 'nahe';
+      this._lastAddressHTML = `${nearText} &ensp;${icon} ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      const addr = this.popoverElement?.querySelector('.nearby-click-address');
+      if (addr) addr.innerHTML = this._lastAddressHTML;
+
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': navigator.language || 'en' }
+      })
+        .then(r => r.json())
+        .then(data => {
+          const a = data.address || {};
+          const street = [a.road, a.house_number].filter(Boolean).join(' ');
+          const cityPart = [a.postcode, a.city || a.town || a.village].filter(Boolean).join(' ');
+          const location = [street, cityPart].filter(Boolean).join(', ');
+          this._lastAddressHTML = location ? `${nearText} &ensp;${icon}<b>${street ? street + ', ' : ''}</b><b style="color:var(--text-color)">${cityPart}</b>` : '';
+          const addr = this.popoverElement?.querySelector('.nearby-click-address');
+          if (addr) addr.innerHTML = this._lastAddressHTML;
+        })
+        .catch(() => {});
     }
 
     updateNearbyData(lat, lon) {
@@ -274,7 +303,20 @@
     }
 
     hide() {
+      if (this._isCircleDragging) return;
+
       this.listingCore?.clearAllHoverEffects();
+
+      // Circle-Drag-Handler aufräumen
+      if (this._circleDragMove) {
+        document.removeEventListener('mousemove', this._circleDragMove);
+        this._circleDragMove = null;
+      }
+      if (this._circleDragUp) {
+        document.removeEventListener('mouseup', this._circleDragUp);
+        this._circleDragUp = null;
+      }
+      this._isCircleDragging = false;
 
       if (this.popoverElement) {
         this.popoverElement.remove();
@@ -315,9 +357,12 @@
           color: circleColor,
           weight: 3,
           fillOpacity: 0.15,
-          interactive: false,
+          interactive: true,
+          bubblingMouseEvents: false,
+          className: 'nearby-circle-draggable',
           pane: 'overlayPane'
         }).addTo(this.map);
+        this.setupCircleDrag();
       } else {
         this.searchCircle.setLatLng([lat, lon]);
 
@@ -346,6 +391,75 @@
           this.searchCircle.setRadius(targetRadius);
         }
       }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CIRCLE DRAG
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    setupCircleDrag() {
+      if (!this.searchCircle) return;
+
+      let isDragging = false;
+      let dragStartLatLng = null;
+      let circleStartLatLng = null;
+
+      // Cursor: move beim Hovern über dem Kreis
+      this.searchCircle.on('mouseover', () => {
+        if (!isDragging) this.map.getContainer().style.cursor = 'move';
+      });
+      this.searchCircle.on('mouseout', () => {
+        if (!isDragging) this.map.getContainer().style.cursor = '';
+      });
+
+      // Drag starten
+      this.searchCircle.on('mousedown', (e) => {
+        isDragging = true;
+        this._isCircleDragging = true;
+        dragStartLatLng = e.latlng;
+        circleStartLatLng = this.searchCircle.getLatLng();
+        this.map.dragging.disable();
+
+        const el = this.searchCircle.getElement();
+        if (el) el.style.cursor = 'grabbing';
+        this.map.getContainer().style.cursor = 'grabbing';
+
+        L.DomEvent.stop(e.originalEvent);
+      });
+
+      // Drag bewegen (document-level, damit es auch außerhalb des Kreises funktioniert)
+      this._circleDragMove = (e) => {
+        if (!isDragging) return;
+        const latlng = this.map.mouseEventToLatLng(e);
+        const latDiff = latlng.lat - dragStartLatLng.lat;
+        const lngDiff = latlng.lng - dragStartLatLng.lng;
+        this.searchCircle.setLatLng([
+          circleStartLatLng.lat + latDiff,
+          circleStartLatLng.lng + lngDiff
+        ]);
+      };
+
+      // Drag beenden → Daten aktualisieren
+      this._circleDragUp = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        this._isCircleDragging = false;
+        this.map.dragging.enable();
+
+        const el = this.searchCircle.getElement();
+        if (el) el.style.cursor = '';
+        this.map.getContainer().style.cursor = '';
+
+        // Neue Position übernehmen
+        const newCenter = this.searchCircle.getLatLng();
+        this.clickLocation = { lat: newCenter.lat, lon: newCenter.lng };
+        this.updateNearbyData(newCenter.lat, newCenter.lng);
+        this.reverseGeocode(newCenter.lat, newCenter.lng);
+        this.showPopover();
+      };
+
+      document.addEventListener('mousemove', this._circleDragMove);
+      document.addEventListener('mouseup', this._circleDragUp);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -436,11 +550,12 @@
 
       return `
         <div class="nearby-header-row-top">
-          <div class="settings-header-content">
-            <i class="${CONFIG.icons.ui.marker}" style="color: var(--space-hover); margin-right: 6px;"></i>
-            <span class="nearby-header-text"><b>${count}</b> ${makerspaceText}</span>
-          </div>
-          <button class="settings-icon-btn nearby-close-btn"><i class="${CONFIG.icons.ui.close}"></i></button>
+          <span class="nearby-grip-wrapper"><i class="${CONFIG.icons.ui.grip}"></i></span>
+          <span class="nearby-header-text"><b>${count} ${makerspaceText}</b></span>
+          <span class="nearby-grip-wrapper"><i class="${CONFIG.icons.ui.grip}"></i></span>
+        </div>
+        <div class="nearby-header-row-address">
+          <span class="nearby-click-address">${this._lastAddressHTML || ''}</span>
         </div>
         <div class="nearby-header-row-bottom">
           <div class="nearby-radius-slider-container">
@@ -449,11 +564,11 @@
               <div class="nearby-radius-track">
                 <div class="nearby-radius-labels">
                   ${this.radii.map((r, idx) =>
-                    `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}km</span>`
+                    `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}&thinsp;km</span>`
                   ).join('')}
                 </div>
                 <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
-                  ${this.currentRadius}km
+                  ${this.currentRadius}&thinsp;km
                 </div>
                 ${this.radii.map((r, idx) => {
                   const f = idx / (this.radii.length - 1);
@@ -566,9 +681,6 @@
     }
 
     setupPopoverDrag() {
-      const header = this.popoverElement.querySelector('.nearby-popover-header');
-      header.style.cursor = 'grab';
-
       let isDragging = false;
       let startPos = { x: 0, y: 0 };
       let savedDragState = null;
@@ -581,7 +693,6 @@
         isDragging = true;
         this._isPopoverDragging = true;
         this.popoverElement.style.cursor = 'grabbing';
-        header.style.cursor = 'grabbing';
         e.preventDefault();
         e.stopPropagation();
 
@@ -625,7 +736,6 @@
 
         isDragging = false;
         this.popoverElement.style.cursor = '';
-        header.style.cursor = 'grab';
 
         setTimeout(() => {
           // Gesicherten State wiederherstellen
@@ -870,7 +980,7 @@
         });
 
         setTimeout(() => {
-          if (pill) pill.textContent = newRadius + 'km';
+          if (pill) pill.textContent = newRadius + '\u2009km';
         }, 300);
       }
 

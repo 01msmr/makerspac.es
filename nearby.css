@@ -60,6 +60,14 @@
 }
 
 /* =================================================================
+   DRAGGABLE CIRCLE
+   ================================================================= */
+
+.nearby-circle-draggable {
+  cursor: move;
+}
+
+/* =================================================================
    POPOVER (Das Fenster)
    ================================================================= */
 
@@ -83,18 +91,54 @@
   flex-direction: column;
   align-items: stretch;
   display: flex;
-  padding: 10px 14px;
+  padding: 10px 7px;
   gap: 8px;
   height: auto;
   background: var(--nearby-title);
 }
 
 .nearby-header-row-top {
-  font-size: 1.33em;
+  font-size: 1.1em;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   width: 100%;
+  cursor: grab;
+}
+
+
+.nearby-grip-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 14px;
+  cursor: grab;
+}
+
+.nearby-grip-wrapper i {
+  font-size: 10px;
+  color: var(--text-muted, #888);
+  transform: scaleX(20);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.nearby-header-row-address {
+  font-size: 0.8em;
+  color: var(--hover-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.nearby-address-icon {
+  color: var(--space-hover);
+  font-size: 1.3em;
+  vertical-align: middle;
+  margin: 0 2px;
 }
 
 .nearby-header-row-bottom {
@@ -142,7 +186,7 @@
   height: 16px;
   cursor: ns-resize;
   color: var(--text-muted, #888);
-  background: var(--dropdown-bg);
+  background: var(--nearby-title);
   border-top: 1px solid var(--dropdown-border);
   border-radius: 0 0 12px 12px;
   transition: background 0.15s, color 0.15s;
@@ -187,8 +231,10 @@
 .nearby-radius-slider-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   width: 100%;
+  font-size: 1.1em;
 }
 
 .nearby-radius-label-prefix {
@@ -197,12 +243,6 @@
   color: var(--text-color);
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 48px;
-  width: 48px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Track (die Schiene) */
@@ -215,7 +255,7 @@
   margin: 0;
   padding: 0 3px;
   box-shadow: 1px 3px 9px rgba(0, 0, 0, 0.4) inset;
-  flex: 1;
+  width: 200px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -233,7 +273,7 @@
   color: var(--search-bg);
   border-radius: 30px;
   font-size: 0.7em;
-  font-weight: 600;
+  font-weight: bold;
   cursor: grab;
   user-select: none;
   transition: left 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
