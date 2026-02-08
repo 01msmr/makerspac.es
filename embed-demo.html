@@ -49,7 +49,7 @@
             overflow: hidden;
             margin: 20px 0;
             background: #eee;
-            height: 450px;
+            height: 440px;
         }
 
         .preview-box-high {
@@ -58,7 +58,7 @@
             overflow: hidden;
             margin: 20px 0;
             background: #eee;
-            height: 650px;
+            height: 640px;
         }
 
         code {
@@ -66,6 +66,7 @@
             background: #eee;
             padding: 2px 6px;
             border-radius: 4px;
+            font-size: .85em;
         }
 
         pre {
@@ -107,120 +108,152 @@
             background: #f8f8f8;
         }
 
+        pre .parameter {
+            color: cyan;
+        }
+
+        .parameter {
+            color: blue;
+            font-weight: bold;
+        }
+
+        .object {
+            color: silver;
+        }
+
+        .separator {
+            color: yellow;
+        }
+
         .pill {
             display: inline-block;
             padding: 2px 8px;
-            background: #e0e0e0;
+            color: white;
+            background-color: grey;
             border-radius: 16px;
-            font-size: 12px;
+            font-size: .7em;
             font-weight: bold;
+            text-align: right;
         }
+
+        .red {
+            background-color: red;
+        }
+
     </style>
 </head>
 
 <body>
 
     <div class="container">
-        <h1>📍 Makerspace Map Embed Guide</h1>
-        <p>Integriere deine Makerspace-Karte direkt in deine eigene Webseite. <br />
-            Zeige deinen <b>Standort</b>, den makerspace-<b>Status</b> (open/closed) und vernetze dich mit
-            <b>befreundeten Spaces</b>.</p>
+        <h1>📍 makerspac.es embed guide</h1>
+        <h2>how to embed your a makerspac.es map of your space on a website</h2>
+        <p>Show your <b>position</b>, your makerspace-<b>status</b> (open/closed) and connect with
+        <b>friendly spaces of yours</b>.</p>
 
-        <h2>1. Live-Vorschau</h2>
-        <h3>a) Höhe 500px: ohne minimap</h3>
+        <h2>1. Live Preview</h2>
+
+        <h3>a) height 440px — without minimap</h3>
         <div class="preview-box">
             <!-- Hier wird die Karte geladen -->
             <iframe src="embed.html?id=1&friends=73,187,45,67" width="100%" height="100%" frameborder="0"></iframe>
         </div>
-        <h3>b) Höhe 700px: mit minimap</h3>
+
+
+        <h3>b) height 640px — with minimap</h3>
         <div class="preview-box-high">
             <!-- Hier wird die Karte geladen -->
             <iframe src="embed.html?id=1&friends=2,45,67" width="100%" height="100%" frameborder="0"></iframe>
         </div>
 
-        <h2>2. Einbindung per Iframe (Empfohlen)</h2>
-        <p>Kopiere diesen Code an die Stelle in deiner Webseite, an der die Karte erscheinen soll. Dies ist die
-            sicherste Methode, da sie deine restliche Seite nicht beeinflusst.</p>
+        <h2>2. embed by iframe (recommended)</h2>
+        <p>Copy one of the following code snippets and insert it on your website where you want the map to appear.<br />
+        This does not interfere with your page´s css.</p>
 
-        <h3>a) Höhe 500px: ohne minimap</h3>
+        <h3>a) height 440px — without minimap</h3>
         <pre>
-<button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+        <button class="copy-btn" onclick="copyCode(this)">copy — for iframe WITHOUT minimap</button>
 &lt;iframe 
-    src="https://makerspac.es/embed.html?id=1&friends=2,45,67" 
-    width="100%" 
-    height="500px" 
-    frameborder="0"&gt;
+    <span class="parameter">src</span>="<span class="object">https://makerspac.es/embed.html?id=1&friends=2,45,67</span>" 
+    <span class="parameter">width</span>="<span class="object">100%</span>" 
+    <span class="parameter">height</span>="<span class="object">440px</span>"
+    <span class="parameter">border-radius</span>: <span class="object">32px</span>;
+    <span class="parameter">frameborder</span>="<span class="object">0</span>"&gt;
 &lt;/iframe&gt;</pre>
 
-        <h3>a) Höhe 500px: mit minimap</h3>
+        <h3>b) height 640px — with minimap</h3>
         <pre>
-<button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
+<button class="copy-btn" onclick="copyCode(this)">copy — for iframe WITH minimap</button>
 &lt;iframe 
-    src="https://makerspac.es/embed.html?id=1&friends=2,45,67" 
-    width="100%" 
-    height="500px" 
-    frameborder="0"&gt;
+    <span class="parameter">src</span>="<span class="object">https://makerspac.es/embed.html<span class="separator">?</span>id=1<span class="separator">&</span>friends=2,45,67</span>" 
+    <span class="parameter">width</span>="<span class="object">100%</span>" 
+    <span class="parameter">height</span>="<span class="object">640px</span>"
+    <span class="parameter">border-radius</span>: <span class="object">32px</span>;
+    <span class="parameter">frameborder</span>="<span class="object">0</span>"&gt;
 &lt;/iframe&gt;</pre>
 
-        <h2>3. Parameter-Konfiguration</h2>
-        <p>Du kannst die Karte über die URL-Parameter anpassen:</p>
+        <h3>c) elements description</h2>
 
         <table class="param-table">
             <thead>
                 <tr>
-                    <th>Parameter</th>
-                    <th>Beschreibung</th>
-                    <th>Beispiel</th>
+                    <th style="width: 18%;">parameter</th>
+                    <th>description</th>
+                    <th>example</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><code>id</code> <span class="pill">Erforderlich</span></td>
-                    <td>Die ID deines Makerspaces (aus der <code>locations.json</code>).</td>
+                    <td><code><span class="parameter">url</span></code> <span class="pill red">required</span></td>
+                    <td>url of the iframe embed page</td>
+                    <td><code>src=https://makerspac.es/embed.html</code></td>
+                </tr>
+                <tr>
+                    <td><code><span class="parameter">id</span></code> <span class="pill red">required</span></td>
+                    <td>The ID of your makerspace (get it from your space´s marker-popup).</td>
                     <td><code>id=1</code></td>
                 </tr>
                 <tr>
-                    <td><code>friends</code></td>
-                    <td>IDs befreundeter Spaces, getrennt durch Komma. Erscheinen in der Sidebar.</td>
+                    <td><code><span class="parameter">friends</span></code><span class="pill">optional</span></td>
+                    <td>IDs of friendly makerspaces of yours, separated by commas. <br />
+                    These appear on the left under your makerspace.</td>
                     <td><code>friends=12,34,56</code></td>
                 </tr>
             </tbody>
         </table>
 
-        <h2>4. Einbindung per DIV & JavaScript</h2>
-        <p>Wenn du volle Kontrolle über das Styling möchtest, kannst du die Karte direkt in ein Div laden. Beachte, dass
-            du hierfür Zugriff auf die JavaScript-Dateien benötigst.</p>
+    <h2>4. embed by div & JavaScript</h2>
+        <p>Load the map directly in a div to control the styling.
+        You need to access the JS and CSS files.</p>
 
-        <pre>
-<button class="copy-btn" onclick="copyCode(this)">Kopieren</button>
-&lt;!-- CSS in den &lt;head&gt; --&gt;
-&lt;link rel="stylesheet" href="embed.css"&gt;
+<pre>
+<button class="copy-btn" onclick="copyCode(this)">copy the code</button>
+&lt;!-- CSS in the &lt;head&gt; --&gt;
+    &lt;link rel="stylesheet" href="embed.css"&gt;
 
-&lt;!-- Div an die gewünschte Stelle --&gt;
-&lt;div id="map-container" style="position:relative; height:500px;"&gt;
-    &lt;div id="map"&gt;&lt;/div&gt;
-    &lt;div id="loading" class="loading"&gt;📍 lädt...&lt;/div&gt;
-&lt;/div&gt;
+    &lt;!-- div at the desired location --&gt;
+    &lt;div id="map-container" style="position:relative; height:440px;"&gt;
+        &lt;div id="map"&gt;&lt;/div&gt;
+        &lt;div id="loading" class="loading"&gt;📍 loading...&lt;/div&gt;
+    &lt;/div&gt;
 
-&lt;!-- Scripte am Ende des &lt;body&gt; --&gt;
-&lt;script src="libs/leaflet/leaflet.js"&gt;&lt;/script&gt;
+    &lt;!-- scripts at the end of &lt;body&gt; --&gt;
+    &lt;script src="libs/leaflet/leaflet.js"&gt;&lt;/script&gt;
 &lt;script src="embed.js"&gt;&lt;/script&gt;</pre>
 
-        <h2>5. FAQ für Makerspaces</h2>
-        <p><strong>Wie finde ich meine ID?</strong><br>
-            Auf der Hauptseite makerspac.es - suche nach Deinem makerspace und klicke den Pin an, dann ist die ID in der
-            URL an der 2.-letzten Stelle:
-            <code>https://makerspac.es/country/city/<b>ID</b>/name</code>
-            Oder suche in der <code>locations.json</code> nach deinem Namen. Die Zahl im Feld <code>ID</code> ist Deine
-            ID.
-        </p>
+    <h2>5. FAQ for embedding <span class="parameter">https://makerspac.es</span></h2>
+    <p><strong>How do I find my ID?</strong><br>
+        On the makerspac.es homepage, search for your makerspace and click on the pin. You will find the ID when you hover
+        over the colored link:
+    </p>
 
-        Suche auch die <code>ID</code>s Deiner befreundeten makerspaces und trage diese nach dem identifyer ein -
-        Beispiel: <code>&friends=x,y,z</code>
+    <p><strong>What are those friends?</strong><br>
+    Search for the IDs of your friends' makerspaces to add them to the embedded map.
+    example: <span class="parameter"><code>&friends=x,y,z</code></span>
 
-        <p><strong>Was passiert, wenn mein Space zu ist?</strong><br>
-            Wenn Ihr die SpaceAPI nutzt, färbt sich der Marker in der Karte automatisch rot und die Sidebar zeigt
-            "closed" an.</p>
+    <p><strong>What happens when my space is closed?</strong><br>
+        When you use the SpaceAPI, the marker on the map automatically turns red and the sidebar displays
+        “closed.”</p>
     </div>
 
     <script>
@@ -228,8 +261,8 @@
             const pre = btn.parentElement;
             const code = pre.innerText.replace('Kopieren', '').trim();
             navigator.clipboard.writeText(code);
-            btn.innerText = 'Dieser Code wurde in Deine Zwischenablage kopiert';
-            setTimeout(() => btn.innerText = 'Kopieren', 3200);
+            btn.innerText = 'code was just added to your clipboard';
+            setTimeout(() => btn.innerText = 'copy this code to embed into your site', 3200);
         }
     </script>
 

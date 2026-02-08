@@ -70,7 +70,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 16px;
+  gap: 12px;
 }
 
 .title {
@@ -84,51 +84,58 @@ body {
   font-weight: bold;
   font-size: 1.7em;
   /* opacity: 0.4; */
-  transition: 0.75s ease-out;
-  transition: opacity;
-}
-
-.title-tools {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.title-tools a {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: yellow;
-  color: black;
-  border-radius: .6em;
-  font-size: 1.25em;
-  text-decoration: none;
-  opacity: 0.4;
-  transition: opacity 0.4s ease;
-  padding: 0.2em;
-}
-
-.title-tools a:hover {
-  opacity: 1;
+  transition: box-shadow 0.75s ease-out;
 }
 
 .title:hover {
-  box-shadow: none;
-  opacity: 0.8;
-  transition: 0.25s ease-out;
+  box-shadow: .2em -.1em .6em .35em transparent;
+  /* opacity: 0.25; */
+  /* color: var(--space-hover) */
+  /* transition: box-shadow 1.25s ease-out; */
   /* filter: invert(1) hue-rotate(180deg) brightness(0.55) contrast(.8) saturate(0.75); */
   outline: 1px solid #666666;
 }
+.title-bar a {
+text-decoration: none;
+}
+
+.title-tools {
+  position: relative; 
+  top: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  z-index: 404;
+}
+
+.title-tools a {
+  border-radius: 0.3em;
+  align-items: center;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  vertical-align: auto;
+  color: rgba(0, 0, 255, .3);
+  background-color: var(--title-background);
+  font-size: 1.7em;
+  text-decoration: none;
+  opacity: 0.6;
+  transition: color, box-shadow, 0.15s ease-in;
+  padding: 0.1em 0em;
+}
+
+.title-tools a:hover {
+  color: rgba(0, 0, 255, .8);
+  box-shadow: 2px 1px 14px rgba(0, 0, 0, 0.9);
+  opacity: 1;
+}
+
 
 .title.popup-active {
   opacity: 0.12;
   transition: opacity 0.25s ease-in-out;
 }
 
-a#titleurl {
-  text-decoration: none;
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SEARCH STYLES MOVED TO search.css
