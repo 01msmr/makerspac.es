@@ -10,7 +10,7 @@
   border-bottom-right-radius: 14px;
   cursor: pointer;
   position: relative;
-  border-bottom: 1px solid var(--dropdown-border);
+  box-shadow: 0 1px 0 var(--dropdown-border);
   color: var(--text-color);
   scroll-snap-align: none;
   display: flex;
@@ -24,11 +24,11 @@
 
 .listing-item:nth-child(2n) {
   background-color: var(--dropdown-alt-bg);
-  border-bottom: 1px solid var(--dropdown-alt-border);
+  box-shadow: 0 1px 0 var(--dropdown-alt-border);
 }
 
 .listing-item:last-child {
-  border-bottom: none;
+  box-shadow: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
