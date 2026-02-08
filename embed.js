@@ -87,7 +87,7 @@ class EmbedMapExtended {
 
   createMap() {
     this.map = L.map('map', {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: true,
       maxZoom: 18,
       minZoom: 3,
@@ -150,7 +150,17 @@ class EmbedMapExtended {
     const item = document.querySelector(`.space-item[data-space-id="${spaceId}"]`);
     if (item) {
       item.classList.add('active');
-      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const friendsDropdown = document.querySelector('.friends-dropdown');
+      if (friendsDropdown && friendsDropdown.contains(item)) {
+        const items = friendsDropdown.querySelectorAll('.listing-item');
+        if (item === items[0]) {
+          friendsDropdown.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (item === items[items.length - 1]) {
+          friendsDropdown.scrollTo({ top: friendsDropdown.scrollHeight, behavior: 'smooth' });
+        } else {
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
     }
 
     // Minimap Sync
@@ -260,7 +270,7 @@ class EmbedMapExtended {
   showLogo() {
     const container = document.createElement('div');
     container.id = 'embed-sidebar';
-    container.style.cssText = `position: absolute; left: 2.5em; top: 1em; z-index: 400; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 2em);`;
+    container.style.cssText = `position: absolute; left: 1em; top: 1em; z-index: 400; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 2em);`;
     container.innerHTML = `<a href="./" target="_blank"><div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span></div></a>`;
     document.body.appendChild(container);
   }

@@ -527,6 +527,7 @@ function setupMap() {
 
   map = new L.Map('map', {
     maxZoom: 18,
+    zoomControl: false,
   });
   console.log('✅ Leaflet map created');
 
