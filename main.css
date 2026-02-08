@@ -18,8 +18,8 @@
   --shadow-color: rgba(0, 0, 0, 0.5);
   --dropdown-bg: white;
   --dropdown-alt-bg: #f6f6f6;
-  --dropdown-border: #ddd;
-  --dropdown-alt-border: #eee;
+  --dropdown-border: #bbb;
+  --dropdown-alt-border: #ccc;
   --search-bg: white;
   --search-opacity: 0.5;
   --search-focus-opacity: 0.9;
@@ -268,8 +268,8 @@ a#titleurl {
 
 /* Solo Gear Button */
 .settings-gear-button-solo {
-  width: 36px;
-  height: 36px;
+  width: calc(1em + 2 * .6em + 2px);
+  height: calc(1em + 2 * .6em + 2px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--border-color);

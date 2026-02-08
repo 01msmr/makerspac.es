@@ -160,7 +160,7 @@
       }
 
       // Andere UI-Elemente
-      ['.title', '.user-guide', '.add-makerspace'].forEach(selector => {
+      ['.title', '.user-guide', '.add-makerspace', '.language-switcher'].forEach(selector => {
         const el = document.querySelector(selector);
         if (el) {
           el.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });

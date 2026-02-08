@@ -551,7 +551,9 @@
 
       document.addEventListener('languageChanged', () => {
         this.createActiveFiltersSection();
-        this.triggerFilterUpdate();
+        if (this.suggestionsDropdown.classList.contains('is-active')) {
+          this.triggerFilterUpdate();
+        }
       });
 
       window.addEventListener('resize', () => {

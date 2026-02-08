@@ -294,7 +294,7 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   const mapRect = mapContainer.getBoundingClientRect();
 
   const connectionEndX = suggestionRect.left + window.AppConfig.connectorOffsetLeft - mapRect.left;
-  const connectionEndY = suggestionRect.top - 0.8 + (suggestionRect.height / 2) - mapRect.top;
+  const connectionEndY = suggestionRect.top + 0.4 + (suggestionRect.height / 2) - mapRect.top;
   const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
   const endLatLng = targetMarker.getLatLng();
@@ -798,7 +798,7 @@ function createMarkerForLocation(location) {
       nameClass = 'space-open';
     }
     else if (location.isOpen === false) {
-      statusIconHtml = `<i class="fas fa-door-closed" title="${getTooltip('tooltips.spaceClosed')}"></i> `;
+      statusIconHtml = `<i class="fas fa-lock" title="${getTooltip('tooltips.spaceClosed')}"></i> `;
       nameClass = 'space-closed';
     }
     else if (location.spaceapi && location.spaceapi.endpoint) {

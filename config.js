@@ -52,7 +52,7 @@
     // Status-Icons (SpaceAPI)
     status: {
       open: 'fas fa-door-open',
-      closed: 'fas fa-door-closed',
+      closed: 'fas fa-lock',
       unknown: 'fas fa-question-circle'
     },
 
@@ -290,12 +290,12 @@
   const SCHWEIF_TRANSFORM = 'matrix(4.16667,0,0,-4.16667,0,9163.45)';
 
   const CONNECTOR_OFFSET_LEFT = -50;
-  const CONNECTOR_OFFSET_TOP = -0.0;
+  const CONNECTOR_OFFSET_TOP = 0.0;
 
   function updateConnectorPosition(svg, itemRect, topOffset = 0) {
     svg.style.left = `${itemRect.left + CONNECTOR_OFFSET_LEFT}px`;
     svg.style.top = `${itemRect.top + topOffset + CONNECTOR_OFFSET_TOP}px`;
-    svg.style.height = `${itemRect.height - 1}px`;
+    svg.style.height = `${itemRect.height - 0.0}px`;
   }
 
   // function createConnectorSVG(itemRect, color, topOffset = 0) {

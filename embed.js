@@ -185,7 +185,7 @@ class EmbedMapExtended {
       nameClass = 'space-open';
       statusColor = 'var(--space-open)';
     } else if (space.isOpen === false) {
-      statusIconHtml = '<i class="fas fa-door-closed"></i> ';
+      statusIconHtml = '<i class="fas fa-lock"></i> ';
       nameClass = 'space-closed';
       statusColor = 'var(--space-closed)';
     } else if (space.spaceapi?.endpoint) {
@@ -222,7 +222,7 @@ class EmbedMapExtended {
     let statusClass = 'space-default';
     if (space.spaceapi?.endpoint) {
       if (space.isOpen === true) { statusIconHtml = '<i class="fas fa-door-open door-icon-open"></i>'; statusClass = 'space-open'; }
-      else if (space.isOpen === false) { statusIconHtml = '<i class="fas fa-door-closed door-icon-closed"></i>'; statusClass = 'space-closed'; }
+      else if (space.isOpen === false) { statusIconHtml = '<i class="fas fa-lock door-icon-closed"></i>'; statusClass = 'space-closed'; }
       else { statusIconHtml = '<i class="fas fa-question-circle door-icon-unknown"></i>'; statusClass = 'space-unknown'; }
     }
     const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
