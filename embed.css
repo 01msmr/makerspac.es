@@ -45,6 +45,19 @@ a {
   box-shadow: 0px 4px 8px 1px var(--shadow-color);
   display: none;
   overflow: visible;
+  flex-shrink: 0;
+}
+
+.friends-dropdown {
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+}
+
+.friends-dropdown .dropdown-header,
+.friends-dropdown .listing-item {
+  scroll-snap-align: start;
 }
 
 .embed-dropdown.is-active {
@@ -73,14 +86,14 @@ a {
   font-family: 'Lato', sans-serif;
   font-weight: normal;
   padding: 8px 16px;
-  background: black;
+  background: var(--hover-text-color);
   border-radius: 16px;
   color: white;
   border-bottom: 1px solid var(--dropdown-border);
   position: sticky;
   top: 0;
   z-index: 10;
-  opacity: 0.4;
+  opacity: 1;
 }
 
 /* ========================================
@@ -281,7 +294,7 @@ a {
 .minimap-marker {
   width: 12.5px !important;
   height: 20.5px !important;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .minimap-marker svg,
@@ -290,18 +303,13 @@ a {
   height: 20.5px !important;
 }
 
-.minimap-marker.active svg,
-.minimap-marker.active img {
-  transform: scale(1.5) !important;
-}
-
 .minimap-marker.active {
   z-index: 1000 !important;
 }
 
-.minimap-marker.active svg path {
-  color: black !important;
-  filter: hue-rotate(180);
+.minimap-marker.active svg,
+.minimap-marker.active img {
+  transform: scale(1.5) !important;
 }
 
 /* ========================================

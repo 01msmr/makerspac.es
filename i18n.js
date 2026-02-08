@@ -75,6 +75,7 @@ class I18n {
   translateUI() {
     this.translateUserGuide();
     this.translateAddMakerspace();
+    this.translateTitleTools();
   }
 
   translateUserGuide() {
@@ -110,6 +111,14 @@ class I18n {
 
     const btn3 = addMakerspace.querySelector('.btn-3');
     if (btn3) btn3.textContent = this.t('addMakerspace.embed');
+  }
+
+  translateTitleTools() {
+    const embedLink = document.querySelector('.tool-embed');
+    if (embedLink) embedLink.title = this.t('addMakerspace.embed');
+
+    const addLink = document.querySelector('.tool-add');
+    if (addLink) addLink.title = this.t('addMakerspace.title');
   }
 
   getLanguage() {

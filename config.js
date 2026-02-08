@@ -14,9 +14,9 @@
     highlight: '#2c2c2c',
 
     // SpaceAPI Status Farben
-    open: '#009900',
+    open: '#0e9000',
     closed: '#DD0000',
-    unknown: '#FF8C00',
+    unknown: '#f67b00',
 
     // Hover/Interaktive Farben
     hoverLight: '#0000ff',
@@ -377,6 +377,28 @@
   // Backward Compatibility (für existierenden Code während Migration)
   window.IC = COLOURS;
   window.getDynamicSpaceColor = getDynamicSpaceColor;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CSS-VARIABLEN AUS COLOURS SETZEN (Single Source of Truth)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  function applyCssColours() {
+    const root = document.documentElement;
+    const dark = isDarkMode();
+
+    root.style.setProperty('--space-hover', dark ? COLOURS.hoverDark : COLOURS.hoverLight);
+    root.style.setProperty('--space-open', COLOURS.open);
+    root.style.setProperty('--space-closed', COLOURS.closed);
+    root.style.setProperty('--space-unknown', COLOURS.unknown);
+    root.style.setProperty('--color-default', dark ? COLOURS.darkModeDefault : COLOURS.default);
+    root.style.setProperty('--color-highlight', dark ? COLOURS.darkModeDefault : COLOURS.highlight);
+  }
+
+  // Sofort anwenden
+  applyCssColours();
+
+  // Bei Dark/Light Mode Wechsel aktualisieren
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyCssColours);
 
   console.log('✅ AppConfig loaded');
 

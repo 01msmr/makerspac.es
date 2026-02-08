@@ -41,9 +41,12 @@ class EmbedMapExtended {
         this.createFriendsDropdown();
       }
 
+      this.setupKeyboardNavigation();
+
       // ✅ Initialer Aufruf: Kurz warten, bis der Container stabil ist
       setTimeout(() => {
         this.selectSpace(this.targetId, false);
+        this.snapFriendsDropdownHeight();
       }, 400);
 
       document.getElementById('loading').style.display = 'none';
@@ -140,10 +143,15 @@ class EmbedMapExtended {
     const marker = this.markers.get(spaceId);
     if (!marker) return;
 
+    this.activeSpaceId = spaceId;
+
     // Sidebar UI Sync
     document.querySelectorAll('.space-item.active').forEach(item => item.classList.remove('active'));
     const item = document.querySelector(`.space-item[data-space-id="${spaceId}"]`);
-    if (item) item.classList.add('active');
+    if (item) {
+      item.classList.add('active');
+      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
 
     // Minimap Sync
     this.highlightMinimapMarker(spaceId);
@@ -252,7 +260,7 @@ class EmbedMapExtended {
   showLogo() {
     const container = document.createElement('div');
     container.id = 'embed-sidebar';
-    container.style.cssText = `position: absolute; left: 2.5em; top: 1em; z-index: 400; display: flex; flex-direction: column; gap: 16px;`;
+    container.style.cssText = `position: absolute; left: 2.5em; top: 1em; z-index: 400; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 2em);`;
     container.innerHTML = `<a href="./" target="_blank"><div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span></div></a>`;
     document.body.appendChild(container);
   }
@@ -275,7 +283,7 @@ class EmbedMapExtended {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(minimap);
     const coords = [];
     [this.targetSpace, ...this.friendSpaces].forEach(space => {
-      let color = space.spaceapi ? (space.isOpen === true ? '#009900' : (space.isOpen === false ? '#DD0000' : '#FF8C00')) : '#666666';
+      let color = space.spaceapi ? (space.isOpen === true ? '#009900' : (space.isOpen === false ? '#DD0000' : '#FF8C00')) : '#0000ff';
       const icon = L.divIcon({ className: 'minimap-marker', html: `<svg viewBox="0 0 25 41" width="12" height="20"><path fill="${color}" stroke="#000" d="M12.5,1 C6,1 1,6 1,12.5 C1,21 12.5,39 12.5,39 C12.5,39 24,21 24,12.5 C24,6 19,1 12.5,1 Z"/><circle fill="#fff" cx="12.5" cy="12.5" r="3"/></svg>`, iconSize: [12, 20], iconAnchor: [6, 20] });
       const m = L.marker([space.loc.lat, space.loc.long], { icon, title: space.name }).addTo(minimap);  // ✅ title hinzugefügt
       m.on('click', () => this.selectSpace(space.ID));
@@ -301,6 +309,46 @@ class EmbedMapExtended {
       dropdown.appendChild(item);
     });
     document.getElementById('embed-sidebar').appendChild(dropdown);
+  }
+
+  snapFriendsDropdownHeight() {
+    const dropdown = document.querySelector('.friends-dropdown');
+    if (!dropdown) return;
+
+    const header = dropdown.querySelector('.dropdown-header');
+    const items = dropdown.querySelectorAll('.listing-item');
+    if (!items.length) return;
+
+    const headerHeight = header ? header.getBoundingClientRect().height : 0;
+    const itemHeight = items[0].getBoundingClientRect().height;
+    const availableHeight = dropdown.getBoundingClientRect().height;
+    const itemsSpace = availableHeight - headerHeight;
+    const visibleItems = Math.floor(itemsSpace / itemHeight);
+
+    if (visibleItems > 0 && visibleItems < items.length) {
+      dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';
+    }
+  }
+
+  setupKeyboardNavigation() {
+    this.activeSpaceId = this.targetId;
+
+    document.addEventListener('keydown', (e) => {
+      if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key)) return;
+      e.preventDefault();
+
+      const idx = this.allIds.indexOf(this.activeSpaceId);
+      let next;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        next = (idx + 1) % this.allIds.length;
+      } else {
+        next = (idx - 1 + this.allIds.length) % this.allIds.length;
+      }
+
+      this.activeSpaceId = this.allIds[next];
+      this.selectSpace(this.activeSpaceId);
+    });
   }
 
   handlePopupOpen(marker, space) {

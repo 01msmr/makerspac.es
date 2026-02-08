@@ -7,7 +7,7 @@
 @import url('search.css');
 @import url('nearby.css');
 @import url('styles-autocomplete.css');
-
+                                                                                                                                                
 /* *** CSS Variables für Light/Dark Mode *** */
 :root {
   --title-background: rgba(111, 233, 166, 1);
@@ -26,18 +26,7 @@
   --hover-text-color: #666;
   --hover-text-color-active: #ccc;
 
-  /* ============================================================================
-     SPACE STATUS FARBEN (Kanonische Quelle für CSS)
-     Synchron mit icons.js ICON_COLOURS
-     ============================================================================ */
-  --space-hover: #0000ff;
-  --space-open: #009900;
-  --space-closed: #DD0000;
-  --space-unknown: #FF8C00;
-
-  /* Zusätzliche Farben für konsistente Nutzung */
-  --color-default: #2c2c2c;
-  --color-highlight: #2c2c2c;
+  /* Space-Status-Farben werden von config.js gesetzt */
 }
 
 /* *** Dark Mode Variables *** */
@@ -57,10 +46,7 @@
     --hover-text-color: #aaa;
     --hover-text-color-active: #ddd;
 
-    /* Dark Mode spezifische Farben */
-    --space-hover: #66b3ff;
-    --color-default: #666666;
-    --color-highlight: #666666;
+    /* Space-Farben werden von config.js gesetzt */
   }
 }
 
@@ -76,12 +62,19 @@ body {
   height: 100vh;
 }
 
-.title {
-  font-family: 'Lato', sans-serif;
-  z-index: 400;
+.title-bar {
   position: absolute;
+  z-index: 401;
   left: 2.5em;
   top: 1em;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.title {
+  font-family: 'Lato', sans-serif;
   color: blue;
   background-color: var(--title-background);
   padding: .25em .75em .25em .50em;
@@ -90,8 +83,34 @@ body {
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
+  /* opacity: 0.4; */
   transition: 0.75s ease-out;
-  /* transition: opacity; */
+  transition: opacity;
+}
+
+.title-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title-tools a {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: yellow;
+  color: black;
+  border-radius: .6em;
+  font-size: 1.25em;
+  text-decoration: none;
+  opacity: 0.4;
+  transition: opacity 0.4s ease;
+  padding: 0.2em;
+}
+
+.title-tools a:hover {
+  opacity: 1;
 }
 
 .title:hover {
@@ -268,8 +287,9 @@ a#titleurl {
 
 /* Solo Gear Button */
 .settings-gear-button-solo {
-  width: calc(1em + 2 * .6em + 2px);
-  height: calc(1em + 2 * .6em + 2px);
+  font-size: inherit;
+  width: calc(1.2em + 2 * .6em + 2px);
+  height: calc(1.2em + 2 * .6em + 2px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--border-color);
