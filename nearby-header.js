@@ -242,16 +242,17 @@
       this.clickLocation = { lat, lon };
       this.updateNearbyData(lat, lon);
 
-      // Optimalen Radius finden
-      let bestIndex = this.radii.indexOf(this.currentRadius);
-      if (bestIndex === -1) bestIndex = 1;
+      // --- NEUE LOGIK: Kleinsten Radius mit >= 2 Items finden ---
+      // Wir suchen den ersten Index in der Liste [10, 15, 25, 40, 65],
+      // dessen Trefferzahl >= 2 ist.
+      let bestIndex = this.radii.findIndex(r => (this.resultsCache[r] || []).length >= 2);
 
-      while (bestIndex > 0 && (this.resultsCache[this.radii[bestIndex]] || []).length > 5) {
-        bestIndex--;
+      // Fallback: Wenn nirgends 2 Treffer sind, nehmen wir den größten Radius (65km),
+      // um zumindest die Chance auf einen einzelnen Treffer zu maximieren.
+      if (bestIndex === -1) {
+        bestIndex = this.radii.length - 1;
       }
-      while (bestIndex < this.radii.length - 1 && (this.resultsCache[this.radii[bestIndex]] || []).length < 2) {
-        bestIndex++;
-      }
+      // ---------------------------------------------------------
 
       this.currentRadius = this.radii[bestIndex];
       this.drawSearchCircle(lat, lon);

@@ -100,7 +100,7 @@
 
   const SETTINGS = {
     // Nearby-Spaces Radien (in km)
-    radiusOptions: [15, 25, 40, 65],
+    radiusOptions: [10, 15, 25, 40, 65],
     defaultRadius: 25,
 
     // Listen-Einstellungen
