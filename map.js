@@ -171,8 +171,8 @@ function updateNavigationIconAppearance(navLinkElement, location) {
   const parentContainer = navLinkElement.parentElement;
   if (!icon || !parentContainer) return;
 
-  const savedService = localStorage.getItem('mapService');
-  const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+  const savedService = window.consent.get('mapService');
+  const mapServiceTimestamp = window.consent.get('mapServiceTimestamp');
   const ninetySixHours = 96 * 60 * 60 * 1000;
   let serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours);
 
@@ -199,13 +199,13 @@ function handleNavigationClick(event, location) {
   const { lat, long } = location.loc;
   if (typeof lat !== 'number' || typeof long !== 'number') return;
 
-  let mapService = localStorage.getItem('mapService');
-  const mapServiceTimestamp = localStorage.getItem('mapServiceTimestamp');
+  let mapService = window.consent.get('mapService');
+  const mapServiceTimestamp = window.consent.get('mapServiceTimestamp');
   const ninetySixHours = 96 * 60 * 60 * 1000;
 
   if (mapService && mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours) {
-    localStorage.removeItem('mapService');
-    localStorage.removeItem('mapServiceTimestamp');
+    window.consent.remove('mapService');
+    window.consent.remove('mapServiceTimestamp');
     mapService = null;
   }
 
@@ -216,7 +216,7 @@ function handleNavigationClick(event, location) {
 function handleNavigationRightClick(event, location, navLinkElement) {
   event.preventDefault();
 
-  const savedService = localStorage.getItem('mapService');
+  const savedService = window.consent.get('mapService');
   let nextService;
 
   if (!savedService || savedService === 'google') {
@@ -227,8 +227,8 @@ function handleNavigationRightClick(event, location, navLinkElement) {
     nextService = 'google';
   }
 
-  localStorage.setItem('mapService', nextService);
-  localStorage.setItem('mapServiceTimestamp', String(Date.now()));
+  window.consent.set('mapService', nextService);
+  window.consent.set('mapServiceTimestamp', String(Date.now()));
 
   updateNavigationIconAppearance(navLinkElement, location);
 }
@@ -537,7 +537,7 @@ function setupMap() {
 
   function updateMapTiles() {
     let isDarkMode = false;
-    const colorScheme = localStorage.getItem('color-scheme') || 'auto';
+    const colorScheme = window.consent.get('color-scheme') || 'auto';
 
     if (colorScheme === 'dark') {
       isDarkMode = true;
@@ -587,7 +587,7 @@ function setupMap() {
   updateMapTiles();
 
   darkModeQuery.addEventListener('change', () => {
-    const currentScheme = localStorage.getItem('color-scheme') || 'auto';
+    const currentScheme = window.consent.get('color-scheme') || 'auto';
     if (currentScheme === 'auto') {
       updateMapTiles();
     }

@@ -3,7 +3,7 @@
 class LanguageSwitcher {
   constructor() {
     // ✅ Lade Sprache SOFORT aus localStorage (synchron!)
-    const savedLang = localStorage.getItem('preferred_language');
+    const savedLang = window.consent.get('preferred_language');
     this.currentLanguage = savedLang || 'de'; // Fallback zu 'de'
 
     console.log('🔧 LanguageSwitcher constructor:');
@@ -129,7 +129,7 @@ class LanguageSwitcher {
     // 2. DARK MODE SECTION
     const darkModeHeader = document.createElement('div');
     darkModeHeader.className = 'settings-header';
-    const currentMode = localStorage.getItem('color-scheme') || 'auto';
+    const currentMode = window.consent.get('color-scheme') || 'auto';
 
     darkModeHeader.innerHTML = `
       <div class="settings-header-content">
@@ -211,6 +211,33 @@ class LanguageSwitcher {
     });
 
     this.settingsPopover.appendChild(bookmarksHeader);
+
+    // 5. STORAGE/CONSENT SECTION
+    const storageHeader = document.createElement('div');
+    storageHeader.className = 'settings-header';
+    storageHeader.id = 'settings-storage-section';
+
+    const stateText = this._getConsentStateText();
+    storageHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-database"></i>
+        <span>${this.t('storage')}: ${stateText}</span>
+      </div>
+      <div class="settings-header-icons">
+        <i class="fas fa-rotate settings-icon-btn" data-action="reset-consent" title="${this.t('resetConsent')}"></i>
+      </div>
+    `;
+
+    storageHeader.querySelector('[data-action="reset-consent"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Settings schließen und Consent-Dialog direkt anzeigen
+      this.toggleSettingsPopover();
+      if (window.consent) {
+        window.consent.resetAndAsk();
+      }
+    });
+
+    this.settingsPopover.appendChild(storageHeader);
     this.container.appendChild(this.settingsPopover);
 
     // Führe die Übersetzung und Zustands-Aktualisierung beim Erstellen aus
@@ -308,7 +335,7 @@ class LanguageSwitcher {
 
   // Color Scheme
   setColorScheme(mode) {
-    localStorage.setItem('color-scheme', mode);
+    window.consent.set('color-scheme', mode);
     if (mode === 'auto') {
       document.documentElement.removeAttribute('data-color-scheme');
     } else {
@@ -342,7 +369,7 @@ class LanguageSwitcher {
   }
 
   loadColorScheme() {
-    const mode = localStorage.getItem('color-scheme') || 'auto';
+    const mode = window.consent.get('color-scheme') || 'auto';
     this.setColorScheme(mode);
   }
 
@@ -350,7 +377,7 @@ class LanguageSwitcher {
   changeLanguage(langCode) {
     this.currentLanguage = langCode;
     window.currentLanguage = langCode;
-    localStorage.setItem('preferred_language', langCode);
+    window.consent.set('preferred_language', langCode);
 
     if (window.i18n) {
       window.i18n.setLanguage(langCode);
@@ -358,7 +385,7 @@ class LanguageSwitcher {
 
     if (window.bookmarkSync && typeof window.bookmarkSync.syncSettings === 'function') {
       window.bookmarkSync.syncSettings({
-        colorScheme: localStorage.getItem('color-scheme') || 'auto',
+        colorScheme: window.consent.get('color-scheme') || 'auto',
         language: langCode
       });
     }
@@ -391,6 +418,10 @@ class LanguageSwitcher {
       const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
       headers[3].textContent = `${bookmarkCount} ${this.t('bookmarks')}`;
     }
+    if (headers.length >= 5) {
+      headers[4].textContent = `${this.t('storage')}: ${this._getConsentStateText()}`;
+    }
+    this.updateStorageSection();
 
     const allFlags = this.settingsPopover.querySelectorAll('[data-lang]');
     allFlags.forEach(flag => {
@@ -444,8 +475,24 @@ class LanguageSwitcher {
     }
   }
 
+  _getConsentStateText() {
+    const state = window.consent?._state || 'unknown';
+    if (state === 'accepted') return this.t('storageAllowed');
+    if (state === 'declined') return this.t('storageDenied');
+    return this.t('storageNotSet');
+  }
+
+  updateStorageSection() {
+    const section = this.settingsPopover?.querySelector('#settings-storage-section');
+    if (!section) return;
+    const span = section.querySelector('.settings-header-content span');
+    if (span) span.textContent = `${this.t('storage')}: ${this._getConsentStateText()}`;
+    const resetBtn = section.querySelector('[data-action="reset-consent"]');
+    if (resetBtn) resetBtn.title = this.t('resetConsent');
+  }
+
   loadLanguagePreference() {
-    const savedLang = localStorage.getItem('preferred_language');
+    const savedLang = window.consent.get('preferred_language');
     if (!savedLang && window.i18n && window.i18n.currentLang) {
       this.currentLanguage = window.i18n.currentLang;
     }

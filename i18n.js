@@ -13,7 +13,7 @@ class I18n {
       window.translations = this.translations; // ✅ Global verfügbar machen
 
       // ✅ ZUERST: Prüfe gespeicherte Sprache
-      const savedLang = localStorage.getItem('preferred_language');
+      const savedLang = window.consent ? window.consent.get('preferred_language') : localStorage.getItem('preferred_language');
       const supportedLangs = ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
 
       if (savedLang && supportedLangs.includes(savedLang)) {

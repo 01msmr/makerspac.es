@@ -10,7 +10,7 @@ class BookmarkManager {
   // Lade Bookmarks aus LocalStorage
   loadBookmarks() {
     try {
-      const stored = localStorage.getItem(this.storageKey);
+      const stored = window.consent.get(this.storageKey);
       if (stored) {
         const bookmarksArray = JSON.parse(stored);
         this.bookmarks = new Set(bookmarksArray);
@@ -26,7 +26,7 @@ class BookmarkManager {
   saveBookmarks() {
     try {
       const bookmarksArray = Array.from(this.bookmarks);
-      localStorage.setItem(this.storageKey, JSON.stringify(bookmarksArray));
+      window.consent.set(this.storageKey, JSON.stringify(bookmarksArray));
       console.log(`💾 Saved ${this.bookmarks.size} bookmarks to storage`);
     } catch (error) {
       console.error('❌ Error saving bookmarks:', error);

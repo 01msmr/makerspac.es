@@ -1,6 +1,186 @@
 /*
- * anonyme Synchronisierung
+ * ConsentManager - DSGVO/GDPR-konforme localStorage-Verwaltung
+ * Zeigt Consent-Banner beim ersten Schreibzugriff.
+ * Bei Ablehnung: Session-only Fallback (Map).
  */
+
+class ConsentManager {
+  constructor() {
+    this._sessionStore = new Map();
+    this._pendingWrites = [];
+    this._banner = null;
+    this._ready = false; // Erst nach Page-Load aktiv → kein Banner während Init
+    // Consent-Status aus localStorage (strictly necessary, kein Consent nötig)
+    const saved = localStorage.getItem('storage_consent');
+    this._state = (saved === 'accepted' || saved === 'declined') ? saved : 'unknown';
+
+    // Aktivierung nach vollständigem Laden (i18n-Translations verfügbar)
+    window.addEventListener('load', () => { this._ready = true; });
+    // Banner-Text aktualisieren bei Sprachwechsel
+    document.addEventListener('languageChanged', () => this._updateBannerTexts());
+  }
+
+  get(key) {
+    // SessionStore hat Priorität (aktuelle Session bei Ablehnung)
+    if (this._sessionStore.has(key)) return this._sessionStore.get(key);
+    return localStorage.getItem(key);
+  }
+
+  set(key, value) {
+    if (this._state === 'accepted') {
+      localStorage.setItem(key, value);
+    } else if (this._state === 'declined') {
+      this._sessionStore.set(key, value);
+    } else {
+      // unknown: während Init still ignorieren, danach Banner zeigen
+      if (!this._ready) return;
+      this._pendingWrites.push({ key, value });
+      this._showBanner();
+    }
+  }
+
+  remove(key) {
+    this._sessionStore.delete(key);
+    localStorage.removeItem(key);
+  }
+
+  _showBanner() {
+    if (this._banner) return;
+
+    this._banner = document.createElement('div');
+    this._banner.className = 'consent-overlay';
+
+    const t = (path) => window.i18n?.t(`consent.${path}`) || this._fallbackText(path);
+
+    this._banner.innerHTML = `
+      <div class="consent-container">
+        <div class="consent-earth">
+          <div class="consent-earth-text">
+            <strong>${t('detailTitle')}</strong>
+            <ul>
+              <li>${t('detailLanguage')}</li>
+              <li>${t('detailTheme')}</li>
+              <li>${t('detailBookmarks')}</li>
+              <li>${t('detailMap')}</li>
+            </ul>
+            <small class="consent-earth-note">${t('noCookieNote')}</small>
+          </div>
+        </div>
+        <div class="consent-sun">
+          <span class="consent-sun-text">${t('message')}</span>
+        </div>
+        <div class="consent-moon">
+          <div class="consent-moon-half consent-moon-decline">
+            <span class="consent-moon-label">${t('decline')}</span>
+          </div>
+          <div class="consent-moon-half consent-moon-accept">
+            <span class="consent-moon-label">${t('accept')}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this._banner.querySelector('.consent-moon-decline').addEventListener('click', () => this._decline());
+    this._banner.querySelector('.consent-moon-accept').addEventListener('click', () => this._accept());
+
+    document.body.appendChild(this._banner);
+    document.body.classList.add('consent-active');
+    requestAnimationFrame(() => this._banner.classList.add('visible'));
+  }
+
+  resetAndAsk() {
+    localStorage.removeItem('storage_consent');
+    this._state = 'unknown';
+    this._ready = true;
+    this._showBanner();
+  }
+
+  _accept() {
+    this._state = 'accepted';
+    localStorage.setItem('storage_consent', 'accepted');
+    for (const { key, value } of this._pendingWrites) {
+      localStorage.setItem(key, value);
+    }
+    this._pendingWrites = [];
+    this._removeBanner();
+    if (window.languageSwitcher) window.languageSwitcher.updateStorageSection();
+  }
+
+  _decline() {
+    this._state = 'declined';
+    localStorage.setItem('storage_consent', 'declined');
+    for (const { key, value } of this._pendingWrites) {
+      this._sessionStore.set(key, value);
+    }
+    this._pendingWrites = [];
+    this._removeBanner();
+    if (window.languageSwitcher) window.languageSwitcher.updateStorageSection();
+  }
+
+  _removeBanner() {
+    if (!this._banner) return;
+    // Exit-Animationen per Inline-Style (höchste Spezifität, überschreibt Enter-Animation)
+    const earth = this._banner.querySelector('.consent-earth');
+    const sun = this._banner.querySelector('.consent-sun');
+    const moon = this._banner.querySelector('.consent-moon');
+    if (moon) moon.style.animation = 'moon-exit 0.75s cubic-bezier(0.64, 0, 0.78, 0) both';
+    if (earth) earth.style.animation = 'earth-exit 1s cubic-bezier(0.64, 0, 0.78, 0) 0.05s both';
+    if (sun) sun.style.animation = 'sun-exit 0.85s cubic-bezier(0.64, 0, 0.78, 0) 0.1s both';
+    // Overlay-Hintergrund ausblenden
+    this._banner.classList.remove('visible');
+    document.body.classList.remove('consent-active');
+    setTimeout(() => {
+      this._banner?.remove();
+      this._banner = null;
+    }, 1200);
+  }
+
+  _updateBannerTexts() {
+    if (!this._banner) return;
+    const t = (path) => window.i18n?.t(`consent.${path}`) || this._fallbackText(path);
+    const textEl = this._banner.querySelector('.consent-sun-text');
+    const declineEl = this._banner.querySelector('.consent-moon-decline .consent-moon-label');
+    const acceptEl = this._banner.querySelector('.consent-moon-accept .consent-moon-label');
+    if (textEl) textEl.innerHTML = t('message');
+    if (declineEl) declineEl.textContent = t('decline');
+    if (acceptEl) acceptEl.textContent = t('accept');
+    // Earth (Details)
+    const titleEl = this._banner.querySelector('.consent-earth-text strong');
+    const items = this._banner.querySelectorAll('.consent-earth-text li');
+    const noteEl = this._banner.querySelector('.consent-earth-note');
+    if (titleEl) titleEl.textContent = t('detailTitle');
+    if (items.length >= 4) {
+      items[0].textContent = t('detailLanguage');
+      items[1].textContent = t('detailTheme');
+      items[2].textContent = t('detailBookmarks');
+      items[3].textContent = t('detailMap');
+    }
+    if (noteEl) noteEl.textContent = t('noCookieNote');
+  }
+
+  _fallbackText(key) {
+    const fallbacks = {
+      message: 'Diese Seite speichert Einstellungen und Favoriten lokal in Deinem Browser, nicht auf der Webseite. Du kannst die Speicherung (Cookies) löschen, indem Du in den Settings auf den renew-Button klickst.<br><br>Das Speichern dieser Daten erlauben?',
+      accept: 'Ja',
+      decline: 'Nein',
+      detailTitle: 'Was soll gespeichert werden?',
+      detailLanguage: 'Spracheinstellung',
+      detailTheme: 'Farbschema',
+      detailBookmarks: 'Favoriten',
+      detailMap: 'Kartendienst',
+      noCookieNote: 'Der Rest funktioniert auch ohne Cookies'
+    };
+    return fallbacks[key] || key;
+  }
+}
+
+// Globale Instanz
+window.consent = new ConsentManager();
+
+
+/* =================================================================
+ * BookmarkSync - anonyme Synchronisierung
+ * ================================================================= */
 
 class BookmarkSync {
   constructor(bookmarkManager) {
@@ -354,12 +534,12 @@ class BookmarkSync {
    */
   syncSettings(settings) {
     const currentSettings = {
-      colorScheme: settings.colorScheme || localStorage.getItem('color-scheme') || 'auto',
-      language: settings.language || localStorage.getItem('preferred_language') || 'de'
+      colorScheme: settings.colorScheme || window.consent.get('color-scheme') || 'auto',
+      language: settings.language || window.consent.get('preferred_language') || 'de'
     };
 
-    // In localStorage speichern
-    localStorage.setItem('user-settings', JSON.stringify(currentSettings));
+    // Speichern
+    window.consent.set('user-settings', JSON.stringify(currentSettings));
 
     console.log('✅ Settings synced:', currentSettings);
   }
@@ -375,7 +555,7 @@ class BookmarkSync {
       if (data.settings) {
         // Color Scheme anwenden
         if (data.settings.colorScheme) {
-          localStorage.setItem('color-scheme', data.settings.colorScheme);
+          window.consent.set('color-scheme', data.settings.colorScheme);
           if (window.languageSwitcher) {
             window.languageSwitcher.setColorScheme(data.settings.colorScheme);
           }
@@ -383,7 +563,7 @@ class BookmarkSync {
 
         // Sprache anwenden
         if (data.settings.language) {
-          localStorage.setItem('preferred_language', data.settings.language);
+          window.consent.set('preferred_language', data.settings.language);
           if (window.languageSwitcher) {
             window.languageSwitcher.changeLanguage(data.settings.language);
           }
@@ -401,7 +581,7 @@ class BookmarkSync {
    */
   generateSyncDataWithSettings() {
     const bookmarks = this.bookmarkManager ? this.bookmarkManager.getBookmarkedIds() : [];
-    const settings = JSON.parse(localStorage.getItem('user-settings') || '{}');
+    const settings = JSON.parse(window.consent.get('user-settings') || '{}');
 
     const syncData = {
       bookmarks: bookmarks,

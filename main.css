@@ -1578,3 +1578,414 @@ a#titleurl:hover h3.space-unknown .fas {
   font-family: monospace;
   user-select: none;
 }
+
+/* =================================================================
+   CONSENT OVERLAY – Sonne, Erde & Mond (DSGVO/GDPR)
+   ================================================================= */
+
+/* Disable nearby popover during consent */
+body.consent-active .nearby-popover,
+body.consent-active #map { pointer-events: none; }
+
+.consent-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  transition: background 0.6s ease-out, backdrop-filter 0.6s ease-out;
+}
+
+.consent-overlay.visible {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(5px);
+}
+
+/* Container für Sonne + Mond */
+.consent-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+}
+
+/* ── Planet-Animationen: Skalieren + Bogen (GPU-beschleunigt) ── */
+/* Enter: von rechts oben herein */
+@keyframes earth-enter {
+  0%   { transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0); }
+  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+}
+
+@keyframes sun-enter {
+  0%   { transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0); }
+  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+}
+
+@keyframes moon-enter {
+  0%   { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0); }
+  100% { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
+}
+
+/* Exit: nach rechts hinaus */
+@keyframes earth-exit {
+  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(0.06,0.06,1) translate3d(350px, 0, 0); }
+}
+
+@keyframes sun-exit {
+  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(0.06,0.06,1) translate3d(250px, 0, 0); }
+}
+
+@keyframes moon-exit {
+  0%   { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(150px, 0, 0); }
+}
+
+/* Exit-Animationen werden per Inline-Style in _removeBanner() gesetzt */
+
+/* ── ERDE: Details (hinter Sonne) ── */
+.consent-earth {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  top: -80px;
+  left: -240px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 55px 190px 55px 55px;
+  background:
+    radial-gradient(ellipse at 25% 20%, rgba(100, 180, 100, 0.5) 0%, transparent 22%),
+    radial-gradient(ellipse at 60% 40%, rgba(80, 150, 80, 0.4) 0%, transparent 28%),
+    radial-gradient(ellipse at 40% 70%, rgba(90, 160, 90, 0.35) 0%, transparent 18%),
+    radial-gradient(ellipse at 75% 65%, rgba(70, 130, 70, 0.3) 0%, transparent 20%),
+    radial-gradient(circle at 15% 50%, rgba(60, 120, 60, 0.25) 0%, transparent 15%),
+    radial-gradient(ellipse at 50% 15%, rgba(220, 230, 240, 0.4) 0%, transparent 18%),
+    radial-gradient(circle at 45% 50%, #2b7ab5, #1a6da0 50%, #0d5a8a);
+  box-shadow:
+    inset -50px -5px 70px rgba(255, 210, 60, 0.25),
+    0 0 50px rgba(30, 100, 180, 0.45),
+    0 0 100px rgba(30, 100, 180, 0.2),
+    0 0 160px rgba(30, 100, 180, 0.08);
+  will-change: transform;
+  transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0);
+}
+
+.consent-overlay.visible .consent-earth {
+  animation: earth-enter 1s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+
+/* Noise texture on Earth */
+.consent-earth::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.consent-earth-text {
+  color: rgba(255, 255, 255, 0.95);
+  font-family: 'Lato', sans-serif;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.5;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  text-align: left;
+}
+
+.consent-earth-text strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.25em;
+}
+
+.consent-earth-text ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.consent-earth-text li {
+  padding: 2px 0;
+}
+
+.consent-earth-text li::before {
+  content: '·  ';
+  opacity: 0.7;
+}
+
+.consent-earth-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85em;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* ── SONNE: Frage ── */
+.consent-sun {
+  position: relative;
+  z-index: 2;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 240, 150, 0.5) 0%, transparent 15%),
+    radial-gradient(circle at 70% 60%, rgba(255, 200, 50, 0.4) 0%, transparent 20%),
+    radial-gradient(circle at 55% 30%, rgba(255, 220, 80, 0.45) 0%, transparent 10%),
+    radial-gradient(circle at 35% 75%, rgba(230, 150, 0, 0.3) 0%, transparent 18%),
+    radial-gradient(circle at 80% 40%, rgba(255, 210, 60, 0.35) 0%, transparent 12%),
+    radial-gradient(circle at 40% 40%, #ffe082, #ffb300 60%, #f57f17);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px;
+  box-shadow:
+    0 0 80px rgba(255, 183, 0, 0.6),
+    0 0 150px rgba(255, 183, 0, 0.3),
+    0 0 220px rgba(255, 160, 0, 0.12);
+  will-change: transform;
+  transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0);
+}
+
+.consent-overlay.visible .consent-sun {
+  animation: sun-enter 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Noise texture on Sun */
+.consent-sun::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Moon shadow cast on the Sun (bottom-right) */
+.consent-sun::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  bottom: -20px;
+  right: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.08) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.consent-sun-text {
+  color: #4e2a00;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.88em;
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── MOND: Buttons (Halbmond / Crescent) ── */
+.consent-moon {
+  position: absolute;
+  z-index: 3;
+  bottom: -120px;
+  right: -85px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  will-change: transform;
+  transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0);
+  box-shadow:
+    0 0 40px rgba(100, 100, 120, 0.4),
+    0 0 80px rgba(80, 80, 100, 0.15),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.consent-overlay.visible .consent-moon {
+  animation: moon-enter 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+}
+
+/* Noise texture on Moon */
+.consent-moon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Crescent-Mond: Lichtseite (Ja) = Basis, Nachtseite (Nein) = versetzter Kreis */
+
+/* Lichtseite füllt den ganzen Mond */
+.consent-moon-accept {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 33%;
+  cursor: pointer;
+  z-index: 1;
+  transition: filter 0.2s;
+  background:
+    radial-gradient(circle at 55% 35%, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.02) 35%, transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.01) 30%, transparent 40%),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 20%),
+    linear-gradient(160deg, #d8d8dd 0%, #c5c5cb 50%, #b5b5be 100%);
+}
+
+.consent-moon-accept:hover {
+  filter: brightness(1.22) contrast(1.12);
+}
+
+.consent-moon-accept .consent-moon-label {
+  color: #2a2a30;
+}
+
+/* Nachtseite: versetzter Kreis → sanfter Halbmond-Bogen */
+.consent-moon-decline {
+  position: absolute;
+  width: 216px;
+  height: 216px;
+  border-radius: 50%;
+  left: -160px;
+  top: -33px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 18px;
+  cursor: pointer;
+  z-index: 2;
+  transition: filter 0.2s;
+  background:
+    radial-gradient(circle at 60% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 40%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.03) 35%, transparent 45%),
+    radial-gradient(circle at 70% 15%, rgba(255, 255, 255, 0.05) 0%, transparent 25%),
+    radial-gradient(circle at 50% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 18%),
+    linear-gradient(160deg, #58585f 0%, #44444b 50%, #3a3a42 100%);
+}
+
+.consent-moon-decline:hover {
+  filter: brightness(1.5) contrast(1.2);
+}
+
+.consent-moon-decline .consent-moon-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Labels im Mond: gegen Rotation zurückdrehen → waagerecht */
+.consent-moon-label {
+  transform: rotate(-30deg);
+  font-family: 'Lato', sans-serif;
+  font-size: 1.08em;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.2;
+  user-select: none;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Dark Mode ── */
+@media (prefers-color-scheme: dark) {
+  .consent-overlay.visible {
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .consent-sun {
+    background:
+      radial-gradient(circle at 25% 20%, rgba(255, 240, 150, 0.5) 0%, transparent 15%),
+      radial-gradient(circle at 70% 60%, rgba(255, 200, 50, 0.4) 0%, transparent 20%),
+      radial-gradient(circle at 55% 30%, rgba(255, 220, 80, 0.45) 0%, transparent 10%),
+      radial-gradient(circle at 40% 40%, #ffe082, #ffb300 60%, #e65100);
+    box-shadow:
+      0 0 60px rgba(255, 160, 0, 0.4),
+      0 0 120px rgba(255, 140, 0, 0.15);
+  }
+
+  .consent-sun-text {
+    color: #3e1a00;
+  }
+
+  .consent-earth {
+    background:
+      radial-gradient(ellipse at 25% 20%, rgba(60, 140, 60, 0.5) 0%, transparent 22%),
+      radial-gradient(ellipse at 60% 40%, rgba(50, 120, 50, 0.4) 0%, transparent 28%),
+      radial-gradient(ellipse at 40% 70%, rgba(60, 130, 60, 0.35) 0%, transparent 18%),
+      radial-gradient(ellipse at 50% 15%, rgba(180, 200, 220, 0.3) 0%, transparent 18%),
+      radial-gradient(circle at 45% 50%, #1a5a8a, #134d78 50%, #0c4068);
+    box-shadow:
+      inset -50px -5px 70px rgba(255, 190, 40, 0.2),
+      0 0 50px rgba(20, 80, 150, 0.45),
+      0 0 100px rgba(20, 80, 150, 0.2),
+      0 0 160px rgba(20, 80, 150, 0.08);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .consent-container {
+    width: 240px;
+    height: 240px;
+  }
+
+  .consent-sun {
+    width: 240px;
+    height: 240px;
+    padding: 40px;
+  }
+
+  .consent-sun-text {
+    font-size: 0.78em;
+  }
+
+  .consent-earth {
+    width: 320px;
+    height: 320px;
+    box-sizing: border-box;
+    top: -60px;
+    left: -190px;
+    padding: 45px 150px 45px 45px;
+  }
+
+  .consent-earth-text {
+    font-size: 0.7em;
+  }
+
+  .consent-moon {
+    width: 120px;
+    height: 120px;
+    bottom: -95px;
+    right: -55px;
+  }
+
+  .consent-moon-decline {
+    width: 173px;
+    height: 173px;
+    left: -129px;
+    top: -27px;
+  }
+
+  .consent-moon-label {
+    font-size: 0.88em;
+  }
+}
