@@ -1598,25 +1598,21 @@ body.consent-active #map { pointer-events: none; }
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0px);
   pointer-events: none;
-  transition: background 0.6s ease-out, backdrop-filter 0.6s ease-out;
-}
-
-.consent-overlay.visible {
-  pointer-events: auto;
+  transition: background 0.6s ease-out;
 }
 
 .consent-overlay.visible {
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(5px);
+  pointer-events: auto;
 }
 
 /* Container für Sonne + Mond */
 .consent-container {
   position: relative;
-  width: 300px;
-  height: 300px;
+  width: 360px;
+  height: 360px;
 }
 
 /* ── Planet-Animationen: Skalieren + Bogen (GPU-beschleunigt) ── */
@@ -1742,8 +1738,8 @@ body.consent-active #map { pointer-events: none; }
 .consent-sun {
   position: relative;
   z-index: 2;
-  width: 300px;
-  height: 300px;
+  width: 360px;
+  height: 360px;
   border-radius: 50%;
   background:
     radial-gradient(circle at 25% 20%, rgba(255, 240, 150, 0.5) 0%, transparent 15%),
@@ -1879,7 +1875,7 @@ body.consent-active #map { pointer-events: none; }
   padding-right: 18px;
   cursor: pointer;
   z-index: 2;
-  transition: filter 0.2s;
+  transition: filter 0.15s;
   background:
     radial-gradient(circle at 60% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 40%, transparent 50%),
     radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.03) 35%, transparent 45%),
@@ -1923,8 +1919,8 @@ body.consent-active #map { pointer-events: none; }
       radial-gradient(circle at 55% 30%, rgba(255, 220, 80, 0.45) 0%, transparent 10%),
       radial-gradient(circle at 40% 40%, #ffe082, #ffb300 60%, #e65100);
     box-shadow:
-      0 0 60px rgba(255, 160, 0, 0.4),
-      0 0 120px rgba(255, 140, 0, 0.15);
+      0 0 60px rgba(255, 160, 0, 0.6),
+      0 0 120px rgba(255, 140, 0, 0.2);
   }
 
   .consent-sun-text {
@@ -1940,22 +1936,22 @@ body.consent-active #map { pointer-events: none; }
       radial-gradient(circle at 45% 50%, #1a5a8a, #134d78 50%, #0c4068);
     box-shadow:
       inset -50px -5px 70px rgba(255, 190, 40, 0.2),
-      0 0 50px rgba(20, 80, 150, 0.45),
-      0 0 100px rgba(20, 80, 150, 0.2),
-      0 0 160px rgba(20, 80, 150, 0.08);
+      0 0 50px rgba(20, 80, 150, 0.65),
+      0 0 100px rgba(20, 80, 150, 0.3),
+      0 0 160px rgba(20, 80, 150, 0.15);
   }
 }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .consent-container {
-    width: 240px;
-    height: 240px;
+    width: 288px;
+    height: 288px;
   }
 
   .consent-sun {
-    width: 240px;
-    height: 240px;
+    width: 288px;
+    height: 288px;
     padding: 40px;
   }
 
