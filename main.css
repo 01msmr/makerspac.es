@@ -1599,7 +1599,12 @@ body.consent-active #map { pointer-events: none; }
   justify-content: center;
   background: rgba(0, 0, 0, 0);
   backdrop-filter: blur(0px);
+  pointer-events: none;
   transition: background 0.6s ease-out, backdrop-filter 0.6s ease-out;
+}
+
+.consent-overlay.visible {
+  pointer-events: auto;
 }
 
 .consent-overlay.visible {

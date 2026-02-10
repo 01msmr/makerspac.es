@@ -123,16 +123,16 @@ class ConsentManager {
     const earth = this._banner.querySelector('.consent-earth');
     const sun = this._banner.querySelector('.consent-sun');
     const moon = this._banner.querySelector('.consent-moon');
-    if (moon) moon.style.animation = 'moon-exit 0.75s cubic-bezier(0.64, 0, 0.78, 0) both';
-    if (earth) earth.style.animation = 'earth-exit 1s cubic-bezier(0.64, 0, 0.78, 0) 0.05s both';
-    if (sun) sun.style.animation = 'sun-exit 0.85s cubic-bezier(0.64, 0, 0.78, 0) 0.1s both';
+    if (moon) moon.style.animation = 'moon-exit 0.52s cubic-bezier(0.64, 0, 0.78, 0) both';
+    if (earth) earth.style.animation = 'earth-exit 0.7s cubic-bezier(0.64, 0, 0.78, 0) 0.035s both';
+    if (sun) sun.style.animation = 'sun-exit 0.6s cubic-bezier(0.64, 0, 0.78, 0) 0.07s both';
     // Overlay-Hintergrund ausblenden
     this._banner.classList.remove('visible');
     document.body.classList.remove('consent-active');
     setTimeout(() => {
       this._banner?.remove();
       this._banner = null;
-    }, 1200);
+    }, 850);
   }
 
   _updateBannerTexts() {

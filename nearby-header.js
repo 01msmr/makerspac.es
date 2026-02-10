@@ -192,7 +192,7 @@
       this._isOverPopup = e.target?.closest?.('.leaflet-popup') !== null;
 
       // Sichtbarkeit
-      if (this.popoverElement || this.isOverSearchUI || this._isOverPopup) {
+      if (this.popoverElement || this.isOverSearchUI || this._isOverPopup || document.body.classList.contains('consent-active')) {
         this.hintElement.style.opacity = '0';
         return;
       }
@@ -225,6 +225,9 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     showAtCursor(lat, lon, mouseX, mouseY) {
+      // Nearby unterdrücken, solange der Consent-Banner offen ist
+      if (document.body.classList.contains('consent-active')) return;
+
       // ✨ Suche und alle Filter löschen beim Aktivieren von Nearby (silent = kein UI-Update)
       if (window.app?.searchHeader) {
         window.app.searchHeader._manualSpaceClick = true;
