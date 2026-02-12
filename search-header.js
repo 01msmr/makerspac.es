@@ -1096,12 +1096,12 @@
             <i class="${CONFIG.icons.ui.filter} filter-icon-in-header"></i>
             <span class="country-filter-name">${translatedCountry}</span>
           </div>
-          <span class="country-count">[${count} ${window.i18n?.t('searchResults.of') || 'of'} ${totalInCountry}]</span>
+          ${!isFilterActive ? `<span class="country-count">[${count} ${window.i18n?.t('searchResults.of') || 'of'} ${totalInCountry}]</span>` : ''}
         </div>
-        <div class="country-nav-carets">
+        ${!isFilterActive ? `<div class="country-nav-carets">
           <i class="${CONFIG.icons.ui.caretUp} country-nav-caret" data-direction="prev"></i>
           <i class="${CONFIG.icons.ui.caretDown} country-nav-caret" data-direction="next"></i>
-        </div>
+        </div>` : ''}
       `;
 
       header.querySelector('.country-filter-button')?.addEventListener('click', (e) => {
@@ -1140,7 +1140,12 @@
       }
 
       if (targetIndex !== currentIndex && headers[targetIndex]) {
-        headers[targetIndex].scrollIntoView({ block: 'start', behavior: 'smooth' });
+        const dropdown = this.suggestionsDropdown;
+        const stickyTop = 83;
+        dropdown.scrollTo({
+          top: headers[targetIndex].offsetTop - stickyTop,
+          behavior: 'smooth'
+        });
       }
     }
 
