@@ -72,7 +72,7 @@
 
       let newBounds;
       if (markersToZoom.length > 1) {
-        newBounds = L.featureGroup(markersToZoom).getBounds().pad(0.2);
+        newBounds = L.featureGroup(markersToZoom).getBounds().pad(0.05);
       } else {
         const center = markersToZoom[0].getLatLng();
         const radius = 0.01;
@@ -117,6 +117,43 @@
     // ═══════════════════════════════════════════════════════════════════════════
     // NORMAL ZOOM
     // ═══════════════════════════════════════════════════════════════════════════
+
+    flyToBoundsTight(bounds, options = {}) {
+      const origSnap = this.map.options.zoomSnap;
+      this.map.options.zoomSnap = 0;
+      const zoom = this.map.getBoundsZoom(bounds);
+      let center = bounds.getCenter();
+
+      const mapEl = document.getElementById('map');
+      if (mapEl) {
+        const mapRect = mapEl.getBoundingClientRect();
+
+        let rightUI = 0;
+        const settingsEl = document.querySelector('.language-switcher');
+        const searchEl = document.querySelector('.search-container');
+        if (settingsEl) {
+          rightUI = mapRect.right - settingsEl.getBoundingClientRect().left;
+        } else if (searchEl) {
+          rightUI = mapRect.right - searchEl.getBoundingClientRect().left;
+        }
+
+        let leftUI = 0;
+        const titleBar = document.querySelector('.title-bar');
+        if (titleBar) {
+          leftUI = titleBar.getBoundingClientRect().right - mapRect.left;
+        }
+
+        const xShift = (leftUI - rightUI) / 2;
+
+        const centerPoint = this.map.project(center, zoom);
+        center = this.map.unproject(
+          L.point(centerPoint.x + xShift, centerPoint.y), zoom
+        );
+      }
+
+      this.map.flyTo(center, zoom, options);
+      this.map.once('moveend', () => { this.map.options.zoomSnap = origSnap; });
+    }
 
     executeNormalZoom(bounds, markersToZoom) {
       this.removeAllZoomFrames();
@@ -163,7 +200,7 @@
       // Phase 1: Zoom Out
       await new Promise(resolve => {
         this.map.once('zoomend moveend', resolve);
-        this.map.flyToBounds(combinedBounds, { duration: DURATION_PART_1 });
+        this.flyToBoundsTight(combinedBounds, { duration: DURATION_PART_1 });
       });
 
       this.removeZoomPreviewFrame(firstFrameInfo.layer);
@@ -175,7 +212,7 @@
       await new Promise(resolve => {
         this.map.once('zoomend moveend', resolve);
         if (markersToZoom.length > 1) {
-          this.map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2), { duration: DURATION_PART_2 });
+          this.flyToBoundsTight(L.featureGroup(markersToZoom).getBounds().pad(0.05), { duration: DURATION_PART_2 });
         } else {
           this.map.flyTo(markersToZoom[0].getLatLng(), 13, { duration: DURATION_PART_2 });
         }
@@ -201,7 +238,7 @@
       const zoomPromise = new Promise(resolve => {
         this.map.once('zoomend moveend', resolve);
         if (markersToZoom.length > 1) {
-          this.map.flyToBounds(L.featureGroup(markersToZoom).getBounds().pad(0.2), zoomOptions);
+          this.flyToBoundsTight(L.featureGroup(markersToZoom).getBounds().pad(0.05), zoomOptions);
         } else {
           this.map.flyTo(markersToZoom[0].getLatLng(), 13, zoomOptions);
         }

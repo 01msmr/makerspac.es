@@ -857,8 +857,10 @@ function createMarkerForLocation(location) {
                       <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
                       `;
   }, {
-    maxWidth: 440,    // ← Maximale Breite auf 400px
-    minWidth: 160     // ← Minimale Breite 160px
+    maxWidth: 440,
+    minWidth: 160,
+    autoPanPaddingTopLeft: L.point(50, 50),
+    autoPanPaddingBottomRight: L.point(50, 80)
   });
   marker.on('popupopen', (e) => {
     // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!

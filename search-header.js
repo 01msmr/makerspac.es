@@ -496,6 +496,9 @@
       this.setupSpaceAPIEvents();
       this.setupBookmarkEvents();
 
+      // Gesamtzahl beim Start anzeigen
+      this.updateSearchCounter(this.json?.length || 0);
+
       console.log('✅ SearchHeader initialized');
     }
 
@@ -540,11 +543,14 @@
         this.map.on('zoomstart movestart', () => {
           this.listingCore?.removeConnectionLine();
         });
+        this.map.on('moveend zoomend', () => {
+          this.listingCore?.updateHoverSVGPosition();
+        });
       }
 
       this.searchCounter.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (this.searchBar.value.length > 0) {
+        if (this.searchBar.value.length > 0 || this.pillsManager?.count() > 0) {
           this.clearSearch();
         }
       });
@@ -1188,14 +1194,18 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     updateSearchCounter(count) {
-      this.searchCounter.textContent = count;
+      const isSearching = this.searchBar.value.length > 0 || this.searchFilter?.hasActiveFilters() || this.pillsManager?.count() > 0;
 
-      const isSearching = this.searchBar.value.length > 0 || this.searchFilter?.hasActiveFilters();
+      if (!isSearching && this.json) {
+        this.searchCounter.textContent = this.json.length;
+      } else {
+        this.searchCounter.textContent = count;
+      }
 
-      this.searchCounter.classList.toggle('visible', isSearching);
-      this.searchCounter.classList.toggle('has-results', count > 0);
+      this.searchCounter.classList.add('visible');
+      this.searchCounter.classList.toggle('has-results', !isSearching || count > 0);
       this.searchCounter.classList.toggle('no-results', isSearching && count === 0);
-      this.searchCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0);
+      this.searchCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0 || this.pillsManager?.count() > 0);
     }
 
     updateDropdownUI(shouldShow) {

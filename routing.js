@@ -722,11 +722,6 @@ export class RoutingManager {
       this.styleFilterManager.applyPreFilters(locations);
     }
 
-    // ✅ NEU: Bei einem Space → Setze Name in Searchbar
-    if (locations.length === 1 && this.searchManager.searchBar) {
-      this.searchManager.searchBar.value = locations[0].name;
-    }
-
     // Update Search-Dropdown
     this.searchManager.createSuggestionItems(locations);
     this.searchManager.updateSearchCounter(locations.length);
