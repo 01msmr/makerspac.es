@@ -1,9 +1,9 @@
 name: Deploy to gitHub Pages
 
 on:
-  # Alle 18 Minuten ausführen
+  # Alle 12 Minuten ausführen, WENN Änderungen verfügbar sind
   schedule:
-    - cron: '*/18 * * * *'
+    - cron: '*/12 * * * *'
   
   # Manuell auslösen
   workflow_dispatch:
