@@ -226,7 +226,7 @@ class EmbedMapExtended {
           </a>
         </div>
         ${space.weekly && space.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); const _tipLine1 = (_isToday ? _t('weekly.today') + ' ' : '') + _t('weekly.openMeeting'); const _tipLine2 = _t('weekdays.' + space.weekly.weekday) + ' — ' + _timeStr + _suf; return `<div style="display:flex; align-items:center; gap:5px; font-size:1.1em; font-weight:bold; margin-top:2px;" title="${_tipLine1}&#013;${_tipLine2}"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
-        <br><br>
+        <br>
         <div class="popup-street-line">
           <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>
         </div>
