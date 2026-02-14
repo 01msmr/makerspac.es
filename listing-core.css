@@ -189,7 +189,7 @@
 }
 
 .listing-item-address-lines {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -197,6 +197,27 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WEEKLY MEETING ICON (Kalender-Icon wenn Meeting heute)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.listing-meeting-today {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--status-color, var(--text-color));
+  color: white;
+  font-size: inherit;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.listing-item.active .listing-meeting-today {
+  background: white;
+  color: var(--status-color, var(--text-color)) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

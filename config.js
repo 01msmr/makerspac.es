@@ -71,7 +71,8 @@
       caretDown: 'fas fa-caret-down',
       flag: 'fas fa-flag',
       peopleGroup: 'fas fa-people-group',
-      doorOpen: 'fas fa-door-open'
+      doorOpen: 'fas fa-door-open',
+      calendarDay: 'fas fa-calendar-day'
     }
   };
 

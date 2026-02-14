@@ -89,6 +89,9 @@
       // Status icon placeholder (always rendered for consistent indentation)
       const addressStatusIcon = `<span class="listing-status-icon">${statusIconHtml}</span>`;
 
+      // Weekly meeting icon (nur wenn Meeting heute ist)
+      const meetingIconHtml = this.getMeetingIconHtml(location);
+
       // Item-HTML zusammenbauen
       item.innerHTML = `
         ${distanceBadgeHtml}
@@ -103,6 +106,7 @@
               ${streetHtml}
               <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${CONFIG.escapeHtml(location.loc.city)}</b></div>
             </div>
+            ${meetingIconHtml}
           </div>
         </div>
       `;
@@ -163,6 +167,33 @@
       if (location.isOpen === true) return 'space-name-open';
       if (location.isOpen === false) return 'space-name-closed';
       return 'space-name-unknown';
+    }
+
+    /**
+     * Formatiert die Uhrzeit aus dem weekly-Format (z.B. 1900 → "19:00")
+     */
+    formatWeeklyTime(time) {
+      const str = String(time).padStart(4, '0');
+      return str.slice(0, 2) + ':' + str.slice(2);
+    }
+
+    /**
+     * Generiert das Meeting-Icon HTML (nur wenn Meeting heute ist)
+     */
+    getMeetingIconHtml(location) {
+      if (!location.weekly || !location.weekly.time) return '';
+      if (location.weekly.weekday !== new Date().getDay()) return '';
+
+      const weekdayAdverb = window.i18n ? window.i18n.t(`weekdays.${location.weekly.weekday}`) : '';
+      const timeStr = this.formatWeeklyTime(location.weekly.time);
+      const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
+      const todayLabel = window.i18n ? window.i18n.t('weekly.today') : 'heute';
+      const openMeeting = window.i18n ? window.i18n.t('weekly.openMeeting') : 'offenes Treffen:';
+      const titleLine1 = `${todayLabel} ${openMeeting}`;
+      const titleLine2 = `${weekdayAdverb} — ${timeStr}${timeSuffix}`;
+      const title = `${titleLine1}&#013;${titleLine2}`;
+
+      return `<span class="listing-meeting-today" title="${title}"><i class="${CONFIG.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

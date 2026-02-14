@@ -98,6 +98,26 @@ body:
       placeholder: "short form of url - e.g. toolbox-bodensee.de"
     validations:
       required: true
+  - type: dropdown
+    id: weekly_weekday
+    attributes:
+      label: Wochentag des offenen Treffens (Optional)
+      description: "An welchem Wochentag findet euer regelmäßiges offenes Treffen statt?"
+      options:
+        - "keins / none"
+        - "Montag / Monday"
+        - "Dienstag / Tuesday"
+        - "Mittwoch / Wednesday"
+        - "Donnerstag / Thursday"
+        - "Freitag / Friday"
+        - "Samstag / Saturday"
+        - "Sonntag / Sunday"
+  - type: input
+    id: weekly_time
+    attributes:
+      label: Uhrzeit des offenen Treffens (Optional)
+      description: "Uhrzeit im HHMM-Format, z.B. 1900 für 19:00 Uhr."
+      placeholder: "1900"
   - type: input
     id: spaceapi
     attributes:
