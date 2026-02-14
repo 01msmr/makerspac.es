@@ -918,6 +918,25 @@ a#titleurl:hover h3.space-unknown .fas {
   color: var(--status-color);
 }
 
+.popup-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-weekly {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1.05em;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.country .fi {
+  margin-right: 4px;
+}
+
 /* +++ START: ENHANCED CSS-BASED NAVIGATION STYLING +++ */
 
 .popup-street-line {
