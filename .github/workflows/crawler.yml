@@ -1,0 +1,56 @@
+name: "🔍 Makerspace Data Crawler"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "create-issues"
+        default: "dry-run"
+      limit:
+        description: "Anzahl Spaces (0 = alle)"
+        required: false
+        type: number
+        default: 0
+      id:
+        description: "Einzelne Space-ID (0 = alle)"
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run Crawler
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "create-issues" ]; then
+            ARGS="$ARGS --create-issues"
+          fi
+          if [ "${{ inputs.limit }}" != "0" ]; then
+            ARGS="$ARGS --limit ${{ inputs.limit }}"
+          fi
+          if [ "${{ inputs.id }}" != "0" ]; then
+            ARGS="$ARGS --id ${{ inputs.id }}"
+          fi
+          echo "Running: node tools/crawler.js $ARGS"
+          node tools/crawler.js $ARGS
