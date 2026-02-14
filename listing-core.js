@@ -193,6 +193,32 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // MEETING-TOOLTIP POSITION (bottom-left / top-left je nach Scroll-Position)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Registriert Scroll-Listener auf Dropdown-Containern,
+     * um Meeting-Tooltips am unteren Rand nach oben zu klappen.
+     */
+    initMeetingTooltipObserver(container) {
+      if (!container) return;
+      const update = () => this.updateMeetingTooltipPositions(container);
+      container.addEventListener('scroll', update, { passive: true });
+      // Einmal initial ausführen
+      update();
+    }
+
+    updateMeetingTooltipPositions(container) {
+      const containerRect = container.getBoundingClientRect();
+      const threshold = 60; // px vom unteren Rand
+      container.querySelectorAll('.listing-meeting-today').forEach(el => {
+        const elRect = el.getBoundingClientRect();
+        const nearBottom = (containerRect.bottom - elRect.bottom) < threshold;
+        el.setAttribute('data-microtip-position', nearBottom ? 'top-left' : 'bottom-left');
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // KEYBOARD-NAVIGATION
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -674,6 +700,9 @@
         connectionWeight = CONFIG.settings.connectionWeightSearch,
         keepHoverOnLeave = false
       } = options;
+
+      // Meeting-Tooltip Positionierung initialisieren
+      this.initMeetingTooltipObserver(container);
 
       container.querySelectorAll('.listing-item').forEach(item => {
         const locationId = parseInt(item.dataset.locationId);

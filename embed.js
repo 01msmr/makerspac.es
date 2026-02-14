@@ -30,11 +30,17 @@ class EmbedMapExtended {
 
   async init() {
     try {
+      // i18n laden (falls verfügbar)
+      if (typeof I18n !== 'undefined') {
+        window.i18n = new I18n();
+        await window.i18n.load();
+      }
       await this.loadData();
       this.createMap();
       this.createMarkers();
       this.showLogo();
       this.createTargetDropdown();
+      this.createLanguageSwitcher();
       this.createMinimap();
 
       if (this.friendSpaces.length > 0) {
@@ -221,7 +227,7 @@ class EmbedMapExtended {
       <div style="--status-color: ${statusColor};">
         <h3 id="style">${styleIconHtml}${space.style || ''}</h3>
         <div class="popup-title-row">
-          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" aria-label="${window.i18n ? window.i18n.t('tooltips.makerspaceId') : 'ID dieses Makerspaces'}: ${space.ID}" role="tooltip" data-microtip-position="top">
+          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" aria-label="${window.i18n ? window.i18n.t('tooltips.makerspaceId') : 'dieser Makerspace: ID'} ${space.ID}" role="tooltip" data-microtip-position="top">
             <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
           </a>
         </div>
@@ -229,6 +235,7 @@ class EmbedMapExtended {
         <br>
         <div class="popup-street-line">
           <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${space.loc?.lat},${space.loc?.long}" target="_blank" class="navigation-icon" aria-label="${window.i18n ? window.i18n.t('tooltips.routeToMakerspace') : 'Route zum Makerspace'}" role="tooltip" data-microtip-position="bottom"><i></i></a>
         </div>
         ${this.zfill(space.loc?.plz || '', space.loc?.country || '')} <b>${space.loc?.city || ''}</b><br>
         <span class="country"><span class="fi fi-${countryCode}"></span>${space.loc?.country || ''}</span><br>
@@ -246,14 +253,27 @@ class EmbedMapExtended {
     }
     const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
     const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
+    const statusColorMap = { 'space-open': 'var(--space-open)', 'space-closed': 'var(--space-closed)', 'space-unknown': 'var(--space-unknown)' };
     const item = document.createElement('div');
     item.className = `space-item listing-item ${statusClass} ${isTarget ? 'target' : ''}`;
+    item.style.setProperty('--status-color', statusColorMap[statusClass] || 'var(--space-hover)');
     item.dataset.spaceId = space.ID;
     const addressLines = isTarget ? `
       <div class="listing-item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
       <div class="listing-item-details">${this.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
       <div class="listing-item-details"><span class="fi fi-${this.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
       <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
+    // Weekly Meeting Badge
+    let meetingHtml = '';
+    if (space.weekly && space.weekly.time && space.weekly.weekday === new Date().getDay()) {
+      const _t = (k) => window.i18n ? window.i18n.t(k) : '';
+      const todayLabel = _t('weekly.today') || 'heute';
+      const weeklyTooltip = _t('weekly.tooltip') || 'wöchentliches Treffen';
+      const timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
+      const timeSuffix = _t('weekly.timeSuffix') || '';
+      meetingHtml = `<span class="listing-meeting-today" aria-label="${weeklyTooltip}: ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-calendar-day"></i> ${todayLabel}</span>`;
+    }
+
     item.innerHTML = `
       <div class="listing-item-content">
         ${isTarget ? '<div class="our-space-pill">Our Space</div>' : ''}
@@ -263,6 +283,7 @@ class EmbedMapExtended {
           <div class="listing-item-address-lines">
             ${addressLines}
           </div>
+          ${meetingHtml}
         </div>
       </div>`;
     return item;
@@ -271,18 +292,152 @@ class EmbedMapExtended {
   showLogo() {
     const container = document.createElement('div');
     container.id = 'embed-sidebar';
-    container.style.cssText = `position: absolute; left: 1em; top: 1em; z-index: 400; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 2em);`;
+    container.style.cssText = `position: absolute; left: 1em; top: 1em; z-index: 400; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-height: calc(100vh - 2em);`;
     container.innerHTML = `<a href="./" target="_blank"><div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span></div></a>`;
     document.body.appendChild(container);
   }
 
   createTargetDropdown() {
+    // Wrapper für Target-Dropdown + Sprach-Switcher nebeneinander
+    const row = document.createElement('div');
+    row.className = 'embed-target-row';
+    document.getElementById('embed-sidebar').appendChild(row);
+
     const dropdown = document.createElement('div');
     dropdown.className = 'embed-dropdown target-dropdown is-active';
     const item = this.createDropdownItem(this.targetSpace, true);
     item.addEventListener('click', () => this.selectSpace(this.targetId));
     dropdown.appendChild(item);
-    document.getElementById('embed-sidebar').appendChild(dropdown);
+    row.appendChild(dropdown);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LANGUAGE SWITCHER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  getLanguageForCountry(country) {
+    const map = { 'Germany': 'de', 'Austria': 'de', 'Switzerland': 'de', 'France': 'fr', 'Italy': 'it', 'Netherlands': 'nl', 'Belgium': 'nl', 'Denmark': 'da', 'Ukraine': 'uk' };
+    return map[country] || 'en';
+  }
+
+  createLanguageSwitcher() {
+    this.languages = [
+      { code: 'de', flag: 'de' },
+      { code: 'en', flag: 'gb' },
+      { code: 'fr', flag: 'fr' },
+      { code: 'nl', flag: 'nl' },
+      { code: 'it', flag: 'it' },
+      { code: 'da', flag: 'dk' },
+      { code: 'uk', flag: 'ua' }
+    ];
+
+    // Startsprache = Land des Makerspaces
+    const startLang = this.getLanguageForCountry(this.targetSpace.loc?.country);
+    if (window.i18n) window.i18n.setLanguage(startLang);
+    this.currentLang = startLang;
+
+    const switcher = document.createElement('div');
+    switcher.className = 'embed-lang-switcher';
+    this.langSwitcher = switcher;
+
+    const activeBtn = document.createElement('span');
+    const activeLang = this.languages.find(l => l.code === startLang) || this.languages[0];
+    activeBtn.className = `fi fi-${activeLang.flag} embed-lang-active`;
+    activeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      switcher.classList.toggle('expanded');
+    });
+    switcher.appendChild(activeBtn);
+
+    const options = document.createElement('div');
+    options.className = 'embed-lang-options';
+    this.languages.forEach(lang => {
+      if (lang.code === startLang) return; // aktive Sprache nicht doppelt
+      const btn = document.createElement('span');
+      btn.className = `fi fi-${lang.flag} embed-lang-btn`;
+      btn.dataset.lang = lang.code;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.switchLanguage(lang.code);
+      });
+      options.appendChild(btn);
+    });
+    switcher.appendChild(options);
+
+    // In die Target-Row hängen (rechts neben dem Dropdown)
+    document.querySelector('.embed-target-row').appendChild(switcher);
+
+    // Schließen bei Klick außerhalb
+    document.addEventListener('click', () => switcher.classList.remove('expanded'));
+  }
+
+  switchLanguage(langCode) {
+    if (!window.i18n) return;
+    window.i18n.setLanguage(langCode);
+    this.currentLang = langCode;
+
+    // Aktive Flagge aktualisieren
+    const lang = this.languages.find(l => l.code === langCode);
+    if (lang) {
+      const activeBtn = this.langSwitcher.querySelector('.embed-lang-active');
+      activeBtn.className = `fi fi-${lang.flag} embed-lang-active`;
+    }
+
+    // Options neu rendern (ohne aktive Sprache)
+    const options = this.langSwitcher.querySelector('.embed-lang-options');
+    options.innerHTML = '';
+    this.languages.forEach(l => {
+      if (l.code === langCode) return;
+      const btn = document.createElement('span');
+      btn.className = `fi fi-${l.flag} embed-lang-btn`;
+      btn.dataset.lang = l.code;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.switchLanguage(l.code);
+      });
+      options.appendChild(btn);
+    });
+
+    // Schließen
+    this.langSwitcher.classList.remove('expanded');
+
+    // Popups und Dropdowns neu rendern
+    this.refreshAllContent();
+  }
+
+  refreshAllContent() {
+    // Alle Popups neu bauen
+    this.markers.forEach((marker, spaceId) => {
+      const space = spaceId === this.targetId ? this.targetSpace : this.friendSpaces.find(s => s.ID === spaceId);
+      if (space) {
+        const isTarget = spaceId === this.targetId;
+        marker.setPopupContent(this.createPopupContent(space, isTarget));
+      }
+    });
+
+    // Target-Dropdown neu bauen
+    const targetDropdown = document.querySelector('.target-dropdown');
+    if (targetDropdown) {
+      targetDropdown.innerHTML = '';
+      const item = this.createDropdownItem(this.targetSpace, true);
+      item.addEventListener('click', () => this.selectSpace(this.targetId));
+      targetDropdown.appendChild(item);
+    }
+
+    // Friends-Dropdown neu bauen
+    const friendsDropdown = document.querySelector('.friends-dropdown');
+    if (friendsDropdown) {
+      friendsDropdown.innerHTML = '';
+      this.friendSpaces.forEach(space => {
+        const item = this.createDropdownItem(space, false);
+        item.addEventListener('click', () => this.selectSpace(space.ID));
+        friendsDropdown.appendChild(item);
+      });
+    }
+
+    // Aktiven Makerspace im Dropdown markiert lassen
+    const activeItem = document.querySelector(`.space-item[data-space-id="${this.targetId}"]`);
+    if (activeItem) activeItem.classList.add('active');
   }
 
   createMinimap() {

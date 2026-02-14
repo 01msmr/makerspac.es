@@ -93,6 +93,8 @@ body {
 
 #map {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
 }
@@ -170,139 +172,6 @@ text-decoration: none;
   opacity: 0.12;
   transition: opacity 0.25s ease-in-out;
 }
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SEARCH STYLES MOVED TO search.css
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.user-guide,
-.add-makerspace {
-  z-index: 2000;
-  width: 30px;
-  height: 30px;
-  transition: all 0.15s ease-in;
-  transition-delay: 0.25s;
-  /* ✅ Delay für ALLES inkl. text-align */
-  overflow: hidden;
-  overflow-y: scroll;
-  font-family: 'Lato', sans-serif;
-  position: absolute;
-  right: 1.5em;
-  bottom: 1.5em;
-  border-radius: 20px;
-  padding: 6px;
-  background-color: #ffff00;
-  box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.3);
-  line-height: 30px;
-  /* ✅ Zentriert vertikal */
-  text-align: center;
-  /* ✅ Zentriert horizontal */
-  opacity: 0.66;
-  color: black;
-  /* Force black text on yellow background */
-}
-
-.user-guide:hover,
-.add-makerspace:hover {
-  width: 260px;
-  height: 40%;
-  padding: 12px;
-  background-color: #ffff00;
-  box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.7);
-  line-height: 1.5em;
-  /* ✅ Normale Zeilenhöhe */
-  text-align: left;
-  /* ✅ Linksbündig */
-  transition: all 0.4s ease-out;
-  transition-delay: 0.3s;
-  /* ✅ Delay beim Hover */
-  cursor: help;
-  opacity: 0.90;
-}
-
-.user-guide:not(:hover),
-.add-makerspace:not(:hover) {
-  /* ✅ Delay ist im Basis-Selector bereits gesetzt */
-  opacity: 0.66;
-}
-
-/* ✅ H2 im minimierten Zustand: nur Icons zeigen */
-.user-guide:not(:hover) h2,
-.add-makerspace:not(:hover) h2 {
-  margin: 0;
-  padding: 0;
-  line-height: 30px;
-  font-size: 18px;
-  /* Text wird durch overflow:hidden des Eltern-Containers ausgeblendet */
-}
-
-.user-guide h2,
-.add-makerspace h2 {
-  margin: 0.5em 0;
-  font-size: 1em;
-  color: black;
-  /* Force black text */
-}
-
-.user-guide ol,
-.add-makerspace ul {
-  margin: 0;
-  padding-left: 1.2em;
-}
-
-.user-guide ol li,
-.add-makerspace ul li {
-  margin-bottom: 1.5em;
-  font-size: 0.9em;
-  line-height: 1.5em;
-  color: black;
-  /* Force black text */
-}
-
-.add-makerspace {
-  box-shadow: 3px 6px 20px 2px rgba(0, 0, 0, 0.5) inset !important;
-  left: 1.5em;
-  background-color: var(--space-hover);
-  opacity: 0.5;
-  color: white;
-}
-
-.add-makerspace:hover {
-  height: 12%;
-  background-color: var(--space-hover);
-  cursor: wait;
-  opacity: 0.90;
-}
-
-.add-makerspace:not(:hover) {
-  transition-delay: 0.3s;
-  opacity: 0.5;
-}
-
-.add-makerspace h2 {
-  color: white;
-  /* Force white text */
-}
-
-.add-makerspace ul li,
-.add-makerspace ul,
-.add-makerspace ul li a {
-  color: white !important;
-  text-decoration: none;
-}
-
-.add-makerspace li:hover {
-  font-weight: bold;
-}
-
-.add-makerspace li:hover::before {
-  content: ">>> ";
-}
-
-
-
-
 
 
 /* ===================================
@@ -766,16 +635,16 @@ text-decoration: none;
 }
 
 a#url {
-  display: inline-block;
-  width: 200%;
+  display: block;
+  width: 100%;
+  margin-left: -13px;
+  margin-top: 6px;
+  padding: 0.2em 1em;
   color: var(--text-color);
   background: transparent;
-  margin-top: 0.5em;
-  padding-left: 25%;
-  position: relative;
-  right: 125%;
   cursor: alias;
   text-align: right;
+  text-decoration: none;
 }
 
 a#url:hover {
@@ -783,7 +652,6 @@ a#url:hover {
   background: var(--text-color);
   text-decoration: none;
   text-align: left;
-  left: -25%;
 }
 
 a h3 {
@@ -1013,11 +881,27 @@ a#titleurl:hover h3.space-unknown .fas {
   z-index: 10;
   display: inline-block;
   transition: all ease-in 0.025s;
+  padding-left: 0;
+  margin-left: 6px;
+}
+
+/* Override microtip base styles for navigation-icon */
+.navigation-icon[role~="tooltip"] {
+  position: absolute;
+}
+
+.navigation-icon[role~="tooltip"]::before,
+.navigation-icon[role~="tooltip"]::after,
+.navigation-icon[role~="tooltip"]:hover::before,
+.navigation-icon[role~="tooltip"]:hover::after {
+  pointer-events: none;
 }
 
 /* Navigation Icon Hover Effect */
 .navigation-icon:hover {
   right: 0px;
+  padding-left: 6px;
+  margin-left: 0;
   transition: all ease-in-out 0.25s;
   outline: none !important;
   border: none !important;
@@ -1025,8 +909,14 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .navigation-icon:hover::before {
-  content: "⇢";
+  content: "⇢" !important;
   font-weight: bold;
+  position: static;
+  opacity: 1;
+  border: none;
+  background: none;
+  width: auto;
+  height: auto;
 }
 
 /* Icon Selection Based on Service Data Attribute */

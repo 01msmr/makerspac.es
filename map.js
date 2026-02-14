@@ -838,7 +838,7 @@ function createMarkerForLocation(location) {
             <div style="--status-color: ${statusColor};">
               <h3 id="style">${styleIconHtml}${styleLabel}</h3>
               <div class="popup-title-row">
-                <a id="titleurl" href="${linkUrl}" target="_blank" aria-label="${getTooltip('tooltips.makerspaceId')}: ${location.ID}" role="tooltip" data-microtip-position="top">
+                <a id="titleurl" href="${linkUrl}" target="_blank" aria-label="${getTooltip('tooltips.makerspaceId')} ${location.ID}" role="tooltip" data-microtip-position="top">
                   <h3 class="${nameClass}" data-id="${location.ID}">
                     ${statusIconHtml}${location.name || 'Unnamed Space'}
                   </h3>
@@ -849,7 +849,7 @@ function createMarkerForLocation(location) {
               <br>
                   <div class="popup-street-line">
                     <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
-                    <a href="#" class="navigation-icon" title="${getTooltip('tooltips.routeToMakerspace')}">
+                    <a href="#" class="navigation-icon" aria-label="${getTooltip('tooltips.routeToMakerspace')}" role="tooltip" data-microtip-position="bottom">
                       <i></i>
                     </a>
                   </div>
