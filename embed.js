@@ -221,11 +221,11 @@ class EmbedMapExtended {
       <div style="--status-color: ${statusColor};">
         <h3 id="style">${styleIconHtml}${space.style || ''}</h3>
         <div class="popup-title-row">
-          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank">
+          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" aria-label="${window.i18n ? window.i18n.t('tooltips.makerspaceId') : 'ID dieses Makerspaces'}: ${space.ID}" role="tooltip" data-microtip-position="top">
             <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
           </a>
         </div>
-        ${space.weekly && space.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); const _tipLine1 = (_isToday ? _t('weekly.today') + ' ' : '') + _t('weekly.openMeeting'); const _tipLine2 = _t('weekdays.' + space.weekly.weekday) + ' — ' + _timeStr + _suf; return `<div class="popup-weekly" title="${_tipLine1}&#013;${_tipLine2}"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+        ${space.weekly && space.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
         <br>
         <div class="popup-street-line">
           <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>

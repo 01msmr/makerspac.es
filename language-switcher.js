@@ -64,7 +64,9 @@ class LanguageSwitcher {
     const settingsButton = document.createElement('button');
     settingsButton.className = 'settings-gear-button-solo';
     settingsButton.innerHTML = '<i class="fas fa-gear"></i>';
-    settingsButton.title = this.t('title');
+    settingsButton.setAttribute('aria-label', this.t('title'));
+    settingsButton.setAttribute('role', 'tooltip');
+    settingsButton.setAttribute('data-microtip-position', 'left');
     settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSettingsPopover();

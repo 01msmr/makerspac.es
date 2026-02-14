@@ -795,15 +795,15 @@ function createMarkerForLocation(location) {
     const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
 
     if (location.isOpen === true) {
-      statusIconHtml = `<i class="fas fa-door-open" title="${getTooltip('tooltips.spaceOpen')}"></i> `;
+      statusIconHtml = `<i class="fas fa-door-open" aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom"></i> `;
       nameClass = 'space-open';
     }
     else if (location.isOpen === false) {
-      statusIconHtml = `<i class="fas fa-lock" title="${getTooltip('tooltips.spaceClosed')}"></i> `;
+      statusIconHtml = `<i class="fas fa-lock" aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom"></i> `;
       nameClass = 'space-closed';
     }
     else if (location.spaceapi && location.spaceapi.endpoint) {
-      statusIconHtml = `<i class="fas fa-question-circle" title="${getTooltip('tooltips.spaceStatusLoading')}"></i> `;
+      statusIconHtml = `<i class="fas fa-question-circle" aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom"></i> `;
       nameClass = 'space-unknown';
     }
 
@@ -838,14 +838,14 @@ function createMarkerForLocation(location) {
             <div style="--status-color: ${statusColor};">
               <h3 id="style">${styleIconHtml}${styleLabel}</h3>
               <div class="popup-title-row">
-                <a id="titleurl" href="${linkUrl}" target="_blank">
+                <a id="titleurl" href="${linkUrl}" target="_blank" aria-label="${getTooltip('tooltips.makerspaceId')}: ${location.ID}" role="tooltip" data-microtip-position="top">
                   <h3 class="${nameClass}" data-id="${location.ID}">
                     ${statusIconHtml}${location.name || 'Unnamed Space'}
                   </h3>
                 </a>
                 ${bookmarkIcon}
               </div>
-              ${location.weekly && location.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); const _tipLine1 = (_isToday ? _t('weekly.today') + ' ' : '') + _t('weekly.openMeeting'); const _tipLine2 = _t('weekdays.' + location.weekly.weekday) + ' — ' + _timeStr + _suf; return `<div class="popup-weekly" title="${_tipLine1}&#013;${_tipLine2}"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+              ${location.weekly && location.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
               <br>
                   <div class="popup-street-line">
                     <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>

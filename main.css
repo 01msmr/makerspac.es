@@ -26,8 +26,43 @@
   --hover-text-color: #666;
   --hover-text-color-active: #ccc;
 
+
+  --microtip-transition-duration: 0.1s;
+  --microtip-transition-delay: 0.15s;
+  --microtip-transition-easing: ease-out;
+  --microtip-font-size: 12px;
+  --microtip-font-weight: 600;
+  /* --microtip-text-transform: uppercase; */
+  --microtip-background-color: rgba(255,255,64,.9);
+  --microtip-color: black;
+  --microtip-border-color: black;
+  --micotip-shadow-color: rgba(0, 0, 0, 0.4);
+
   /* Space-Status-Farben werden von config.js gesetzt */
 }
+
+/* Microtip Farben (zentral ueberschrieben) */
+[aria-label][role~="tooltip"]::after {
+  font-family: 'Lato', sans-serif;
+  color: var(--microtip-color);
+  background: var(--microtip-background-color);
+  border: 1.5px solid var(--microtip-border-color);
+  box-shadow: .15em .1em .5em .1em var(--micotip-shadow-color);
+}
+
+/* Microtip Pfeil: SVG durch CSS-Border ersetzen */
+[aria-label][role~="tooltip"]::before {
+  background: none !important;
+  content: "" !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 6px solid transparent;
+}
+
+[role~="tooltip"][data-microtip-position|="top"]::before    { border-top: 8px solid var(--microtip-border-color); border-bottom: 0; margin-bottom: 3px; }
+[role~="tooltip"][data-microtip-position|="bottom"]::before { border-bottom: 8px solid var(--microtip-border-color); border-top: 0; margin-top: 3px; }
+[role~="tooltip"][data-microtip-position="left"]::before    { border-left: 8px solid var(--microtip-border-color); border-right: 0; margin-right: 3px; }
+[role~="tooltip"][data-microtip-position="right"]::before   { border-right: 8px solid var(--microtip-border-color); border-left: 0; margin-left: 3px; }
 
 /* *** Dark Mode Variables *** */
 @media (prefers-color-scheme: dark) {
@@ -664,7 +699,7 @@ text-decoration: none;
 
 
 .leaflet-popup-content-wrapper {
-  overflow: hidden;
+  overflow: visible;
   z-index: 800;
 
   /* Erhöht die maximal erlaubte Breite des Popups.
@@ -931,6 +966,8 @@ a#titleurl:hover h3.space-unknown .fas {
   font-size: 1.05em;
   font-weight: bold;
   margin-top: 8px;
+  cursor: help;
+  width: fit-content;
 }
 
 .country .fi {

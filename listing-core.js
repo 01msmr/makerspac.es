@@ -148,12 +148,13 @@
         return `<i class="${CONFIG.icons.status.unknown} door-icon-unknown" style="opacity:0"></i> `;
       }
 
+      const _t = (k) => window.i18n ? window.i18n.t(k) : '';
       if (location.isOpen === true) {
-        return `<i class="${CONFIG.icons.status.open} door-icon-open" title="Space ist geöffnet"></i> `;
+        return `<i class="${CONFIG.icons.status.open} door-icon-open" aria-label="${_t('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="right"></i> `;
       } else if (location.isOpen === false) {
-        return `<i class="${CONFIG.icons.status.closed} door-icon-closed" title="Space ist geschlossen"></i> `;
+        return `<i class="${CONFIG.icons.status.closed} door-icon-closed" aria-label="${_t('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="right"></i> `;
       } else {
-        return `<i class="${CONFIG.icons.status.unknown} door-icon-unknown" title="Space-Status unbekannt"></i> `;
+        return `<i class="${CONFIG.icons.status.unknown} door-icon-unknown" aria-label="${_t('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="right"></i> `;
       }
     }
 
@@ -184,16 +185,11 @@
       if (!location.weekly || !location.weekly.time) return '';
       if (location.weekly.weekday !== new Date().getDay()) return '';
 
-      const weekdayAdverb = window.i18n ? window.i18n.t(`weekdays.${location.weekly.weekday}`) : '';
-      const timeStr = this.formatWeeklyTime(location.weekly.time);
-      const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
       const todayLabel = window.i18n ? window.i18n.t('weekly.today') : 'heute';
-      const openMeeting = window.i18n ? window.i18n.t('weekly.openMeeting') : 'offenes Treffen:';
-      const titleLine1 = `${todayLabel} ${openMeeting}`;
-      const titleLine2 = `${weekdayAdverb} — ${timeStr}${timeSuffix}`;
-      const title = `${titleLine1}&#013;${titleLine2}`;
-
-      return `<span class="listing-meeting-today" title="${title}"><i class="${CONFIG.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
+      const weeklyTooltip = window.i18n ? window.i18n.t('weekly.tooltip') : 'wöchentliches Treffen';
+      const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
+      const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
+      return `<span class="listing-meeting-today" aria-label="${weeklyTooltip}: ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="${CONFIG.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

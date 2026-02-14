@@ -30,6 +30,9 @@
   <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
 
   <!-- CSS (main.css imports: listing-core.css, search.css, nearby.css, styles-autocomplete.css) -->
+  <!-- Microtip Tooltips -->
+  <link rel="stylesheet" href="libs/microtip.css" />
+
   <link rel="stylesheet" type="text/css" href="main.css" />
 
   <!-- Flag Icons -->
@@ -118,23 +121,18 @@
     });
   </script>
 
+
   <!-- Consent + Bookmark-System -->
   <script src="datasync.js"></script> <!-- ConsentManager muss VOR bookmark-manager.js kommen -->
   <script src="bookmark-manager.js"></script>
 
   <script src="language-switcher.js"></script>
 
-  <!-- ✨ NEU: Refaktorisierte Module -->
   <script src="listing-core.js"></script>
   <script src="zoom-manager.js"></script>
   <script src="search-filter.js"></script>   <!-- Filter-Logik -->
   <script src="search-header.js"></script>   <!-- Pills, Autocomplete, Header -->
   <script src="nearby-header.js"></script>
-
-  <!-- ALT: DEAKTIVIERT für Test der Refaktorisierung -->
-  <!-- <script src="style-filter.js"></script> -->
-  <!-- <script src="search.js"></script> -->
-  <!-- <script src="nearby-spaces.js"></script> -->
 
   <!-- ✅ Embed-Modus Handler (muss VOR map.js geladen werden) -->
   <script src="embed.js"></script>
@@ -144,25 +142,6 @@
 
   <script type="module" src="map.js"></script>
 
-  <!-- ✨ Scroll-Reset für User Guide und Add Makerspace -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const userGuide = document.querySelector('.user-guide');
-      const addMakerspace = document.querySelector('.add-makerspace');
-
-      if (userGuide) {
-        userGuide.addEventListener('mouseleave', () => {
-          userGuide.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-
-      if (addMakerspace) {
-        addMakerspace.addEventListener('mouseleave', () => {
-          addMakerspace.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-    });
-  </script>
 </body>
 
 </html>
