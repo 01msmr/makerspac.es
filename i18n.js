@@ -143,7 +143,7 @@ class I18n {
     }
 
     // Return translation for current language
-    if (value && typeof value === 'object' && value[this.currentLang]) {
+    if (value && typeof value === 'object' && this.currentLang in value) {
       return value[this.currentLang];
     }
 
