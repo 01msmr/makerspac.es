@@ -80,6 +80,16 @@ a {
   color: #333 !important;
 }
 
+/* Badge nach rechts schieben */
+.embed-dropdown .listing-item-address {
+  width: 100%;
+}
+
+.embed-dropdown .listing-meeting-today {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 /* Badge im Basis-Zustand: HG: Statusfarbe, Text: Weiß */
 .embed-dropdown .space-item:not(.active) .listing-meeting-today {
   background: var(--status-color) !important;

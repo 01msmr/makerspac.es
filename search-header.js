@@ -709,7 +709,8 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     createActiveFiltersSection() {
-      const existingSection = this.suggestionsDropdown.querySelector('.active-filters-section');
+      const searchContainer = this.suggestionsDropdown.parentElement;
+      const existingSection = searchContainer.querySelector('.active-filters-section');
       if (existingSection) existingSection.remove();
 
       const filtersSection = document.createElement('div');
@@ -726,6 +727,11 @@
           label: window.i18n?.t('filter.status') || 'Status',
           options: CONFIG.filterCategories.doorState.options
         },
+        weekly: {
+          icon: CONFIG.icons.ui.calendarDay,
+          label: window.i18n?.t('filter.weekly') || 'Meeting',
+          options: [...CONFIG.filterCategories.weekly.options, 'any']
+        },
         country: {
           icon: CONFIG.icons.ui.flag,
           label: window.i18n?.t('filter.country') || 'Country',
@@ -739,17 +745,22 @@
         }
       };
 
-      Object.keys(categories).forEach(categoryKey => {
+      const categoryKeys = Object.keys(categories);
+      const midIndex = Math.floor(categoryKeys.length / 2);
+      categoryKeys.forEach((categoryKey, index) => {
         const config = categories[categoryKey];
-        const pill = this.createCategoryPill(categoryKey, config);
+        const position = index < midIndex ? 'top-right' : 'top-left';
+        const pill = this.createCategoryPill(categoryKey, config, position);
         filtersSection.appendChild(pill);
       });
 
       if (this.searchFilter?.hasActiveFilters()) {
         const clearAllPill = document.createElement('div');
         clearAllPill.classList.add('filter-pill', 'filter-pill-clear-all');
+        clearAllPill.setAttribute('aria-label', window.i18n?.t('filter.clearAll') || 'Clear all filters');
+        clearAllPill.setAttribute('role', 'tooltip');
+        clearAllPill.setAttribute('data-microtip-position', 'top-right');
         clearAllPill.innerHTML = `<i class="${CONFIG.icons.ui.close}"></i>`;
-        clearAllPill.title = 'Clear all filters';
         clearAllPill.addEventListener('click', (e) => {
           e.stopPropagation();
           this.clearAllFilters();
@@ -757,13 +768,16 @@
         filtersSection.appendChild(clearAllPill);
       }
 
-      this.suggestionsDropdown.insertBefore(filtersSection, this.suggestionsDropdown.firstChild);
+      searchContainer.insertBefore(filtersSection, this.suggestionsDropdown);
     }
 
-    createCategoryPill(categoryKey, config) {
+    /* === ORIGINAL createCategoryPill (mit Text-Labels) ===
+    createCategoryPill(categoryKey, config, microtipPosition = 'top-left') {
       const pill = document.createElement('div');
       pill.classList.add('filter-pill');
       pill.dataset.category = categoryKey;
+      pill.setAttribute('role', 'tooltip');
+      pill.setAttribute('data-microtip-position', microtipPosition);
 
       const activeFilter = this.getActiveFilterForCategory(categoryKey);
 
@@ -777,28 +791,83 @@
         if (categoryKey === 'bookmarks' && config.iconOnly) {
           const bookmarkCount = window.bookmarkManager?.getCount() || 0;
           pill.innerHTML = `<i class="${config.icon}"></i>`;
-          pill.title = `${config.label} (${bookmarkCount})`;
+          pill.setAttribute('aria-label', `${config.label} (${bookmarkCount})`);
         } else if (categoryKey === 'country') {
           const countryCode = CONFIG.getCountryCode(activeFilter);
           pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
+          pill.setAttribute('aria-label', config.label);
         } else if (categoryKey === 'style') {
           const styleIconClass = CONFIG.getStyleIcon(activeFilter);
           const translatedStyle = this.translateFilterValue('style', activeFilter);
           pill.innerHTML = styleIconClass
             ? `<i class="${styleIconClass}"></i> ${translatedStyle}`
             : `<i class="${config.icon}"></i> ${translatedStyle}`;
+          pill.setAttribute('aria-label', config.label);
         } else {
           const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
           pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
+          pill.setAttribute('aria-label', config.label);
         }
       } else {
         pill.classList.add('filter-pill-passive');
         if (categoryKey === 'bookmarks' && config.iconOnly) {
           const bookmarkCount = window.bookmarkManager?.getCount() || 0;
           pill.innerHTML = `<i class="${config.icon}"></i>`;
-          pill.title = `${config.label} (${bookmarkCount})`;
+          pill.setAttribute('aria-label', `${config.label} (${bookmarkCount})`);
         } else {
           pill.innerHTML = `<i class="${config.icon}"></i> ${config.label}`;
+          pill.setAttribute('aria-label', config.label);
+        }
+      }
+    === END ORIGINAL === */
+
+    createCategoryPill(categoryKey, config, microtipPosition = 'top-left') {
+      const pill = document.createElement('div');
+      pill.classList.add('filter-pill');
+      pill.dataset.category = categoryKey;
+      pill.setAttribute('role', 'tooltip');
+      pill.setAttribute('data-microtip-position', microtipPosition);
+
+      const activeFilter = this.getActiveFilterForCategory(categoryKey);
+
+      if (activeFilter) {
+        pill.classList.add('filter-pill-active');
+
+        if (categoryKey === 'doorState') {
+          pill.classList.add(`filter-pill-${activeFilter}`);
+        }
+
+        // Aktiver Filter: Icon + gewählter Wert anzeigen
+        if (categoryKey === 'bookmarks' && config.iconOnly) {
+          const bookmarkCount = window.bookmarkManager?.getCount() || 0;
+          pill.innerHTML = `<i class="${config.icon}"></i>`;
+          pill.setAttribute('aria-label', `${config.label} (${bookmarkCount})`);
+        } else if (categoryKey === 'country') {
+          const countryCode = CONFIG.getCountryCode(activeFilter);
+          pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
+          pill.setAttribute('aria-label', config.label);
+        } else if (categoryKey === 'style') {
+          const styleIconClass = CONFIG.getStyleIcon(activeFilter);
+          const translatedStyle = this.translateFilterValue('style', activeFilter);
+          pill.innerHTML = styleIconClass
+            ? `<i class="${styleIconClass}"></i> ${translatedStyle}`
+            : `<i class="${config.icon}"></i> ${translatedStyle}`;
+          pill.setAttribute('aria-label', config.label);
+        } else {
+          const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
+          pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
+          pill.setAttribute('aria-label', config.label);
+        }
+      } else {
+        // Passiv: nur Icon, Name nur im Microtip
+        pill.classList.add('filter-pill-passive');
+        if (categoryKey === 'bookmarks' && config.iconOnly) {
+          const bookmarkCount = window.bookmarkManager?.getCount() || 0;
+          pill.innerHTML = `<i class="${config.icon}"></i>`;
+          pill.setAttribute('aria-label', `${config.label} (${bookmarkCount})`);
+        } else {
+          pill.innerHTML = `<i class="${config.icon}"></i>`;
+          pill.setAttribute('aria-label', config.label);
         }
       }
 
@@ -830,6 +899,8 @@
         return selectedStyles.find(s => CONFIG.filterCategories.style.options.includes(s)) || null;
       } else if (categoryKey === 'doorState') {
         return selectedStyles.find(s => CONFIG.filterCategories.doorState.options.includes(s)) || null;
+      } else if (categoryKey === 'weekly') {
+        return selectedStyles.find(s => CONFIG.filterCategories.weekly.options.includes(s) || s === 'any') || null;
       }
 
       return null;
@@ -847,6 +918,9 @@
       } else if (categoryKey === 'doorState') {
         const doorMap = { 'open': 'doorState.open', 'closed': 'doorState.closed' };
         return window.i18n?.t(doorMap[value] || value) || value;
+      } else if (categoryKey === 'weekly') {
+        if (value === 'any') return window.i18n?.t('weekdays.any') || 'any day';
+        return window.i18n?.t(`weekdays.${value}`) || value;
       } else if (categoryKey === 'country') {
         return window.i18n?.t(`countries.${value}`) || value;
       }
@@ -927,6 +1001,10 @@
         const statusIconClass = CONFIG.getStatusIcon(option === 'open' ? true : false);
         optionItem.innerHTML = `<i class="${statusIconClass}" style="margin-right: 8px; width: 20px; text-align: center;"></i>`;
         optionItem.appendChild(document.createTextNode(this.translateFilterValue('doorState', option)));
+      } else if (categoryKey === 'weekly') {
+        const label = this.translateFilterValue('weekly', option);
+        const todayMarker = (option !== 'any' && parseInt(option) === new Date().getDay()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
+        optionItem.innerHTML = `<i class="${CONFIG.icons.ui.calendarDay}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}${todayMarker}`;
       }
 
       const activeFilter = this.getActiveFilterForCategory(categoryKey);
@@ -950,6 +1028,11 @@
       if (categoryKey === 'bookmarks' && option === 'bookmarked') {
         const isActive = this.searchFilter?.getSelectedStyles().includes('bookmarked');
         this.searchFilter?.setStyleFilter('bookmarked', !isActive);
+      } else if (categoryKey === 'weekly') {
+        // Clear all weekday options + 'any'
+        CONFIG.filterCategories.weekly.options.forEach(opt => this.searchFilter?.setStyleFilter(opt, false));
+        this.searchFilter?.setStyleFilter('any', false);
+        this.searchFilter?.setStyleFilter(option, true);
       } else {
         const categoryOptions = CONFIG.filterCategories[categoryKey]?.options || [];
         categoryOptions.forEach(opt => {
@@ -977,6 +1060,9 @@
       categoryOptions.forEach(opt => {
         this.searchFilter?.setStyleFilter(opt, false);
       });
+      if (categoryKey === 'weekly') {
+        this.searchFilter?.setStyleFilter('any', false);
+      }
 
       this.triggerFilterUpdate();
     }

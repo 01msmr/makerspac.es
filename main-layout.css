@@ -1,0 +1,130 @@
+/* ═════════════════════════════════════════════════════════
+   MAIN-LAYOUT.CSS – CSS Variables, Page Layout, Utilities
+   ═════════════════════════════════════════════════════════ */
+
+/* *** CSS Variables für Light Mode (Default) *** */
+:root {
+  --title-background: rgba(111, 233, 166, 1);
+  --nearby-title: rgba(111, 233, 166, 0.66);
+  --bg-color: white;
+  --text-color: black;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --dropdown-bg: white;
+  --dropdown-alt-bg: #f6f6f6;
+  --dropdown-border: #bbb;
+  --dropdown-alt-border: #ccc;
+  --search-bg: white;
+  --search-opacity: 0.5;
+  --search-focus-opacity: 0.9;
+  --hover-text-color: #666;
+  --hover-text-color-active: #ccc;
+
+
+  --microtip-transition-duration: 0.1s;
+  --microtip-transition-delay: 0.15s;
+  --microtip-transition-easing: ease-out;
+  --microtip-font-size: 12px;
+  --microtip-font-weight: 600;
+  /* --microtip-text-transform: uppercase; */
+  --microtip-background-color: rgba(255,255,32,.9);
+  --microtip-color: black;
+  --microtip-border-color: black;
+  --micotip-shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* Space-Status-Farben werden von config.js gesetzt */
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.title-bar {
+  position: absolute;
+  z-index: 401;
+  left: 1em;
+  top: 1em;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.title {
+  font-family: 'Lato', sans-serif;
+  color: blue;
+  background-color: var(--title-background);
+  padding: .25em .75em .25em .50em;
+  border-radius: .6em;
+  border: .30em dashed rgba(256, 256, 256, .77);
+  box-shadow: .2em -.1em .6em .35em var(--shadow-color);
+  font-weight: bold;
+  font-size: 1.7em;
+  /* opacity: 0.4; */
+  transition: box-shadow 0.75s ease-out;
+}
+
+.title:hover {
+  box-shadow: .2em -.1em .6em .35em transparent;
+  /* opacity: 0.25; */
+  /* color: var(--space-hover) */
+  /* transition: box-shadow 1.25s ease-out; */
+  /* filter: invert(1) hue-rotate(180deg) brightness(0.55) contrast(.8) saturate(0.75); */
+  outline: 1px solid #666666;
+}
+.title-bar a {
+text-decoration: none;
+}
+
+.title-tools {
+  position: relative;
+  top: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  z-index: 404;
+}
+
+.title-tools a {
+  border-radius: 0.3em;
+  align-items: center;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  vertical-align: auto;
+  color: rgba(0, 0, 255, .3);
+  background-color: var(--title-background);
+  font-size: 1.7em;
+  text-decoration: none;
+  opacity: 0.6;
+  transition: color, box-shadow, 0.15s ease-in;
+  padding: 0.1em 0em;
+}
+
+.title-tools a:hover {
+  color: rgba(0, 0, 255, .8);
+  box-shadow: 2px 1px 14px rgba(0, 0, 0, 0.9);
+  opacity: 1;
+}
+
+
+.title.popup-active {
+  opacity: 0.12;
+  transition: opacity 0.25s ease-in-out;
+}
+
+
+/* Utility-Klasse zum Ausblenden */
+.is-hidden {
+  display: none !important;
+}

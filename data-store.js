@@ -1,12 +1,12 @@
-// language-switcher.js - FINAL: Flaggen in 2. Zeile, Einzeltoggle für Clustering
+// data-store.js - Settings: Sprache, Farbschema, Clustering, Bookmarks, Consent
 
-class LanguageSwitcher {
+class DataStore {
   constructor() {
     // ✅ Lade Sprache SOFORT aus localStorage (synchron!)
     const savedLang = window.consent.get('preferred_language');
     this.currentLanguage = savedLang || 'de'; // Fallback zu 'de'
 
-    console.log('🔧 LanguageSwitcher constructor:');
+    console.log('🔧 DataStore constructor:');
     console.log('   - savedLang from localStorage:', savedLang);
     console.log('   - this.currentLanguage set to:', this.currentLanguage);
 
@@ -502,4 +502,5 @@ class LanguageSwitcher {
 }
 
 // Initialize
-window.languageSwitcher = new LanguageSwitcher();
+window.dataStore = new DataStore();
+// window.languageSwitcher = window.dataStore; // Rückwärtskompatibilität

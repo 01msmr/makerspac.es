@@ -44,7 +44,7 @@
 
 [aria-label][role~="tooltip"]::after {
   background: rgba(17, 17, 17, .9);
-  border-radius: 4px;
+  border-radius: 6px;
   color: #ffffff;
   content: attr(aria-label);
   font-size: var(--microtip-font-size, 13px);

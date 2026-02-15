@@ -772,7 +772,7 @@ export class RoutingManager {
       const bounds = L.latLngBounds(
         locations.map(loc => [loc.loc.lat, loc.loc.long])
       );
-      window.map.fitBounds(bounds, { padding: [50, 50] });
+      window.map.fitBounds(bounds, { padding: [12, 12] });
     }
   }
 

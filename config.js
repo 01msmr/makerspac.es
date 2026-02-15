@@ -146,6 +146,10 @@
       icon: 'fas fa-door-open',
       options: ['open', 'closed']
     },
+    weekly: {
+      icon: 'fas fa-calendar-day',
+      options: ['1', '2', '3', '4', '5', '6', '0']  // Mon-Sun
+    },
     country: {
       icon: 'fas fa-flag',
       options: [] // Wird dynamisch befüllt

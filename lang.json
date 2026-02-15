@@ -11,7 +11,7 @@
     },
     "status": {
       "de": "Status",
-      "en": "status",
+      "en": "state",
       "fr": "statut",
       "it": "stato",
       "nl": "status",
@@ -35,6 +35,15 @@
       "nl": "favorieten",
       "da": "favoritter",
       "uk": "улюблені"
+    },
+    "weekly": {
+      "de": "Tag",
+      "en": "day",
+      "fr": "jour",
+      "it": "giorno",
+      "nl": "dag",
+      "da": "dag",
+      "uk": "день"
     },
     "clearAll": {
       "de": "alle Filter löschen",
@@ -429,13 +438,13 @@
       "uk": "цей мейкерспейс: ID"
     },
     "routeToMakerspace": {
-      "de": "LINKS: Route zum Makerspace /// RECHTS: wechsle Karten-Anbieter",
-      "en": "LEFT: route to makerspace /// RIGHT: switch map provider",
-      "fr": "GAUCHE: itinéraire vers le makerspace /// DROITE: changer de fournisseur",
-      "it": "SINISTRA: percorso verso il makerspace /// DESTRA: cambia fornitore",
-      "nl": "LINKS: route naar makerspace /// RECHTS: wissel kaartaanbieder",
-      "da": "VENSTRE: rute til makerspace /// HØJRE: skift kortudbyder",
-      "uk": "ЛІВА: маршрут до мейкерспейсу /// ПРАВА: змінити картпровайдера"
+      "de": "> zum Makerspace    >> Karten-Anbieter wechseln",
+      "en": "> to makerspace    >> switch map provider",
+      "fr": "> vers le makerspace    >> changer de fournisseur",
+      "it": "> verso il makerspace    >> cambia fornitore",
+      "nl": "> naar makerspace    >> wissel kaartaanbieder",
+      "da": "> til makerspace    >> skift kortudbyder",
+      "uk": "> до мейкерспейсу    >> змінити картпровайдера"
     },
     "addBookmark": {
       "de": "Zu Favoriten hinzufügen",
@@ -897,7 +906,7 @@
     },
     "countText": {
       "de": "Stil, Öffnungsstatus oder Land",
-      "en": "style, status or country",
+      "en": "style, state or country",
       "fr": "style, statut ou pays",
       "it": "stile, stato o paese",
       "nl": "stijl, status of land",
@@ -1172,6 +1181,15 @@
       "nl": "op zaterdag",
       "da": "om lørdagen",
       "uk": "щосуботи"
+    },
+    "any": {
+      "de": "beliebig",
+      "en": "any day",
+      "fr": "n'importe quel jour",
+      "it": "qualsiasi giorno",
+      "nl": "elke dag",
+      "da": "enhver dag",
+      "uk": "будь-який день"
     }
   },
   "weekdaysShort": {

@@ -231,7 +231,7 @@ class EmbedMapExtended {
             <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
           </a>
         </div>
-        ${space.weekly && space.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+        ${space.weekly && space.weekly.time && space.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
         <br>
         <div class="popup-street-line">
           <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>
@@ -265,7 +265,7 @@ class EmbedMapExtended {
       <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
     // Weekly Meeting Badge
     let meetingHtml = '';
-    if (space.weekly && space.weekly.time && space.weekly.weekday === new Date().getDay()) {
+    if (space.weekly && space.weekly.time && space.weekly.weekday <= 6 && space.weekly.weekday === new Date().getDay()) {
       const _t = (k) => window.i18n ? window.i18n.t(k) : '';
       const todayLabel = _t('weekly.today') || 'heute';
       const weeklyTooltip = _t('weekly.tooltip') || 'wöchentliches Treffen';

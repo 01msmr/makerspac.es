@@ -185,7 +185,12 @@
       const selectedNormalStyles = new Set();
       const selectedStateFilters = new Set();
       const selectedCountries = new Set();
+      const selectedWeekdays = new Set();
       let bookmarkFilterActive = false;
+      let weeklyAnyActive = false;
+
+      // Weekly-Optionen
+      const weeklyOptions = new Set(CONFIG.filterCategories.weekly?.options || []);
 
       // Alle Länder sammeln
       const allCountries = new Set();
@@ -199,8 +204,12 @@
       this.selectedStyles.forEach(style => {
         if (style === 'bookmarked') {
           bookmarkFilterActive = true;
+        } else if (style === 'any') {
+          weeklyAnyActive = true;
         } else if (style === 'open' || style === 'closed') {
           selectedStateFilters.add(style);
+        } else if (weeklyOptions.has(style)) {
+          selectedWeekdays.add(parseInt(style));
         } else if (allCountries.has(style)) {
           selectedCountries.add(style);
         } else {
@@ -233,11 +242,19 @@
         const countryMatch = selectedCountries.size === 0 ||
           (locationCountry && selectedCountries.has(locationCountry));
 
+        // Weekly-Match
+        let weeklyMatch = true;
+        if (weeklyAnyActive) {
+          weeklyMatch = !!location.weekly?.time && location.weekly.weekday <= 6;
+        } else if (selectedWeekdays.size > 0) {
+          weeklyMatch = location.weekly?.weekday != null && selectedWeekdays.has(location.weekly.weekday);
+        }
+
         // Bookmark-Match
         const bookmarkMatch = !bookmarkFilterActive || (bookmarkedIds && bookmarkedIds.has(location.ID));
 
         // AND zwischen Kategorien
-        return styleMatch && stateMatch && countryMatch && bookmarkMatch;
+        return styleMatch && stateMatch && countryMatch && weeklyMatch && bookmarkMatch;
       });
 
       // ═══════════════════════════════════════════════════════════════════════

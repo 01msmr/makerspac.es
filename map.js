@@ -845,7 +845,7 @@ function createMarkerForLocation(location) {
                 </a>
                 ${bookmarkIcon}
               </div>
-              ${location.weekly && location.weekly.time ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+              ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
               <br>
                   <div class="popup-street-line">
                     <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
@@ -860,8 +860,8 @@ function createMarkerForLocation(location) {
   }, {
     maxWidth: 440,
     minWidth: 160,
-    autoPanPaddingTopLeft: L.point(50, 50),
-    autoPanPaddingBottomRight: L.point(50, 80)
+    autoPanPaddingTopLeft: L.point(12, 12),
+    autoPanPaddingBottomRight: L.point(12, 54)
   });
   marker.on('popupopen', (e) => {
     // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!
@@ -919,6 +919,25 @@ function createMarkerForLocation(location) {
       if (isOverlapping) {
         logoElement.classList.add('popup-active');
       }
+    }
+
+    // Pan map if popup overlaps with active search dropdown
+    if (popupElement && !wasOpenedByHover) {
+      setTimeout(() => {
+        const dropdown = document.getElementById('suggestions-dropdown');
+        if (!dropdown || !dropdown.classList.contains('is-active')) return;
+        const searchContainer = dropdown.closest('.search-container');
+        if (!searchContainer) return;
+        const popupRect = popupElement.getBoundingClientRect();
+        const containerRect = searchContainer.getBoundingClientRect();
+        const isOverlapping = !(popupRect.right < containerRect.left ||
+          popupRect.left > containerRect.right ||
+          popupRect.bottom < containerRect.top ||
+          popupRect.top > containerRect.bottom);
+        if (isOverlapping) {
+          map.panBy([popupRect.right - containerRect.left + 12, 0], { animate: true, duration: 0.3 });
+        }
+      }, 350);
     }
 
     if (popupElement) {

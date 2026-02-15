@@ -182,7 +182,7 @@
      * Generiert das Meeting-Icon HTML (nur wenn Meeting heute ist)
      */
     getMeetingIconHtml(location) {
-      if (!location.weekly || !location.weekly.time) return '';
+      if (!location.weekly || !location.weekly.time || location.weekly.weekday > 6) return '';
       if (location.weekly.weekday !== new Date().getDay()) return '';
 
       const todayLabel = window.i18n ? window.i18n.t('weekly.today') : 'heute';
@@ -557,10 +557,8 @@
 
       // scroll-padding-top aus CSS lesen (deckt sticky-Header ab), Fallback auf padding-top
       const style = getComputedStyle(container);
-      const scrollPadding = parseFloat(style.scrollPaddingTop);
-      const topOffset = (!isNaN(scrollPadding) && scrollPadding > 0)
-        ? scrollPadding
-        : (parseFloat(style.paddingTop) || 0);
+      const scrollPadding = parseFloat(style.scrollPaddingTop) || 0;
+      const topOffset = scrollPadding > 0 ? scrollPadding : (parseFloat(style.paddingTop) || 0);
       const visibleTop = containerRect.top + topOffset;
 
       if (itemRect.top < visibleTop) {

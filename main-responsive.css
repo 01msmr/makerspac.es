@@ -1,0 +1,324 @@
+/* ═════════════════════════════════════════════════════════
+   MAIN-RESPONSIVE.CSS – Dark Mode, Color Schemes,
+                          Responsive & High Contrast
+   ═════════════════════════════════════════════════════════ */
+
+
+/* ===================================
+   DARK MODE – CSS Variables
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --border-color: #444;
+    --shadow-color: rgba(0, 0, 0, 0.7);
+    --dropdown-bg: #2a2a2a;
+    --dropdown-border: #555;
+    --dropdown-alt-bg: #333;
+    --dropdown-alt-border: #444;
+    --search-bg: #2a2a2a;
+    --search-opacity: 0.9;
+    --search-focus-opacity: 1;
+    --hover-text-color: #aaa;
+    --hover-text-color-active: #ddd;
+
+    /* Space-Farben werden von config.js gesetzt */
+  }
+}
+
+
+/* ===================================
+   MANUAL COLOR SCHEME OVERRIDES
+   =================================== */
+
+/* Dark Mode per Attribute */
+[data-color-scheme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --border-color: #444;
+  --shadow-color: rgba(0, 0, 0, 0.7);
+  --dropdown-bg: #2a2a2a;
+  --dropdown-border: #555;
+  --dropdown-alt-bg: #333;
+  --dropdown-alt-border: #444;
+  --search-bg: #2a2a2a;
+  --search-opacity: 0.9;
+  --search-focus-opacity: 1;
+  --hover-text-color: #aaa;
+  --hover-text-color-active: #ddd;
+}
+
+[data-color-scheme="light"] {
+  --bg-color: white;
+  --text-color: black;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --dropdown-bg: white;
+  --dropdown-alt-bg: #f6f6f6;
+  --dropdown-border: #ddd;
+  --dropdown-alt-border: #eee;
+  --search-bg: white;
+  --search-opacity: 0.3;
+  --search-focus-opacity: 0.9;
+  --hover-text-color: #666;
+  --hover-text-color-active: #ccc;
+}
+
+
+/* ===================================
+   DARK MODE – Settings
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  .settings-gear-button-solo {
+    background: var(--dropdown-bg);
+  }
+
+  .settings-header {
+    background: var(--dropdown-bg);
+  }
+}
+
+
+/* ===================================
+   DARK MODE – Leaflet Popups
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background-color: rgba(60, 60, 60, 0.95);
+    color: var(--text-color);
+  }
+
+  .leaflet-popup-content h3 {
+    color: var(--text-color) !important;
+  }
+
+  .leaflet-popup-content a {
+    color: #66b3ff !important;
+  }
+
+  /* URL-Farbe beim Hover auf schwarz im Dark Mode */
+  .leaflet-popup-content a:not(.navigation-icon):hover {
+    color: black !important;
+  }
+
+}
+
+
+/* ===================================
+   DARK MODE – Map Filter
+   =================================== */
+
+#map.dark-mode-map .maplibregl-canvas-container canvas {
+  filter: invert(1) hue-rotate(150deg) brightness(0.55) contrast(.8) saturate(0.75);
+}
+
+
+/* ===================================
+   DARK MODE – Navigation Icons
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  .popup-street-line.status-open .navigation-icon {
+    color: #00bb00;
+  }
+
+  .popup-street-line.status-closed .navigation-icon {
+    color: #ff5555;
+  }
+
+  .popup-street-line.status-unknown .navigation-icon {
+    color: #ffaa00;
+  }
+
+  .popup-street-line.status-default .navigation-icon {
+    color: #66b3ff;
+  }
+}
+
+
+/* ===================================
+   HIGH CONTRAST – Navigation Icons
+   =================================== */
+
+@media (prefers-contrast: high) {
+  .popup-street-line.status-open .navigation-icon {
+    color: #008800;
+  }
+
+  .popup-street-line.status-closed .navigation-icon {
+    color: #cc0000;
+  }
+
+  .popup-street-line.status-unknown .navigation-icon {
+    color: #ff6600;
+  }
+
+  .popup-street-line.status-default .navigation-icon {
+    color: #0000dd;
+  }
+}
+
+
+/* ===================================
+   DARK MODE – Bookmark Sync
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  .sync-btn-secondary {
+    background: #444444;
+    color: #aaaaaa;
+  }
+
+  .sync-btn-secondary:hover {
+    background: #555555;
+    color: #cccccc;
+  }
+
+  .sync-qr-container {
+    background: white;
+  }
+}
+
+
+/* ===================================
+   DARK MODE – Consent Overlay
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  .consent-overlay.visible {
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .consent-sun {
+    background:
+      radial-gradient(circle at 25% 20%, rgba(255, 240, 150, 0.5) 0%, transparent 15%),
+      radial-gradient(circle at 70% 60%, rgba(255, 200, 50, 0.4) 0%, transparent 20%),
+      radial-gradient(circle at 55% 30%, rgba(255, 220, 80, 0.45) 0%, transparent 10%),
+      radial-gradient(circle at 40% 40%, #ffe082, #ffb300 60%, #e65100);
+    box-shadow:
+      0 0 60px rgba(255, 160, 0, 0.6),
+      0 0 120px rgba(255, 140, 0, 0.2);
+  }
+
+  .consent-sun-text {
+    color: #3e1a00;
+  }
+
+  .consent-earth {
+    background:
+      radial-gradient(ellipse at 25% 20%, rgba(60, 140, 60, 0.5) 0%, transparent 22%),
+      radial-gradient(ellipse at 60% 40%, rgba(50, 120, 50, 0.4) 0%, transparent 28%),
+      radial-gradient(ellipse at 40% 70%, rgba(60, 130, 60, 0.35) 0%, transparent 18%),
+      radial-gradient(ellipse at 50% 15%, rgba(180, 200, 220, 0.3) 0%, transparent 18%),
+      radial-gradient(circle at 45% 50%, #1a5a8a, #134d78 50%, #0c4068);
+    box-shadow:
+      inset -50px -5px 70px rgba(255, 190, 40, 0.2),
+      0 0 50px rgba(20, 80, 150, 0.65),
+      0 0 100px rgba(20, 80, 150, 0.3),
+      0 0 160px rgba(20, 80, 150, 0.15);
+  }
+}
+
+
+/* ═════════════════════════════════════════════════════════
+   RESPONSIVE – Mobile (max-width: 768px)
+   ═════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Language Switcher & Settings */
+  .language-switcher {
+    right: calc(1.5em + 300px + 8px);
+  }
+
+  .settings-popover {
+    min-width: 240px;
+  }
+
+  /* Navigation Icon */
+  .navigation-icon {
+    font-size: 1.2em;
+    right: 0px;
+  }
+
+  .navigation-icon:hover {
+    right: -15px;
+  }
+
+  .navigation-icon:hover::after {
+    display: none;
+  }
+
+  /* Bookmark Sync Dialog */
+  .sync-dialog {
+    max-width: 95%;
+    padding: 20px;
+  }
+
+  .sync-dialog h2 {
+    font-size: 1.2em;
+  }
+
+  .sync-url-input {
+    font-size: 0.75em;
+  }
+
+  .sync-notification {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+  }
+
+  /* Consent Overlay */
+  .consent-container {
+    width: 288px;
+    height: 288px;
+  }
+
+  .consent-sun {
+    width: 288px;
+    height: 288px;
+    padding: 40px;
+  }
+
+  .consent-sun-text {
+    font-size: 0.78em;
+  }
+
+  .consent-earth {
+    width: 320px;
+    height: 320px;
+    box-sizing: border-box;
+    top: -60px;
+    left: -190px;
+    padding: 45px 150px 45px 45px;
+  }
+
+  .consent-earth-text {
+    font-size: 0.7em;
+  }
+
+  .consent-moon {
+    width: 120px;
+    height: 120px;
+    bottom: -95px;
+    right: -55px;
+  }
+
+  .consent-moon-decline {
+    width: 173px;
+    height: 173px;
+    left: -129px;
+    top: -27px;
+  }
+
+  .consent-moon-label {
+    font-size: 0.88em;
+  }
+}
