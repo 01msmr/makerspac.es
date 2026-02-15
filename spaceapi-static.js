@@ -86,7 +86,7 @@ class StaticSpaceAPI {
     }
   }
 
-  // ✨ WICHTIG: getStatusIcon Funktion (wie in spaceapi-detect.js)
+  // Status-Icon basierend auf isOpen-Wert
   getStatusIcon(location, icons) {
     if (!icons) {
       console.error("⚠️ Icons object is undefined!");

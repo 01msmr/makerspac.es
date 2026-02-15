@@ -10,6 +10,26 @@ const TIMEOUT_MS = 45000; // 45 Sekunden
 const MAX_RETRIES = 3; // 3 Versuche
 const RETRY_DELAY_MS = 5000; // 5 Sekunden zwischen Versuchen
 
+// Helper: Parst SpaceAPI-JSON, Plaintext "0"/"1", ThingSpeak-JSON
+function parseOpenStatus(text) {
+  const trimmed = text.trim();
+  if (trimmed === '0') return false;
+  if (trimmed === '1') return true;
+  try {
+    const data = JSON.parse(trimmed);
+    const rawOpen = data.state?.open;
+    if (rawOpen !== undefined) {
+      if (rawOpen === 1 || rawOpen === true) return true;
+      if (rawOpen === 0 || rawOpen === false) return false;
+    }
+    if (data.field1 !== undefined) {
+      if (data.field1 === '1' || data.field1 === 1 || data.field1 === true) return true;
+      if (data.field1 === '0' || data.field1 === 0 || data.field1 === false) return false;
+    }
+  } catch (e) {}
+  return null;
+}
+
 // Helper: Sleep
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -62,12 +82,8 @@ async function fetchSpaceStatus(space) {
       };
     }
 
-    const data = await response.json();
-    const rawOpen = data.state?.open;
-    // Manche Spaces liefern 0/1 statt false/true
-    const isOpen = rawOpen === 1 || rawOpen === true ? true :
-      rawOpen === 0 || rawOpen === false ? false :
-        null;
+    const text = await response.text();
+    const isOpen = parseOpenStatus(text);
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
       isOpen === false ? '🔴 CLOSED' :
