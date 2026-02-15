@@ -63,7 +63,11 @@ async function fetchSpaceStatus(space) {
     }
 
     const data = await response.json();
-    const isOpen = data.state?.open;
+    const rawOpen = data.state?.open;
+    // Manche Spaces liefern 0/1 statt false/true
+    const isOpen = rawOpen === 1 || rawOpen === true ? true :
+      rawOpen === 0 || rawOpen === false ? false :
+        null;
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
       isOpen === false ? '🔴 CLOSED' :

@@ -21,7 +21,11 @@ class ConsentManager {
   }
 
   get(key) {
-    // SessionStore hat Priorität (aktuelle Session bei Ablehnung)
+    return localStorage.getItem(key);
+  }
+
+  /* === ORIGINAL get/set (consent-gesteuert) ===
+  get(key) {
     if (this._sessionStore.has(key)) return this._sessionStore.get(key);
     return localStorage.getItem(key);
   }
@@ -32,11 +36,17 @@ class ConsentManager {
     } else if (this._state === 'declined') {
       this._sessionStore.set(key, value);
     } else {
-      // unknown: während Init still ignorieren, danach Banner zeigen
       if (!this._ready) return;
       this._pendingWrites.push({ key, value });
       this._showBanner();
     }
+  }
+  === END ORIGINAL === */
+
+  // Alle Daten sind funktional notwendig (Sprache, Theme, Favoriten,
+  // Kartendienst) — kein Tracking. Daher immer in localStorage speichern.
+  set(key, value) {
+    localStorage.setItem(key, value);
   }
 
   remove(key) {

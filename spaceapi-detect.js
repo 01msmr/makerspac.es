@@ -140,8 +140,11 @@ class SimpleSpaceAPI {
       console.log('✅ Direct fetch SUCCESS for', apiEndpoint);
       console.log('🌐 Raw SpaceAPI response:', data);
 
-      const isOpen = data.state?.open;
-      console.log('🎯 Extracted isOpen:', isOpen, '(type:', typeof isOpen, ')');
+      const rawOpen = data.state?.open;
+      // Manche Spaces liefern 0/1 statt false/true
+      const isOpen = rawOpen === 1 || rawOpen === true ? true :
+        rawOpen === 0 || rawOpen === false ? false : null;
+      console.log('🎯 Extracted isOpen:', isOpen, '(raw:', rawOpen, typeof rawOpen, ')');
 
       return isOpen;
 
@@ -175,8 +178,11 @@ class SimpleSpaceAPI {
       const data = await response.json();
       console.log('✅ Proxy fetch SUCCESS for', apiEndpoint);
 
-      const isOpen = data.state?.open;
-      console.log('🎯 Extracted isOpen:', isOpen, '(type:', typeof isOpen, ')');
+      const rawOpen = data.state?.open;
+      // Manche Spaces liefern 0/1 statt false/true
+      const isOpen = rawOpen === 1 || rawOpen === true ? true :
+        rawOpen === 0 || rawOpen === false ? false : null;
+      console.log('🎯 Extracted isOpen:', isOpen, '(raw:', rawOpen, typeof rawOpen, ')');
 
       return isOpen;
 
