@@ -54,6 +54,10 @@ class ConsentManager {
     localStorage.removeItem(key);
   }
 
+  // ===================================================================
+  // === CONSENT BANNER — DEAKTIVIERT ===================================
+  // ===================================================================
+  /*
   _showBanner() {
     if (this._banner) return;
 
@@ -129,14 +133,12 @@ class ConsentManager {
 
   _removeBanner() {
     if (!this._banner) return;
-    // Exit-Animationen per Inline-Style (höchste Spezifität, überschreibt Enter-Animation)
     const earth = this._banner.querySelector('.consent-earth');
     const sun = this._banner.querySelector('.consent-sun');
     const moon = this._banner.querySelector('.consent-moon');
     if (moon) moon.style.animation = 'moon-exit 0.52s cubic-bezier(0.64, 0, 0.78, 0) both';
     if (earth) earth.style.animation = 'earth-exit 0.7s cubic-bezier(0.64, 0, 0.78, 0) 0.035s both';
     if (sun) sun.style.animation = 'sun-exit 0.6s cubic-bezier(0.64, 0, 0.78, 0) 0.07s both';
-    // Overlay-Hintergrund ausblenden
     this._banner.classList.remove('visible');
     document.body.classList.remove('consent-active');
     setTimeout(() => {
@@ -154,7 +156,6 @@ class ConsentManager {
     if (textEl) textEl.innerHTML = t('message');
     if (declineEl) declineEl.textContent = t('decline');
     if (acceptEl) acceptEl.textContent = t('accept');
-    // Earth (Details)
     const titleEl = this._banner.querySelector('.consent-earth-text strong');
     const items = this._banner.querySelectorAll('.consent-earth-text li');
     const noteEl = this._banner.querySelector('.consent-earth-note');
@@ -182,10 +183,33 @@ class ConsentManager {
     };
     return fallbacks[key] || key;
   }
+  */
+  // ===================================================================
+  // === CONSENT BANNER — ENDE ==========================================
+  // ===================================================================
 }
 
 // Globale Instanz
 window.consent = new ConsentManager();
+
+// Hash frühzeitig decodieren → localStorage schreiben, bevor BookmarkManager liest
+(function applySettingsFromHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#s=')) return;
+  const raw = hash.slice(3);
+  const [settings, bookmarks] = raw.split('-');
+  if (settings && settings.length >= 3) {
+    const cs = ['auto', 'light', 'dark'][parseInt(settings[0])];
+    const lang = settings.slice(1, 3);
+    if (cs) localStorage.setItem('color-scheme', cs);
+    if (lang.length === 2) localStorage.setItem('preferred_language', lang);
+  }
+  if (bookmarks) {
+    const ids = bookmarks.split('.').map(Number).filter(n => !isNaN(n) && n > 0);
+    if (ids.length) localStorage.setItem('makerspace_bookmarks', JSON.stringify(ids));
+  }
+  console.log('✅ Settings from URL hash applied');
+})();
 
 
 /* =================================================================

@@ -116,6 +116,11 @@ class BookmarkManager {
     this.toggleBookmark(locationId);
     this.updateBookmarkIcon(iconElement, locationId);
 
+    // Settings-Hash aktualisieren
+    if (window.dataStore?.updateSettingsHash) {
+      window.dataStore.updateSettingsHash();
+    }
+
     // Trigger Event für andere Komponenten (z.B. Filter-Update)
     window.dispatchEvent(new CustomEvent('bookmarksChanged', {
       detail: {
@@ -148,6 +153,11 @@ class BookmarkManager {
         totalCount: 0
       }
     }));
+
+    // Settings-Hash aktualisieren
+    if (window.dataStore?.updateSettingsHash) {
+      window.dataStore.updateSettingsHash();
+    }
 
     console.log('🗑️ All bookmarks cleared');
   }

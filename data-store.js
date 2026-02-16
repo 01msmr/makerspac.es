@@ -66,7 +66,7 @@ class DataStore {
     settingsButton.innerHTML = '<i class="fas fa-gear"></i>';
     settingsButton.setAttribute('aria-label', this.t('title'));
     settingsButton.setAttribute('role', 'tooltip');
-    settingsButton.setAttribute('data-microtip-position', 'left');
+    settingsButton.setAttribute('data-microtip-position', 'bottom-left');
     settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSettingsPopover();
@@ -85,6 +85,22 @@ class DataStore {
     this.settingsPopover = document.createElement('div');
     this.settingsPopover.className = 'settings-popover is-hidden'; // Standardmäßig unsichtbar
 
+    // 0. TITEL-ZEILE mit Close-Button
+    const titleHeader = document.createElement('div');
+    titleHeader.className = 'settings-header settings-title-header';
+    titleHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-gear"></i>
+        <span>${this.t('title')}</span>
+      </div>
+      <button class="settings-close-btn"><i class="fas fa-xmark"></i></button>
+    `;
+    titleHeader.querySelector('.settings-close-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.closeSettingsPopover();
+    });
+    this.settingsPopover.appendChild(titleHeader);
+
     // 1. SPRACHE SECTION - ZWEIZEILIG
     const languageHeader = document.createElement('div');
     languageHeader.className = 'settings-header settings-header-languages';
@@ -99,9 +115,10 @@ class DataStore {
       { code: 'uk', flag: 'ua', name: 'Українська' }
     ];
 
-    const languageIconsHTML = languages.map(lang => {
+    const languageIconsHTML = languages.map((lang, i) => {
       const isActive = lang.code === this.currentLanguage ? 'active' : '';
-      return `<span class="fi fi-${lang.flag} settings-icon-btn settings-flag-btn ${isActive}" data-lang="${lang.code}" title="${lang.name}"></span>`;
+      const pos = i >= languages.length - 2 ? 'bottom-left' : 'bottom';
+      return `<span class="fi fi-${lang.flag} settings-icon-btn settings-flag-btn ${isActive}" data-lang="${lang.code}" aria-label="${lang.name}" role="tooltip" data-microtip-position="${pos}"></span>`;
     }).join('');
 
     languageHeader.innerHTML = `
@@ -139,9 +156,9 @@ class DataStore {
         <span>${this.t('colorScheme')}</span>
       </div>
       <div class="settings-header-icons">
-        <i class="fas fa-adjust settings-icon-btn ${currentMode === 'auto' ? 'active' : ''}" data-mode="auto" title="${this.t('auto')}"></i>
-        <i class="far fa-circle settings-icon-btn ${currentMode === 'light' ? 'active' : ''}" data-mode="light" title="${this.t('light')}"></i>
-        <i class="fas fa-circle settings-icon-btn ${currentMode === 'dark' ? 'active' : ''}" data-mode="dark" title="${this.t('dark')}"></i>
+        <span class="settings-icon-btn ${currentMode === 'auto' ? 'active' : ''}" data-mode="auto" aria-label="${this.t('auto')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-adjust"></i></span>
+        <span class="settings-icon-btn ${currentMode === 'light' ? 'active' : ''}" data-mode="light" aria-label="${this.t('light')}" role="tooltip" data-microtip-position="bottom-left"><i class="far fa-circle"></i></span>
+        <span class="settings-icon-btn ${currentMode === 'dark' ? 'active' : ''}" data-mode="dark" aria-label="${this.t('dark')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-circle"></i></span>
       </div>
     `;
 
@@ -167,7 +184,7 @@ class DataStore {
         <span>${this.t('clustering')}</span>
       </div>
       <div class="settings-header-icons">
-        <i class="fas fa-toggle-on settings-icon-btn" id="clustering-toggle-btn"></i>
+        <span class="settings-icon-btn" id="clustering-toggle-btn" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-toggle-on"></i></span>
       </div>
     `;
 
@@ -183,38 +200,35 @@ class DataStore {
 
     this.settingsPopover.appendChild(clusteringHeader);
 
-    // 4. BOOKMARKS SECTION
-    const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
-    const bookmarksHeader = document.createElement('div');
-    bookmarksHeader.className = 'settings-header';
-    bookmarksHeader.innerHTML = `
+    // 4. SAVED SETTINGS SECTION
+    const settingsSection = document.createElement('div');
+    settingsSection.className = 'settings-header';
+    settingsSection.innerHTML = `
       <div class="settings-header-content">
-        <i class="fas fa-bookmark"></i>
-        <span>${bookmarkCount} ${this.t('bookmarks')}</span>
+        <i class="fas fa-floppy-disk"></i>
+        <span>${this.t('savedSettings')}</span>
       </div>
       <div class="settings-header-icons">
-        <i class="fas fa-download settings-icon-btn" data-action="share" title="${this.t('share')}"></i>
-        <i class="fas fa-upload settings-icon-btn" data-action="import" title="${this.t('import')}"></i>
-        <i class="fas fa-trash settings-icon-btn settings-icon-danger" data-action="delete" title="${this.t('deleteAll')}"></i>
+        <span class="settings-icon-btn" data-action="qr-settings" aria-label="${this.t('qrSettings')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-qrcode"></i></span>
+        <span class="settings-icon-btn settings-icon-danger" data-action="delete-all" aria-label="${this.t('deleteAll')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-trash"></i></span>
       </div>
     `;
 
-    bookmarksHeader.querySelector('[data-action="share"]').addEventListener('click', (e) => {
+    settingsSection.querySelector('[data-action="qr-settings"]').addEventListener('click', (e) => {
       e.stopPropagation();
-      this.handleBookmarkShare();
+      this.showSettingsQRCode();
     });
-    bookmarksHeader.querySelector('[data-action="import"]').addEventListener('click', (e) => {
+    settingsSection.querySelector('[data-action="delete-all"]').addEventListener('click', (e) => {
       e.stopPropagation();
-      this.handleBookmarkImport();
-    });
-    bookmarksHeader.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.handleBookmarkDelete();
+      this.showDeleteConfirmation(e.target.closest('.settings-icon-btn'));
     });
 
-    this.settingsPopover.appendChild(bookmarksHeader);
+    this.settingsPopover.appendChild(settingsSection);
 
-    // 5. STORAGE/CONSENT SECTION
+    // ===================================================================
+    // === STORAGE/CONSENT SECTION — DEAKTIVIERT ========================
+    // ===================================================================
+    /*
     const storageHeader = document.createElement('div');
     storageHeader.className = 'settings-header';
     storageHeader.id = 'settings-storage-section';
@@ -232,7 +246,6 @@ class DataStore {
 
     storageHeader.querySelector('[data-action="reset-consent"]').addEventListener('click', (e) => {
       e.stopPropagation();
-      // Settings schließen und Consent-Dialog direkt anzeigen
       this.toggleSettingsPopover();
       if (window.consent) {
         window.consent.resetAndAsk();
@@ -240,6 +253,10 @@ class DataStore {
     });
 
     this.settingsPopover.appendChild(storageHeader);
+    */
+    // ===================================================================
+    // === STORAGE/CONSENT SECTION — ENDE ===============================
+    // ===================================================================
     this.container.appendChild(this.settingsPopover);
 
     // Führe die Übersetzung und Zustands-Aktualisierung beim Erstellen aus
@@ -259,6 +276,9 @@ class DataStore {
     } else {
       // Öffnen
       this.settingsPopover.classList.remove('is-hidden');
+      // Zahnrad verstecken
+      const gearBtn = this.container.querySelector('.settings-gear-button-solo');
+      if (gearBtn) gearBtn.style.visibility = 'hidden';
       this.updateSettingsLabels();
       this.updateClusteringToggleUI();
 
@@ -278,7 +298,7 @@ class DataStore {
       // Click Outside
       setTimeout(() => {
         this.documentClickHandler = (e) => {
-          if (!this.container.contains(e.target)) {
+          if (!this.container.contains(e.target) && !e.target.closest('.sync-dialog-overlay')) {
             this.closeSettingsPopover();
           }
         };
@@ -292,6 +312,9 @@ class DataStore {
     if (this.settingsPopover) {
       this.settingsPopover.classList.add('is-hidden');
     }
+    // Zahnrad wieder einblenden
+    const gearBtn = this.container?.querySelector('.settings-gear-button-solo');
+    if (gearBtn) gearBtn.style.visibility = '';
     // Listener entfernen
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
@@ -305,34 +328,91 @@ class DataStore {
 
 
   // Bookmark Actions
-  handleBookmarkShare(retryCount = 0) {
-    const maxRetries = 50;
-    if (!window.bookmarkSync) {
-      if (retryCount < maxRetries) {
-        setTimeout(() => this.handleBookmarkShare(retryCount + 1), 100);
-        return;
-      }
-      return;
-    }
-    window.bookmarkSync.showExportDialog();
+  showSettingsQRCode() {
+    if (typeof QRCode === 'undefined') return;
+
+    const url = window.location.href;
+    const currentLang = window.currentLanguage || 'de';
+    const t = window.translations || {};
+
+    const dialog = document.createElement('div');
+    dialog.className = 'sync-dialog-overlay';
+    dialog.innerHTML = `
+      <div class="sync-dialog">
+        <h2>${t.settings?.qrTitle?.[currentLang] || 'Übergib Einstellungen und Lesezeichen an ein anderes Gerät'}</h2>
+        <div class="sync-section">
+          <div class="sync-qr-container" id="qr-settings-code"></div>
+        </div>
+        <div class="sync-actions">
+          <button class="sync-btn sync-btn-secondary" id="qr-settings-close">
+            ${t.sync?.close?.[currentLang] || 'Schließen'}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    new QRCode(document.getElementById('qr-settings-code'), {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    dialog.querySelector('#qr-settings-close').addEventListener('click', () => dialog.remove());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.remove();
+    });
   }
 
-  handleBookmarkImport(retryCount = 0) {
-    const maxRetries = 50;
-    if (!window.bookmarkSync) {
-      if (retryCount < maxRetries) {
-        setTimeout(() => this.handleBookmarkImport(retryCount + 1), 100);
-        return;
-      }
-      return;
-    }
-    window.bookmarkSync.showImportDialog();
-  }
+  showDeleteConfirmation(anchorEl) {
+    // Vorherige Bestätigung entfernen
+    document.querySelector('.settings-confirm-tooltip')?.remove();
 
-  handleBookmarkDelete() {
-    if (window.bookmarkManager && confirm(this.t('confirmDelete'))) {
-      window.bookmarkManager.clearAllBookmarks();
-    }
+    const tooltip = document.createElement('div');
+    tooltip.className = 'settings-confirm-tooltip';
+    tooltip.innerHTML = `
+      <span>${this.t('confirmDeleteSettings')}</span>
+      <button class="settings-confirm-yes">${this.t('confirmYes')}</button>
+    `;
+
+    document.body.appendChild(tooltip);
+
+    // Position über dem Icon (wie Microtip)
+    const rect = anchorEl.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+    tooltip.style.top = (rect.top - 8) + 'px';
+
+    requestAnimationFrame(() => tooltip.classList.add('show'));
+
+    tooltip.querySelector('.settings-confirm-yes').addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Bookmarks löschen
+      if (window.bookmarkManager) {
+        window.bookmarkManager.clearAllBookmarks();
+      }
+      // localStorage-Settings zurücksetzen
+      localStorage.removeItem('color-scheme');
+      localStorage.removeItem('preferred_language');
+      // Hash entfernen
+      history.replaceState(null, '', window.location.pathname);
+      // UI auf Defaults zurücksetzen
+      this.setColorScheme('auto');
+      this.changeLanguage('de');
+      tooltip.remove();
+    });
+
+    // Wegklicken = schließen
+    const dismiss = (e) => {
+      if (!tooltip.contains(e.target) && e.target !== anchorEl) {
+        tooltip.remove();
+        document.removeEventListener('click', dismiss, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss, true), 0);
   }
 
   // Color Scheme
@@ -351,6 +431,8 @@ class DataStore {
         language: this.currentLanguage
       });
     }
+
+    this.updateSettingsHash();
   }
 
   updateMapColorScheme(mode) {
@@ -396,6 +478,8 @@ class DataStore {
     document.dispatchEvent(new CustomEvent('languageChanged', {
       detail: { language: langCode }
     }));
+
+    this.updateSettingsHash();
   }
 
   refreshUI() {
@@ -413,17 +497,13 @@ class DataStore {
     if (!this.settingsPopover) return;
 
     const headers = this.settingsPopover.querySelectorAll('.settings-header-content span');
-    if (headers.length >= 4) {
-      headers[0].textContent = this.t('language');
-      headers[1].textContent = this.t('colorScheme');
-      headers[2].textContent = this.t('clustering');
-      const bookmarkCount = window.bookmarkManager ? window.bookmarkManager.getCount() : 0;
-      headers[3].textContent = `${bookmarkCount} ${this.t('bookmarks')}`;
-    }
     if (headers.length >= 5) {
-      headers[4].textContent = `${this.t('storage')}: ${this._getConsentStateText()}`;
+      headers[0].textContent = this.t('title');
+      headers[1].textContent = this.t('language');
+      headers[2].textContent = this.t('colorScheme');
+      headers[3].textContent = this.t('clustering');
+      headers[4].textContent = this.t('savedSettings');
     }
-    this.updateStorageSection();
 
     const allFlags = this.settingsPopover.querySelectorAll('[data-lang]');
     allFlags.forEach(flag => {
@@ -433,22 +513,20 @@ class DataStore {
     const lightBtn = this.settingsPopover.querySelector('[data-mode="light"]');
     const autoBtn = this.settingsPopover.querySelector('[data-mode="auto"]');
     const darkBtn = this.settingsPopover.querySelector('[data-mode="dark"]');
-    const shareBtn = this.settingsPopover.querySelector('[data-action="share"]');
-    const importBtn = this.settingsPopover.querySelector('[data-action="import"]');
-    const deleteBtn = this.settingsPopover.querySelector('[data-action="delete"]');
+    const qrBtn = this.settingsPopover.querySelector('[data-action="qr-settings"]');
+    const deleteBtn = this.settingsPopover.querySelector('[data-action="delete-all"]');
 
-    if (lightBtn) lightBtn.title = this.t('light');
-    if (autoBtn) autoBtn.title = this.t('auto');
-    if (darkBtn) darkBtn.title = this.t('dark');
-    if (shareBtn) shareBtn.title = this.t('share');
-    if (importBtn) importBtn.title = this.t('import');
-    if (deleteBtn) deleteBtn.title = this.t('deleteAll');
+    if (lightBtn) lightBtn.setAttribute('aria-label', this.t('light'));
+    if (autoBtn) autoBtn.setAttribute('aria-label', this.t('auto'));
+    if (darkBtn) darkBtn.setAttribute('aria-label', this.t('dark'));
+    if (qrBtn) qrBtn.setAttribute('aria-label', this.t('qrSettings'));
+    if (deleteBtn) deleteBtn.setAttribute('aria-label', this.t('deleteAll'));
 
-    // Clustering Title Update
+    // Clustering aria-label Update
     const toggleBtn = this.settingsPopover.querySelector('#clustering-toggle-btn');
     if (toggleBtn && window.mapUtils) {
       const isClusteringActive = window.mapUtils.isClusteringEnabled();
-      toggleBtn.title = isClusteringActive ? this.t('clusteringOff') : this.t('clusteringOn');
+      toggleBtn.setAttribute('aria-label', isClusteringActive ? this.t('clusteringOff') : this.t('clusteringOn'));
     }
   }
 
@@ -466,14 +544,15 @@ class DataStore {
 
     if (typeof isClusteringActive !== 'boolean') return;
 
+    const toggleIcon = toggleBtn.querySelector('i');
     if (isClusteringActive) {
       toggleBtn.classList.add('active'); // Hintergrund an
-      toggleBtn.classList.replace('fa-toggle-off', 'fa-toggle-on');
-      toggleBtn.title = this.t('clusteringOff'); // Tooltip sagt was beim Klick passiert
+      if (toggleIcon) toggleIcon.classList.replace('fa-toggle-off', 'fa-toggle-on');
+      toggleBtn.setAttribute('aria-label', this.t('clusteringOff')); // Tooltip sagt was beim Klick passiert
     } else {
       toggleBtn.classList.remove('active'); // Hintergrund aus (passiv)
-      toggleBtn.classList.replace('fa-toggle-on', 'fa-toggle-off');
-      toggleBtn.title = this.t('clusteringOn');
+      if (toggleIcon) toggleIcon.classList.replace('fa-toggle-on', 'fa-toggle-off');
+      toggleBtn.setAttribute('aria-label', this.t('clusteringOn'));
     }
   }
 
@@ -498,6 +577,72 @@ class DataStore {
     if (!savedLang && window.i18n && window.i18n.currentLang) {
       this.currentLanguage = window.i18n.currentLang;
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SETTINGS HASH — URL-basierte Settings-Persistenz (#s=...)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  encodeSettingsHash() {
+    const colorSchemes = ['auto', 'light', 'dark'];
+    const cs = colorSchemes.indexOf(window.consent.get('color-scheme') || 'auto');
+    const lang = window.consent.get('preferred_language') || 'de';
+
+    let hash = `#s=${Math.max(0, cs)}${lang}`;
+
+    const bookmarks = window.bookmarkManager?.getBookmarkedIds?.() || [];
+    if (bookmarks.length > 0) {
+      hash += '-' + bookmarks.slice().sort((a, b) => a - b).join('.');
+    }
+
+    return hash;
+  }
+
+  updateSettingsHash() {
+    clearTimeout(this._hashDebounce);
+    this._hashDebounce = setTimeout(async () => {
+      const hash = this.encodeSettingsHash();
+      history.replaceState(null, '', hash);
+
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+
+        const now = Date.now();
+        const isRapid = this._lastHashToastTime && (now - this._lastHashToastTime < 10000);
+        this._lastHashToastTime = now;
+
+        if (isRapid) {
+          const msg = this.t('linkCopiedNew') || '<b>neuen</b> Settings-Link kopiert';
+          this.showSettingsToast(msg);
+        } else {
+          const msg = this.t('linkCopied') || 'Für Lesezeichen: Settings-Link kopiert';
+          this.showSettingsToast(msg);
+        }
+      } catch (err) {
+        // Clipboard nicht verfügbar (z.B. HTTP, iframe)
+      }
+    }, 300);
+  }
+
+  showSettingsToast(msg) {
+    let toast = document.querySelector('.settings-hash-toast');
+    if (toast) {
+      toast.classList.remove('show', 'zoom-out');
+      clearTimeout(toast._hideTimer);
+    } else {
+      toast = document.createElement('div');
+      toast.className = 'settings-hash-toast';
+      document.body.appendChild(toast);
+    }
+
+    toast.innerHTML = msg;
+    requestAnimationFrame(() => toast.classList.add('show'));
+
+    toast._hideTimer = setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('zoom-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 }
 

@@ -30,8 +30,6 @@
       this.isInactive = false;
 
       // UI-State
-      this.isOverSearchUI = false;
-      this._isOverPopup = false;
       this._isPopoverDragging = false;
       this.isPillDragging = false;
       this._pendingReactivationId = null;
@@ -54,7 +52,6 @@
 
       this.createHint();
       this.setupEventListeners();
-      this.setupUIHoverTracking();
 
       console.log('✅ NearbyHeader initialized');
     }
@@ -90,12 +87,6 @@
       }, CONFIG.settings.hintShrinkMs);
     }
 
-    updateHintState() {
-      if (this.isOverSearchUI && this.hintElement) {
-        this.hintElement.style.opacity = '0';
-      }
-    }
-
     // ═══════════════════════════════════════════════════════════════════════════
     // EVENT-LISTENER
     // ═══════════════════════════════════════════════════════════════════════════
@@ -103,6 +94,12 @@
     setupEventListeners() {
       // Mausbewegung: Hint folgen
       document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+
+      // Searchbar-Fokus: Nearby schließen
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar) {
+        searchBar.addEventListener('focus', () => this.hide());
+      }
 
       // Rechtsklick: Nearby anzeigen
       this.map.on('contextmenu', (e) => {
@@ -149,38 +146,6 @@
       });
     }
 
-    setupUIHoverTracking() {
-      // Such-UI
-      const searchBar = document.getElementById('search-bar');
-      const dropdown = document.getElementById('suggestions-dropdown');
-
-      if (searchBar) {
-        searchBar.addEventListener('focus', () => this.hide());
-        searchBar.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
-        searchBar.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
-      }
-
-      if (dropdown) {
-        dropdown.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
-        dropdown.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
-      }
-
-      // Andere UI-Elemente
-      ['.title-bar', '.user-guide', '.add-makerspace', '.language-switcher'].forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el) {
-          el.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
-          el.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
-        }
-      });
-
-      // Leaflet Controls
-      document.querySelectorAll('.leaflet-control').forEach(control => {
-        control.addEventListener('mouseenter', () => { this.isOverSearchUI = true; this.updateHintState(); });
-        control.addEventListener('mouseleave', () => { this.isOverSearchUI = false; });
-      });
-    }
-
     handleMouseMove(e) {
       if (!this.hintElement) return;
 
@@ -188,11 +153,14 @@
       this.hintElement.style.left = (e.clientX + 8) + 'px';
       this.hintElement.style.top = (e.clientY + 8) + 'px';
 
-      // Popup-Hover prüfen
-      this._isOverPopup = e.target?.closest?.('.leaflet-popup') !== null;
+      // Nur auf der Map sichtbar (nicht auf UI-Elementen, Controls, Popups)
+      const mapContainer = document.getElementById('map');
+      const isOverMap = mapContainer && mapContainer.contains(e.target) &&
+                        !e.target.closest('.leaflet-control-container') &&
+                        !e.target.closest('.leaflet-popup');
 
-      // Sichtbarkeit
-      if (this.popoverElement || this.isOverSearchUI || this._isOverPopup || document.body.classList.contains('consent-active')) {
+      const settingsOpen = document.querySelector('.language-switcher .settings-popover:not(.is-hidden)');
+      if (this.popoverElement || !isOverMap || settingsOpen || document.body.classList.contains('consent-active')) {
         this.hintElement.style.opacity = '0';
         return;
       }
@@ -202,7 +170,7 @@
       // Fade nach Inaktivität
       clearTimeout(this.opacityTimer);
       this.opacityTimer = setTimeout(() => {
-        if (this.hintElement && !this.popoverElement && !this.isOverSearchUI && !this._isOverPopup) {
+        if (this.hintElement && !this.popoverElement) {
           this.hintElement.style.opacity = '0.3';
         }
       }, CONFIG.settings.hintFadeMs);

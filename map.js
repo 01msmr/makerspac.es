@@ -563,6 +563,15 @@ function setupMap() {
 
       currentMapLibreLayer.addTo(map);
 
+      // Suppress benign MapLibre GL tile parsing errors (null values in OpenFreeMap vector tiles)
+      const glMap = currentMapLibreLayer.getMaplibreMap();
+      if (glMap) {
+        glMap.on('error', (e) => {
+          if (e.error?.message?.includes('Expected value to be of type number')) return;
+          console.warn('MapLibre GL:', e.error?.message || e.error);
+        });
+      }
+
       window.currentMapLibreLayer = currentMapLibreLayer;
 
       const mapContainer = document.getElementById('map');

@@ -125,8 +125,9 @@ function loadSpaceAPIsFromLocations() {
     const locationsData = fs.readFileSync(locationsPath, 'utf8');
     const locations = JSON.parse(locationsData);
 
-    // Extrahiere alle Locations mit SpaceAPI UND nicht-leerem Endpoint
+    // Extrahiere alle Locations mit SpaceAPI UND nicht-leerem Endpoint (TEMPLATE ausschließen)
     const spacesWithAPI = locations.filter(loc =>
+      loc.name !== 'TEMPLATE' &&
       loc.spaceapi &&
       loc.spaceapi.endpoint &&
       loc.spaceapi.endpoint.trim() !== '' // ✨ Filtere auch leere Strings!

@@ -86,14 +86,15 @@
   font-family: Lato, sans-serif;
   position: absolute;
   right: 0;
-  top: calc(100% + 5px);
+  top: 0;
   background: var(--dropdown-bg);
   border-radius: 16px;
   box-shadow: 0 4px 12px 2px var(--shadow-color);
   min-width: 280px;
-  z-index: 1001;
-  overflow: hidden;
+  overflow: visible;
   animation: fadeIn 0.15s ease-out;
+  /* Kein eigener z-index → kein Stacking-Context → Microtips können das Popover überdecken.
+     Stacking kommt vom Parent .language-switcher (z-index: 1000). */
 }
 
 /* Settings Header */
@@ -104,6 +105,39 @@
   padding: 10px 14px;
   border-bottom: 1px solid var(--dropdown-border);
   background: var(--dropdown-alt-bg);
+  position: relative;
+}
+
+/* Hovered Tooltip-Section über Nachbar-Sections heben */
+.settings-header:has([role~="tooltip"]:hover) {
+  z-index: 2;
+}
+
+/* Titel-Zeile */
+.settings-title-header {
+  font-weight: 600;
+}
+
+.settings-title-header .settings-header-content i {
+  color: var(--text-color);
+}
+
+/* Close-Button (X) in der Titelzeile */
+.settings-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1em;
+  padding: 4px 6px;
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.settings-close-btn:hover {
+  opacity: 1;
+  background: var(--dropdown-border);
 }
 
 /* Zweizeilige Sprach-Sektion */
@@ -120,8 +154,13 @@
   width: 100%;
 }
 
+.settings-header:first-child {
+  border-radius: 16px 16px 0 0;
+}
+
 .settings-header:last-child {
   border-bottom: none;
+  border-radius: 0 0 16px 16px;
 }
 
 .settings-header-content {
@@ -196,6 +235,7 @@
 .settings-icon-btn:not(.settings-flag-btn):hover {
   background: var(--dropdown-border);
   transform: scale(1.15);
+  z-index: 1;
 }
 
 /* Active-Styling NUR für NICHT-Flaggen */
@@ -888,6 +928,7 @@ a#titleurl:hover h3.space-unknown .fas {
   width: 90%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
+  font-family: 'Lato', sans-serif;
 }
 
 .sync-dialog h2 {
@@ -1064,6 +1105,93 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .sync-pill i {
   margin: 0;
+}
+
+/* Settings Hash Toast (Microtip-Optik: gelb-schwarz) */
+.settings-hash-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: none;
+  padding: 6px 11px;
+  border-radius: 8px;
+  background: var(--microtip-background-color);
+  color: var(--microtip-color);
+  border: 3px solid var(--microtip-border-color);
+  font-family: 'Lato', sans-serif;
+  font-size: var(--microtip-font-size, 12px);
+  font-weight: var(--microtip-font-weight, 600);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.3s ease-in;
+  z-index: 10000;
+}
+
+.settings-hash-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.settings-hash-toast.zoom-out {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(2);
+}
+
+/* Settings Confirm Tooltip (Microtip-Stil) */
+.settings-confirm-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--microtip-background-color);
+  color: var(--microtip-color);
+  border: 3px solid var(--microtip-border-color);
+  font-family: 'Lato', sans-serif;
+  font-size: var(--microtip-font-size, 12px);
+  font-weight: var(--microtip-font-weight, 600);
+  white-space: pre-line;
+  text-align: center;
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.settings-confirm-tooltip.show {
+  opacity: 1;
+}
+
+.settings-confirm-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-top: 8px solid var(--microtip-border-color);
+  border-bottom: 0;
+}
+
+.settings-confirm-yes {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 16px;
+  border: 2px solid var(--microtip-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--microtip-color);
+  font-family: 'Lato', sans-serif;
+  font-size: var(--microtip-font-size, 12px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-confirm-yes:hover {
+  background: var(--microtip-color);
+  color: var(--microtip-background-color);
 }
 
 /* Notifications */
