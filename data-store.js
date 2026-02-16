@@ -66,7 +66,7 @@ class DataStore {
     settingsButton.innerHTML = '<i class="fas fa-gear"></i>';
     settingsButton.setAttribute('aria-label', this.t('title'));
     settingsButton.setAttribute('role', 'tooltip');
-    settingsButton.setAttribute('data-microtip-position', 'bottom-left');
+    settingsButton.setAttribute('data-microtip-position', 'left');
     settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSettingsPopover();
