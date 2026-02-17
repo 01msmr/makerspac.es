@@ -166,6 +166,24 @@ jobs:
               "datacheck.latest": today
             };
 
+            // Weekly (offenes Treffen)
+            const weekdayMap = {
+              "Sonntag / Sunday": 0,
+              "Montag / Monday": 1,
+              "Dienstag / Tuesday": 2,
+              "Mittwoch / Wednesday": 3,
+              "Donnerstag / Thursday": 4,
+              "Freitag / Friday": 5,
+              "Samstag / Saturday": 6
+            };
+            const weekdayRaw = getField("Wochentag des offenen Treffens (Optional)");
+            const weekday = weekdayMap[weekdayRaw] || 9;
+            const weeklyTime = getInt("Uhrzeit des offenen Treffens (Optional)", 0);
+            newEntry.weekly = {
+              "weekday": weekday,
+              "time": weeklyTime
+            };
+
             // Debug: Neuen Eintrag ausgeben
             console.log("=== NEW ENTRY ===");
             console.log(JSON.stringify(newEntry, null, 2));
