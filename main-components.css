@@ -242,14 +242,12 @@
 
 .settings-flag-btn:hover {
   opacity: 1 !important;
-  transform: scale(1.15);
   background-color: transparent !important;
 }
 
 /* Dark Mode & andere Icons: MIT active/hover */
 .settings-icon-btn:not(.settings-flag-btn):hover {
   background: var(--dropdown-border);
-  transform: scale(1.15);
   z-index: 1;
 }
 

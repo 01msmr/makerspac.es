@@ -32,35 +32,552 @@
     }
   },
   {
-    "name": "Toolbox Bodensee",
-    "ID": 1,
+    "name": "Metalab",
+    "ID": 234,
     "loc": {
-      "lat": 47.7126816,
-      "long": 9.3995537,
-      "plz": 88677,
-      "city": "Markdorf",
+      "lat": 48.2094862,
+      "long": 16.3561031,
+      "plz": 1010,
+      "city": "Wien",
       "street": {
-        "name": "Bergheimer Straße",
+        "name": "Rathausstraße",
         "number": 6,
         "ext": ""
       },
-      "country": "Germany"
+      "country": "Austria"
     },
-    "style": "for all",
+    "style": "",
     "link": {
-      "url": "https://www.toolbox-bodensee.de",
-      "text": "toolbox-bodensee.de"
+      "url": "https://metalab.at",
+      "text": "metalab.at"
     },
     "spaceapi": {
-      "endpoint": "https://toolbox-bodensee.de/toolboxbodensee.json"
+      "endpoint": "https://metalab.at/status.json"
     },
     "dates": {
-      "space.init": 20140301,
+      "space.init": 20010000,
       "datacheck.latest": 20250726
     },
     "weekly": {
-      "weekday": 4,
-      "time": 1900
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Happylab Wien",
+    "ID": 235,
+    "loc": {
+      "lat": 48.2194148,
+      "long": 16.4067915,
+      "plz": 1020,
+      "city": "Wien",
+      "street": {
+        "name": "Schönngasse",
+        "number": 15,
+        "ext": "-17"
+      },
+      "country": "Austria"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://www.happylab.at",
+      "text": "happylab.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Maker Austria",
+    "ID": 236,
+    "loc": {
+      "lat": 48.188289,
+      "long": 16.3467836,
+      "plz": 1050,
+      "city": "Wien",
+      "street": {
+        "name": "Schönbrunner Straße",
+        "number": 125,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://www.makeraustria.at",
+      "text": "makeraustria.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "HAND.WERK.STADT",
+    "ID": 237,
+    "loc": {
+      "lat": 48.0832519,
+      "long": 16.2993311,
+      "plz": 2340,
+      "city": "Mödling",
+      "street": {
+        "name": "Diplom-Ingenieur-Wilhelm-Haßlinger-Straße",
+        "number": 3,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "http://www.handwerkstadt.org",
+      "text": "handwerkstadt.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "/usr/space",
+    "ID": 238,
+    "loc": {
+      "lat": 47.9229905,
+      "long": 16.2119331,
+      "plz": 2544,
+      "city": "Leobersdorf",
+      "street": {
+        "name": "Mühlgasse",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.usrspace.at",
+      "text": "usrspace.at"
+    },
+    "spaceapi": {
+      "endpoint": "https://www.usrspace.at/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Segmentation Vault",
+    "ID": 239,
+    "loc": {
+      "lat": 48.2036763,
+      "long": 15.6201487,
+      "plz": 3100,
+      "city": "St. Pölten",
+      "street": {
+        "name": "Ludwig-Stöhr-Straße",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://segvault.space",
+      "text": "segvault.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "/dev/lol",
+    "ID": 240,
+    "loc": {
+      "lat": 48.3058349,
+      "long": 14.283851,
+      "plz": 4020,
+      "city": "Linz",
+      "street": {
+        "name": "Hofgasse",
+        "number": 19,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://devlol.org",
+      "text": "devlol.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://devlol.org/status/hackerspaceapi"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "otelo Linz",
+    "ID": 241,
+    "loc": {
+      "lat": 48.2492638,
+      "long": 14.3082813,
+      "plz": 4030,
+      "city": "Linz",
+      "street": {
+        "name": "Wüstenrotplatz",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.otelolinz.at",
+      "text": "otelolinz.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Steyr-Werke",
+    "ID": 242,
+    "loc": {
+      "lat": 48.0449155,
+      "long": 14.4167987,
+      "plz": 4400,
+      "city": "Steyr",
+      "street": {
+        "name": "Wieserfeldplatz",
+        "number": 11,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.steyr-werke.at",
+      "text": "steyr-werke.at"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "otelo Vorchdorf",
+    "ID": 243,
+    "loc": {
+      "lat": 48.0062999,
+      "long": 13.9231099,
+      "plz": 4655,
+      "city": "Vorchdorf",
+      "street": {
+        "name": "Schulstraße",
+        "number": 8,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://otelo.or.at/standort/vorchdorf",
+      "text": "otelo.or.at/standort/vorchdorf"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "CCC Salzburg",
+    "ID": 244,
+    "loc": {
+      "lat": 47.7940083,
+      "long": 13.0565329,
+      "plz": 5020,
+      "city": "Salzburg",
+      "street": {
+        "name": "Ulrike-Gschwandtner-Straße",
+        "number": 5,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://cccsbg.at",
+      "text": "cccsbg.at"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.sbg.chaostreff.at/status/json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "IT-Syndikat",
+    "ID": 245,
+    "loc": {
+      "lat": 47.257821,
+      "long": 11.3960576,
+      "plz": 6020,
+      "city": "Innsbruck",
+      "street": {
+        "name": "Tschamlerstraße",
+        "number": 3,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://it-syndikat.org",
+      "text": "it-syndikat.org"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.it-syndikat.org/api/status.php"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "eLab HTU Graz",
+    "ID": 246,
+    "loc": {
+      "lat": 47.0581771,
+      "long": 15.4594425,
+      "plz": 8010,
+      "city": "Graz",
+      "street": {
+        "name": "Inffeldgasse",
+        "number": 18,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "for students",
+    "link": {
+      "url": "https://htugraz.at/e-lab",
+      "text": "htugraz.at/e-lab"
+    },
+    "spaceapi": {
+      "endpoint": "https://doorothy.htu.tugraz.at/doorothy/elab/status.spaceapi"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20251230
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Makerspace Carinthia",
+    "ID": 247,
+    "loc": {
+      "lat": 46.6180671,
+      "long": 14.3171542,
+      "plz": 9020,
+      "city": "Klagenfurt am Wörthersee",
+      "street": {
+        "name": "Lastenstraße",
+        "number": 26,
+        "ext": ""
+      },
+      "country": "Austria"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://www.makerspace-carinthia.com",
+      "text": "makerspace-carinthia.com"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackerspace Brussels",
+    "ID": 248,
+    "loc": {
+      "lat": 50.8557647,
+      "long": 4.3198282,
+      "plz": 1080,
+      "city": "Molenbeek-Saint-Jean",
+      "street": {
+        "name": "Rue Osseghem",
+        "number": 53,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hsbxl.be",
+      "text": "hsbxl.be"
+    },
+    "spaceapi": {
+      "endpoint": "https://api.hsbxl.be/index.php/0.1/spaceapi/"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20251230
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Ko-Lab Hackerspace",
+    "ID": 249,
+    "loc": {
+      "lat": 51.0192665,
+      "long": 4.471821,
+      "plz": 2800,
+      "city": "Mechelen",
+      "street": {
+        "name": "Hoveniersstraat",
+        "number": 14,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://ko-lab.space",
+      "text": "ko-lab.space"
+    },
+    "spaceapi": {
+      "endpoint": "https://status.ko-lab.space"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackerspace Gent",
+    "ID": 250,
+    "loc": {
+      "lat": 51.0751501,
+      "long": 3.7260859,
+      "plz": 9000,
+      "city": "Gent",
+      "street": {
+        "name": "Wiedauwkaai",
+        "number": 51,
+        "ext": ""
+      },
+      "country": "Belgium"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackerspace.gent",
+      "text": "hackerspace.gent"
+    },
+    "spaceapi": {
+      "endpoint": "https://windowserver.0x20.be/spaceapi.json"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hal9k",
+    "ID": 261,
+    "loc": {
+      "lat": 57.018723,
+      "long": 9.8821367,
+      "plz": 9200,
+      "city": "Aalborg",
+      "street": {
+        "name": "Sofiendalsvej",
+        "number": 80,
+        "ext": ""
+      },
+      "country": "Denmark"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hal9k.dk",
+      "text": "hal9k.dk"
+    },
+    "dates": {
+      "init": 20080523,
+      "space.edited.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
     }
   },
   {
@@ -237,6 +754,35 @@
     "dates": {
       "space.init": 20010000,
       "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Wissenswerkstatt Friedrichshafen",
+    "ID": 210,
+    "loc": {
+      "lat": 47.65223,
+      "long": 9.4723957,
+      "plz": 3010,
+      "city": "Friedrichshafen",
+      "street": {
+        "name": "Bahnhofplatz",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for youth",
+    "link": {
+      "url": "https://www.wiwe-fn.de",
+      "text": "www.wiwe-fn.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250830
     },
     "weekly": {
       "weekday": 9,
@@ -639,35 +1185,6 @@
     }
   },
   {
-    "name": "Schokowerkstatt",
-    "ID": 21,
-    "loc": {
-      "lat": 52.5009318,
-      "long": 13.4233556,
-      "plz": 10997,
-      "city": "Berlin",
-      "street": {
-        "name": "Mariannenstraße",
-        "number": 6,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.schokowerkstatt.de",
-      "text": "schokowerkstatt.de"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "TüftelLab Berlin",
     "ID": 22,
     "loc": {
@@ -694,6 +1211,35 @@
     "weekly": {
       "weekday": 3,
       "time": 1600
+    }
+  },
+  {
+    "name": "Schokowerkstatt",
+    "ID": 21,
+    "loc": {
+      "lat": 52.5009318,
+      "long": 13.4233556,
+      "plz": 10997,
+      "city": "Berlin",
+      "street": {
+        "name": "Mariannenstraße",
+        "number": 6,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.schokowerkstatt.de",
+      "text": "schokowerkstatt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
     }
   },
   {
@@ -784,35 +1330,6 @@
     }
   },
   {
-    "name": "MotionLab.Berlin",
-    "ID": 26,
-    "loc": {
-      "lat": 52.4936567,
-      "long": 13.4482343,
-      "plz": 12435,
-      "city": "Berlin",
-      "street": {
-        "name": "Bouchéstraße",
-        "number": 12,
-        "ext": " , Halle 20"
-      },
-      "country": "Germany"
-    },
-    "style": "commercial",
-    "link": {
-      "url": "https://motionlab.berlin",
-      "text": "motionlab.berlin"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Fluktus Werkstätten",
     "ID": 27,
     "loc": {
@@ -831,6 +1348,35 @@
     "link": {
       "url": "https://www.fluktus-werkstaetten.de",
       "text": "fluktus-werkstaetten.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "MotionLab.Berlin",
+    "ID": 26,
+    "loc": {
+      "lat": 52.4936567,
+      "long": 13.4482343,
+      "plz": 12435,
+      "city": "Berlin",
+      "street": {
+        "name": "Bouchéstraße",
+        "number": 12,
+        "ext": " , Halle 20"
+      },
+      "country": "Germany"
+    },
+    "style": "commercial",
+    "link": {
+      "url": "https://motionlab.berlin",
+      "text": "motionlab.berlin"
     },
     "dates": {
       "space.init": 20010000,
@@ -1019,35 +1565,6 @@
     }
   },
   {
-    "name": "Landkombinat e.V.",
-    "ID": 34,
-    "loc": {
-      "lat": 53.8400254,
-      "long": 13.0743426,
-      "plz": 17111,
-      "city": "Beggerow",
-      "street": {
-        "name": "Gatschow",
-        "number": 22,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.landkombinat.org/konzept-werkstaetten",
-      "text": "landkombinat.org"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Entität e. V.",
     "ID": 35,
     "loc": {
@@ -1074,6 +1591,35 @@
     "weekly": {
       "weekday": 5,
       "time": 1600
+    }
+  },
+  {
+    "name": "Landkombinat e.V.",
+    "ID": 34,
+    "loc": {
+      "lat": 53.8400254,
+      "long": 13.0743426,
+      "plz": 17111,
+      "city": "Beggerow",
+      "street": {
+        "name": "Gatschow",
+        "number": 22,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.landkombinat.org/konzept-werkstaetten",
+      "text": "landkombinat.org"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
     }
   },
   {
@@ -1254,35 +1800,6 @@
     }
   },
   {
-    "name": "HoFaLab e.V.",
-    "ID": 42,
-    "loc": {
-      "lat": 53.5205538,
-      "long": 10.0199596,
-      "plz": 20539,
-      "city": "Hamburg",
-      "street": {
-        "name": "Packersweide",
-        "number": 7,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hofalab.de/de/home-de/",
-      "text": "hofalab.de"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 2,
-      "time": 1800
-    }
-  },
-  {
     "name": "Fabulous St. Pauli",
     "ID": 43,
     "loc": {
@@ -1309,6 +1826,35 @@
     "weekly": {
       "weekday": 4,
       "time": 1630
+    }
+  },
+  {
+    "name": "HoFaLab e.V.",
+    "ID": 42,
+    "loc": {
+      "lat": 53.5205538,
+      "long": 10.0199596,
+      "plz": 20539,
+      "city": "Hamburg",
+      "street": {
+        "name": "Packersweide",
+        "number": 7,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hofalab.de/de/home-de/",
+      "text": "hofalab.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 2,
+      "time": 1800
     }
   },
   {
@@ -1739,7 +2285,7 @@
     "name": "KreativKellerei",
     "ID": 58,
     "loc": {
-      "lat": 53.5155420,
+      "lat": 53.515542,
       "long": 8.1039919,
       "plz": 26382,
       "city": "Wilhelmshaven",
@@ -1851,7 +2397,7 @@
     },
     "weekly": {
       "weekday": 3,
-      "time": 1830          
+      "time": 1830
     }
   },
   {
@@ -3675,35 +4221,6 @@
     }
   },
   {
-    "name": "Computer-Club an der RWTH Aachen",
-    "ID": 123,
-    "loc": {
-      "lat": 50.7732395,
-      "long": 6.0851814,
-      "plz": 52062,
-      "city": "Aachen",
-      "street": {
-        "name": "Elisabethstraße",
-        "number": 16,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.ccac.rwth-aachen.de",
-      "text": "ccac.rwth-aachen.de"
-    },
-    "dates": {
-      "space.init": 19800130,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "CCC Aachen",
     "ID": 124,
     "loc": {
@@ -3728,6 +4245,35 @@
     },
     "dates": {
       "space.init": 20020101,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Computer-Club an der RWTH Aachen",
+    "ID": 123,
+    "loc": {
+      "lat": 50.7732395,
+      "long": 6.0851814,
+      "plz": 52062,
+      "city": "Aachen",
+      "street": {
+        "name": "Elisabethstraße",
+        "number": 16,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.ccac.rwth-aachen.de",
+      "text": "ccac.rwth-aachen.de"
+    },
+    "dates": {
+      "space.init": 19800130,
       "datacheck.latest": 20250726
     },
     "weekly": {
@@ -4389,35 +4935,6 @@
     }
   },
   {
-    "name": "Hackerspace FFM",
-    "ID": 147,
-    "loc": {
-      "lat": 50.1886436,
-      "long": 8.5910195,
-      "plz": 61440,
-      "city": "Oberursel",
-      "street": {
-        "name": "Ludwig-Erhard-Straße",
-        "number": 32,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.hackerspace-ffm.de",
-      "text": "hackerspace-ffm.de"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Maker-Werkstadt Frankfurt",
     "ID": 148,
     "loc": {
@@ -4436,6 +4953,35 @@
     "link": {
       "url": "https://maker-werkstadt.de",
       "text": "maker-werkstadt.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackerspace FFM",
+    "ID": 147,
+    "loc": {
+      "lat": 50.1886436,
+      "long": 8.5910195,
+      "plz": 61440,
+      "city": "Oberursel",
+      "street": {
+        "name": "Ludwig-Erhard-Straße",
+        "number": 32,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hackerspace-ffm.de",
+      "text": "hackerspace-ffm.de"
     },
     "dates": {
       "space.init": 20010000,
@@ -4984,6 +5530,35 @@
     }
   },
   {
+    "name": "Univ. Stuttgart - Universum",
+    "ID": 177,
+    "loc": {
+      "lat": 48.7460948,
+      "long": 9.1035644,
+      "plz": 70569,
+      "city": "Stuttgart",
+      "street": {
+        "name": "Pfaffenwaldring",
+        "number": 45,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for students",
+    "link": {
+      "url": "https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace",
+      "text": "tik.uni-stuttgart.de"
+    },
+    "dates": {
+      "space.init": 20010000,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
     "name": "Aerospace Lab",
     "ID": 167,
     "loc": {
@@ -5277,35 +5852,6 @@
     }
   },
   {
-    "name": "Univ. Stuttgart - Universum",
-    "ID": 177,
-    "loc": {
-      "lat": 48.7460948,
-      "long": 9.1035644,
-      "plz": 70569,
-      "city": "Stuttgart",
-      "street": {
-        "name": "Pfaffenwaldring",
-        "number": 45,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for students",
-    "link": {
-      "url": "https://www.tik.uni-stuttgart.de/forschung-und-lehre/makerspace",
-      "text": "tik.uni-stuttgart.de"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Essembly",
     "ID": 178,
     "loc": {
@@ -5386,6 +5932,38 @@
     "dates": {
       "space.init": 20010000,
       "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Makerspace im Jugendzentrum Crailsheim",
+    "ID": 274,
+    "loc": {
+      "lat": 49.1393664,
+      "long": 10.0781709,
+      "plz": 74564,
+      "city": "Crailsheim",
+      "street": {
+        "name": "Schönebürgstraße",
+        "number": "33",
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://juze-cr.de/makerspace/",
+      "text": "juze-cr.de/makerspace/"
+    },
+    "spaceapi": {
+      "endpoint": "https://spaceapi.juze-cr.de"
+    },
+    "dates": {
+      "space.init": 20260201,
+      "datacheck.latest": 20260201
     },
     "weekly": {
       "weekday": 9,
@@ -6185,35 +6763,6 @@
     }
   },
   {
-    "name": "FabLab Allgäu",
-    "ID": 208,
-    "loc": {
-      "lat": 47.7294584,
-      "long": 10.3122255,
-      "plz": 87439,
-      "city": "Kempten im Allgäu",
-      "street": {
-        "name": "Landwehrstraße",
-        "number": 2,
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.fablab-allgaeu.de",
-      "text": "fablab-allgaeu.de"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Makerspace Garching",
     "ID": 209,
     "loc": {
@@ -6243,28 +6792,28 @@
     }
   },
   {
-    "name": "Wissenswerkstatt Friedrichshafen",
-    "ID": 210,
+    "name": "FabLab Allgäu",
+    "ID": 208,
     "loc": {
-      "lat": 47.65223,
-      "long": 9.4723957,
-      "plz": 3010,
-      "city": "Friedrichshafen",
+      "lat": 47.7294584,
+      "long": 10.3122255,
+      "plz": 87439,
+      "city": "Kempten im Allgäu",
       "street": {
-        "name": "Bahnhofplatz",
-        "number": 1,
+        "name": "Landwehrstraße",
+        "number": 2,
         "ext": ""
       },
       "country": "Germany"
     },
-    "style": "for youth",
+    "style": "for all",
     "link": {
-      "url": "https://www.wiwe-fn.de",
-      "text": "www.wiwe-fn.de"
+      "url": "https://www.fablab-allgaeu.de",
+      "text": "fablab-allgaeu.de"
     },
     "dates": {
       "space.init": 20010000,
-      "datacheck.latest": 20250830
+      "datacheck.latest": 20250726
     },
     "weekly": {
       "weekday": 9,
@@ -6356,6 +6905,38 @@
     "weekly": {
       "weekday": 9,
       "time": 0
+    }
+  },
+  {
+    "name": "Toolbox Bodensee",
+    "ID": 1,
+    "loc": {
+      "lat": 47.7126816,
+      "long": 9.3995537,
+      "plz": 88677,
+      "city": "Markdorf",
+      "street": {
+        "name": "Bergheimer Straße",
+        "number": 6,
+        "ext": ""
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.toolbox-bodensee.de",
+      "text": "toolbox-bodensee.de"
+    },
+    "spaceapi": {
+      "endpoint": "https://toolbox-bodensee.de/toolboxbodensee.json"
+    },
+    "dates": {
+      "space.init": 20140301,
+      "datacheck.latest": 20250726
+    },
+    "weekly": {
+      "weekday": 4,
+      "time": 1900
     }
   },
   {
@@ -6951,56 +7532,24 @@
     }
   },
   {
-    "name": "Metalab",
-    "ID": 234,
+    "name": "NOI Makerspace",
+    "ID": 262,
     "loc": {
-      "lat": 48.2094862,
-      "long": 16.3561031,
-      "plz": 1010,
-      "city": "Wien",
+      "lat": 46.4786013,
+      "long": 11.3325925,
+      "plz": 39100,
+      "city": "Bolzano-Bozen",
       "street": {
-        "name": "Rathausstraße",
-        "number": 6,
-        "ext": ""
+        "name": "Via Volta",
+        "number": 13,
+        "ext": "a"
       },
-      "country": "Austria"
-    },
-    "style": "",
-    "link": {
-      "url": "https://metalab.at",
-      "text": "metalab.at"
-    },
-    "spaceapi": {
-      "endpoint": "https://metalab.at/status.json"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Happylab Wien",
-    "ID": 235,
-    "loc": {
-      "lat": 48.2194148,
-      "long": 16.4067915,
-      "plz": 1020,
-      "city": "Wien",
-      "street": {
-        "name": "Schönngasse",
-        "number": 15,
-        "ext": "-17"
-      },
-      "country": "Austria"
+      "country": "Italy"
     },
     "style": "commercial",
     "link": {
-      "url": "https://www.happylab.at",
-      "text": "happylab.at"
+      "url": "https://makerspace.noi.bz.it",
+      "text": "makerspace.noi.bz.it"
     },
     "dates": {
       "space.init": 20010000,
@@ -7012,28 +7561,28 @@
     }
   },
   {
-    "name": "Maker Austria",
-    "ID": 236,
+    "name": "BASE1 makerspace",
+    "ID": 263,
     "loc": {
-      "lat": 48.188289,
-      "long": 16.3467836,
-      "plz": 1050,
-      "city": "Wien",
+      "lat": 49.6004781,
+      "long": 6.1140391,
+      "plz": 1430,
+      "city": "Luxembourg",
       "street": {
-        "name": "Schönbrunner Straße",
-        "number": 125,
+        "name": "Boulevard Pierre Dupong",
+        "number": 40,
         "ext": ""
       },
-      "country": "Austria"
+      "country": "Luxembourg"
     },
-    "style": "commercial",
+    "style": "for students & youth",
     "link": {
-      "url": "https://www.makeraustria.at",
-      "text": "makeraustria.at"
+      "url": "https://base1.lu",
+      "text": "base1.lu"
     },
     "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
+      "init": 20080523,
+      "space.edited.latest": 20250726
     },
     "weekly": {
       "weekday": 9,
@@ -7041,60 +7590,28 @@
     }
   },
   {
-    "name": "HAND.WERK.STADT",
-    "ID": 237,
+    "name": "CCC Lëtzebuerg",
+    "ID": 264,
     "loc": {
-      "lat": 48.0832519,
-      "long": 16.2993311,
-      "plz": 2340,
-      "city": "Mödling",
+      "lat": 49.6207694,
+      "long": 6.1224033,
+      "plz": 1750,
+      "city": "Luxembourg",
       "street": {
-        "name": "Diplom-Ingenieur-Wilhelm-Haßlinger-Straße",
-        "number": 3,
+        "name": "Avenue Victor Hugo",
+        "number": 60,
         "ext": ""
       },
-      "country": "Austria"
-    },
-    "style": "commercial",
-    "link": {
-      "url": "http://www.handwerkstadt.org",
-      "text": "handwerkstadt.org"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "/usr/space",
-    "ID": 238,
-    "loc": {
-      "lat": 47.9229905,
-      "long": 16.2119331,
-      "plz": 2544,
-      "city": "Leobersdorf",
-      "street": {
-        "name": "Mühlgasse",
-        "number": 8,
-        "ext": ""
-      },
-      "country": "Austria"
+      "country": "Luxembourg"
     },
     "style": "for all",
     "link": {
-      "url": "https://www.usrspace.at",
-      "text": "usrspace.at"
-    },
-    "spaceapi": {
-      "endpoint": "https://www.usrspace.at/spaceapi.json"
+      "url": "https://c3l.lu",
+      "text": "c3l.lu"
     },
     "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
+      "init": 20080523,
+      "space.edited.latest": 20250726
     },
     "weekly": {
       "weekday": 9,
@@ -7102,368 +7619,28 @@
     }
   },
   {
-    "name": "Segmentation Vault",
-    "ID": 239,
+    "name": "Level2",
+    "ID": 265,
     "loc": {
-      "lat": 48.2036763,
-      "long": 15.6201487,
-      "plz": 3100,
-      "city": "St. Pölten",
+      "lat": 49.5915948,
+      "long": 6.1405476,
+      "plz": 2611,
+      "city": "Luxembourg",
       "street": {
-        "name": "Ludwig-Stöhr-Straße",
-        "number": 8,
+        "name": "route de Thionville",
+        "number": 87,
         "ext": ""
       },
-      "country": "Austria"
+      "country": "Luxembourg"
     },
     "style": "for all",
     "link": {
-      "url": "https://segvault.space",
-      "text": "segvault.space"
+      "url": "https://level2.lu",
+      "text": "level2.lu"
     },
     "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "/dev/lol",
-    "ID": 240,
-    "loc": {
-      "lat": 48.3058349,
-      "long": 14.283851,
-      "plz": 4020,
-      "city": "Linz",
-      "street": {
-        "name": "Hofgasse",
-        "number": 19,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://devlol.org",
-      "text": "devlol.org"
-    },
-    "spaceapi": {
-      "endpoint": "https://devlol.org/status/hackerspaceapi"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "otelo Linz",
-    "ID": 241,
-    "loc": {
-      "lat": 48.2492638,
-      "long": 14.3082813,
-      "plz": 4030,
-      "city": "Linz",
-      "street": {
-        "name": "Wüstenrotplatz",
-        "number": 2,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.otelolinz.at",
-      "text": "otelolinz.at"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Steyr-Werke",
-    "ID": 242,
-    "loc": {
-      "lat": 48.0449155,
-      "long": 14.4167987,
-      "plz": 4400,
-      "city": "Steyr",
-      "street": {
-        "name": "Wieserfeldplatz",
-        "number": 11,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.steyr-werke.at",
-      "text": "steyr-werke.at"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "otelo Vorchdorf",
-    "ID": 243,
-    "loc": {
-      "lat": 48.0062999,
-      "long": 13.9231099,
-      "plz": 4655,
-      "city": "Vorchdorf",
-      "street": {
-        "name": "Schulstraße",
-        "number": 8,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://otelo.or.at/standort/vorchdorf",
-      "text": "otelo.or.at/standort/vorchdorf"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "CCC Salzburg",
-    "ID": 244,
-    "loc": {
-      "lat": 47.7940083,
-      "long": 13.0565329,
-      "plz": 5020,
-      "city": "Salzburg",
-      "street": {
-        "name": "Ulrike-Gschwandtner-Straße",
-        "number": 5,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://cccsbg.at",
-      "text": "cccsbg.at"
-    },
-    "spaceapi": {
-      "endpoint": "https://spaceapi.sbg.chaostreff.at/status/json"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "IT-Syndikat",
-    "ID": 245,
-    "loc": {
-      "lat": 47.257821,
-      "long": 11.3960576,
-      "plz": 6020,
-      "city": "Innsbruck",
-      "street": {
-        "name": "Tschamlerstraße",
-        "number": 3,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://it-syndikat.org",
-      "text": "it-syndikat.org"
-    },
-    "spaceapi": {
-      "endpoint": "https://spaceapi.it-syndikat.org/api/status.php"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "eLab HTU Graz",
-    "ID": 246,
-    "loc": {
-      "lat": 47.0581771,
-      "long": 15.4594425,
-      "plz": 8010,
-      "city": "Graz",
-      "street": {
-        "name": "Inffeldgasse",
-        "number": 18,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "for students",
-    "link": {
-      "url": "https://htugraz.at/e-lab",
-      "text": "htugraz.at/e-lab"
-    },
-    "spaceapi": {
-      "endpoint": "https://doorothy.htu.tugraz.at/doorothy/elab/status.spaceapi"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20251230
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Makerspace Carinthia",
-    "ID": 247,
-    "loc": {
-      "lat": 46.6180671,
-      "long": 14.3171542,
-      "plz": 9020,
-      "city": "Klagenfurt am Wörthersee",
-      "street": {
-        "name": "Lastenstraße",
-        "number": 26,
-        "ext": ""
-      },
-      "country": "Austria"
-    },
-    "style": "commercial",
-    "link": {
-      "url": "https://www.makerspace-carinthia.com",
-      "text": "makerspace-carinthia.com"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hackerspace Brussels",
-    "ID": 248,
-    "loc": {
-      "lat": 50.8557647,
-      "long": 4.3198282,
-      "plz": 1080,
-      "city": "Molenbeek-Saint-Jean",
-      "street": {
-        "name": "Rue Osseghem",
-        "number": 53,
-        "ext": ""
-      },
-      "country": "Belgium"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hsbxl.be",
-      "text": "hsbxl.be"
-    },
-    "spaceapi": {
-      "endpoint": "https://api.hsbxl.be/index.php/0.1/spaceapi/"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20251230
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Ko-Lab Hackerspace",
-    "ID": 249,
-    "loc": {
-      "lat": 51.0192665,
-      "long": 4.471821,
-      "plz": 2800,
-      "city": "Mechelen",
-      "street": {
-        "name": "Hoveniersstraat",
-        "number": 14,
-        "ext": ""
-      },
-      "country": "Belgium"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://ko-lab.space",
-      "text": "ko-lab.space"
-    },
-    "spaceapi": {
-      "endpoint": "https://status.ko-lab.space"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hackerspace Gent",
-    "ID": 250,
-    "loc": {
-      "lat": 51.0751501,
-      "long": 3.7260859,
-      "plz": 9000,
-      "city": "Gent",
-      "street": {
-        "name": "Wiedauwkaai",
-        "number": 51,
-        "ext": ""
-      },
-      "country": "Belgium"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hackerspace.gent",
-      "text": "hackerspace.gent"
-    },
-    "spaceapi": {
-      "endpoint": "https://windowserver.0x20.be/spaceapi.json"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20251115
+      "init": 20010000,
+      "space.edited.latest": 20250726
     },
     "weekly": {
       "weekday": 9,
@@ -7496,6 +7673,230 @@
     "dates": {
       "space.init": 20260201,
       "datacheck.latest": 20260201
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "HermitHive",
+    "ID": 266,
+    "loc": {
+      "lat": 52.0293447,
+      "long": 5.0830369,
+      "plz": 3431,
+      "city": "HN Nieuwegein",
+      "street": {
+        "name": "Bankstede",
+        "number": 1,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hermithive.nl",
+      "text": "hermithive.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hermithive.nl/state.json"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackalot",
+    "ID": 267,
+    "loc": {
+      "lat": 51.4843364,
+      "long": 5.4495034,
+      "plz": 5627,
+      "city": "JP Eindhoven",
+      "street": {
+        "name": "Fransebaan",
+        "number": 93,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackalot.nl",
+      "text": "hackalot.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hackalot.nl/statejson"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackerspace Nijmegen",
+    "ID": 268,
+    "loc": {
+      "lat": 51.8374345,
+      "long": 5.8444145,
+      "plz": 6542,
+      "city": "JP Nijmegen",
+      "street": {
+        "name": "Villanovastraat",
+        "number": 4,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hackerspacenijmegen.nl",
+      "text": "hackerspacenijmegen.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://state.hackerspacenijmegen.nl/state.json"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hack42",
+    "ID": 269,
+    "loc": {
+      "lat": 51.9771387,
+      "long": 5.9402584,
+      "plz": 6827,
+      "city": "BL Arnhem",
+      "street": {
+        "name": "Cruquiusweg",
+        "number": 3,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://hack42.nl",
+      "text": "hack42.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://hack42.nl/spacestate/json.php"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251115
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "FabLab Coevorden",
+    "ID": 271,
+    "loc": {
+      "lat": 52.6599534,
+      "long": 6.7549756,
+      "plz": 7742,
+      "city": "AB Coevorden",
+      "street": {
+        "name": "Van Heeckerenlaan",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for youth",
+    "link": {
+      "url": "https://www.fablabcoevorden.nl",
+      "text": "www.fablabcoevorden.nl"
+    },
+    "spaceapi": {
+      "endpoint": ""
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251230
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Hackerspace Drenthe",
+    "ID": 270,
+    "loc": {
+      "lat": 52.6598384,
+      "long": 6.7548194,
+      "plz": 7742,
+      "city": "AB Coevorden",
+      "street": {
+        "name": "Van Heeckerenlaan",
+        "number": 2,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://www.hackerspace-drenthe.nl",
+      "text": "www.hackerspace-drenthe.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://mqtt.hackerspace-drenthe.nl/spaceapi"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251230
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 0
+    }
+  },
+  {
+    "name": "Maakplek",
+    "ID": 272,
+    "loc": {
+      "lat": 53.2310177,
+      "long": 6.584143,
+      "plz": 9713,
+      "city": "BT Groningen",
+      "street": {
+        "name": "Struisvogelstraat",
+        "number": 15,
+        "ext": ""
+      },
+      "country": "Netherlands"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://maakplek.nl",
+      "text": "maakplek.nl"
+    },
+    "spaceapi": {
+      "endpoint": "https://maakplek.nl/api"
+    },
+    "dates": {
+      "init": 20010000,
+      "space.edited.latest": 20251115
     },
     "weekly": {
       "weekday": 9,
@@ -7814,375 +8215,6 @@
     }
   },
   {
-    "name": "Hal9k",
-    "ID": 261,
-    "loc": {
-      "lat": 57.018723,
-      "long": 9.8821367,
-      "plz": 9200,
-      "city": "Aalborg",
-      "street": {
-        "name": "Sofiendalsvej",
-        "number": 80,
-        "ext": ""
-      },
-      "country": "Denmark"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.hal9k.dk",
-      "text": "hal9k.dk"
-    },
-    "dates": {
-      "init": 20080523,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "NOI Makerspace",
-    "ID": 262,
-    "loc": {
-      "lat": 46.4786013,
-      "long": 11.3325925,
-      "plz": 39100,
-      "city": "Bolzano-Bozen",
-      "street": {
-        "name": "Via Volta",
-        "number": 13,
-        "ext": "a"
-      },
-      "country": "Italy"
-    },
-    "style": "commercial",
-    "link": {
-      "url": "https://makerspace.noi.bz.it",
-      "text": "makerspace.noi.bz.it"
-    },
-    "dates": {
-      "space.init": 20010000,
-      "datacheck.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "BASE1 makerspace",
-    "ID": 263,
-    "loc": {
-      "lat": 49.6004781,
-      "long": 6.1140391,
-      "plz": 1430,
-      "city": "Luxembourg",
-      "street": {
-        "name": "Boulevard Pierre Dupong",
-        "number": 40,
-        "ext": ""
-      },
-      "country": "Luxembourg"
-    },
-    "style": "for students & youth",
-    "link": {
-      "url": "https://base1.lu",
-      "text": "base1.lu"
-    },
-    "dates": {
-      "init": 20080523,
-      "space.edited.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "CCC Lëtzebuerg",
-    "ID": 264,
-    "loc": {
-      "lat": 49.6207694,
-      "long": 6.1224033,
-      "plz": 1750,
-      "city": "Luxembourg",
-      "street": {
-        "name": "Avenue Victor Hugo",
-        "number": 60,
-        "ext": ""
-      },
-      "country": "Luxembourg"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://c3l.lu",
-      "text": "c3l.lu"
-    },
-    "dates": {
-      "init": 20080523,
-      "space.edited.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Level2",
-    "ID": 265,
-    "loc": {
-      "lat": 49.5915948,
-      "long": 6.1405476,
-      "plz": 2611,
-      "city": "Luxembourg",
-      "street": {
-        "name": "route de Thionville",
-        "number": 87,
-        "ext": ""
-      },
-      "country": "Luxembourg"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://level2.lu",
-      "text": "level2.lu"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20250726
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "HermitHive",
-    "ID": 266,
-    "loc": {
-      "lat": 52.0293447,
-      "long": 5.0830369,
-      "plz": 3431,
-      "city": "HN Nieuwegein",
-      "street": {
-        "name": "Bankstede",
-        "number": 1,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hermithive.nl",
-      "text": "hermithive.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://hermithive.nl/state.json"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hackalot",
-    "ID": 267,
-    "loc": {
-      "lat": 51.4843364,
-      "long": 5.4495034,
-      "plz": 5627,
-      "city": "JP Eindhoven",
-      "street": {
-        "name": "Fransebaan",
-        "number": 93,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hackalot.nl",
-      "text": "hackalot.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://hackalot.nl/statejson"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hackerspace Nijmegen",
-    "ID": 268,
-    "loc": {
-      "lat": 51.8374345,
-      "long": 5.8444145,
-      "plz": 6542,
-      "city": "JP Nijmegen",
-      "street": {
-        "name": "Villanovastraat",
-        "number": 4,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hackerspacenijmegen.nl",
-      "text": "hackerspacenijmegen.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://state.hackerspacenijmegen.nl/state.json"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hack42",
-    "ID": 269,
-    "loc": {
-      "lat": 51.9771387,
-      "long": 5.9402584,
-      "plz": 6827,
-      "city": "BL Arnhem",
-      "street": {
-        "name": "Cruquiusweg",
-        "number": 3,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://hack42.nl",
-      "text": "hack42.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://hack42.nl/spacestate/json.php"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Hackerspace Drenthe",
-    "ID": 270,
-    "loc": {
-      "lat": 52.6598384,
-      "long": 6.7548194,
-      "plz": 7742,
-      "city": "AB Coevorden",
-      "street": {
-        "name": "Van Heeckerenlaan",
-        "number": 2,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://www.hackerspace-drenthe.nl",
-      "text": "www.hackerspace-drenthe.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://mqtt.hackerspace-drenthe.nl/spaceapi"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251230
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "FabLab Coevorden",
-    "ID": 271,
-    "loc": {
-      "lat": 52.6599534,
-      "long": 6.7549756,
-      "plz": 7742,
-      "city": "AB Coevorden",
-      "street": {
-        "name": "Van Heeckerenlaan",
-        "number": 2,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for youth",
-    "link": {
-      "url": "https://www.fablabcoevorden.nl",
-      "text": "www.fablabcoevorden.nl"
-    },
-    "spaceapi": {
-      "endpoint": ""
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251230
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Maakplek",
-    "ID": 272,
-    "loc": {
-      "lat": 53.2310177,
-      "long": 6.584143,
-      "plz": 9713,
-      "city": "BT Groningen",
-      "street": {
-        "name": "Struisvogelstraat",
-        "number": 15,
-        "ext": ""
-      },
-      "country": "Netherlands"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://maakplek.nl",
-      "text": "maakplek.nl"
-    },
-    "spaceapi": {
-      "endpoint": "https://maakplek.nl/api"
-    },
-    "dates": {
-      "init": 20010000,
-      "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
     "name": "Hacklab",
     "ID": 273,
     "loc": {
@@ -8208,38 +8240,6 @@
     "dates": {
       "init": 20010000,
       "space.edited.latest": 20251115
-    },
-    "weekly": {
-      "weekday": 9,
-      "time": 0
-    }
-  },
-  {
-    "name": "Makerspace im Jugendzentrum Crailsheim",
-    "ID": 274,
-    "loc": {
-      "lat": 49.1393664,
-      "long": 10.0781709,
-      "plz": 74564,
-      "city": "Crailsheim",
-      "street": {
-        "name": "Schönebürgstraße",
-        "number": "33",
-        "ext": ""
-      },
-      "country": "Germany"
-    },
-    "style": "for all",
-    "link": {
-      "url": "https://juze-cr.de/makerspace/",
-      "text": "juze-cr.de/makerspace/"
-    },
-    "spaceapi": {
-      "endpoint": "https://spaceapi.juze-cr.de"
-    },
-    "dates": {
-      "space.init": 20260201,
-      "datacheck.latest": 20260201
     },
     "weekly": {
       "weekday": 9,
