@@ -186,11 +186,13 @@
       const selectedStateFilters = new Set();
       const selectedCountries = new Set();
       const selectedWeekdays = new Set();
+      const selectedWorkshops = new Set();
       let bookmarkFilterActive = false;
       let weeklyAnyActive = false;
 
       // Weekly-Optionen
       const weeklyOptions = new Set(CONFIG.filterCategories.weekly?.options || []);
+      const workshopOptions = new Set(CONFIG.filterCategories.workshops?.options || []);
 
       // Alle Länder sammeln
       const allCountries = new Set();
@@ -212,6 +214,8 @@
           selectedWeekdays.add(parseInt(style));
         } else if (allCountries.has(style)) {
           selectedCountries.add(style);
+        } else if (workshopOptions.has(style)) {
+          selectedWorkshops.add(style);
         } else {
           selectedNormalStyles.add(style);
         }
@@ -253,8 +257,12 @@
         // Bookmark-Match
         const bookmarkMatch = !bookmarkFilterActive || (bookmarkedIds && bookmarkedIds.has(location.ID));
 
+        // Workshop-Match (OR innerhalb der Kategorie)
+        const workshopMatch = selectedWorkshops.size === 0 ||
+          (location.workshops && location.workshops.some(w => selectedWorkshops.has(w)));
+
         // AND zwischen Kategorien
-        return styleMatch && stateMatch && countryMatch && weeklyMatch && bookmarkMatch;
+        return styleMatch && stateMatch && countryMatch && weeklyMatch && bookmarkMatch && workshopMatch;
       });
 
       // ═══════════════════════════════════════════════════════════════════════

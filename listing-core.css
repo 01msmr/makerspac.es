@@ -213,6 +213,19 @@
   color: var(--status-color, var(--text-color)) !important;
 }
 
+.listing-workshops {
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: var(--status-color, var(--text-color));
+  white-space: nowrap;
+}
+
+.listing-item.active .listing-workshops {
+  color: white !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    STYLE & STATUS ICONS
    ═══════════════════════════════════════════════════════════════════════════ */

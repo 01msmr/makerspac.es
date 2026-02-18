@@ -184,6 +184,29 @@ jobs:
               "time": weeklyTime
             };
 
+            // Workshops (Checkboxen parsen)
+            const workshopLabelMap = {
+              "3D-Druck / 3D printing": "3d",
+              "Laser / Laser cutting": "laser",
+              "Elektronik / Electronics": "electronics",
+              "Holzwerkstatt / Woodworking": "wood",
+              "Metallwerkstatt / Metalworking": "metal",
+              "Textil / Textile": "textile",
+              "CNC / CNC machining": "cnc",
+              "Bio/Labor / Bio/Lab": "bio",
+              "VR": "vr"
+            };
+            const workshopsRaw = getField("Werkstatt-Arten / Workshop types (Optional)", "");
+            const workshops = [];
+            if (workshopsRaw) {
+              for (const [label, key] of Object.entries(workshopLabelMap)) {
+                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
+                  workshops.push(key);
+                }
+              }
+            }
+            newEntry.workshops = workshops;
+
             // Debug: Neuen Eintrag ausgeben
             console.log("=== NEW ENTRY ===");
             console.log(JSON.stringify(newEntry, null, 2));

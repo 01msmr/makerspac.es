@@ -742,6 +742,11 @@
           label: window.i18n?.t('filter.bookmarks') || 'Bookmarks',
           options: ['bookmarked'],
           iconOnly: true
+        },
+        workshops: {
+          icon: CONFIG.icons.ui.workshops,
+          label: window.i18n?.t('filter.workshops') || 'Werkstätten',
+          options: CONFIG.filterCategories.workshops.options
         }
       };
 
@@ -901,6 +906,8 @@
         return selectedStyles.find(s => CONFIG.filterCategories.doorState.options.includes(s)) || null;
       } else if (categoryKey === 'weekly') {
         return selectedStyles.find(s => CONFIG.filterCategories.weekly.options.includes(s) || s === 'any') || null;
+      } else if (categoryKey === 'workshops') {
+        return selectedStyles.find(s => CONFIG.filterCategories.workshops.options.includes(s)) || null;
       }
 
       return null;
@@ -923,6 +930,8 @@
         return window.i18n?.t(`weekdays.${value}`) || value;
       } else if (categoryKey === 'country') {
         return window.i18n?.t(`countries.${value}`) || value;
+      } else if (categoryKey === 'workshops') {
+        return window.i18n?.t(`workshops.${value}`) || value;
       }
       return value;
     }
@@ -1005,6 +1014,10 @@
         const label = this.translateFilterValue('weekly', option);
         const todayMarker = (option !== 'any' && parseInt(option) === new Date().getDay()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
         optionItem.innerHTML = `<i class="${CONFIG.icons.ui.calendarDay}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}${todayMarker}`;
+      } else if (categoryKey === 'workshops') {
+        const workshopIcon = CONFIG.getWorkshopIcon(option);
+        const label = this.translateFilterValue('workshops', option);
+        optionItem.innerHTML = `<i class="${workshopIcon}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}`;
       }
 
       const activeFilter = this.getActiveFilterForCategory(categoryKey);

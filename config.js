@@ -72,7 +72,21 @@
       flag: 'fas fa-flag',
       peopleGroup: 'fas fa-people-group',
       doorOpen: 'fas fa-door-open',
-      calendarDay: 'fas fa-calendar-day'
+      calendarDay: 'fas fa-calendar-day',
+      workshops: 'fas fa-screwdriver-wrench'
+    },
+
+    // Workshop-Arten-Icons
+    workshops: {
+      '3d': 'fas fa-cube',
+      'laser': 'fas fa-wand-magic-sparkles',
+      'electronics': 'fas fa-microchip',
+      'wood': 'fas fa-hammer',
+      'metal': 'fas fa-gears',
+      'textile': 'fas fa-scissors',
+      'cnc': 'fas fa-industry',
+      'bio': 'fas fa-flask',
+      'vr': 'fas fa-vr-cardboard'
     }
   };
 
@@ -158,6 +172,10 @@
       icon: 'fas fa-bookmark',
       options: ['bookmarked'],
       iconOnly: true
+    },
+    workshops: {
+      icon: 'fas fa-screwdriver-wrench',
+      options: ['3d', 'laser', 'electronics', 'wood', 'metal', 'textile', 'cnc', 'bio', 'vr']
     }
   };
 
@@ -191,6 +209,10 @@
   function getStyleIcon(style) {
     const key = style ? style.toLowerCase() : '';
     return ICONS.styles[key] || '';
+  }
+
+  function getWorkshopIcon(key) {
+    return ICONS.workshops[key] || '';
   }
 
   /**
@@ -303,22 +325,6 @@
     svg.style.height = `${itemRect.height - 0.0}px`;
   }
 
-  // function createConnectorSVG(itemRect, color, topOffset = 0) {
-  //   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  //   svg.id = 'current-connector';
-  //   updateConnectorPosition(svg, itemRect, topOffset);
-  //   svg.setAttribute('viewBox', '65 0 570 620');
-  //   svg.setAttribute('preserveAspectRatio', 'none');
-  //
-  //   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  //   path.setAttribute('d', SCHWEIF_PATH);
-  //   path.setAttribute('fill', color);
-  //   svg.appendChild(path);
-  //
-  //   document.body.appendChild(svg);
-  //   return svg;
-  // }
-
   function createConnectorSVG(itemRect, color, topOffset = 0) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'current-connector';
@@ -364,6 +370,7 @@
 
     // Helper-Funktionen
     getStyleIcon,
+    getWorkshopIcon,
     getStatusIcon,
     getCountryCode,
     isDarkMode,

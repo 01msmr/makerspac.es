@@ -1,10 +1,6 @@
 name: Deploy to gitHub Pages
 
 on:
-  # Alle 12 Minuten SpaceAPI pruefen — Deploy nur bei Aenderungen
-  schedule:
-    - cron: '*/12 * * * *'
-
   # Manuell ausloesen — deployt immer
   workflow_dispatch:
 

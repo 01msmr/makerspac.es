@@ -92,13 +92,20 @@
       // Weekly meeting icon (nur wenn Meeting heute ist)
       const meetingIconHtml = this.getMeetingIconHtml(location);
 
+      // Workshop-Anzahl
+      const workshopsHtml = this.getWorkshopsHtml(location);
+
+
+
+      
+
       // Item-HTML zusammenbauen
       item.innerHTML = `
         ${distanceBadgeHtml}
         <div class="listing-item-content">
           <div class="listing-item-name">
             <span class="${nameClass}">${styleIconHtml}${CONFIG.escapeHtml(location.name)}</span>
-            ${bookmarkIcon}
+            ${bookmarkIcon} <!-- Bookmark ist hier oben rechts -->
           </div>
           <div class="listing-item-address">
             ${addressStatusIcon}
@@ -106,10 +113,12 @@
               ${streetHtml}
               <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${CONFIG.escapeHtml(location.loc.city)}</b></div>
             </div>
-            ${meetingIconHtml}
+            ${meetingIconHtml} <!-- Erst das Heute-Badge -->
+            ${workshopsHtml}   <!-- Dann die Workshops (wird per CSS nach rechts geschoben) -->
           </div>
         </div>
       `;
+
 
       return item;
     }
@@ -181,6 +190,24 @@
     /**
      * Generiert das Meeting-Icon HTML (nur wenn Meeting heute ist)
      */
+    getWorkshopsHtml(location) {
+      if (!location.workshops || location.workshops.length === 0) return '';
+
+      // Werkstattliste untereinander (\n für Zeilenumbruch)
+      const workshopNames = location.workshops
+        .map(w => (window.i18n ? window.i18n.t('workshops.' + w) : w))
+        .join('\n');
+
+      return `
+    <span class="listing-workshops" 
+          aria-label="${workshopNames}" 
+          role="tooltip" 
+          data-microtip-position="bottom-left"
+          data-microtip-size="small">
+      ${location.workshops.length} <i class="${CONFIG.icons.ui.workshops}"></i>
+    </span>`;
+    }
+
     getMeetingIconHtml(location) {
       if (!location.weekly || !location.weekly.time || location.weekly.weekday > 6) return '';
       if (location.weekly.weekday !== new Date().getDay()) return '';
@@ -210,11 +237,11 @@
 
     updateMeetingTooltipPositions(container) {
       const containerRect = container.getBoundingClientRect();
-      const threshold = 60; // px vom unteren Rand
-      container.querySelectorAll('.listing-meeting-today').forEach(el => {
+      const halfY = containerRect.top + containerRect.height / 2;
+      container.querySelectorAll('.listing-meeting-today, .listing-workshops').forEach(el => {
         const elRect = el.getBoundingClientRect();
-        const nearBottom = (containerRect.bottom - elRect.bottom) < threshold;
-        el.setAttribute('data-microtip-position', nearBottom ? 'top-left' : 'bottom-left');
+        const inLowerHalf = elRect.top > halfY;
+        el.setAttribute('data-microtip-position', inLowerHalf ? 'top-left' : 'bottom-left');
       });
     }
 

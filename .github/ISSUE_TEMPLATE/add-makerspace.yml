@@ -84,6 +84,20 @@ body:
         - "commercial"
     validations:
       required: true
+  - type: checkboxes
+    id: workshops
+    attributes:
+      label: Werkstatt-Arten / Workshop types (Optional)
+      options:
+        - label: "3D-Druck / 3D printing"
+        - label: "Laser / Laser cutting"
+        - label: "Elektronik / Electronics"
+        - label: "Holzwerkstatt / Woodworking"
+        - label: "Metallwerkstatt / Metalworking"
+        - label: "Textil / Textile"
+        - label: "CNC / CNC machining"
+        - label: "Bio/Labor / Bio/Lab"
+        - label: "VR"
   - type: input
     id: url
     attributes:

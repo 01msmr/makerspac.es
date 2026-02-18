@@ -854,6 +854,7 @@ function createMarkerForLocation(location) {
                 </a>
                 ${bookmarkIcon}
               </div>
+              ${location.workshops && location.workshops.length > 0 ? `<div class="popup-workshops">${location.workshops.map(w => { const icon = window.AppConfig.getWorkshopIcon(w); const label = window.i18n?.t('workshops.' + w) || w; return icon ? `<span aria-label="${label}" role="tooltip" data-microtip-position="top"><i class="${icon}"></i></span>` : ''; }).join('')}</div>` : ''}
               ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
               <br>
                   <div class="popup-street-line">
@@ -1218,66 +1219,6 @@ function setupMapClickHandler() {
   });
 }
 
-/**
- * ✅ Rest der ESC-Logik (wird nur ausgeführt wenn KEIN nearby-popover)
- */
-function executeEscapeLogicRest() {
-  if (!window.searchManager) return;
-
-  const searchManager = window.searchManager;
-
-  console.log('🧹 executeEscapeLogicRest: START');
-
-  // Blockiere Auto-Zoom
-  searchManager._manualSpaceClick = true;
-
-  // 1. Schließe Filter-Dropdown, falls aktiv
-  if (searchManager.styleFilterManager &&
-    typeof searchManager.styleFilterManager.isDropdownOpen === 'function' &&
-    searchManager.styleFilterManager.isDropdownOpen()) {
-    searchManager.styleFilterManager.closeDropdown();
-    console.log('   ✅ Filter-Dropdown geschlossen');
-  }
-
-  // 2. Leere Pills
-  if (searchManager.pillsManager) {
-    searchManager.pillsManager.clear();
-    console.log('   ✅ Pills geleert');
-  }
-
-  // 3. Routing clearen
-  if (window.routingManager) {
-    window.routingManager._activeCountryFilter = null;
-    window.routingManager._isNavigating = true;
-    window.location.hash = '';
-    console.log('   ✅ Routing geleert');
-  }
-
-  // 4. Filter neu anwenden
-  searchManager.applyPillFilters([]);
-  console.log('   ✅ Filter neu angewendet');
-
-  // 5. Schließe Such-Dropdown
-  searchManager.closeDropdown();
-  console.log('   ✅ Dropdown geschlossen');
-
-  // Reset Flags
-  setTimeout(() => {
-    if (window.routingManager) window.routingManager._isNavigating = false;
-    searchManager._manualSpaceClick = false;
-    console.log('   ✅ Flags zurückgesetzt');
-  }, 100);
-
-  console.log('🧹 executeEscapeLogicRest: ENDE');
-}
-
-/**
- * ✅ VERALTET - wird nicht mehr verwendet
- * Searchbar-Leerung passiert jetzt direkt im contextmenu Handler
- */
-function executeEscapeLogic() {
-  executeEscapeLogicRest();
-}
 function setupRouting() {
   const routingManager = new RoutingManager(
     window.styleFilterManager,

@@ -200,43 +200,85 @@ class EmbedMapExtended {
   }
 
   createPopupContent(space, isTarget) {
+    // 1. Farben und Status-Logik vorbereiten
+    const iconColor = window.AppConfig.getDynamicSpaceColor(space);
+    const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
+
     let statusIconHtml = '';
-    let nameClass = '';
-    let statusColor = 'blue';
+    let nameClass = 'space-default';
+    let statusColor = 'var(--space-hover)';
 
     if (space.isOpen === true) {
-      statusIconHtml = '<i class="fas fa-door-open"></i> ';
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-door-open"></i></span>`;
       nameClass = 'space-open';
       statusColor = 'var(--space-open)';
     } else if (space.isOpen === false) {
-      statusIconHtml = '<i class="fas fa-lock"></i> ';
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-lock"></i></span>`;
       nameClass = 'space-closed';
       statusColor = 'var(--space-closed)';
     } else if (space.spaceapi?.endpoint) {
-      statusIconHtml = '<i class="fas fa-question-circle"></i> ';
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-question-circle"></i></span>`;
       nameClass = 'space-unknown';
       statusColor = 'var(--space-unknown)';
     }
 
-    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
+    // 2. Style Icon Logik
+    const styleIconMap = {
+      'for all': 'fas fa-people-group',
+      'for students': 'fas fa-graduation-cap',
+      'for youth': 'fas fa-child',
+      'commercial': 'fas fa-money-bill-wave'
+    };
     const locationStyle = space.style?.toLowerCase() || '';
     const styleIconHtml = styleIconMap[locationStyle] ? `<i class="${styleIconMap[locationStyle]}"></i> ` : '';
+
+    // Workshops: Kleinere Icons, Farbe wie Adresse (inherit)
+    const workshopsHtml = (location.workshops && location.workshops.length > 0) ? `
+  <div class="popup-workshops" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; margin-bottom: 2px;">
+    ${location.workshops.map(w => {
+      const icon = window.AppConfig.getWorkshopIcon(w);
+      const label = window.i18n?.t('workshops.' + w) || w;
+      return icon ? `
+        <span aria-label="${label}" role="tooltip" data-microtip-position="top" style="display: inline-block;">
+          <i class="${icon}" style="font-size: 0.75rem; color: inherit; opacity: 0.7;"></i>
+        </span>` : '';
+    }).join('')}
+  </div>` : '';
+
+    // Weekly im Popup
+    const weeklyHtml = (location.weekly && location.weekly.time) ? (() => {
+      const _t = (k) => window.i18n ? window.i18n.t(k) : '';
+      const isToday = location.weekly.weekday === new Date().getDay();
+      const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
+      return `<div class="popup-weekly" style="color: inherit; font-size: 0.85rem; margin-top: 4px; opacity: 0.7; display: flex; align-items: center; gap: 4px;" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom">
+            <i class="fas fa-calendar-day"></i> <span>${isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday)} — ${timeStr}${_t('weekly.timeSuffix')}</span>
+          </div>`;
+    })() : '';
+
+
     const countryCode = this.getCountryCode(space.loc?.country || '');
 
+    // 5. HTML Zusammenbau
     return `
       <div style="--status-color: ${statusColor};">
         <h3 id="style">${styleIconHtml}${space.style || ''}</h3>
         <div class="popup-title-row">
-          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" aria-label="${window.i18n ? window.i18n.t('tooltips.makerspaceId') : 'dieser Makerspace: ID'} ${space.ID}" role="tooltip" data-microtip-position="top">
+          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" 
+             aria-label="${getTooltip('tooltips.makerspaceId')} ${space.ID}" role="tooltip" data-microtip-position="top">
             <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
           </a>
         </div>
-        ${space.weekly && space.weekly.time && space.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = space.weekly.weekday === new Date().getDay(); const _timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + space.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+        
+        ${workshopsHtml}
+        ${weeklyHtml}
+        
         <br>
         <div class="popup-street-line">
           <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${space.loc?.lat},${space.loc?.long}" target="_blank" class="navigation-icon" aria-label="${window.i18n ? window.i18n.t('tooltips.routeToMakerspace') : 'Route zum Makerspace'}" role="tooltip" data-microtip-position="bottom"><i></i></a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${space.loc?.lat},${space.loc?.long}" target="_blank" 
+             class="navigation-icon" aria-label="${getTooltip('tooltips.routeToMakerspace')}" role="tooltip" data-microtip-position="bottom"><i></i></a>
         </div>
+        
         ${this.zfill(space.loc?.plz || '', space.loc?.country || '')} <b>${space.loc?.city || ''}</b><br>
         <span class="country"><span class="fi fi-${countryCode}"></span>${space.loc?.country || ''}</span><br>
         <a id="url" href="${space.link?.url || '#'}" target="_blank"><b>${space.link?.text || space.link?.url || ''}</b></a>
@@ -274,6 +316,13 @@ class EmbedMapExtended {
       meetingHtml = `<span class="listing-meeting-today" aria-label="${weeklyTooltip}: ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-calendar-day"></i> ${todayLabel}</span>`;
     }
 
+    const workshopsCount = space.workshops ? space.workshops.length : 0;
+    const workshopColor = window.AppConfig.getDynamicSpaceColor(space);
+    const workshopsHtml = workshopsCount > 0 ? `
+      <span class="listing-workshops" style="color: ${workshopColor}; font-weight: bold; margin-left: 8px; font-size: 0.8em; opacity: 1;">
+        <i class="fas fa-screwdriver-wrench"></i> ${workshopsCount}
+      </span>` : '';
+
     item.innerHTML = `
       <div class="listing-item-content">
         ${isTarget ? '<div class="our-space-pill">Our Space</div>' : ''}
@@ -283,7 +332,7 @@ class EmbedMapExtended {
           <div class="listing-item-address-lines">
             ${addressLines}
           </div>
-          ${meetingHtml}
+          ${workshopsHtml}${meetingHtml}
         </div>
       </div>`;
     return item;

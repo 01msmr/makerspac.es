@@ -431,21 +431,6 @@
    POPUP CONTENT ELEMENTS
    =================================== */
 
-.spac {
-  padding-left: 1.5em;
-  margin: 0 .1em 0 .1em;
-  border-radius: .25em;
-  background-color: blue;
-  color: white;
-  border: .1em solid transparent;
-}
-
-.spac:hover {
-  background-color: white;
-  color: blue;
-  border: .1em solid blue;
-}
-
 a#url {
   display: block;
   width: 100%;
@@ -630,12 +615,23 @@ a#titleurl:hover h3.space-unknown .fas {
 .popup-weekly {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 1.05em;
+  gap: 5px;padding-left: 6px;
+  font-size: 1.2em;
   font-weight: bold;
   margin-top: 8px;
   cursor: help;
   width: fit-content;
+}
+
+.popup-workshops {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  padding-top: 2px;
+  padding-left: 6px;
+  font-size: 1em;
+  color: color-mix(in srgb, var(--text-color) 70%, transparent);
 }
 
 .country .fi {
