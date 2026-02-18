@@ -41,9 +41,10 @@ class DataStore {
       title: 'Einstellungen',
       language: 'Sprache',
       colorScheme: 'Farbschema',
-      clustering: 'Orte gruppieren',
+      clustering: 'Orte clustern',
       clusteringOn: 'aktivieren',
       clusteringOff: 'deaktivieren',
+      mapService: 'Navigation',
       light: 'Hell',
       auto: 'Automatisch',
       dark: 'Dunkel',
@@ -200,7 +201,40 @@ class DataStore {
 
     this.settingsPopover.appendChild(clusteringHeader);
 
-    // 4. SAVED SETTINGS SECTION
+    // 4. NAVIGATION SERVICE SECTION
+    const navServiceHeader = document.createElement('div');
+    navServiceHeader.className = 'settings-header';
+    const currentNavService = window.consent.get('mapService') || 'google';
+
+    navServiceHeader.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-route"></i>
+        <span>${this.t('mapService')}</span>
+      </div>
+      <div class="settings-header-icons">
+        <span class="settings-icon-btn ${currentNavService === 'osm' ? 'active' : ''}" data-nav="osm" aria-label="OpenStreetMap" role="tooltip" data-microtip-position="bottom"><i class="fas fa-map"></i></span>
+        <span class="settings-icon-btn ${currentNavService === 'google' ? 'active' : ''}" data-nav="google" aria-label="Google Maps" role="tooltip" data-microtip-position="bottom"><i class="fab fa-google"></i></span>
+        <span class="settings-icon-btn ${currentNavService === 'apple' ? 'active' : ''}" data-nav="apple" aria-label="Apple Maps" role="tooltip" data-microtip-position="bottom"><i class="fab fa-apple"></i></span>
+      </div>
+    `;
+
+    navServiceHeader.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const service = btn.dataset.nav;
+        window.consent.set('mapService', service);
+        window.consent.remove('mapServiceTimestamp');
+        navServiceHeader.querySelectorAll('[data-nav]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.navigation-icon').forEach(navLink => {
+          navLink.setAttribute('data-service', service);
+        });
+      });
+    });
+
+    this.settingsPopover.appendChild(navServiceHeader);
+
+    // 5. SAVED SETTINGS SECTION
     const settingsSection = document.createElement('div');
     settingsSection.className = 'settings-header';
     settingsSection.innerHTML = `
@@ -344,6 +378,9 @@ class DataStore {
           <div class="sync-qr-container" id="qr-settings-code"></div>
         </div>
         <div class="sync-actions">
+          <button class="sync-btn sync-btn-primary" id="qr-settings-copy">
+            <i class="fas fa-copy"></i> URL kopieren
+          </button>
           <button class="sync-btn sync-btn-secondary" id="qr-settings-close">
             ${t.sync?.close?.[currentLang] || 'Schließen'}
           </button>
@@ -365,6 +402,31 @@ class DataStore {
     dialog.querySelector('#qr-settings-close').addEventListener('click', () => dialog.remove());
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.remove();
+    });
+
+    dialog.querySelector('#qr-settings-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        const rect = dialog.querySelector('.sync-dialog').getBoundingClientRect();
+        let toast = document.querySelector('.settings-hash-toast');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.className = 'settings-hash-toast';
+          document.body.appendChild(toast);
+        } else {
+          toast.classList.remove('show', 'zoom-out');
+          clearTimeout(toast._hideTimer);
+        }
+        toast.style.top = (rect.top - 10) + 'px';
+        toast.style.left = (rect.left + rect.width / 2) + 'px';
+        toast.style.transform = 'translate(-50%, -100%)';
+        toast.innerHTML = '✓ URL kopiert';
+        requestAnimationFrame(() => toast.classList.add('show'));
+        toast._hideTimer = setTimeout(() => {
+          toast.classList.remove('show');
+          toast.classList.add('zoom-out');
+          setTimeout(() => { toast.style.transform = ''; toast.remove(); }, 300);
+        }, 2500);
+      });
     });
   }
 
@@ -497,13 +559,19 @@ class DataStore {
     if (!this.settingsPopover) return;
 
     const headers = this.settingsPopover.querySelectorAll('.settings-header-content span');
-    if (headers.length >= 5) {
+    if (headers.length >= 6) {
       headers[0].textContent = this.t('title');
       headers[1].textContent = this.t('language');
       headers[2].textContent = this.t('colorScheme');
       headers[3].textContent = this.t('clustering');
-      headers[4].textContent = this.t('savedSettings');
+      headers[4].textContent = this.t('mapService');
+      headers[5].textContent = this.t('savedSettings');
     }
+
+    const currentService = window.consent.get('mapService') || 'google';
+    this.settingsPopover.querySelectorAll('[data-nav]').forEach(b => {
+      b.classList.toggle('active', b.dataset.nav === currentService);
+    });
 
     const allFlags = this.settingsPopover.querySelectorAll('[data-lang]');
     allFlags.forEach(flag => {

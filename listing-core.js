@@ -193,17 +193,11 @@
     getWorkshopsHtml(location) {
       if (!location.workshops || location.workshops.length === 0) return '';
 
-      // Werkstattliste untereinander (\n für Zeilenumbruch)
-      const workshopNames = location.workshops
-        .map(w => (window.i18n ? window.i18n.t('workshops.' + w) : w))
-        .join('\n');
-
       return `
-    <span class="listing-workshops" 
-          aria-label="${workshopNames}" 
-          role="tooltip" 
-          data-microtip-position="bottom-left"
-          data-microtip-size="small">
+    <span class="listing-workshops"
+          aria-label="${CONFIG.getWorkshopsTooltip(location.workshops)}"
+          role="tooltip"
+          data-microtip-position="bottom-left">
       ${location.workshops.length} <i class="${CONFIG.icons.ui.workshops}"></i>
     </span>`;
     }
@@ -216,7 +210,7 @@
       const weeklyTooltip = window.i18n ? window.i18n.t('weekly.tooltip') : 'wöchentliches Treffen';
       const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
       const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
-      return `<span class="listing-meeting-today" aria-label="${weeklyTooltip}: ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="${CONFIG.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
+      return `<span class="listing-meeting-today" aria-label="${weeklyTooltip} — ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="${CONFIG.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

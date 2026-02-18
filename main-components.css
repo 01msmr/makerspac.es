@@ -500,18 +500,22 @@ hr {
   border: 0px solid white;
 }
 
-#style {
-  display: block;
-  margin-bottom: 8px;
-  font-size: small;
-  text-transform: uppercase;
-  font-style: italic;
-  font-weight: 400;
+.popup-body-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 2px;
+  margin-top: -8px;
+  margin-bottom: 4px;
 }
 
-#style:hover {
-  color: var(--text-color);
-  font-weight: 800;
+.popup-style-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  color: var(--status-color);
 }
 
 
@@ -615,12 +619,13 @@ a#titleurl:hover h3.space-unknown .fas {
 .popup-weekly {
   display: flex;
   align-items: center;
-  gap: 5px;padding-left: 6px;
+  gap: 5px;
+  padding-left: 6px;
   font-size: 1.2em;
   font-weight: bold;
   margin-top: 8px;
-  cursor: help;
   width: fit-content;
+  justify-self: start;
 }
 
 .popup-workshops {
@@ -632,6 +637,8 @@ a#titleurl:hover h3.space-unknown .fas {
   padding-left: 6px;
   font-size: 1em;
   color: color-mix(in srgb, var(--text-color) 70%, transparent);
+  width: fit-content;
+  justify-self: start;
 }
 
 .country .fi {
@@ -640,172 +647,60 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* ===================================
-   NAVIGATION ICON (Popup)
+   ADDRESS BLOCK + NAVIGATION ICON (Popup)
    =================================== */
 
 .popup-street-line {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(255,255,255,0.66);
+  background-image: linear-gradient(to bottom, transparent 50%, var(--status-color, var(--space-hover)) 50%);
+  background-size: 100% 400%;
+  background-position: 0 0;
+  border-radius: 9px;
+  padding: 6px 10px;
+  margin: 6px 0;
+  cursor: pointer;
+  transition: background-position 160ms ease-in-out, color 160ms ease-in-out;
+  font-size: 1.05em;
   line-height: 1.5;
-  margin-bottom: 2px;
-  font-size: 1.1em;
 }
 
-.street {
-  font-size: 0.9em;
-  color: #666666;
+.popup-address-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  color: black;
 }
 
-.city {
-  font-size: 1.3em;
-  font-weight: light;
+.popup-street-line:hover .popup-address-lines {
+  color: white;
 }
 
-.city b {
-  font-size: 1.1em;
+.popup-street-line:hover {
+  background-position: 0 100%;
+  color: white !important;
 }
 
-.country {
-  color: #666666;
-  font-weight: normal;
+.popup-street-line:hover .country {
+  color: white;
 }
 
-/* Navigation Icon Base Styling */
-.navigation-icon {
-  position: absolute;
-  top: 50%;
-  right: 28px;
-  font-size: 1.4em;
-  transform: translateY(-50%);
+/* Navigation Icon */
+.leaflet-container .navigation-icon {
   text-decoration: none;
-  z-index: 10;
-  display: inline-block;
-  transition: all ease-in 0.025s;
-  padding-left: 0;
-  margin-left: 6px;
+  color: var(--status-color, var(--space-hover)) !important;
+  transition: color 0.15s;
 }
 
-/* Override microtip base styles for navigation-icon */
-.navigation-icon[role~="tooltip"] {
-  position: absolute;
+.leaflet-container .navigation-icon:hover {
+  color: white !important;
 }
 
 .navigation-icon[role~="tooltip"]::before,
-.navigation-icon[role~="tooltip"]::after,
-.navigation-icon[role~="tooltip"]:hover::before,
-.navigation-icon[role~="tooltip"]:hover::after {
+.navigation-icon[role~="tooltip"]::after {
   pointer-events: none;
-}
-
-/* Navigation Icon Hover Effect */
-.navigation-icon:hover {
-  right: 0px;
-  padding-left: 6px;
-  margin-left: 0;
-  transition: all ease-in-out 0.25s;
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.navigation-icon:hover::before {
-  content: "⇢" !important;
-  font-weight: bold;
-  position: static;
-  opacity: 1;
-  border: none;
-  background: none;
-  width: auto;
-  height: auto;
-}
-
-/* Icon Selection Based on Service Data Attribute */
-.navigation-icon[data-service="google"] i::before {
-  content: "\f1a0";
-  /* fab fa-google */
-  font-family: "Font Awesome 5 Brands";
-}
-
-.navigation-icon[data-service="apple"] i::before {
-  content: "\f179";
-  /* fab fa-apple */
-  font-family: "Font Awesome 5 Brands";
-}
-
-.navigation-icon[data-service="osm"] i::before {
-  content: "\f279";
-  /* fas fa-map */
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-}
-
-.navigation-icon[data-service="default"] i::before,
-.navigation-icon:not([data-service]) i::before {
-  content: "\f5eb";
-  /* fas fa-directions */
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-}
-
-
-
-/* Visual indicator for cycling through services */
-.navigation-icon:active {
-  transform: translateY(-50%) scale(1.1);
-  transition: transform 0.1s ease-in-out;
-}
-
-
-/* Color Definitions Based on Parent Status Class */
-.popup-street-line.status-open .navigation-icon {
-  color: var(--space-open);
-}
-
-.popup-street-line.status-closed .navigation-icon {
-  color: var(--space-closed);
-}
-
-.popup-street-line.status-unknown .navigation-icon {
-  color: var(--space-unknown);
-}
-
-.popup-street-line.status-default .navigation-icon {
-  color: var(--space-hover);
-}
-
-/* Hover Effects for Navigation Icons */
-.popup-street-line.status-open .navigation-icon:hover {
-  color: var(--space-open);
-}
-
-.popup-street-line.status-closed .navigation-icon:hover {
-  color: var(--space-closed);
-}
-
-.popup-street-line.status-unknown .navigation-icon:hover {
-  color: var(--space-unknown);
-}
-
-.popup-street-line.status-default .navigation-icon:hover {
-  color: var(--space-hover);
-}
-
-/* Service-specific Icon Styling with Pseudo-elements */
-.navigation-icon i {
-  position: relative;
-}
-
-/* Reset default icon content */
-.navigation-icon i::before {
-  display: inline-block;
-  font-style: normal;
-  font-variant: normal;
-  text-rendering: auto;
-  line-height: 1;
-}
-
-/* Animation for Icon Switching */
-.navigation-icon i {
-  transition: all 0.2s ease-in-out;
 }
 
 /* Accessibility: Focus States */
@@ -813,6 +708,51 @@ a#titleurl:hover h3.space-unknown .fas {
   outline: 2px solid currentColor;
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+/* Click feedback */
+.navigation-icon:active {
+  transform: scale(0.9);
+  transition: transform 0.1s ease-in-out;
+}
+
+/* Icon Selection Based on Service Data Attribute */
+.navigation-icon[data-service="google"] i::before {
+  content: "\f1a0";
+  font-family: "Font Awesome 5 Brands";
+}
+
+.navigation-icon[data-service="apple"] i::before {
+  content: "\f179";
+  font-family: "Font Awesome 5 Brands";
+}
+
+.navigation-icon[data-service="osm"] i::before {
+  content: "\f279";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+.navigation-icon[data-service="default"] i::before,
+.navigation-icon:not([data-service]) i::before {
+  content: "\f5eb";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+.navigation-icon i {
+  display: inline-block;
+  font-size: 1.5em;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.country {
+  color: #666666;
+  font-weight: normal;
+  transition: color 0.15s;
 }
 
 
@@ -1151,7 +1091,11 @@ a#titleurl:hover h3.space-unknown .fas {
 .settings-confirm-tooltip {
   position: fixed;
   transform: translate(-50%, -100%);
-  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 72px;
+  padding: 0 14px 8px;
   border-radius: 8px;
   background: var(--microtip-background-color);
   color: var(--microtip-color);
@@ -1164,6 +1108,12 @@ a#titleurl:hover h3.space-unknown .fas {
   z-index: 10001;
   opacity: 0;
   transition: opacity 0.15s ease-out;
+}
+
+.settings-confirm-tooltip span {
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 .settings-confirm-tooltip.show {
@@ -1185,7 +1135,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .settings-confirm-yes {
   display: inline-block;
-  margin-top: 6px;
+  margin-top: 0;
   padding: 2px 16px;
   border: 2px solid var(--microtip-color);
   border-radius: 4px;

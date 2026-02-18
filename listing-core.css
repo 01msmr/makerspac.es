@@ -223,6 +223,11 @@
   white-space: nowrap;
 }
 
+.listing-workshops::after {
+  white-space: pre-line !important;
+  width: 105px !important;
+}
+
 .listing-item.active .listing-workshops {
   color: white !important;
 }

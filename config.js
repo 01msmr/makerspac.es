@@ -215,6 +215,14 @@
     return ICONS.workshops[key] || '';
   }
 
+  function getWorkshopsTooltip(workshops) {
+    const count = workshops.length;
+    const header = window.i18n?.t('filter.workshops') || 'Werkstätten';
+    const separator = '─'.repeat(14);
+    const names = workshops.map(w => window.i18n?.t('workshops.' + w) || w).join('&#10;');
+    return `${count} ${header}&#10;${separator}&#10;${names}`;
+  }
+
   /**
    * Holt Status-Icon-Klasse basierend auf isOpen
    * @param {boolean|null} isOpen - Space Status
@@ -371,6 +379,7 @@
     // Helper-Funktionen
     getStyleIcon,
     getWorkshopIcon,
+    getWorkshopsTooltip,
     getStatusIcon,
     getCountryCode,
     isDarkMode,

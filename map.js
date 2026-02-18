@@ -171,12 +171,7 @@ function updateNavigationIconAppearance(navLinkElement, location) {
   const parentContainer = navLinkElement.parentElement;
   if (!icon || !parentContainer) return;
 
-  const savedService = window.consent.get('mapService');
-  const mapServiceTimestamp = window.consent.get('mapServiceTimestamp');
-  const ninetySixHours = 96 * 60 * 60 * 1000;
-  let serviceExpired = !savedService || (mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours);
-
-  const serviceToUse = serviceExpired ? 'default' : savedService;
+  const serviceToUse = window.consent.get('mapService') || 'default';
   navLinkElement.setAttribute('data-service', serviceToUse);
 
   parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
@@ -192,6 +187,17 @@ function updateNavigationIconAppearance(navLinkElement, location) {
 
   parentContainer.classList.add(statusClass);
   navLinkElement.setAttribute('data-status', statusClass.replace('status-', ''));
+
+  const colorMap = {
+    'status-open': 'var(--space-open)',
+    'status-closed': 'var(--space-closed)',
+    'status-unknown': 'var(--space-unknown)',
+    'status-default': 'var(--space-hover)'
+  };
+  const popupRoot = navLinkElement.closest('.leaflet-popup-content')?.firstElementChild;
+  if (popupRoot) {
+    popupRoot.style.setProperty('--status-color', colorMap[statusClass] || 'var(--space-hover)');
+  }
 }
 
 function handleNavigationClick(event, location) {
@@ -199,39 +205,10 @@ function handleNavigationClick(event, location) {
   const { lat, long } = location.loc;
   if (typeof lat !== 'number' || typeof long !== 'number') return;
 
-  let mapService = window.consent.get('mapService');
-  const mapServiceTimestamp = window.consent.get('mapServiceTimestamp');
-  const ninetySixHours = 96 * 60 * 60 * 1000;
-
-  if (mapService && mapServiceTimestamp && (Date.now() - parseInt(mapServiceTimestamp, 10)) > ninetySixHours) {
-    window.consent.remove('mapService');
-    window.consent.remove('mapServiceTimestamp');
-    mapService = null;
-  }
-
-  const serviceToUse = mapService || 'google';
+  const serviceToUse = window.consent.get('mapService') || 'google';
   openMap(serviceToUse, lat, long);
 }
 
-function handleNavigationRightClick(event, location, navLinkElement) {
-  event.preventDefault();
-
-  const savedService = window.consent.get('mapService');
-  let nextService;
-
-  if (!savedService || savedService === 'google') {
-    nextService = 'apple';
-  } else if (savedService === 'apple') {
-    nextService = 'osm';
-  } else {
-    nextService = 'google';
-  }
-
-  window.consent.set('mapService', nextService);
-  window.consent.set('mapServiceTimestamp', String(Date.now()));
-
-  updateNavigationIconAppearance(navLinkElement, location);
-}
 
 function openMap(service, lat, long) {
   let url;
@@ -790,7 +767,7 @@ function createMarkerForLocation(location) {
     let statusIconHtml = '';
     let nameClass = '';
 
-    let statusColor = 'blue';
+    let statusColor = 'var(--space-hover)';
     if (location.isOpen === true) {
       statusColor = 'var(--space-open)';
     }
@@ -804,15 +781,15 @@ function createMarkerForLocation(location) {
     const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
 
     if (location.isOpen === true) {
-      statusIconHtml = `<i class="fas fa-door-open" aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom"></i> `;
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-door-open"></i></span> `;
       nameClass = 'space-open';
     }
     else if (location.isOpen === false) {
-      statusIconHtml = `<i class="fas fa-lock" aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom"></i> `;
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-lock"></i></span> `;
       nameClass = 'space-closed';
     }
     else if (location.spaceapi && location.spaceapi.endpoint) {
-      statusIconHtml = `<i class="fas fa-question-circle" aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom"></i> `;
+      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-question-circle"></i></span> `;
       nameClass = 'space-unknown';
     }
 
@@ -823,7 +800,7 @@ function createMarkerForLocation(location) {
 
     if (styleIconClass) {
       const translatedStyle = window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style;
-      styleIconHtml = `<i class="${styleIconClass}" title="${translatedStyle}"></i> `;
+      styleIconHtml = `<span aria-label="${translatedStyle}" role="tooltip" data-microtip-position="top"><i class="${styleIconClass}"></i></span>`;
     }
 
     const streetName = location.loc?.street?.name || '';
@@ -835,38 +812,35 @@ function createMarkerForLocation(location) {
     const countryName = location.loc?.country || '';
     const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
 
-    const styleLabel = locationStyle && styleTranslationMap[locationStyle] ?
-      (window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style) :
-      (location.style || '');
-
     const bookmarkIcon = window.bookmarkManager ?
       window.bookmarkManager.createBookmarkIcon(location.ID, 'popup-bookmark') :
       '';
 
     return `
             <div style="--status-color: ${statusColor};">
-              <h3 id="style">${styleIconHtml}${styleLabel}</h3>
-              <div class="popup-title-row">
-                <a id="titleurl" href="${linkUrl}" target="_blank" aria-label="${getTooltip('tooltips.makerspaceId')} ${location.ID}" role="tooltip" data-microtip-position="top">
-                  <h3 class="${nameClass}" data-id="${location.ID}">
-                    ${statusIconHtml}${location.name || 'Unnamed Space'}
-                  </h3>
-                </a>
-                ${bookmarkIcon}
+              <div class="popup-body-grid">
+                ${location.workshops && location.workshops.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${window.AppConfig.getWorkshopsTooltip(location.workshops)}" role="tooltip" data-microtip-position="top">${location.workshops.map(w => { const icon = window.AppConfig.getWorkshopIcon(w); return icon ? `<i class="${icon}"></i>` : ''; }).join('')}</div>` : ''}
+                <div class="popup-style-cell">${styleIconHtml}</div>
+                <div class="popup-title-row">
+                  <a id="titleurl" href="${linkUrl}" target="_blank">
+                    <h3 class="${nameClass}" data-id="${location.ID}">
+                      ${statusIconHtml}${location.name || 'Unnamed Space'}
+                    </h3>
+                  </a>
+                  ${bookmarkIcon}
+                </div>
+                ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div></div><div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
               </div>
-              ${location.workshops && location.workshops.length > 0 ? `<div class="popup-workshops">${location.workshops.map(w => { const icon = window.AppConfig.getWorkshopIcon(w); const label = window.i18n?.t('workshops.' + w) || w; return icon ? `<span aria-label="${label}" role="tooltip" data-microtip-position="top"><i class="${icon}"></i></span>` : ''; }).join('')}</div>` : ''}
-              ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
-              <br>
-                  <div class="popup-street-line">
-                    <span class="street">${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></span>
-                    <a href="#" class="navigation-icon" aria-label="${getTooltip('tooltips.routeToMakerspace')}" role="tooltip" data-microtip-position="bottom">
-                      <i></i>
-                    </a>
-                  </div>
-                  ${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</span><br>
-                    <span class="country"><span class="fi fi-${getCountryCode(countryName)}"></span>${translatedCountry}</span><br>
-                      <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
-                      `;
+              <a href="#" class="popup-street-line navigation-icon" aria-label="Route zu ${location.name || ''}" role="tooltip" data-microtip-position="bottom">
+                <i></i>
+                <div class="popup-address-lines">
+                  <div>${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></div>
+                  <div>${zfill(location.loc?.plz || '', countryName)} <b>${location.loc?.city || ''}</b></div>
+                  <div><span class="fi fi-${getCountryCode(countryName)}"></span> ${translatedCountry}</div>
+                </div>
+              </a>
+              <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
+              `;
   }, {
     maxWidth: 440,
     minWidth: 160,
@@ -989,9 +963,6 @@ function createMarkerForLocation(location) {
       updateNavigationIconAppearance(navLink, location);
       navLink.addEventListener('click', (event) => {
         handleNavigationClick(event, location);
-      });
-      navLink.addEventListener('contextmenu', (event) => {
-        handleNavigationRightClick(event, location, navLink);
       });
     }
 
