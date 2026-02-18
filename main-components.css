@@ -20,6 +20,7 @@
   padding: 3px 8px;
   border-radius: 8px;
   white-space: pre;
+  overflow: hidden;
 }
 
 /* Microtip Pfeil: SVG durch CSS-Border ersetzen */
@@ -639,6 +640,11 @@ a#titleurl:hover h3.space-unknown .fas {
   color: color-mix(in srgb, var(--text-color) 70%, transparent);
   width: fit-content;
   justify-self: start;
+}
+
+.leaflet-container .popup-workshops::after {
+  white-space: pre-line !important;
+  width: 105px !important;
 }
 
 .country .fi {

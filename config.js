@@ -218,9 +218,8 @@
   function getWorkshopsTooltip(workshops) {
     const count = workshops.length;
     const header = window.i18n?.t('filter.workshops') || 'Werkstätten';
-    const separator = '─'.repeat(14);
     const names = workshops.map(w => window.i18n?.t('workshops.' + w) || w).join('&#10;');
-    return `${count} ${header}&#10;${separator}&#10;${names}`;
+    return `${count} ${header}&#10;……………………………&#10;${names}`;
   }
 
   /**
