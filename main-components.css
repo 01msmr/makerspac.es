@@ -120,6 +120,11 @@
 /* Titel-Zeile */
 .settings-title-header {
   font-weight: 600;
+  border-bottom: none;
+}
+
+.settings-title-header .settings-header-content span {
+  font-size: 1.4em;
 }
 
 .settings-title-header .settings-header-content i {
@@ -145,6 +150,7 @@
   position: absolute;
   right: 0;
   top: 0;
+  z-index: 10;
 }
 
 .settings-close-btn i {
