@@ -35,18 +35,21 @@
   /* Space-Status-Farben werden von config.js gesetzt */
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
 }
 
 #map {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
 }
 
 .title-bar {

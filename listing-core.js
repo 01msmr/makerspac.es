@@ -499,6 +499,7 @@
      * SVG im Body mit position:fixed - wird bei Scroll/Navigation aktualisiert
      */
     createHoverSVG(item, location, color = 'blue') {
+      if (window.innerWidth <= 767) return;
       this.cleanupHoverSVG();
       const itemRect = item.getBoundingClientRect();
       this.currentHoverSVG = CONFIG.createConnectorSVG(itemRect, color);
@@ -545,6 +546,7 @@
      * Erstellt eine Connection Line zum Marker
      */
     createConnectionLine(item, targetMarker, color = '#0000ff') {
+      if (window.innerWidth <= 767) return;
       if (window.mapUtils?.createConnectionLine) {
         this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);
       }

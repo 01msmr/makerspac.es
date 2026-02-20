@@ -507,14 +507,17 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     initializeEventListeners() {
-      this.searchBar.focus();
+      if (window.innerWidth > 767) this.searchBar.focus();
 
       document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
       this.searchBar.addEventListener('input', () => this.handleSearchInput());
       this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
 
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) {
+        // Klicks innerhalb des Filter-Popovers (auch nach Entfernen aus DOM) ignorieren
+        // Auf Mobile: kein closeDropdown bei Außenklick (Tastatur-Dismiss würde Nav-Buttons verbergen)
+        if (window.innerWidth > 767 &&
+            !e.target.closest('.search-container') && !e.target.closest('.mf-overlay')) {
           this.closeDropdown();
         }
       });
@@ -1253,12 +1256,17 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     handleItemClick(location) {
-      this.searchFilter.currentIdMatch = null;
+      const isMobile = window.innerWidth <= 767;
 
+      // Doppelklick / Doppeltap erkennen
+      if (!this._clickTimestamps) this._clickTimestamps = {};
+      const now = Date.now();
+      const isDoubleClick = (now - (this._clickTimestamps[location.ID] || 0)) < 400;
+      this._clickTimestamps[location.ID] = now;
+
+      this.searchFilter.currentIdMatch = null;
       clearTimeout(this.zoomDebounceTimeout);
       this._manualSpaceClick = true;
-
-      this.map?.flyTo([location.loc.lat, location.loc.long], CONFIG.settings.defaultZoomLevel);
 
       const targetMarker = this.listingCore?.findMarkerByLocation(location);
       if (targetMarker) {
@@ -1272,21 +1280,38 @@
           });
         }
 
-        this.map?.once('moveend', () => {
-          targetMarker._openedByHover = false;
-          targetMarker.openPopup();
-          if (window.mapUtils?.setStickyPopup) {
-            window.mapUtils.setStickyPopup(targetMarker);
-          }
-        });
+        targetMarker.openPopup();
+        if (window.mapUtils?.setStickyPopup) {
+          window.mapUtils.setStickyPopup(targetMarker);
+        }
       }
 
-      this.searchFilter.applyPreFilters([location]);
-
-      this.searchBar.value = location.name;
-      this.createSuggestionItems([location], null);
-      this.updateSearchCounter(1);
-      this.updateDropdownUI(true);
+      if (isMobile) {
+        // Mobile: BG/FG invertieren; bei Doppeltap Namen in Searchbar
+        this.suggestionsDropdown.querySelectorAll('.listing-item.active')
+          .forEach(el => el.classList.remove('active'));
+        const clickedItem = this.suggestionsDropdown.querySelector(
+          `.listing-item[data-location-id="${location.ID}"]`
+        );
+        if (clickedItem) clickedItem.classList.add('active');
+        if (isDoubleClick) {
+          this.searchBar.value = location.name;
+        }
+      } else {
+        // Desktop: flyTo; bei Doppelklick zusätzlich filtern + Namen eintragen
+        if (targetMarker) {
+          this.zoomManager?.map?.flyTo(targetMarker.getLatLng(), 13, { duration: 1.0 });
+        }
+        if (isDoubleClick) {
+          this.searchFilter.applyPreFilters([location]);
+          this.searchBar.value = location.name;
+          this.createSuggestionItems([location], null);
+          this.updateSearchCounter(1);
+          this.updateDropdownUI(true);
+          const activeItem = this.suggestionsDropdown.querySelector('.listing-item');
+          if (activeItem) activeItem.classList.add('active');
+        }
+      }
 
       setTimeout(() => {
         this._manualSpaceClick = false;
@@ -1315,6 +1340,9 @@
     updateDropdownUI(shouldShow) {
       this.suggestionsDropdown.classList.toggle('is-active', shouldShow);
       this.searchBar.classList.toggle('has-suggestions', shouldShow);
+      // Spiegelt is-active auf .dropdown-wrap für mobile Nav-Sichtbarkeit
+      this.suggestionsDropdown.closest('.dropdown-wrap')
+        ?.classList.toggle('is-active', shouldShow);
       if (shouldShow) this.adjustDropdownHeight();
     }
 
@@ -1325,6 +1353,7 @@
 
       this.suggestionsDropdown.classList.remove('is-active');
       this.searchBar.classList.remove('has-suggestions');
+      this.suggestionsDropdown.closest('.dropdown-wrap')?.classList.remove('is-active');
       this.listingCore?.removeConnectionLine();
       this.listingCore?.resetKeyboardNavigation();
       this.listingCore?.cleanupHoverSVG();
@@ -1357,6 +1386,7 @@
     }
 
     adjustDropdownHeight() {
+      if (window.innerWidth <= 767) return; // Mobile: Höhe wird von CSS (116px) und applyGridSnapping gesetzt
       const dropdown = this.suggestionsDropdown;
       if (!dropdown) return;
 

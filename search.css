@@ -60,7 +60,7 @@
   transition: opacity 0.5s ease-in-out, border-color 0.5s, box-shadow 0.5s;
 }
 
-/* 
+/*
    Nur animieren, wenn NICHT gehovert und NICHT fokussiert.
    Das verhindert, dass die Animation beim Interagieren dazwischenfunkt.
 */
@@ -102,6 +102,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--space-hover);
+  font-family: 'Lato', sans-serif;
   border: 1px solid var(--space-hover);
   border-radius: 50%;
   width: 28px;
@@ -109,7 +110,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Lato', sans-serif;
   font-size: 1.0em;
   font-weight: bold;
   z-index: 4;
@@ -203,13 +203,13 @@
   opacity: 1;
 }
 
-#suggestions-dropdown.is-zooming {
-  pointer-events: auto;
-}
-
 #suggestions-dropdown.overlap-reduced {
   opacity: 0.33 !important;
   transition: opacity 0.3s ease-in-out;
+}
+
+#suggestions-dropdown.is-zooming {
+  pointer-events: auto;
 }
 
 /* =================================================================
@@ -336,11 +336,11 @@
   background-color: var(--dropdown-bg);
   border: 1px solid var(--dropdown-border);
   border-radius: 8px;
-  box-shadow: 0px 4px 12px 2px var(--shadow-color);
   min-width: 150px;
   max-height: none;
   overflow-y: auto;
   z-index: 10000;
+  box-shadow: 0px 4px 12px 2px var(--shadow-color);
 }
 
 .filter-popover-item {
@@ -501,6 +501,33 @@
   transform: scale(1.2);
 }
 
+/* Filter-Indicator: global versteckt, mobile eingeblendet */
+.filter-active-indicator {
+  display: none;
+}
+
+/* Active listing item → nur mobile, Styles im @media (max-width: 767px) Block unten */
+
+/* =================================================================
+   DROPDOWN-NAV (standardmäßig versteckt, nur mobile)
+   ================================================================= */
+
+.dropdown-nav {
+  display: none;
+}
+
+/* =================================================================
+   FILTER-TOGGLE-BUTTON + LUPE (standardmäßig versteckt, nur mobile)
+   ================================================================= */
+
+#filter-toggle-btn {
+  display: none !important;
+}
+
+.search-lupe {
+  display: none !important;
+}
+
 /* =================================================================
    MOBILE RESPONSIVE
    ================================================================= */
@@ -518,5 +545,400 @@
   .country-group-header {
     padding: 2px 8px;
     font-size: 0.85em;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Search Container: unten fixiert, wächst nach oben */
+  .search-container {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto !important;
+    width: auto !important;
+    display: flex;
+    flex-direction: column-reverse;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Overlap-Trick zurücksetzen (war für downward flow) */
+  #suggestions-dropdown {
+    margin-top: 0 !important;
+    padding-top: 8px !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 50vh;
+  }
+
+  .active-filters-section {
+    margin-top: 0 !important;
+    padding-top: 6px !important;
+    border-radius: 0 !important;
+    border-top: 1px solid var(--dropdown-border);
+  }
+
+  /* Search input row: untere Leiste */
+  .search-input-row {
+    background-color: var(--search-bg);
+    padding: 8px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Search input wrapper füllt verbleibende Breite */
+  .search-input-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #filter-toggle-btn {
+    display: flex !important;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background-color: var(--search-bg);
+    color: var(--text-color);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9em;
+  }
+
+  #filter-toggle-btn:hover {
+    background-color: var(--space-hover);
+    color: white;
+  }
+
+  /* === FILTER-INDICATOR (aktiver Filter inline neben Filter-Button) === */
+  .filter-active-indicator {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    background: #0077ff;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    flex-shrink: 1;
+    overflow: hidden;
+    max-width: 44%;
+    cursor: pointer;
+  }
+
+  .filter-active-indicator.has-filters {
+    display: none; /* Aktiver Filter nur als Chip-Bar (#mobile-active-filters) anzeigen, nicht doppelt */
+  }
+
+  .filter-active-indicator .fi-sep {
+    opacity: 0.5;
+    margin: 0 2px;
+  }
+
+  .filter-active-indicator .fi-more {
+    opacity: 0.7;
+    margin-left: 3px;
+  }
+
+  .search-lupe {
+    display: block !important;
+    position: absolute;
+    left: 0.75em;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-color);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 3;
+    font-size: 0.85em;
+  }
+
+  #search-bar {
+    padding-left: 2.2em;
+    animation: none; /* Pulse-Animation auf Mobile deaktiviert */
+    opacity: 1;
+  }
+
+  /* === MOBILE FILTER OVERLAY & SHEET === */
+  .mf-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 10001;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .mf-sheet {
+    width: 100%;
+    background: var(--dropdown-bg);
+    border-radius: 20px 20px 0 0;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  .mf-categories {
+    width: 48%;
+    border-right: 1px solid var(--dropdown-border);
+    overflow-y: auto;
+  }
+
+  .mf-options {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .mf-cat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--dropdown-border);
+    cursor: pointer;
+    color: var(--text-color);
+  }
+
+  .mf-cat-item.mf-selected {
+    background: var(--space-hover);
+    color: white;
+  }
+
+  .mf-cat-label {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mf-cat-value {
+    font-size: 0.85em;
+  }
+
+  .mf-opt-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--dropdown-border);
+    cursor: pointer;
+    color: var(--text-color);
+  }
+
+  .mf-opt-item:hover {
+    background: var(--hover-text-color-active);
+  }
+
+  .mf-opt-item.mf-opt-active {
+    background: var(--space-hover);
+    color: white;
+  }
+
+  .mf-opt-clear {
+    text-align: center;
+    color: #999;
+  }
+
+  /* === MOBILE ACTIVE FILTERS CHIP BAR === */
+  .mobile-active-filters {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--dropdown-bg);
+    border-top: 1px solid var(--dropdown-border);
+  }
+
+  .mf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--space-hover);
+    color: white;
+    border-radius: 12px;
+    padding: 3px 8px;
+  }
+
+  .mf-chip-remove {
+    cursor: pointer;
+    opacity: 0.7;
+    margin-left: 2px;
+  }
+
+  .mf-chip-remove:hover {
+    opacity: 1;
+  }
+
+  /* Status-Chip Farben */
+  .mf-chip.mf-chip-open   { background: var(--space-open); }
+  .mf-chip.mf-chip-closed { background: var(--space-closed); }
+
+  /* === DESKTOP FILTER-BAR VERSTECKEN === */
+  .active-filters-section {
+    display: none !important;
+  }
+
+  /* === DROPDOWN-WRAP: Flex-Row (nav links, dropdown rechts) === */
+  .dropdown-wrap {
+    display: flex;
+    flex-direction: row;
+    border-radius: 0;
+    border-top: 1px solid silver;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65); /* Schatten nach oben zur Karte */
+  }
+
+  /* === DROPDOWN: 2-SPALTEN BADGE-GRID === */
+  #suggestions-dropdown {
+    display: grid !important;
+    flex: 1;
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 58px; /* Touch-Höhe je Space-Badge */
+    min-height: 116px; /* immer 2 Zeilen hoch: 2×58px */
+    max-height: 116px;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen; !important schlägt .active-filters-section + #suggestions-dropdown */
+    padding: 0;
+    gap: 0;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important; /* kein Schatten nach unten */
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+
+  /* SVG-Objekte im Dropdown ausblenden */
+  #suggestions-dropdown svg {
+    display: none !important;
+  }
+
+  /* Country-Header: ausblenden (kein Platz in Grid) */
+  #suggestions-dropdown .country-group-header {
+    display: none !important;
+  }
+
+  /* Autocomplete-Container: volle Breite */
+  #suggestions-dropdown .autocomplete-container {
+    grid-column: 1 / -1;
+  }
+
+  /* Space-Badges: status-color als Hintergrund, weißer Text, keine Ränder */
+  #suggestions-dropdown .listing-item {
+    min-height: auto !important;
+    height: 58px;
+    flex-direction: column;
+    gap: 0;
+    padding: 6px 8px;
+    border-radius: 0;
+    border: none;
+    background: var(--status-color, var(--space-hover));
+    color: white !important;
+    overflow: hidden;
+    align-items: flex-start;
+    outline: 1px solid rgba(255, 255, 255, 0.25); /* 1px visueller Trenner */
+  }
+
+  /* Alle Kind-Elemente: weiß */
+  #suggestions-dropdown .listing-item * {
+    color: white !important;
+  }
+
+  /* Tap-Feedback: invertiert */
+  #suggestions-dropdown .listing-item:active,
+  #suggestions-dropdown .listing-item.active {
+    background: var(--bg-color) !important;
+    color: var(--status-color, var(--space-hover)) !important;
+  }
+
+  #suggestions-dropdown .listing-item:active *,
+  #suggestions-dropdown .listing-item.active * {
+    color: var(--status-color, var(--space-hover)) !important;
+  }
+
+  #suggestions-dropdown .listing-dist-badge { display: none; }
+  #suggestions-dropdown .listing-item-content { flex: 1; min-width: 0; width: 100%; }
+  #suggestions-dropdown .listing-item-name {
+    padding-bottom: 1px;
+    font-size: 12px;
+    gap: 0;
+  }
+  #suggestions-dropdown .listing-item-name > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  #suggestions-dropdown .listing-item-address { gap: 0; }
+  #suggestions-dropdown .listing-status-icon  { display: none; }
+  #suggestions-dropdown .listing-item-details { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #suggestions-dropdown .listing-meeting-today { display: none; }
+  #suggestions-dropdown .listing-workshops     { display: none; }
+
+  /* Straße ausblenden, nur PLZ+Stadt sichtbar */
+  #suggestions-dropdown .listing-item-address-lines > div:first-child { display: none; }
+
+  /* === SCROLL-NAV-BUTTONS (links vom Dropdown, weiß auf schwarz) === */
+  .dropdown-nav {
+    display: none; /* sichtbar wenn Dropdown Inhalt hat */
+    flex-direction: column;
+    background: black;
+    flex-shrink: 0;
+    width: 36px;
+    border-radius: 0;
+  }
+
+  .dropdown-wrap:has(#suggestions-dropdown.is-active) .dropdown-nav {
+    display: flex;
+  }
+
+  .dropdown-nav-btn {
+    flex: 1;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1em;
+  }
+
+  /* 1px Trenner nur unterhalb des UP-Buttons */
+  #dropdown-nav-up {
+    margin-bottom: 1px;
+  }
+
+  .dropdown-nav-btn:active {
+    background: white;
+    color: black;
+  }
+
+  /* === COLLAPSED SEARCHBAR (inaktiv) === */
+  .search-input-row {
+    transition: padding 0.2s ease;
+  }
+
+  #search-bar {
+    transition: padding 0.2s ease, border-color 0.5s;
+  }
+
+  .search-container:not(:focus-within) .search-input-row {
+    padding: 4px 8px;
+  }
+
+  .search-container:not(:focus-within) #search-bar {
+    height: 22px;      /* ~halbe Höhe */
+    padding-top: 2px;
+    padding-bottom: 2px;
+    line-height: 1;
+  }
+
+  .search-container:not(:focus-within) #filter-toggle-btn {
+    width: 22px;
+    height: 22px;
   }
 }

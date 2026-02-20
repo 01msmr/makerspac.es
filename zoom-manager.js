@@ -223,7 +223,7 @@
 
       setTimeout(() => {
         this.removeZoomPreviewFrame(secondFrameInfo?.layer);
-        this.searchBar?.focus();
+        if (window.innerWidth > 767) this.searchBar?.focus();
       }, 800);
     }
 
@@ -249,7 +249,7 @@
         if (!keepFrame) {
           this.removeZoomPreviewFrame(frameToRemove);
         }
-        this.searchBar?.focus();
+        if (window.innerWidth > 767) this.searchBar?.focus();
       });
     }
 
@@ -422,21 +422,11 @@
     }
 
     reduceDropdownOpacity() {
-      const dropdown = this.suggestionsDropdown;
-      if (dropdown && !dropdown.classList.contains('overlap-reduced')) {
-        dropdown.style.setProperty('transition', 'opacity 0.3s ease-in-out', 'important');
-        dropdown.style.setProperty('opacity', '0.33', 'important');
-        dropdown.classList.add('overlap-reduced');
-      }
+      // Transparenz deaktiviert
     }
 
     resetDropdownOpacity() {
-      const dropdown = this.suggestionsDropdown;
-      if (dropdown?.classList.contains('overlap-reduced')) {
-        dropdown.style.setProperty('transition', 'opacity 0.3s ease-in-out', 'important');
-        dropdown.style.setProperty('opacity', '1', 'important');
-        dropdown.classList.remove('overlap-reduced');
-      }
+      // Transparenz deaktiviert
     }
 
     stopDropdownOverlapDetection() {

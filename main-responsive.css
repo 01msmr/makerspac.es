@@ -322,3 +322,26 @@
     font-size: 0.88em;
   }
 }
+
+@media (max-width: 767px) {
+  /* Volle Bildschirmhöhe/-breite für iPhone (kein weißer Rand) */
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Language-Switcher unabhängig von search-container */
+  .language-switcher {
+    right: 1.5em !important;
+  }
+
+  /* Home-Link: auf 140px verkleinert (proportional) */
+  .title {
+    font-size: 1.05em;
+  }
+
+  /* Space-URL im Marker-Popup ausblenden */
+  a#url {
+    display: none !important;
+  }
+}

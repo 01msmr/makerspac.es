@@ -189,6 +189,12 @@
       icons
     };
 
+    // Mobile Filter UI
+    if (window.MobileFilterUI) {
+      window.app.mobileFilterUI = new window.MobileFilterUI();
+      window.app.mobileFilterUI.init();
+    }
+
     // Backward Compatibility: window.searchManager
     window.searchManager = {
       // Referenz auf SearchHeader

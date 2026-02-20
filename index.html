@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>map of makerspac.es</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 
   <!-- Favicons -->
   <link rel="icon" type="image/x-icon" href="icons/favicon.ico" />
@@ -68,11 +68,25 @@
 
   <!-- search bar container -->
   <div class="search-container">
-    <div class="search-input-wrapper">
-      <input type="text" id="search-bar" placeholder="" autocomplete="off" spellcheck="false">
-      <div class="search-counter" id="search-counter">0</div>
+    <div class="search-input-row">
+      <button id="filter-toggle-btn" class="filter-toggle-btn" aria-label="Filter">
+        <i class="fas fa-filter"></i>
+      </button>
+      <div id="filter-active-indicator" class="filter-active-indicator"></div>
+      <div class="search-input-wrapper">
+        <i class="fas fa-magnifying-glass search-lupe" aria-hidden="true"></i>
+        <input type="text" id="search-bar" placeholder="" autocomplete="off" spellcheck="false">
+        <div class="search-counter" id="search-counter">0</div>
+      </div>
     </div>
-    <div id="suggestions-dropdown"></div>
+    <div id="mobile-active-filters" class="mobile-active-filters"></div>
+    <div class="dropdown-wrap">
+      <div id="dropdown-nav" class="dropdown-nav">
+        <button class="dropdown-nav-btn" id="dropdown-nav-up" aria-label="Seite hoch"><i class="fas fa-angles-up"></i></button>
+        <button class="dropdown-nav-btn" id="dropdown-nav-down" aria-label="Seite runter"><i class="fas fa-angles-down"></i></button>
+      </div>
+      <div id="suggestions-dropdown"></div>
+    </div>
   </div>
 
   <!-- User Guide - wird von ui-translator.js übersetzt -->
@@ -138,6 +152,7 @@
 
   <!-- ✨ NEU: Orchestrator (muss VOR map.js geladen werden) -->
   <script src="main.js"></script>
+  <script src="mobile-filter.js"></script>
 
   <script type="module" src="map.js"></script>
 
