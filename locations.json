@@ -1,7 +1,7 @@
 [
   {
     "name": "TEMPLATE",
-    "ID": 277,
+    "ID": 278,
     "loc": {
       "lat": 1,
       "long": 1,
@@ -6903,6 +6903,42 @@
     "workshops": []
   },
   {
+    "name": "H3CKE",
+    "ID": 277,
+    "loc": {
+      "lat": 47.854684,
+      "long": 12.1228579,
+      "plz": 83022,
+      "city": "Rosenheim",
+      "street": {
+        "name": "Herzog-Otto-Straße",
+        "number": "8",
+        "ext": "a"
+      },
+      "country": "Germany"
+    },
+    "style": "for all",
+    "link": {
+      "url": "https://h3cke.de",
+      "text": "h3cke.de"
+    },
+    "dates": {
+      "space.init": 20260221,
+      "datacheck.latest": 20260221
+    },
+    "weekly": {
+      "weekday": 9,
+      "time": 1800
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "wood",
+      "textile"
+    ]
+  },
+  {
     "name": "RO-LIP",
     "ID": 204,
     "loc": {
@@ -7203,7 +7239,15 @@
       "weekday": 4,
       "time": 1900
     },
-    "workshops": ["wood", "3d", "electronics", "cnc", "laser", "textile", "vr"]
+    "workshops": [
+      "wood",
+      "3d",
+      "electronics",
+      "cnc",
+      "laser",
+      "textile",
+      "vr"
+    ]
   },
   {
     "name": "Freiraum",
