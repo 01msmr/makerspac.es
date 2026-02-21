@@ -779,7 +779,7 @@
 
         // Click
         if (onItemClick) {
-          item.addEventListener('click', () => onItemClick(location, item));
+          item.addEventListener('click', (e) => { e.stopPropagation(); onItemClick(location, item); });
         }
 
         // Bookmarks

@@ -577,11 +577,10 @@
     border-top: 1px solid var(--dropdown-border);
   }
 
-  /* Search input row: untere Leiste */
+  /* Search input row: min 36px (collapsed bar), wächst wenn bar expandiert */
   .search-input-row {
-    background-color: var(--search-bg);
-    padding: 8px;
-    border-top: 1px solid var(--border-color);
+    background-color: black;
+    padding: 7px 8px;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -618,7 +617,7 @@
     display: none;
     align-items: center;
     gap: 4px;
-    background: #0077ff;
+    background: var(--space-hover);
     color: white;
     font-weight: bold;
     border-radius: 4px;
@@ -660,7 +659,7 @@
 
   #search-bar {
     padding-left: 2.2em;
-    animation: none; /* Pulse-Animation auf Mobile deaktiviert */
+    animation: none !important; /* Pulse-Animation auf Mobile deaktiviert */
     opacity: 1;
   }
 
@@ -672,6 +671,7 @@
     z-index: 10001;
     display: flex;
     align-items: flex-end;
+    /* bottom wird per JS dynamisch gesetzt (über Searchbar + Chip-Bar) */
   }
 
   .mf-sheet {
@@ -682,82 +682,124 @@
     display: flex;
     flex-direction: row;
     overflow: hidden;
+    opacity: 0.92;
   }
 
   .mf-categories {
-    width: 48%;
-    border-right: 1px solid var(--dropdown-border);
+    width: 42%;
+    background: black;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
     overflow-y: auto;
+    flex-shrink: 0;
   }
 
   .mf-options {
     flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 6px;
+    padding: 8px;
   }
 
   .mf-cat-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--dropdown-border);
+    height: 42px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    color: var(--text-color);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9em;
   }
 
   .mf-cat-item.mf-selected {
-    background: var(--space-hover);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
   }
 
-  .mf-cat-label {
-    display: flex;
-    flex-direction: column;
+  .mf-cat-item.mf-has-value {
+    color: white;
   }
 
-  .mf-cat-value {
-    font-size: 0.85em;
-  }
-
+  /* Filter-Optionen als Pills */
   .mf-opt-item {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--dropdown-border);
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 100px;
     cursor: pointer;
     color: var(--text-color);
+    background: transparent;
+    font-size: 0.88em;
+    white-space: nowrap;
   }
 
   .mf-opt-item:hover {
-    background: var(--hover-text-color-active);
+    border-color: var(--text-color);
+    opacity: 0.85;
   }
 
   .mf-opt-item.mf-opt-active {
     background: var(--space-hover);
+    border-color: var(--space-hover);
     color: white;
+    font-weight: bold;
   }
 
-  .mf-opt-clear {
-    text-align: center;
-    color: #999;
+  /* doorState-Pills: aktiv grün oder rot */
+  .mf-opt-item.mf-opt-door-open.mf-opt-active  { background: var(--space-open);   border-color: var(--space-open); }
+  .mf-opt-item.mf-opt-door-closed.mf-    box-shadow: none !important; /* kein Schatten nach unten */
+    border-bottom: 1px solid white;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }opt-active { background: var(--space-closed); border-color: var(--space-closed); }
+
+  /* Nutzer-Land (ohne aktiven Filter): dezent hervorgehoben */
+  .mf-opt-item.mf-opt-user-country {
+    border-color: rgba(0, 119, 255, 0.5);
+    color: var(--space-hover);
   }
 
   /* === MOBILE ACTIVE FILTERS CHIP BAR === */
   .mobile-active-filters {
     display: none;
     flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
-    padding: 6px 10px;
-    background: var(--dropdown-bg);
-    border-top: 1px solid var(--dropdown-border);
+    padding: 4px 10px;
+    background: black;
+    /* border-top: 1px solid var(--dropdown-border); */
   }
 
   .mf-chip {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    height: 24px;
     background: var(--space-hover);
     color: white;
     border-radius: 12px;
-    padding: 3px 8px;
+    border: 1px solid white;
+    padding: 0 8px;
+    font-size: 0.85em;
+  }
+
+  /* Länderflagge im Chip & Options-Pill: exakter Kreis, konzentrisch links */
+  .mf-country-flag,
+  .mf-opt-flag {
+    width: 24px !important;   /* überschreibt .fi-Klasse (1.333em) → perfekter Kreis */
+    height: 24px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
+    margin-left: -8px;        /* Kreis-Mittelpunkt bei x=12px = Chip-Halbkreis-Mittelpunkt */
+    margin-right: 4px;
   }
 
   .mf-chip-remove {
@@ -779,33 +821,43 @@
     display: none !important;
   }
 
-  /* === DROPDOWN-WRAP: Flex-Row (nav links, dropdown rechts) === */
+  /* === DROPDOWN-WRAP: unsichtbar wenn leer (0px Platz über Searchbar) === */
   .dropdown-wrap {
-    display: flex;
+    display: none; /* nur sichtbar wenn Dropdown aktiv */
     flex-direction: row;
     border-radius: 0;
-    border-top: 1px solid silver;
+    border-top: 3px solid black;
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65); /* Schatten nach oben zur Karte */
   }
 
-  /* === DROPDOWN: 2-SPALTEN BADGE-GRID === */
+  .dropdown-wrap:has(#suggestions-dropdown.is-active) {
+    display: flex;
+  }
+
+  /* === DROPDOWN: nur wenn aktiv, schwarzer HG, 2-Spalten-Grid === */
   #suggestions-dropdown {
+    display: none !important; /* versteckt wenn leer → 0px Platz über Searchbar */
+  }
+
+  #suggestions-dropdown.is-active {
     display: grid !important;
     flex: 1;
     min-width: 0;
+    background: black;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: 58px; /* Touch-Höhe je Space-Badge */
     min-height: 116px; /* immer 2 Zeilen hoch: 2×58px */
     max-height: 116px;
     overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen; !important schlägt .active-filters-section + #suggestions-dropdown */
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen */
     padding: 0;
     gap: 0;
     margin-top: 0 !important;
     padding-top: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important; /* kein Schatten nach unten */
+    /* border-bottom: 1px solid white; */
     touch-action: pan-y;
     overscroll-behavior: contain;
   }
@@ -838,7 +890,6 @@
     color: white !important;
     overflow: hidden;
     align-items: flex-start;
-    outline: 1px solid rgba(255, 255, 255, 0.25); /* 1px visueller Trenner */
   }
 
   /* Alle Kind-Elemente: weiß */
@@ -907,9 +958,13 @@
     font-size: 1em;
   }
 
-  /* 1px Trenner nur unterhalb des UP-Buttons */
+  /* Trenner unterhalb des UP-Buttons */
   #dropdown-nav-up {
-    margin-bottom: 1px;
+    border-bottom: 1px solid white;
+  }
+
+  #dropdown-nav-down {
+    border-bottom: 1px solid white;
   }
 
   .dropdown-nav-btn:active {
@@ -917,27 +972,25 @@
     color: black;
   }
 
-  /* === COLLAPSED SEARCHBAR (inaktiv) === */
+  /* === COLLAPSED SEARCHBAR – nur wenn #search-bar selbst NICHT fokussiert === */
   .search-input-row {
     transition: padding 0.2s ease;
   }
 
   #search-bar {
-    transition: padding 0.2s ease, border-color 0.5s;
+    transition: padding 0.2s ease, border-color 0.5s, height 0.2s ease;
   }
 
-  .search-container:not(:focus-within) .search-input-row {
-    padding: 4px 8px;
-  }
+  /* search-input-row bleibt 36px hoch, nur Inhalte schrumpfen */
 
-  .search-container:not(:focus-within) #search-bar {
+  .search-container:not(:has(#search-bar:focus)) #search-bar {
     height: 22px;      /* ~halbe Höhe */
     padding-top: 2px;
     padding-bottom: 2px;
     line-height: 1;
   }
 
-  .search-container:not(:focus-within) #filter-toggle-btn {
+  .search-container:not(:has(#search-bar:focus)) #filter-toggle-btn {
     width: 22px;
     height: 22px;
   }

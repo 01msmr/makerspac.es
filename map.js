@@ -505,6 +505,7 @@ function setupMap() {
   map = new L.Map('map', {
     maxZoom: 18,
     zoomControl: false,
+    closePopupOnClick: false,
   });
   console.log('✅ Leaflet map created');
 
@@ -1173,7 +1174,8 @@ function setStickyPopup(marker) {
 function setupMapClickHandler() {
   map.on('click', (e) => {
     if (e.originalEvent && e.originalEvent.target &&
-      !e.originalEvent.target.closest('.leaflet-marker-icon')) {
+      !e.originalEvent.target.closest('.leaflet-marker-icon') &&
+      !e.originalEvent.target.closest('.search-container')) {
       clearStickyPopup();
     }
   });

@@ -89,6 +89,18 @@
           return;
         }
 
+        // Mobile: direkt zur Endposition, keine Animation
+        if (window.innerWidth <= 767) {
+          const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
+          this.map.fitBounds(newBounds, {
+            animate: false,
+            paddingTopLeft:     L.point(8, 8),
+            paddingBottomRight: L.point(8, 8 + uiH),
+          });
+          this.previousZoomBounds = newBounds;
+          return;
+        }
+
         if (!this.previousZoomBounds) {
           this.previousZoomBounds = this.map.getBounds();
         }

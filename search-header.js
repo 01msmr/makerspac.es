@@ -535,7 +535,7 @@
 
       this.suggestionsDropdown.addEventListener('wheel', (e) => {
         e.stopPropagation();
-        setTimeout(() => this.searchBar.focus(), 0);
+        if (window.innerWidth > 767) setTimeout(() => this.searchBar.focus(), 0);
       }, { passive: true });
 
       this.suggestionsDropdown.addEventListener('mousedown', (e) => {
@@ -693,6 +693,10 @@
       this.createActiveFiltersSection();
       this.createSuggestionItems(filteredLocations, idMatch);
       this.updateSearchCounter(filteredLocations.length);
+      // Mobile Chip-Bar synchron halten (auch bei Routing-getriggerten Filter-Änderungen)
+      window.app?.mobileFilterUI?.updateChipBar?.();
+      // Mobile: Dropdown nach Filteränderung zum ersten Item scrollen
+      if (window.innerWidth <= 767) this.suggestionsDropdown.scrollTop = 0;
 
       const query = this.searchBar.value.trim();
       const hasPills = this.pillsManager?.count() > 0;
@@ -1037,7 +1041,7 @@
           window.routingManager.applyCountryFilter(option);
         }
         this.scrollToTop();
-        this.searchBar.focus();
+        if (window.innerWidth > 767) this.searchBar.focus();
         return;
       }
 
@@ -1061,7 +1065,7 @@
 
       this.searchFilter?.applyFilters();
       this.scrollToTop();
-      this.searchBar.focus();
+      if (window.innerWidth > 767) this.searchBar.focus();
     }
 
     clearCategoryFilter(categoryKey) {
@@ -1100,7 +1104,7 @@
       if (!silent) {
         this.triggerFilterUpdate();
         this.scrollToTop();
-        this.searchBar.focus();
+        if (window.innerWidth > 767) this.searchBar.focus();
       }
 
       setTimeout(() => {
@@ -1410,7 +1414,8 @@
     }
 
     scrollToTop() {
-      this.suggestionsDropdown?.scrollTo({ top: 0, behavior: 'smooth' });
+      const behavior = window.innerWidth <= 767 ? 'instant' : 'smooth';
+      this.suggestionsDropdown?.scrollTo({ top: 0, behavior });
       this.listingCore.keyboardIndex = 0;
     }
 

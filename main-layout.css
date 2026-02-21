@@ -52,6 +52,12 @@ body {
   inset: 0;
 }
 
+@media (max-width: 767px) {
+  #map {
+    bottom: var(--mobile-ui-height, 0px);
+  }
+}
+
 .title-bar {
   position: absolute;
   z-index: 401;
