@@ -659,7 +659,11 @@
 
   #search-bar {
     padding-left: 2.2em;
-    animation: none !important; /* Pulse-Animation auf Mobile deaktiviert */
+  }
+
+  /* Pulse-Animation nur im Ruhezustand (nicht fokussiert) deaktivieren */
+  #search-bar:not(:focus) {
+    animation: none !important;
     opacity: 1;
   }
 
@@ -751,12 +755,8 @@
   }
 
   /* doorState-Pills: aktiv grün oder rot */
-  .mf-opt-item.mf-opt-door-open.mf-opt-active  { background: var(--space-open);   border-color: var(--space-open); }
-  .mf-opt-item.mf-opt-door-closed.mf-    box-shadow: none !important; /* kein Schatten nach unten */
-    border-bottom: 1px solid white;
-    touch-action: pan-y;
-    overscroll-behavior: contain;
-  }opt-active { background: var(--space-closed); border-color: var(--space-closed); }
+  .mf-opt-item.mf-opt-door-open.mf-opt-active   { background: var(--space-open);   border-color: var(--space-open); }
+  .mf-opt-item.mf-opt-door-closed.mf-opt-active { background: var(--space-closed); border-color: var(--space-closed); }
 
   /* Nutzer-Land (ohne aktiven Filter): dezent hervorgehoben */
   .mf-opt-item.mf-opt-user-country {
@@ -968,8 +968,8 @@
   }
 
   .dropdown-nav-btn:active {
-    background: white;
-    color: black;
+    background: #555;
+    color: white;
   }
 
   /* === COLLAPSED SEARCHBAR – nur wenn #search-bar selbst NICHT fokussiert === */

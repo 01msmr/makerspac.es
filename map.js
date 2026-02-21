@@ -505,7 +505,7 @@ function setupMap() {
   map = new L.Map('map', {
     maxZoom: 18,
     zoomControl: false,
-    closePopupOnClick: false,
+    closePopupOnClick: window.innerWidth > 767, // Mobile: false (verhindert sofortiges Schließen), Desktop: true (Standard)
   });
   console.log('✅ Leaflet map created');
 

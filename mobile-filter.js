@@ -260,7 +260,7 @@ class MobileFilterUI {
     });
 
     bar.innerHTML = chips.join('');
-    bar.style.display = chips.length ? 'flex' : 'none';
+    bar.style.display = (chips.length && window.innerWidth <= 767) ? 'flex' : 'none';
 
     bar.querySelectorAll('.mf-chip').forEach(chip => {
       chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
