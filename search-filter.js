@@ -271,7 +271,7 @@
 
       // 1. Liste für Marker & Dropdown (Display) - ID-Match als Bonus
       let locationsForDisplay = finalFiltered;
-      if (this._currentIdMatch) {
+      if (this._currentIdMatch && window.innerWidth > 767) {
         const idMatchId = this._currentIdMatch.ID;
         const alreadyIncluded = finalFiltered.some(loc => loc.ID === idMatchId);
         if (!alreadyIncluded) {
@@ -325,7 +325,8 @@
      */
     _notifyResultsChange(filteredLocations, locationsForZoom) {
       if (this._onResultsChange) {
-        this._onResultsChange(filteredLocations, locationsForZoom, this._currentIdMatch);
+        this._onResultsChange(filteredLocations, locationsForZoom,
+          window.innerWidth > 767 ? this._currentIdMatch : null);
       }
     }
 

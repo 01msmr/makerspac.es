@@ -4,6 +4,9 @@ class MobileFilterUI {
   constructor() {
     this.selectedCategory = null;
     this.sheet = null;
+    this._jumpModeActive = null; // null | 'up' | 'down'
+    this._scrollTrack = null;
+    this._jumpModeTimer = null;
   }
 
   // ISO 3166-1 alpha-2 → Länderbezeichnung (wie in locations.json verwendet)
@@ -21,9 +24,15 @@ class MobileFilterUI {
       ?.addEventListener('click', () => this.sheet ? this.close() : this.open());
 
     document.getElementById('dropdown-nav-up')
-      ?.addEventListener('click', () => this.scrollDropdown(-1));
+      ?.addEventListener('click', () => {
+        if (this._jumpModeActive === 'up') this._scrollToTop();
+        else this.scrollDropdown(-1);
+      });
     document.getElementById('dropdown-nav-down')
-      ?.addEventListener('click', () => this.scrollDropdown(1));
+      ?.addEventListener('click', () => {
+        if (this._jumpModeActive === 'down') this._scrollToBottom();
+        else this.scrollDropdown(1);
+      });
 
     // Map-Bottom dynamisch an Search-Container anpassen (Mobile)
     const searchContainer = document.querySelector('.search-container');
@@ -38,8 +47,10 @@ class MobileFilterUI {
     // Grid-Snapping auf Dropdown-Items setzen wenn Inhalt sich ändert
     const dropdown = document.getElementById('suggestions-dropdown');
     if (dropdown) {
-      new MutationObserver(() => this.applyGridSnapping(dropdown))
-        .observe(dropdown, { childList: true, subtree: false });
+      new MutationObserver(() => {
+        this.applyGridSnapping(dropdown);
+        this._deactivateJumpMode();
+      }).observe(dropdown, { childList: true, subtree: false });
 
       // Maus-Wheel → Snap-Pages auf Mobile
       dropdown.addEventListener('wheel', (e) => {
@@ -47,6 +58,9 @@ class MobileFilterUI {
         e.preventDefault();
         this.scrollDropdown(e.deltaY > 0 ? 1 : -1);
       }, { passive: false });
+
+      // Schnell-Scroll erkennen → Jump-Mode aktivieren
+      dropdown.addEventListener('scroll', () => this._trackFastScroll(dropdown));
     }
   }
 
@@ -56,6 +70,86 @@ class MobileFilterUI {
     const pageH = 116; // 2 Zeilen × 512px (kein gap)
     const page = Math.round(dropdown.scrollTop / pageH);
     dropdown.scrollTo({ top: Math.max(0, page + direction) * pageH, behavior: 'smooth' });
+  }
+
+  _trackFastScroll(dropdown) {
+    if (window.innerWidth > 767) return;
+    const now = Date.now();
+    if (!this._scrollTrack) {
+      this._scrollTrack = { time: now, top: dropdown.scrollTop };
+      return;
+    }
+    const elapsed = now - this._scrollTrack.time;
+    if (elapsed > 660) {
+      this._scrollTrack = { time: now, top: dropdown.scrollTop };
+      return;
+    }
+    const delta = dropdown.scrollTop - this._scrollTrack.top;
+    if (Math.abs(delta) > 116) { // mehr als 2 Items (2 × 58px)
+      this._activateJumpMode(delta > 0 ? 'down' : 'up');
+    }
+  }
+
+  _activateJumpMode(direction) {
+    if (this._jumpModeActive === direction) return;
+    if (this._jumpModeActive) this._deactivateJumpMode();
+    this._jumpModeActive = direction;
+    const btnId     = direction === 'down' ? 'dropdown-nav-down' : 'dropdown-nav-up';
+    const iconClass = direction === 'down' ? 'fas fa-angles-down' : 'fas fa-angles-up';
+    const icon = document.querySelector(`#${btnId} i`);
+    if (icon) icon.className = iconClass;
+    document.getElementById('dropdown-nav')?.classList.add(`jump-mode-${direction}`);
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.classList.remove('flicker');
+      void btn.offsetWidth; // reflow → Animation neu starten
+      btn.classList.add('flicker');
+    }
+    // Auto-Deaktivierung nach 2s ohne Interaktion
+    clearTimeout(this._jumpModeTimer);
+    this._jumpModeTimer = setTimeout(() => this._deactivateJumpMode(), 3000);
+  }
+
+  _deactivateJumpMode() {
+    if (!this._jumpModeActive) return;
+    clearTimeout(this._jumpModeTimer);
+    this._jumpModeTimer = null;
+    const direction = this._jumpModeActive;
+    this._jumpModeActive = null;
+    this._scrollTrack = null;
+    const btnId     = direction === 'down' ? 'dropdown-nav-down' : 'dropdown-nav-up';
+    const iconClass = direction === 'down' ? 'fas fa-angle-down' : 'fas fa-angle-up';
+    const icon = document.querySelector(`#${btnId} i`);
+    if (icon) icon.className = iconClass;
+    document.getElementById('dropdown-nav')?.classList.remove(`jump-mode-${direction}`);
+  }
+
+  _disableNavButtons() {
+    document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = true; });
+    const dropdown = document.getElementById('suggestions-dropdown');
+    let scrollEndTimer = null;
+    const onScroll = () => {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(() => {
+        document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = false; });
+        dropdown?.removeEventListener('scroll', onScroll);
+      }, 1000);
+    };
+    dropdown?.addEventListener('scroll', onScroll);
+  }
+
+  _scrollToTop() {
+    document.getElementById('suggestions-dropdown')
+      ?.scrollTo({ top: 0, behavior: 'smooth' });
+    this._deactivateJumpMode();
+    this._disableNavButtons();
+  }
+
+  _scrollToBottom() {
+    const dropdown = document.getElementById('suggestions-dropdown');
+    if (dropdown) dropdown.scrollTo({ top: dropdown.scrollHeight, behavior: 'smooth' });
+    this._deactivateJumpMode();
+    this._disableNavButtons();
   }
 
   getCategories() {

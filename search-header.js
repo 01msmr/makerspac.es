@@ -1336,6 +1336,17 @@
         if (isDoubleClick) {
           this.searchBar.value = location.name;
         }
+
+        // Map auf alle Dropdown-Items zoomen (nach Popup-Öffnung)
+        setTimeout(() => {
+          const items = this.suggestionsDropdown.querySelectorAll('.listing-item');
+          const locations = Array.from(items)
+            .map(el => window.locationById?.get(parseInt(el.dataset.locationId)))
+            .filter(Boolean);
+          if (locations.length > 0 && window.zoomManager) {
+            window.zoomManager.setupAutoZoom(locations, loc => window.markerById?.get(loc.ID));
+          }
+        }, 50);
       } else {
         // Desktop: flyTo; bei Doppelklick zusätzlich filtern + Namen eintragen
         if (targetMarker) {

@@ -939,6 +939,7 @@
     flex-shrink: 0;
     width: 36px;
     border-radius: 0;
+    overflow: visible;
   }
 
   .dropdown-wrap:has(#suggestions-dropdown.is-active) .dropdown-nav {
@@ -972,6 +973,32 @@
     color: white;
   }
 
+  .dropdown-nav-btn:disabled {
+    pointer-events: none;
+  }
+
+  /* === JUMP-MODE: Icon innerhalb des Buttons verschieben === */
+  .dropdown-nav-btn i {
+    transition: transform 0.2s ease;
+  }
+
+  .dropdown-nav.jump-mode-up #dropdown-nav-up i {
+    transform: translateY(-6px);
+  }
+
+  .dropdown-nav.jump-mode-down #dropdown-nav-down i {
+    transform: translateY(6px);
+  }
+
+  @keyframes nav-flicker {
+    0%, 100% { background: black; color: white; }
+    50%       { background: white; color: black; }
+  }
+
+  .dropdown-nav-btn.flicker {
+    animation: nav-flicker 0.25s ease;
+  }
+
   /* === SEARCHBAR FOCUS-ANIMATION === */
 
   /* Expanded-Werte (Fokus) – explizit damit die Transition einen TO-Wert hat */
@@ -986,6 +1013,10 @@
     transition: width 0.2s ease, height 0.2s ease;
   }
 
+  .search-counter {
+    transition: opacity 0.3s ease-in-out, height 0.2s ease, padding 0.2s ease, font-size 0.2s ease, border-radius 0.2s ease;
+  }
+
   /* Collapsed-Werte (kein Fokus) */
   .search-container:not(.bar-focused) #search-bar {
     height: 22px;
@@ -997,5 +1028,14 @@
   .search-container:not(.bar-focused) #filter-toggle-btn {
     width: 22px;
     height: 22px;
+  }
+
+  .search-container:not(.bar-focused) .search-counter {
+    height: 14px;
+    width: auto;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: 0.68em;
+    right: 3px;
   }
 }
