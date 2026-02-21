@@ -80,7 +80,7 @@ class MobileFilterUI {
       return;
     }
     const elapsed = now - this._scrollTrack.time;
-    if (elapsed > 660) {
+    if (elapsed > 600) {
       this._scrollTrack = { time: now, top: dropdown.scrollTop };
       return;
     }
@@ -107,7 +107,7 @@ class MobileFilterUI {
     }
     // Auto-Deaktivierung nach 2s ohne Interaktion
     clearTimeout(this._jumpModeTimer);
-    this._jumpModeTimer = setTimeout(() => this._deactivateJumpMode(), 3000);
+    this._jumpModeTimer = setTimeout(() => this._deactivateJumpMode(), 1500);
   }
 
   _deactivateJumpMode() {
@@ -128,27 +128,33 @@ class MobileFilterUI {
     document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = true; });
     const dropdown = document.getElementById('suggestions-dropdown');
     let scrollEndTimer = null;
+
+    const reEnable = () => {
+      clearTimeout(scrollEndTimer);
+      dropdown?.removeEventListener('scroll', onScroll);
+      this._deactivateJumpMode();
+      document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = false; });
+    };
+
     const onScroll = () => {
       clearTimeout(scrollEndTimer);
-      scrollEndTimer = setTimeout(() => {
-        document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = false; });
-        dropdown?.removeEventListener('scroll', onScroll);
-      }, 1000);
+      scrollEndTimer = setTimeout(reEnable, 900);
     };
+
     dropdown?.addEventListener('scroll', onScroll);
+    // Fallback: falls kein Scroll-Event feuert (z.B. bereits am Anfang/Ende)
+    scrollEndTimer = setTimeout(reEnable, 900);
   }
 
   _scrollToTop() {
     document.getElementById('suggestions-dropdown')
       ?.scrollTo({ top: 0, behavior: 'smooth' });
-    this._deactivateJumpMode();
     this._disableNavButtons();
   }
 
   _scrollToBottom() {
     const dropdown = document.getElementById('suggestions-dropdown');
     if (dropdown) dropdown.scrollTo({ top: dropdown.scrollHeight, behavior: 'smooth' });
-    this._deactivateJumpMode();
     this._disableNavButtons();
   }
 

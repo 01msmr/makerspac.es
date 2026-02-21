@@ -1373,17 +1373,10 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     updateSearchCounter(count) {
-      const isSearching = this.searchBar.value.length > 0 || this.searchFilter?.hasActiveFilters() || this.pillsManager?.count() > 0;
-
-      if (!isSearching && this.json) {
-        this.searchCounter.textContent = this.json.length;
-      } else {
-        this.searchCounter.textContent = count;
-      }
-
+      this.searchCounter.textContent = count;
       this.searchCounter.classList.add('visible');
-      this.searchCounter.classList.toggle('has-results', !isSearching || count > 0);
-      this.searchCounter.classList.toggle('no-results', isSearching && count === 0);
+      this.searchCounter.classList.toggle('has-results', count > 0);
+      this.searchCounter.classList.remove('no-results');
       this.searchCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0 || this.pillsManager?.count() > 0);
     }
 
