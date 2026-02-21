@@ -119,12 +119,21 @@ class MobileFilterUI {
     this.sheet.addEventListener('click', e => {
       if (e.target === this.sheet) this.close();
     });
+
+    // Außerhalb tippen → schließen
+    this._outsideHandler = (e) => {
+      if (this.sheet && !this.sheet.contains(e.target)) this.close();
+    };
+    setTimeout(() => document.addEventListener('pointerdown', this._outsideHandler), 0);
   }
 
   close() {
+    document.removeEventListener('pointerdown', this._outsideHandler);
+    this._outsideHandler = null;
     this.sheet?.remove();
     this.sheet = null;
     this.updateChipBar();
+    document.querySelector('.search-container')?.classList.remove('bar-focused');
   }
 
   buildSheet() {

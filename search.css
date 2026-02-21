@@ -972,25 +972,29 @@
     color: white;
   }
 
-  /* === COLLAPSED SEARCHBAR – nur wenn #search-bar selbst NICHT fokussiert === */
-  .search-input-row {
-    transition: padding 0.2s ease;
-  }
+  /* === SEARCHBAR FOCUS-ANIMATION === */
 
+  /* Expanded-Werte (Fokus) – explizit damit die Transition einen TO-Wert hat */
   #search-bar {
-    transition: padding 0.2s ease, border-color 0.5s, height 0.2s ease;
+    height: 36px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    transition: height 0.2s ease, padding 0.2s ease, border-color 0.5s;
   }
 
-  /* search-input-row bleibt 36px hoch, nur Inhalte schrumpfen */
+  #filter-toggle-btn {
+    transition: width 0.2s ease, height 0.2s ease;
+  }
 
-  .search-container:not(:has(#search-bar:focus)) #search-bar {
-    height: 22px;      /* ~halbe Höhe */
+  /* Collapsed-Werte (kein Fokus) */
+  .search-container:not(.bar-focused) #search-bar {
+    height: 22px;
     padding-top: 2px;
     padding-bottom: 2px;
     line-height: 1;
   }
 
-  .search-container:not(:has(#search-bar:focus)) #filter-toggle-btn {
+  .search-container:not(.bar-focused) #filter-toggle-btn {
     width: 22px;
     height: 22px;
   }

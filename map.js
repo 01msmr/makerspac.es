@@ -149,6 +149,7 @@ window.mapUtils = {
   removeConnectionLine: removeConnectionLine,
   clearStickyPopup: clearStickyPopup,
   setStickyPopup: setStickyPopup,
+  isStickyMarker: (marker) => currentStickyMarker === marker && isPopupSticky,
   setMarkerDropdownHover: setMarkerDropdownHover,
   clearMarkerDropdownHover: clearMarkerDropdownHover,
   updateMarkerIcon: updateMarkerIcon,
@@ -855,6 +856,19 @@ function createMarkerForLocation(location) {
     if (!wasOpenedByHover) {
       // Popup wurde NICHT durch Hover geöffnet → Sofort sticky
       setStickyPopup(marker);
+
+      // Mobile: Entsprechendes Listing-Item im Dropdown als aktiv markieren
+      if (window.innerWidth <= 767) {
+        const dropdown = document.getElementById('suggestions-dropdown');
+        if (dropdown) {
+          dropdown.querySelectorAll('.listing-item.active').forEach(el => el.classList.remove('active'));
+          const activeItem = dropdown.querySelector(`.listing-item[data-location-id="${location.ID}"]`);
+          if (activeItem) {
+            activeItem.classList.add('active');
+            activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+      }
     }
 
     // Jetzt clearen (für nächstes Mal)
@@ -974,6 +988,12 @@ function createMarkerForLocation(location) {
   });
   marker.on('popupclose', () => {
     document.querySelector('.title').classList.remove('popup-active');
+
+    // Mobile: Marker zurück in Cluster geben (war temporär direkt auf Map)
+    if (marker._isTemporarilyUnclustered) {
+      map.removeLayer(marker);
+      marker._isTemporarilyUnclustered = false;
+    }
 
     // ✅ URL zurücksetzen wenn dieser Marker sticky war und URL gesetzt hatte
     if (marker._hasSetUrl && currentStickyMarker === marker) {

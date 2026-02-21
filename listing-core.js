@@ -612,7 +612,7 @@
      * Prüft ob ein Marker sticky ist
      */
     isStickyMarker(marker) {
-      return window.mapUtils?.currentStickyMarker === marker;
+      return window.mapUtils?.isStickyMarker?.(marker) ?? false;
     }
 
     /**
@@ -732,6 +732,7 @@
 
         // Mouseenter
         item.addEventListener('mouseenter', () => {
+          if (window.innerWidth <= 767) return;
           if (!this.hasMouseMoved()) return;
           this.setMouseInput();
 
@@ -757,6 +758,7 @@
 
         // Mouseleave
         item.addEventListener('mouseleave', (e) => {
+          if (window.innerWidth <= 767) return;
           // Ignorieren wenn wir zu einem anderen Item wechseln
           if (e.relatedTarget?.closest('.listing-item')) return;
 

@@ -512,6 +512,11 @@
       document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
       this.searchBar.addEventListener('input', () => this.handleSearchInput());
       this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
+      this.searchBar.addEventListener('blur', () => this.handleSearchBlur());
+
+      // Filter-Button: Blur soll Bar nicht kollabieren
+      document.getElementById('filter-toggle-btn')
+        ?.addEventListener('pointerdown', () => { this._filterBtnDown = true; });
 
       document.addEventListener('click', (e) => {
         // Klicks innerhalb des Filter-Popovers (auch nach Entfernen aus DOM) ignorieren
@@ -606,6 +611,11 @@
     }
 
     handleSearchFocus() {
+      if (window.innerWidth <= 767) {
+        window.mobileFilterUI?.close();
+        this.searchBar.closest('.search-container')?.classList.add('bar-focused');
+      }
+
       this.listingCore?.cleanupHoverSVG();
       this.listingCore?.clearAllHoverEffects();
 
@@ -614,6 +624,16 @@
       this.searchBar.classList.add('has-suggestions');
 
       this.triggerFilterUpdate();
+    }
+
+    handleSearchBlur() {
+      if (window.innerWidth <= 767) {
+        if (this._filterBtnDown) {
+          this._filterBtnDown = false;
+          return; // Filter-Button getippt → Bar bleibt expandiert
+        }
+        this.searchBar.closest('.search-container')?.classList.remove('bar-focused');
+      }
     }
 
     triggerFilterUpdate() {
@@ -1284,8 +1304,23 @@
           });
         }
 
+        // Mobile: Marker ggf. aus Cluster holen, damit Popup + Pin sichtbar werden
+        if (isMobile) {
+          const clusterGroup = window.clusterGroup;
+          if (clusterGroup && window.mapUtils?.isClusteringEnabled()) {
+            const visibleParent = clusterGroup.getVisibleParent(targetMarker);
+            if (visibleParent && visibleParent !== targetMarker) {
+              targetMarker.addTo(window.map);
+              targetMarker._isTemporarilyUnclustered = true;
+            }
+          }
+        }
+
+        const popupWasAlreadyOpen = targetMarker.isPopupOpen();
         targetMarker.openPopup();
-        if (window.mapUtils?.setStickyPopup) {
+        // Nur sticky setzen wenn Popup schon offen war (dann feuert popupopen nicht nochmal).
+        // War es zu, übernimmt der popupopen-Handler das setStickyPopup.
+        if (popupWasAlreadyOpen && window.mapUtils?.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
         }
       }

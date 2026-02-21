@@ -89,11 +89,12 @@
           return;
         }
 
-        // Mobile: direkt zur Endposition, keine Animation
+        // Mobile: schneller, direkter Zoom ohne Frame-Effekte
         if (window.innerWidth <= 767) {
           const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
           this.map.fitBounds(newBounds, {
-            animate: false,
+            animate: true,
+            duration: 0.35,
             paddingTopLeft:     L.point(8, 8),
             paddingBottomRight: L.point(8, 8 + uiH),
           });
