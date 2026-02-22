@@ -92,7 +92,7 @@ class MobileFilterUI {
             if (icon && !icon.className.includes('arrows')) {
               icon.className = `fas fa-angles-${dir}`;
             }
-            this._navClickTimers[dir] = setTimeout(() => this._resetNavClick(dir), 1500);
+            this._navClickTimers[dir] = setTimeout(() => this._resetNavClick(dir), 600);
           }
 
           // Session nach kurzer Pause zurücksetzen
@@ -170,11 +170,12 @@ class MobileFilterUI {
       if (direction === 'up') this._scrollToTop();
       else this._scrollToBottom();
       this._navClickCounts[direction] = 0;
+      this._navClickTimers[direction] = setTimeout(() => this._resetNavClick(direction), 600);
       return;
     }
 
     if (icon) icon.className = `fas ${iconMap[count]}`;
-    this._navClickTimers[direction] = setTimeout(() => this._resetNavClick(direction), 500);
+    this._navClickTimers[direction] = setTimeout(() => this._resetNavClick(direction), 600);
   }
 
   _resetNavClick(direction) {
@@ -239,7 +240,7 @@ class MobileFilterUI {
 
   _scrollToBottom() {
     const dropdown = document.getElementById('suggestions-dropdown');
-    if (dropdown) this._smoothScroll(dropdown, dropdown.scrollHeight, 500);
+    if (dropdown) this._smoothScroll(dropdown, dropdown.scrollHeight, 600);
   }
 
   getCategories() {

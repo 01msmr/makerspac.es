@@ -232,6 +232,11 @@
 
 @media (max-width: 768px) {
 
+  /* Double-Tap-Zoom unterdrücken (Leaflet setzt auf Map-Canvas eigenen touch-action) */
+  html {
+    touch-action: manipulation;
+  }
+
   /* Language Switcher & Settings */
   .language-switcher {
     right: calc(1.5em + 300px + 8px);

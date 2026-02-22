@@ -591,11 +591,19 @@
     min-width: 0;
   }
 
+  /* 46px-Säule für Filter-Button (gleich breit wie .dropdown-nav) */
+  .filter-btn-area {
+    width: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   #filter-toggle-btn {
     display: flex !important;
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 1px solid var(--border-color);
     background-color: var(--search-bg);
@@ -603,7 +611,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 1.15em;
   }
 
   #filter-toggle-btn:hover {
@@ -958,7 +966,7 @@
     flex-direction: column;
     background: black;
     flex-shrink: 0;
-    width: 36px;
+    width: 46px;
     border-radius: 0;
     overflow: visible;
   }
@@ -983,11 +991,11 @@
 
   /* Trenner unterhalb des UP-Buttons */
   #dropdown-nav-up {
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid grey;
   }
 
   #dropdown-nav-down {
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid grey;
   }
 
   /* End-Indikatoren: Icon per transform verschieben — kein Effekt auf Box/Layout/Trennlinie */
