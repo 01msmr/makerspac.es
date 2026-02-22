@@ -439,6 +439,11 @@
         }
       });
 
+      // Verhindert blur auf searchBar beim Tippen auf einen Vorschlag
+      this.container.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+
       document.addEventListener('click', (e) => {
         if (!this.container.contains(e.target) && e.target !== this.searchBar) {
           this.hide();
@@ -559,7 +564,10 @@
       this.searchCounter.addEventListener('click', (e) => {
         e.stopPropagation();
         if (this.searchBar.value.length > 0 || this.pillsManager?.count() > 0) {
-          this.clearSearch();
+          this.searchBar.value = '';
+          this.pillsManager?.clear();
+          this.searchBar.focus();
+          this.triggerFilterUpdate();
         }
       });
 
@@ -713,6 +721,10 @@
       this.createActiveFiltersSection();
       this.createSuggestionItems(filteredLocations, idMatch);
       this.updateSearchCounter(filteredLocations.length);
+      // Autocomplete ausblenden wenn nur noch 1 Suchergebnis übrig
+      if (filteredLocations.length === 1 && this.autocompleteManager?.isActive()) {
+        this.autocompleteManager.hide();
+      }
       // Mobile Chip-Bar synchron halten (auch bei Routing-getriggerten Filter-Änderungen)
       window.app?.mobileFilterUI?.updateChipBar?.();
       // Mobile: Dropdown nach Filteränderung zum ersten Item scrollen
@@ -786,12 +798,12 @@
         filtersSection.appendChild(pill);
       });
 
-      if (this.searchFilter?.hasActiveFilters()) {
+      if (this.searchFilter?.hasActiveFilters() || window.routingManager?._activeCountryFilter) {
         const clearAllPill = document.createElement('div');
         clearAllPill.classList.add('filter-pill', 'filter-pill-clear-all');
         clearAllPill.setAttribute('aria-label', window.i18n?.t('filter.clearAll') || 'Clear all filters');
         clearAllPill.setAttribute('role', 'tooltip');
-        clearAllPill.setAttribute('data-microtip-position', 'top-right');
+        clearAllPill.setAttribute('data-microtip-position', 'top-left');
         clearAllPill.innerHTML = `<i class="${CONFIG.icons.ui.close}"></i>`;
         clearAllPill.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1373,11 +1385,17 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     updateSearchCounter(count) {
-      this.searchCounter.textContent = count;
+      this.searchCounter.innerHTML = count + '<span class="counter-x" aria-hidden="true">×</span>';
       this.searchCounter.classList.add('visible');
       this.searchCounter.classList.toggle('has-results', count > 0);
       this.searchCounter.classList.remove('no-results');
       this.searchCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0 || this.pillsManager?.count() > 0);
+
+      // Microtip: "x makerspaces"
+      const label = count + ' ' + (window.i18n?.t('nearbySpaces.makerspaces') || 'makerspaces');
+      this.searchCounter.setAttribute('role', 'tooltip');
+      this.searchCounter.setAttribute('data-microtip-position', 'top-left');
+      this.searchCounter.setAttribute('aria-label', label);
     }
 
     updateDropdownUI(shouldShow) {

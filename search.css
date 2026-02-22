@@ -128,8 +128,7 @@
   cursor: pointer;
 }
 
-.search-counter::after {
-  content: '×';
+.search-counter .counter-x {
   position: absolute;
   top: 35%;
   left: 50%;
@@ -147,7 +146,7 @@
   transform: translateY(-50%) scale(1.1);
 }
 
-.search-counter.is-clearable:hover::after {
+.search-counter.is-clearable:hover .counter-x {
   opacity: 1;
 }
 
@@ -159,6 +158,11 @@
   border: none;
   visibility: hidden;
   display: none;
+}
+
+/* microtip setzt position:relative – das hier stellt absolute wieder her */
+.search-counter[aria-label][role~="tooltip"] {
+  position: absolute; /* microtip overrides to relative; counter must stay absolute */
 }
 
 /* Dark Mode */
@@ -311,7 +315,7 @@
 }
 
 .filter-pill-clear-all i {
-  font-size: 0.9em;
+  font-size: 1.1em;
   margin: 0;
 }
 
@@ -541,11 +545,6 @@
     font-size: 0.7em;
     padding: 2px 6px 2px 4px !important;
   }
-
-  .country-group-header {
-    padding: 2px 8px;
-    font-size: 0.85em;
-  }
 }
 
 @media (max-width: 767px) {
@@ -563,12 +562,12 @@
   }
 
   /* Overlap-Trick zurücksetzen (war für downward flow) */
-  #suggestions-dropdown {
+  /* #suggestions-dropdown {
     margin-top: 0 !important;
     padding-top: 8px !important;
     border-radius: 20px 20px 0 0;
     max-height: 50vh;
-  }
+  } */
 
   .active-filters-section {
     margin-top: 0 !important;
@@ -816,6 +815,22 @@
   .mf-chip.mf-chip-open   { background: var(--space-open); }
   .mf-chip.mf-chip-closed { background: var(--space-closed); }
 
+  /* Clear-All-Button: exakter Kreis */
+  .mobile-active-filters .filter-pill-clear-all {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .mobile-active-filters .filter-pill-clear-all i {
+    font-size: 17px !important;
+  }
+
   /* === DESKTOP FILTER-BAR VERSTECKEN === */
   .active-filters-section {
     display: none !important;
@@ -849,7 +864,7 @@
     min-height: 116px; /* immer 2 Zeilen hoch: 2×58px */
     max-height: 116px;
     overflow-y: auto;
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
     scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen */
     padding: 0;
     gap: 0;
@@ -890,6 +905,12 @@
     color: white !important;
     overflow: hidden;
     align-items: flex-start;
+    scroll-snap-align: none; /* Snap nur auf 2-Row-Grenzen (s.u.) */
+  }
+
+  /* Snap-Punkt alle 2 Rows = jedes 4. Item (2-Spalten-Grid, viewport = 2 Rows) */
+  #suggestions-dropdown .listing-item:nth-child(4n+1) {
+    scroll-snap-align: start;
   }
 
   /* Alle Kind-Elemente: weiß */
@@ -900,8 +921,8 @@
   /* Tap-Feedback: invertiert */
   #suggestions-dropdown .listing-item:active,
   #suggestions-dropdown .listing-item.active {
-    background: var(--bg-color) !important;
-    color: var(--status-color, var(--space-hover)) !important;
+    background: var(--bg-color);
+    color: var(--status-color, var(--space-hover));
   }
 
   #suggestions-dropdown .listing-item:active *,
@@ -948,6 +969,7 @@
 
   .dropdown-nav-btn {
     flex: 1;
+    box-sizing: border-box;
     background: black;
     color: white;
     border: none;
@@ -968,6 +990,17 @@
     border-bottom: 1px solid white;
   }
 
+  /* End-Indikatoren: Icon per transform verschieben — kein Effekt auf Box/Layout/Trennlinie */
+  #dropdown-nav-up.at-end i {
+    transform: translateY(-14px);
+    color: #666;
+  }
+
+  #dropdown-nav-down.at-end i {
+    transform: translateY(14px);
+    color: #666;
+  }
+
   .dropdown-nav-btn:active {
     background: #555;
     color: white;
@@ -977,26 +1010,9 @@
     pointer-events: none;
   }
 
-  /* === JUMP-MODE: Icon innerhalb des Buttons verschieben === */
+  /* === NAV-ICON: sanfte Übergänge beim Icon-Wechsel === */
   .dropdown-nav-btn i {
-    transition: transform 0.2s ease;
-  }
-
-  .dropdown-nav.jump-mode-up #dropdown-nav-up i {
-    transform: translateY(-6px);
-  }
-
-  .dropdown-nav.jump-mode-down #dropdown-nav-down i {
-    transform: translateY(6px);
-  }
-
-  @keyframes nav-flicker {
-    0%, 100% { background: black; color: white; }
-    50%       { background: white; color: black; }
-  }
-
-  .dropdown-nav-btn.flicker {
-    animation: nav-flicker 0.25s ease;
+    transition: opacity 0.15s ease;
   }
 
   /* === SEARCHBAR FOCUS-ANIMATION === */
@@ -1037,5 +1053,9 @@
     border-radius: 999px;
     font-size: 0.68em;
     right: 3px;
+  }
+
+  .search-container:not(.bar-focused) .search-counter .counter-x {
+    font-size: 22px;
   }
 }

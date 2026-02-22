@@ -385,6 +385,18 @@
    RESPONSIVE ADJUSTMENTS
    ============================================ */
 
+@media (max-width: 767px) {
+  .autocomplete-container {
+    position: fixed !important;
+    top: auto !important;
+    bottom: var(--mobile-ui-height, 50px) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-height: 40vh !important;
+  }
+}
+
 @media (max-width: 768px) {
   .autocomplete-container {
     left: 2px;

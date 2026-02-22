@@ -4,9 +4,8 @@ class MobileFilterUI {
   constructor() {
     this.selectedCategory = null;
     this.sheet = null;
-    this._jumpModeActive = null; // null | 'up' | 'down'
-    this._scrollTrack = null;
-    this._jumpModeTimer = null;
+    this._navClickCounts = { up: 0, down: 0 };
+    this._navClickTimers = { up: null, down: null };
   }
 
   // ISO 3166-1 alpha-2 → Länderbezeichnung (wie in locations.json verwendet)
@@ -24,15 +23,9 @@ class MobileFilterUI {
       ?.addEventListener('click', () => this.sheet ? this.close() : this.open());
 
     document.getElementById('dropdown-nav-up')
-      ?.addEventListener('click', () => {
-        if (this._jumpModeActive === 'up') this._scrollToTop();
-        else this.scrollDropdown(-1);
-      });
+      ?.addEventListener('click', () => this._navClick('up'));
     document.getElementById('dropdown-nav-down')
-      ?.addEventListener('click', () => {
-        if (this._jumpModeActive === 'down') this._scrollToBottom();
-        else this.scrollDropdown(1);
-      });
+      ?.addEventListener('click', () => this._navClick('down'));
 
     // Map-Bottom dynamisch an Search-Container anpassen (Mobile)
     const searchContainer = document.querySelector('.search-container');
@@ -49,7 +42,9 @@ class MobileFilterUI {
     if (dropdown) {
       new MutationObserver(() => {
         this.applyGridSnapping(dropdown);
-        this._deactivateJumpMode();
+        this._resetNavClick('up');
+        this._resetNavClick('down');
+        this._updateEndIndicators();
       }).observe(dropdown, { childList: true, subtree: false });
 
       // Maus-Wheel → Snap-Pages auf Mobile
@@ -59,69 +54,159 @@ class MobileFilterUI {
         this.scrollDropdown(e.deltaY > 0 ? 1 : -1);
       }, { passive: false });
 
-      // Schnell-Scroll erkennen → Jump-Mode aktivieren
-      dropdown.addEventListener('scroll', () => this._trackFastScroll(dropdown));
+      dropdown.addEventListener('touchstart', () => {
+        if (window.innerWidth > 767) return;
+        this._touchFastDir = null; // erlaubt Re-Aktivierung pro Geste
+      }, { passive: true });
+
+      dropdown.addEventListener('touchend', () => {
+        if (window.innerWidth > 767) return;
+        this._updateEndIndicators();
+      }, { passive: true });
+
+      // Scroll-Event: End-Indikatoren + kumulative Fast-Scroll-Erkennung
+      dropdown.addEventListener('scroll', () => {
+        if (window.innerWidth > 767) return;
+        this._updateEndIndicators();
+        if (this._scrollRaf) return; // programmatischen Scroll ausschließen
+
+        const curTop = dropdown.scrollTop;
+        const step   = curTop - (this._scrollLastTop ?? curTop);
+        this._scrollLastTop = curTop;
+
+        if (step !== 0) {
+          const dir = step > 0 ? 'down' : 'up';
+          // Richtungswechsel → Session zurücksetzen
+          if (dir !== this._scrollSessionDir) {
+            this._scrollSessionDir  = dir;
+            this._scrollSessionDist = 0;
+          }
+          this._scrollSessionDist += Math.abs(step);
+
+          // Aktivieren wenn kumulativ ≥ 1 pageH in gleicher Richtung
+          if (this._scrollSessionDist >= 116 && this._touchFastDir !== dir) {
+            this._touchFastDir = dir;
+            clearTimeout(this._navClickTimers[dir]);
+            this._navClickCounts[dir] = 1; // nächster Click → count=2 → 5×-Scroll
+            const icon = document.querySelector(`#dropdown-nav-${dir} i`);
+            if (icon && !icon.className.includes('arrows')) {
+              icon.className = `fas fa-angles-${dir}`;
+            }
+            this._navClickTimers[dir] = setTimeout(() => this._resetNavClick(dir), 1500);
+          }
+
+          // Session nach kurzer Pause zurücksetzen
+          clearTimeout(this._scrollSessionTimer);
+          this._scrollSessionTimer = setTimeout(() => {
+            this._scrollSessionDir  = null;
+            this._scrollSessionDist = 0;
+          }, 600);
+        }
+      }, { passive: true });
+
+      this._updateEndIndicators();
     }
   }
 
   scrollDropdown(direction) {
     const dropdown = document.getElementById('suggestions-dropdown');
     if (!dropdown) return;
-    const pageH = 116; // 2 Zeilen × 512px (kein gap)
-    const page = Math.round(dropdown.scrollTop / pageH);
-    dropdown.scrollTo({ top: Math.max(0, page + direction) * pageH, behavior: 'smooth' });
+    const rowH = 116; // 2 Zeilen × 58px
+    // Basis auf nächste 116px-Grenze runden → sauberes Snapping auch nach Touch
+    const base = Math.round((this._scrollTarget ?? dropdown.scrollTop) / rowH) * rowH;
+    this._scrollTarget = base + direction * rowH;
+    this._smoothScroll(dropdown, this._scrollTarget, 420);
   }
 
-  _trackFastScroll(dropdown) {
+  _smoothScroll(el, targetTop, duration = 420) {
+    // Laufende Animation cancellen (verhindert mehrere gleichzeitige RAF-Loops)
+    if (this._scrollRaf) {
+      cancelAnimationFrame(this._scrollRaf);
+      this._scrollRaf = null;
+    }
+    const start = el.scrollTop;
+    const end = Math.max(0, Math.min(targetTop, el.scrollHeight - el.clientHeight));
+    const dist = end - start;
+    if (dist === 0) { el.style.scrollSnapType = ''; this._scrollTarget = null; this._scrollingToEnd = false; return; }
+    el.style.scrollSnapType = 'none';
+    const t0 = performance.now();
+    const ease = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; // easeInOutCubic
+    const step = now => {
+      const p = Math.min((now - t0) / duration, 1);
+      el.scrollTop = start + dist * ease(p);
+      if (p < 1) {
+        this._scrollRaf = requestAnimationFrame(step);
+      } else {
+        this._scrollRaf = null;
+        this._scrollTarget = null;
+        this._scrollingToEnd = false;
+        el.style.scrollSnapType = ''; // Snap nach Animation wiederherstellen
+        this._updateEndIndicators();
+      }
+    };
+    this._scrollRaf = requestAnimationFrame(step);
+  }
+
+  _navClick(direction) {
     if (window.innerWidth > 767) return;
-    const now = Date.now();
-    if (!this._scrollTrack) {
-      this._scrollTrack = { time: now, top: dropdown.scrollTop };
+    clearTimeout(this._navClickTimers[direction]);
+    this._navClickCounts[direction] = (this._navClickCounts[direction] || 0) + 1;
+    const count = this._navClickCounts[direction];
+
+    const iconUp   = { 1: 'fa-angle-up',            2: 'fa-angles-up',   3: 'fa-arrows-up-to-line'   };
+    const iconDown = { 1: 'fa-angle-down',           2: 'fa-angles-down', 3: 'fa-arrows-down-to-line' };
+    const iconMap  = direction === 'up' ? iconUp : iconDown;
+    const btnId    = `dropdown-nav-${direction}`;
+    const icon     = document.querySelector(`#${btnId} i`);
+
+    if (count === 1) {
+      this.scrollDropdown(direction === 'up' ? -1 : 1);
+    } else if (count === 2) {
+      this.scrollDropdown(direction === 'up' ? -5 : 5);
+    } else {
+      // Triple-Klick: an den Rand springen, to-line Icon während Animation halten
+      this._scrollingToEnd = true;
+      if (icon) icon.className = `fas ${iconMap[3]}`;
+      if (direction === 'up') this._scrollToTop();
+      else this._scrollToBottom();
+      this._navClickCounts[direction] = 0;
       return;
     }
-    const elapsed = now - this._scrollTrack.time;
-    if (elapsed > 600) {
-      this._scrollTrack = { time: now, top: dropdown.scrollTop };
-      return;
-    }
-    const delta = dropdown.scrollTop - this._scrollTrack.top;
-    if (Math.abs(delta) > 116) { // mehr als 2 Items (2 × 58px)
-      this._activateJumpMode(delta > 0 ? 'down' : 'up');
-    }
+
+    if (icon) icon.className = `fas ${iconMap[count]}`;
+    this._navClickTimers[direction] = setTimeout(() => this._resetNavClick(direction), 500);
   }
 
-  _activateJumpMode(direction) {
-    if (this._jumpModeActive === direction) return;
-    if (this._jumpModeActive) this._deactivateJumpMode();
-    this._jumpModeActive = direction;
-    const btnId     = direction === 'down' ? 'dropdown-nav-down' : 'dropdown-nav-up';
-    const iconClass = direction === 'down' ? 'fas fa-angles-down' : 'fas fa-angles-up';
-    const icon = document.querySelector(`#${btnId} i`);
+  _resetNavClick(direction) {
+    clearTimeout(this._navClickTimers[direction]);
+    this._navClickCounts[direction] = 0;
+    const iconClass = direction === 'up' ? 'fas fa-angle-up' : 'fas fa-angle-down';
+    const icon = document.querySelector(`#dropdown-nav-${direction} i`);
     if (icon) icon.className = iconClass;
-    document.getElementById('dropdown-nav')?.classList.add(`jump-mode-${direction}`);
-    const btn = document.getElementById(btnId);
-    if (btn) {
-      btn.classList.remove('flicker');
-      void btn.offsetWidth; // reflow → Animation neu starten
-      btn.classList.add('flicker');
-    }
-    // Auto-Deaktivierung nach 2s ohne Interaktion
-    clearTimeout(this._jumpModeTimer);
-    this._jumpModeTimer = setTimeout(() => this._deactivateJumpMode(), 1500);
+    this._updateEndIndicators(); // ggf. to-line Icon wiederherstellen
   }
 
-  _deactivateJumpMode() {
-    if (!this._jumpModeActive) return;
-    clearTimeout(this._jumpModeTimer);
-    this._jumpModeTimer = null;
-    const direction = this._jumpModeActive;
-    this._jumpModeActive = null;
-    this._scrollTrack = null;
-    const btnId     = direction === 'down' ? 'dropdown-nav-down' : 'dropdown-nav-up';
-    const iconClass = direction === 'down' ? 'fas fa-angle-down' : 'fas fa-angle-up';
-    const icon = document.querySelector(`#${btnId} i`);
-    if (icon) icon.className = iconClass;
-    document.getElementById('dropdown-nav')?.classList.remove(`jump-mode-${direction}`);
+  _updateEndIndicators() {
+    const dropdown = document.getElementById('suggestions-dropdown');
+    if (!dropdown || window.innerWidth > 767) return;
+    const atTop    = dropdown.scrollTop <= 1;
+    const atBottom = dropdown.scrollTop >= dropdown.scrollHeight - dropdown.clientHeight - 1;
+    const upBtn    = document.getElementById('dropdown-nav-up');
+    const downBtn  = document.getElementById('dropdown-nav-down');
+    upBtn?.classList.toggle('at-end', atTop);
+    downBtn?.classList.toggle('at-end', atBottom);
+    const upIcon   = upBtn?.querySelector('i');
+    const downIcon = downBtn?.querySelector('i');
+    if (atTop    && upIcon)   upIcon.className   = 'fas fa-arrows-up-to-line';
+    if (atBottom && downIcon) downIcon.className = 'fas fa-arrows-down-to-line';
+    // Normales Icon sofort zurücksetzen sobald Endposition verlassen —
+    // außer während triple-click-Animation zum Ende hin
+    if (!this._scrollingToEnd) {
+      if (!atTop    && upIcon?.className.includes('arrows-up-to-line'))
+        upIcon.className   = `fas fa-angle${this._navClickCounts.up   >= 2 ? 's' : ''}-up`;
+      if (!atBottom && downIcon?.className.includes('arrows-down-to-line'))
+        downIcon.className = `fas fa-angle${this._navClickCounts.down >= 2 ? 's' : ''}-down`;
+    }
   }
 
   _disableNavButtons() {
@@ -132,7 +217,8 @@ class MobileFilterUI {
     const reEnable = () => {
       clearTimeout(scrollEndTimer);
       dropdown?.removeEventListener('scroll', onScroll);
-      this._deactivateJumpMode();
+      this._resetNavClick('up');
+      this._resetNavClick('down');
       document.querySelectorAll('.dropdown-nav-btn').forEach(btn => { btn.disabled = false; });
     };
 
@@ -147,15 +233,13 @@ class MobileFilterUI {
   }
 
   _scrollToTop() {
-    document.getElementById('suggestions-dropdown')
-      ?.scrollTo({ top: 0, behavior: 'smooth' });
-    this._disableNavButtons();
+    const dropdown = document.getElementById('suggestions-dropdown');
+    if (dropdown) this._smoothScroll(dropdown, 0, 500);
   }
 
   _scrollToBottom() {
     const dropdown = document.getElementById('suggestions-dropdown');
-    if (dropdown) dropdown.scrollTo({ top: dropdown.scrollHeight, behavior: 'smooth' });
-    this._disableNavButtons();
+    if (dropdown) this._smoothScroll(dropdown, dropdown.scrollHeight, 500);
   }
 
   getCategories() {
@@ -220,9 +304,10 @@ class MobileFilterUI {
       if (e.target === this.sheet) this.close();
     });
 
-    // Außerhalb tippen → schließen
+    // Außerhalb tippen → schließen (Filter-Button ausgenommen: der handled toggle selbst)
     this._outsideHandler = (e) => {
-      if (this.sheet && !this.sheet.contains(e.target)) this.close();
+      const filterBtn = document.getElementById('filter-toggle-btn');
+      if (this.sheet && !this.sheet.contains(e.target) && !filterBtn?.contains(e.target)) this.close();
     };
     setTimeout(() => document.addEventListener('pointerdown', this._outsideHandler), 0);
   }
@@ -368,7 +453,15 @@ class MobileFilterUI {
       </span>`;
     });
 
-    bar.innerHTML = chips.join('');
+    const clearAllHtml = chips.length > 0
+      ? `<span class="filter-pill filter-pill-clear-all mf-clear-all-btn" role="tooltip"
+             data-microtip-position="top-left"
+             aria-label="${window.i18n?.t('filter.clearAll') || 'clear all filters'}">
+           <i class="${window.AppConfig?.icons?.ui?.close || 'fas fa-xmark'}"></i>
+         </span>`
+      : '';
+
+    bar.innerHTML = chips.join('') + clearAllHtml;
     bar.style.display = (chips.length && window.innerWidth <= 767) ? 'flex' : 'none';
 
     bar.querySelectorAll('.mf-chip').forEach(chip => {
@@ -377,6 +470,12 @@ class MobileFilterUI {
         window.app?.searchHeader?.clearCategoryFilter(chip.dataset.key);
         this.updateChipBar();
       });
+    });
+
+    bar.querySelector('.mf-clear-all-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      window.app?.searchHeader?.clearAllFilters();
+      this.updateChipBar();
     });
 
     // Inline-Indicator in der Search-Input-Row
@@ -412,6 +511,7 @@ class MobileFilterUI {
     items.forEach((item, i) => {
       item.style.borderRadius = '0';
       item.style.scrollSnapAlign = (i % 4 === 0) ? 'start' : 'none';
+      item.style.scrollSnapStop  = (i % 4 === 0) ? 'always' : 'normal'; // erzwingt Stopp, kein Überfliegen
 
       // Nur innere Borders: rechts nur linke Spalte, unten nur nicht-letzte Zeile
       item.style.border = 'none';
