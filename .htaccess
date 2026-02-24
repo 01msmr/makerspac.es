@@ -1,0 +1,58 @@
+# ─── Gzip-Komprimierung ──────────────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE \
+        text/html \
+        text/css \
+        text/javascript \
+        application/javascript \
+        application/json \
+        image/svg+xml \
+        font/ttf \
+        font/woff \
+        font/woff2
+</IfModule>
+
+# ─── Cache-Control-Header ─────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+
+    # HTML: immer beim Server nachfragen (304 wenn unverändert)
+    <FilesMatch "\.(html)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
+    # JSON-Daten: 10 Minuten (locations.json + status.json aktualisieren sich)
+    <FilesMatch "\.(json)$">
+        Header set Cache-Control "max-age=600, must-revalidate"
+    </FilesMatch>
+
+    # App-JS/CSS: 1 Tag (kein Content-Hashing, aber kurze Veralterung)
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "max-age=86400, stale-while-revalidate=3600"
+    </FilesMatch>
+
+    # Schriften: 1 Jahr (ändern sich nie)
+    <FilesMatch "\.(woff2|woff|ttf|eot)$">
+        Header set Cache-Control "max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Bilder + Icons: 1 Woche
+    <FilesMatch "\.(png|jpg|jpeg|gif|svg|ico|webp)$">
+        Header set Cache-Control "max-age=604800"
+    </FilesMatch>
+
+    # Webmanifest: 1 Tag
+    <FilesMatch "\.(webmanifest)$">
+        Header set Cache-Control "max-age=86400"
+    </FilesMatch>
+
+</IfModule>
+
+# ─── ETags aktivieren (für präzise 304-Antworten) ────────────────────────────
+FileETag MTime Size
+
+# ─── MIME-Typen sicherstellen ─────────────────────────────────────────────────
+<IfModule mod_mime.c>
+    AddType font/woff2       .woff2
+    AddType font/woff        .woff
+    AddType application/json .json
+</IfModule>

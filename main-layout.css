@@ -4,7 +4,8 @@
 
 @font-face {
   font-family: 'Roboto';
-  src: url('fonts/Roboto-SemiBold.ttf') format('truetype');
+  src: url('fonts/Roboto-SemiBold.woff2') format('woff2'),
+       url('fonts/Roboto-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
