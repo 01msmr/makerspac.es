@@ -38,7 +38,6 @@ export class RoutingManager {
       // Weitere Städte könnten hier bei Bedarf hinzugefügt werden
     };
 
-    console.log('✅ RoutingManager constructor called (Hash Mode)');
 
     // Init mit Pills-Support
     this.initRoutingListeners();
@@ -60,10 +59,6 @@ export class RoutingManager {
     this._routes = this._createRoutes();
     this._cityRoutes = this._createCityRoutes();
 
-    console.log('--- DEBUG: Routing Data Loaded LAZY ---');
-    console.log(`JSON Data Length: ${this.json.length}`);
-    console.log(`Countries: ${this._countries.slice(0, 3)}... (${this._countries.length})`);
-    console.log('--------------------------------------');
   }
 
   // ========================================
@@ -175,7 +170,6 @@ export class RoutingManager {
    * ✅ Aktiviere City-Filter (als Pill!)
    */
   applyCityFilter(cityName) {
-    console.log(`🏙️ City selected: ${cityName}. Clearing country filter.`);
 
     // 1. Country-Filter explizit deaktivieren
     this._activeCountryFilter = null;
@@ -434,7 +428,6 @@ export class RoutingManager {
 
   // ✨ NEU: Erzwingt einen erneuten Aufruf der Routenbehandlung
   rerunRouteHandler() {
-    console.log('🔄 Rerunning route handler after data load.');
     this._ensureDataLoaded(); // Stellt sicher, dass die Daten extrahiert werden
     this.handleRouteWithPills();
   }
@@ -449,7 +442,6 @@ export class RoutingManager {
  * ✅ Schützt Favoriten, wenn die URL leer ist.
  */
   clearAllPillsAndFilters() {
-    console.log("🌍 Routing-Info: Deaktiviere Land. Stadt-Pills und Style-Filter bleiben aktiv.");
 
     // ✅ FIX: Nur Country-Filter deaktivieren, Pills und Style-Filter NICHT löschen
     this._activeCountryFilter = null;
@@ -500,7 +492,6 @@ export class RoutingManager {
 
     // ✅ LÖSUNG 2: Ignoriere hashchange wenn WIR die URL gesetzt haben
     if (this._isNavigating) {
-      console.log('🔒 Ignoring hashchange - was set by navigateToLocations');
       this._isNavigating = false;
       return;
     }
@@ -569,7 +560,6 @@ export class RoutingManager {
     const pills = this.loadPillsFromURL();
 
     // Debugging-Zeile
-    console.log(`🔎 Route Handler: Hash='${hash}', Pills found: ${pills.length > 0 ? pills.map(p => p.text).join(', ') : 'None'}`);
 
     if (!pills.length) {
       this.clearAllPillsAndFilters();
@@ -604,7 +594,6 @@ export class RoutingManager {
     // Initialer Aufruf
     this.handleRouteWithPills();
 
-    console.log('✅ RoutingManager initialized with Hash listeners');
   }
 
   // ========================================
@@ -622,7 +611,6 @@ export class RoutingManager {
     // Format: #/bookmarks/IDs
     const idsString = hash.replace('#/bookmarks/', '');
 
-    console.log(`🔖 Bookmark route: ${idsString}`);
 
     // Parse IDs
     const ids = idsString.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
@@ -640,7 +628,6 @@ export class RoutingManager {
       return;
     }
 
-    console.log(`✅ Found ${locations.length} location(s) for IDs:`, ids);
 
     // Zeige diese Locations
     this.showLocations(locations, ids);
@@ -664,13 +651,11 @@ export class RoutingManager {
     const idsString = parts[2];
     const name = parts[3]; // optional
 
-    console.log(`🌍 Hierarchical route: ${country}/${city}/${idsString}${name ? '/' + name : ''}`);
 
     const ids = idsString.split(',')
       .map(id => parseInt(id.trim(), 10))
       .filter(id => !isNaN(id) && id > 0);
 
-    console.log('📍 Location route detected:', ids);
 
     if (ids.length === 0) {
       console.warn('⚠️ No valid IDs found in route');
@@ -689,7 +674,6 @@ export class RoutingManager {
       return;
     }
 
-    console.log(`✅ Found ${locations.length} location(s) for IDs:`, ids);
 
     // Zeige diese Locations
     this.showLocations(locations, ids);
@@ -783,7 +767,6 @@ export class RoutingManager {
     const marker = window.markerById.get(location.ID);
     if (marker) {
       marker.openPopup();
-      console.log('📍 Opened popup for:', location.name);
     }
   }
 

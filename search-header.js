@@ -19,7 +19,6 @@
       this.onChangeCallback = null;
 
       this.initializeEventListeners();
-      console.log('✅ SearchPillsManager initialized');
     }
 
     createContainer() {
@@ -33,7 +32,6 @@
     addPill(suggestion) {
       const id = this.generatePillId(suggestion);
       if (this.pills.has(id)) {
-        console.log(`ℹ️ Pill already exists: ${id}`);
         return;
       }
 
@@ -44,7 +42,6 @@
       if (this.onChangeCallback) {
         this.onChangeCallback(this.getPillsArray());
       }
-      console.log(`➕ Added pill: ${suggestion.text} (${suggestion.type})`);
     }
 
     generatePillId(suggestion) {
@@ -55,7 +52,6 @@
       if (!this.pills.has(id)) return;
 
       const pill = this.pills.get(id);
-      console.log(`➖ Removed pill: ${pill.text} (${pill.type})`);
 
       this.pills.delete(id);
       this.render();
@@ -83,7 +79,6 @@
     }
 
     clear() {
-      console.log('🗑️ Clearing all pills');
       this.pills.clear();
       this.render();
       this.updateSearchBarPadding();
@@ -164,7 +159,6 @@
     }
 
     loadPills(pillsArray) {
-      console.log('📥 Loading pills:', pillsArray);
       this.pills.clear();
       pillsArray.forEach(pill => {
         const id = this.generatePillId(pill);
@@ -224,7 +218,6 @@
       this.minChars = 2;
 
       this.initializeEventListeners();
-      console.log('✅ AutocompleteManager initialized');
     }
 
     createContainer() {
@@ -366,7 +359,6 @@
 
       if (!this.styleFilterManager.selectedStyles.has(filterKey)) {
         this.styleFilterManager.selectedStyles.add(filterKey);
-        console.log(`✅ Activated filter: ${filterKey}`);
       }
 
       this.styleFilterManager.applyFilters();
@@ -483,7 +475,6 @@
       this._skipAutoZoom = false;
       this.zoomManager = null;
 
-      console.log('✅ SearchHeader created');
     }
 
     init(listingCore, searchFilter, zoomManager = null) {
@@ -504,7 +495,6 @@
       // Gesamtzahl beim Start anzeigen
       this.updateSearchCounter(this.json?.length || 0);
 
-      console.log('✅ SearchHeader initialized');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -710,7 +700,6 @@
         }
       });
 
-      console.log('✅ Autocomplete & Pills initialized');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1120,7 +1109,6 @@
     }
 
     clearAllFilters(silent = false) {
-      console.log('🗑️ Master Reset: ALLES wird gelöscht.');
 
       this.searchBar.value = '';
       this.pillsManager?.clear();
@@ -1385,16 +1373,17 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     updateSearchCounter(count) {
-      this.searchCounter.innerHTML = count + '<span class="counter-x" aria-hidden="true">×</span>';
+      this.searchCounter.innerHTML = count + '<span class="counter-x" aria-hidden="true"></span>';
       this.searchCounter.classList.add('visible');
       this.searchCounter.classList.toggle('has-results', count > 0);
+      this.searchCounter.classList.toggle('is-pill', count > 99);
       this.searchCounter.classList.remove('no-results');
       this.searchCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0 || this.pillsManager?.count() > 0);
 
       // Microtip: "x makerspaces"
       const label = count + ' ' + (window.i18n?.t('nearbySpaces.makerspaces') || 'makerspaces');
       this.searchCounter.setAttribute('role', 'tooltip');
-      this.searchCounter.setAttribute('data-microtip-position', 'top-left');
+      this.searchCounter.setAttribute('data-microtip-position', 'bottom-left');
       this.searchCounter.setAttribute('aria-label', label);
     }
 
@@ -1520,6 +1509,5 @@
   window.AutocompleteManager = AutocompleteManager;
   window.SearchHeader = SearchHeader;
 
-  console.log('✅ SearchHeader loaded (Pills, Autocomplete, Header)');
 
 })();

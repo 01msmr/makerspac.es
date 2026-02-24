@@ -38,7 +38,6 @@
       // Keyboard Handler
       this._keyboardHandler = this.handleKeyDown.bind(this);
 
-      console.log('✅ NearbyHeader created');
     }
 
     /**
@@ -53,7 +52,6 @@
       this.createHint();
       this.setupEventListeners();
 
-      console.log('✅ NearbyHeader initialized');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1055,6 +1053,5 @@
 
   window.NearbyHeader = NearbyHeader;
 
-  console.log('✅ NearbyHeader loaded');
 
 })();

@@ -1,7 +1,6 @@
 // map.js - Finale Anti-Flacker Version mit ID-basiertem State Management und Navigation
 
 import { RoutingManager } from './routing.js';
-console.log('📦 map.js loaded as module');
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -112,15 +111,12 @@ function toggleClustering(enable) {
   // 2. Layer-Container togglen
   if (enable) {
     if (!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
-    console.log('✅ Clustering aktiviert.');
   } else {
     if (map.hasLayer(clusterGroup)) map.removeLayer(clusterGroup);
-    console.log('❌ Clustering deaktiviert.');
   }
 
   // ✅ WICHTIG: Blockiere Auto-Zoom beim Clustering-Toggle IMMER!
   if (window.searchManager) {
-    console.log('🚫 Clustering-Toggle - Auto-Zoom wird blockiert');
     window.searchManager._manualSpaceClick = true;
   }
 
@@ -134,7 +130,6 @@ function toggleClustering(enable) {
       setTimeout(() => {
         if (window.searchManager) {
           window.searchManager._manualSpaceClick = false;
-          console.log('✅ Auto-Zoom-Blockade aufgehoben');
         }
       }, 100);
     }, 50);
@@ -250,7 +245,6 @@ function removeConnectionLine() {
         map.removeLayer(connectionLine);
       }
     } catch (e) {
-      console.log('Error removing line:', e);
     }
     connectionLine = null;
   }
@@ -374,7 +368,6 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
     noClip: true,
   }).addTo(map);
 
-  console.log('🔍 Connection Line created with weight:', weight);  // DEBUG
 
   connectionLine.bringToFront();
 
@@ -501,14 +494,12 @@ async function initializeApp() {
 let currentMapLibreLayer = null;
 
 function setupMap() {
-  console.log('🔧 Starting MapLibre setup...');
 
   map = new L.Map('map', {
     maxZoom: 18,
     zoomControl: false,
     closePopupOnClick: window.innerWidth > 767, // Mobile: false (verhindert sofortiges Schließen), Desktop: true (Standard)
   });
-  console.log('✅ Leaflet map created');
 
   window.map = map;
 
@@ -526,7 +517,6 @@ function setupMap() {
       isDarkMode = darkModeQuery.matches;
     }
 
-    console.log('🗺️ Updating map - Dark mode:', isDarkMode, 'Color scheme:', colorScheme);
 
     const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -647,11 +637,8 @@ async function loadData() {
     window.json = rawData.slice(1); // Überspringe Index 0
     json = window.json;
 
-    console.log(`🗑️ Filtered out template (next ID: ${rawData[0]?.ID})`);
-    console.log(`📊 Loaded ${json.length} active locations`);
 
     // ✅ OPTIMIERUNG: Baue Index für schnellen ID-Zugriff
-    console.log("🔍 Building location index by ID...");
     const idSet = new Set();
     let issuesFound = 0;
 
@@ -678,22 +665,18 @@ async function loadData() {
     if (issuesFound > 0) {
       console.error(`❌ Found ${issuesFound} ID issues - some locations may not work correctly`);
     } else {
-      console.log(`✅ All ${json.length} location IDs validated successfully`);
     }
 
-    console.log("📍 Creating markers immediately...");
     json.forEach((location, index) => {
       if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
         createMarkerForLocation(location);
       }
     });
 
-    console.log("✅ All markers created immediately!");
 
     const spaceAPI = new StaticSpaceAPI();
     window.spaceAPI = spaceAPI;
 
-    console.log("🔄 Loading fresh SpaceAPI status in background for", json.filter(loc => loc.spaceapi?.endpoint).length, "spaces...");
 
     spaceAPI.onStatusUpdate((location) => {
       updateMarkerIconForLocation(location);
@@ -705,11 +688,6 @@ async function loadData() {
       const nullCount = json.filter(loc => loc.isOpen === null).length;
       const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
 
-      console.log("✅ SpaceAPI status loading complete:");
-      console.log(`   - ✅ Open: ${openCount}`);
-      console.log(`   - ❌ Closed: ${closedCount}`);
-      console.log(`   - ⚠️ Null: ${nullCount}`);
-      console.log(`   - ❓ Undefined: ${undefinedCount}`);
 
       if (window.styleFilterManager && typeof window.styleFilterManager.refreshStyleStats === 'function') {
         window.styleFilterManager.refreshStyleStats();
@@ -1131,13 +1109,11 @@ function setupStyleFilter() {
   // ✨ NEU: SearchFilter ersetzt StyleFilterManager
   if (window.styleFilterManager) {
     styleFilterManager = window.styleFilterManager;
-    console.log('✅ StyleFilter already initialized by AppMain');
     return;
   }
 
   // Fallback für alte StyleFilterManager (falls noch geladen)
   if (!window.StyleFilterManager) {
-    console.log('ℹ️ StyleFilterManager not needed (using SearchFilter)');
     return;
   }
   styleFilterManager = new StyleFilterManager(window.json, allMarkers, icons, searchManager);
@@ -1145,17 +1121,10 @@ function setupStyleFilter() {
   if (searchManager) {
     searchManager.setStyleFilterManager(styleFilterManager);
   }
-  console.log('StyleFilterManager initialized successfully');
   const openCount = window.json.filter(loc => loc.isOpen === true).length;
   const closedCount = window.json.filter(loc => loc.isOpen === false).length;
   const unknownCount = window.json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length;
-  console.log('📊 Filter initialized with:');
-  console.log(`   - Open spaces: ${openCount}`);
-  console.log(`   - Closed spaces: ${closedCount}`);
-  console.log(`   - Unknown/loading: ${unknownCount}`);
   if (openCount === 0 && closedCount === 0) {
-    console.log('⏳ SpaceAPI status is still loading in background...');
-    console.log('   Filter will be updated automatically when data arrives');
   }
 }
 function setupSearch() {
@@ -1174,7 +1143,6 @@ function setupSearch() {
     });
     // searchManager wird von AppMain.init() gesetzt (Backward Compatibility)
     searchManager = window.searchManager;
-    console.log('✅ AppMain initialized successfully');
   } else {
     console.error('❌ AppMain not available');
   }
@@ -1271,38 +1239,20 @@ window.validateLocationIds = function () {
 Gibt einen Bericht über alle IDs aus
 */
 window.reportLocationIdStatus = function () {
-  console.log('═══════════════════════════════════════════════════════════');
-  console.log('📊 LOCATION ID STATUS REPORT');
-  console.log('═══════════════════════════════════════════════════════════');
 
   const validation = window.validateLocationIds();
-  console.log(`Total Locations: ${validation.totalLocations}`);
-  console.log(`Valid IDs: ${validation.uniqueIds}`);
-  console.log(`Status: ${validation.valid ? '✅ VALID' : '❌ ISSUES FOUND'}`);
   if (validation.issues.length > 0) {
-    console.log('\n⚠️ ISSUES FOUND:');
     validation.issues.forEach((issue, i) => {
-      console.log(`\n${i + 1}. ${issue.type.toUpperCase()}`);
-      console.log(`   Location: "${issue.name}" (index ${issue.index})`);
-      console.log(`   ID: ${issue.id}`);
       if (issue.duplicate) {
-        console.log(`   Also used by: "${issue.duplicate.name}"`);
       }
     });
   } else {
-    console.log('\n✅ No issues found - all IDs are valid and unique!');
   }
-  console.log('\n📈 ID STATISTICS:');
   const ids = window.json.map(loc => loc.ID).filter(id => typeof id === 'number');
   if (ids.length > 0) {
-    console.log(`   Min ID: ${Math.min(...ids)}`);
-    console.log(`   Max ID: ${Math.max(...ids)}`);
-    console.log(`   ID Range: ${Math.max(...ids) - Math.min(...ids) + 1}`);
     const sortedIds = [...ids].sort((a, b) => a - b);
     const isSequential = sortedIds.every((id, i) => i === 0 || id === sortedIds[i - 1] + 1);
-    console.log(`   Sequential: ${isSequential ? '✅ Yes' : '⚠️ No (gaps exist)'}`);
   }
-  console.log('\n═══════════════════════════════════════════════════════════');
 };
 // Hauptinitialisierung
 const init = async () => {

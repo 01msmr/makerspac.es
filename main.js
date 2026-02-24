@@ -139,7 +139,6 @@
       zfill
     } = options;
 
-    console.log('🚀 Initializing App...');
 
     // Icons initialisieren
     const icons = initializeLeafletIcons();
@@ -238,11 +237,6 @@
     // Backward Compatibility: window.nearbySpacesManager
     window.nearbySpacesManager = nearbyHeader;
 
-    console.log('✅ App initialized successfully');
-    console.log('  - ListingCore:', !!listingCore);
-    console.log('  - SearchFilter:', !!searchFilter);
-    console.log('  - SearchHeader:', !!searchHeader);
-    console.log('  - NearbyHeader:', !!nearbyHeader);
 
     return {
       listingCore,
@@ -262,11 +256,9 @@
    * Für schrittweise Migration
    */
   function initLegacyMode(map, allMarkers, json, icons, zfill) {
-    console.log('⚠️ Running in Legacy Mode');
 
     // Wenn die neuen Module nicht geladen sind, nutze alte
     if (!window.ListingCore || !window.SearchFilter || !window.SearchHeader) {
-      console.log('  - New modules not loaded, using legacy modules');
       return null;
     }
 
@@ -288,6 +280,5 @@
     CONFIG
   };
 
-  console.log('✅ AppMain loaded');
 
 })();

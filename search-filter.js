@@ -25,7 +25,6 @@
 
       this.initializeStyleStats();
 
-      console.log('✅ SearchFilter initialized with', this.styleStats.size, 'unique styles');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -95,9 +94,7 @@
      * Aktualisiert die Style-Statistiken
      */
     refreshStyleStats() {
-      console.log('🔄 Refreshing filter statistics...');
       this.initializeStyleStats();
-      console.log('✅ Filter refreshed with', this.styleStats.size, 'items');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -365,7 +362,7 @@
       }
 
       // Text-Suche
-      if (query.length > 0 && query !== 'xcr') {
+      if (query.length > 0) {
         const normalizedQuery = query.toLowerCase();
 
         // ID-Match prüfen
@@ -514,6 +511,5 @@
 
   window.SearchFilter = SearchFilter;
 
-  console.log('✅ SearchFilter loaded');
 
 })();

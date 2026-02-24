@@ -2,8 +2,18 @@
    MAIN-LAYOUT.CSS – CSS Variables, Page Layout, Utilities
    ═════════════════════════════════════════════════════════ */
 
+@font-face {
+  font-family: 'Roboto';
+  src: url('fonts/Roboto-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* *** CSS Variables für Light Mode (Default) *** */
 :root {
+  --font-family: 'Roboto', sans-serif;
+
   --title-background: rgba(111, 233, 166, 1);
   --nearby-title: rgba(111, 233, 166, 0.66);
   --bg-color: white;
@@ -26,7 +36,6 @@
   --microtip-transition-easing: ease-out;
   --microtip-font-size: 12px;
   --microtip-font-weight: 600;
-  /* --microtip-text-transform: uppercase; */
   --microtip-background-color: rgba(255,255,32,.92);
   --microtip-color: black;
   --microtip-border-color: black;
@@ -42,7 +51,7 @@ html, body {
 }
 
 body {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   background-color: var(--bg-color);
   color: var(--text-color);
 }
@@ -70,7 +79,7 @@ body {
 }
 
 .title {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   color: blue;
   background-color: var(--title-background);
   padding: .25em .75em .25em .50em;
@@ -79,28 +88,37 @@ body {
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
-  /* opacity: 0.4; */
   transition: box-shadow 0.75s ease-out;
 }
 
 .title:hover {
   box-shadow: .2em -.1em .6em .35em transparent;
-  /* opacity: 0.25; */
-  /* color: var(--space-hover) */
-  /* transition: box-shadow 1.25s ease-out; */
-  /* filter: invert(1) hue-rotate(180deg) brightness(0.55) contrast(.8) saturate(0.75); */
   outline: 1px solid #666666;
 }
+
+.spac {
+  padding-left: 1.5em;
+  margin: 0 .1em 0 .1em;
+  border-radius: .25em;
+  background-color: blue;
+  color: white;
+  border: .1em solid transparent;
+}
+
+.spac:hover {
+  background-color: white;
+  color: blue;
+  border: .1em solid blue;
+}
+
 .title-bar a {
 text-decoration: none;
 }
 
 .title-tools {
   position: relative;
-  top: 0px;
   display: flex;
   flex-direction: column;
-  gap: 0px;
   z-index: 404;
 }
 

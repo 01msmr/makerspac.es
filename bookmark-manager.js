@@ -14,7 +14,6 @@ class BookmarkManager {
       if (stored) {
         const bookmarksArray = JSON.parse(stored);
         this.bookmarks = new Set(bookmarksArray);
-        console.log(`📚 Loaded ${this.bookmarks.size} bookmarks from storage`);
       }
     } catch (error) {
       console.error('❌ Error loading bookmarks:', error);
@@ -27,7 +26,6 @@ class BookmarkManager {
     try {
       const bookmarksArray = Array.from(this.bookmarks);
       window.consent.set(this.storageKey, JSON.stringify(bookmarksArray));
-      console.log(`💾 Saved ${this.bookmarks.size} bookmarks to storage`);
     } catch (error) {
       console.error('❌ Error saving bookmarks:', error);
     }
@@ -44,10 +42,8 @@ class BookmarkManager {
   toggleBookmark(locationId) {
     if (this.bookmarks.has(locationId)) {
       this.bookmarks.delete(locationId);
-      console.log(`🔖 Removed bookmark: ${locationId}`);
     } else {
       this.bookmarks.add(locationId);
-      console.log(`🔖 Added bookmark: ${locationId}`);
     }
     this.saveBookmarks();
     return this.isBookmarked(locationId);
@@ -159,7 +155,6 @@ class BookmarkManager {
       window.dataStore.updateSettingsHash();
     }
 
-    console.log('🗑️ All bookmarks cleared');
   }
 
   // Initialisiere Event-Listener für Bookmark-Icons im DOM

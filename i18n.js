@@ -20,7 +20,6 @@ class I18n {
         // ✅ Gespeicherte Sprache hat Priorität
         this.currentLang = savedLang;
         window.currentLanguage = savedLang;
-        console.log(`✅ Loaded saved language: ${savedLang}`);
       } else {
         // ✅ Fallback: Auto-detect browser language
         const browserLang = navigator.language.substring(0, 2);
@@ -28,11 +27,9 @@ class I18n {
         if (supportedLangs.includes(browserLang)) {
           this.currentLang = browserLang;
           window.currentLanguage = browserLang;
-          console.log(`🌍 Detected browser language: ${browserLang}`);
         } else {
           this.currentLang = 'en'; // Fallback
           window.currentLanguage = 'en';
-          console.log(`🌍 Browser language ${browserLang} not supported, using: en`);
         }
       }
 
@@ -42,7 +39,6 @@ class I18n {
         searchBar.placeholder = this.translations.searchPlaceholder[this.currentLang] ||
           this.translations.searchPlaceholder['de'] ||
           'Search...';
-        console.log('✅ Search placeholder set to:', searchBar.placeholder);
       }
 
       // ✅ Übersetze UI-Elemente
@@ -64,7 +60,6 @@ class I18n {
   setLanguage(lang) {
     if (['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'].includes(lang)) {
       this.currentLang = lang;
-      console.log(`🌍 Language changed to: ${lang}`);
 
       // ✅ Übersetze UI neu
       this.translateUI();

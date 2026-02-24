@@ -4,7 +4,6 @@ class StaticSpaceAPI {
   constructor() {
     this.statusData = null;
     this.listeners = [];
-    console.log('📄 StaticSpaceAPI initialized');
   }
 
   // Event-Listener hinzufügen
@@ -25,7 +24,6 @@ class StaticSpaceAPI {
 
   // Lade Status aus statischer JSON
   async enrichLocationData(locations) {
-    console.log('📄 Loading static SpaceAPI status from status.json...');
 
     try {
       // Lade status.json (mit Cache-Buster)
@@ -38,8 +36,6 @@ class StaticSpaceAPI {
 
       this.statusData = await response.json();
 
-      console.log('✅ Loaded status from:', this.statusData.stats.lastUpdate);
-      console.log('📊 Stats:', this.statusData.stats);
 
       // Mappe Status auf Locations
       let applied = 0;
@@ -59,7 +55,6 @@ class StaticSpaceAPI {
           } else {
             // Endpoint nicht in Status-Daten gefunden
             location.isOpen = null;
-            console.log('⚠️ No status data for:', location.name);
           }
         }
       });
@@ -70,18 +65,11 @@ class StaticSpaceAPI {
       const nullCount = locations.filter(loc => loc.isOpen === null).length;
       const undefinedCount = locations.filter(loc => loc.isOpen === undefined).length;
 
-      console.log('✅ Status applied to', applied, 'locations:');
-      console.log(`   🟢 isOpen === true: ${openCount}`);
-      console.log(`   🔴 isOpen === false: ${closedCount}`);
-      console.log(`   🟠 isOpen === null: ${nullCount}`);
-      console.log(`   ⚪ isOpen === undefined: ${undefinedCount}`);
 
       return locations;
 
     } catch (error) {
       console.error('❌ Error loading status.json:', error);
-      console.log('ℹ️ Make sure status.json exists in the root directory');
-      console.log('ℹ️ Run: node scripts/fetch-spaceapi-status.js');
       return locations;
     }
   }
@@ -134,26 +122,17 @@ class StaticSpaceAPI {
   // Logging (für Debugging)
   logCacheInfo() {
     if (!this.statusData) {
-      console.log('⚠️ No status data loaded yet');
       return;
     }
 
-    console.log('📊 Static Status Info:');
-    console.log('   Last Update:', new Date(this.statusData.stats.lastUpdate).toLocaleString());
-    console.log('   🟢 Open:', this.statusData.stats.open);
-    console.log('   🔴 Closed:', this.statusData.stats.closed);
-    console.log('   🟠 Unknown:', this.statusData.stats.unknown);
-    console.log('   📦 Total Spaces:', this.statusData.stats.total);
   }
 
   // Dummy-Funktionen für Kompatibilität
   cleanExpiredCache() {
-    console.log('ℹ️ StaticSpaceAPI: Cache cleaning not needed (using static data)');
     return 0;
   }
 
   clearCache() {
-    console.log('ℹ️ StaticSpaceAPI: Clearing status data');
     this.statusData = null;
     return 0;
   }

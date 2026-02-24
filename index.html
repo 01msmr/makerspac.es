@@ -16,33 +16,28 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icons/android-chrome-512x512.png" />
   <link rel="manifest" href="icons/site.webmanifest" />
 
-  <!-- Lokale Bibliotheken -->
-  <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
-  <script src="libs/leaflet/leaflet.js"></script>
+  <!-- Preload kritische Ressourcen (parallel zum HTML-Parsen) -->
+  <link rel="preload" href="fonts/Roboto-SemiBold.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="locations.json" as="fetch" crossorigin />
+  <link rel="preload" href="status.json" as="fetch" crossorigin />
 
-  <script src="libs/leaflet-markercluster/leaflet.markercluster.js"></script>
+  <!-- Bibliotheks-CSS -->
+  <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
   <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.css" />
   <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.Default.css" />
-
-
-  <link href="libs/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
-  <script src="libs/maplibre-gl/maplibre-gl.js"></script>
-
-  <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
-
-  <!-- CSS (main.css imports: listing-core.css, search.css, nearby.css, styles-autocomplete.css) -->
-  <!-- Microtip Tooltips -->
+  <link rel="stylesheet" href="libs/maplibre-gl/maplibre-gl.css" />
   <link rel="stylesheet" href="libs/microtip.css" />
-
-  <link rel="stylesheet" type="text/css" href="main.css" />
-
-  <!-- Flag Icons -->
   <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
-
-  <!-- Font Awesome lokal -->
   <link rel="stylesheet" href="libs/fontawesome/css/all.min.css" />
 
-  <script src="libs/qrcode.min.js"></script>
+  <!-- App CSS: direkte Links statt @import-Kette → paralleles Laden -->
+  <link rel="stylesheet" href="main-layout.css" />
+  <link rel="stylesheet" href="main-components.css" />
+  <link rel="stylesheet" href="main-responsive.css" />
+  <link rel="stylesheet" href="listing-core.css" />
+  <link rel="stylesheet" href="search.css" />
+  <link rel="stylesheet" href="nearby.css" />
+  <link rel="stylesheet" href="styles-autocomplete.css" />
 
 </head>
 
@@ -105,55 +100,34 @@
     </ol>
   </div>
 
-  <!-- + makerspace - wird von ui-translator.js übersetzt -->
-  <!-- <div class="add-makerspace">
-    <h2>+ Deinen Makerspace hinzufügen 💛</h2>
-    <br />
-    <ul>
-      <!-- <li><a href="https://forms.gle/NMDpikBPqGuSeXy3A" target="_blank" class="btn-1">über Google Forms</a></li> -->
-      <li><a href="https://github.com/01msmr/makerspac.es/issues/new?template=add-makerspace.yml" target="_blank"
-        class="btn-2">über GitHub Pull Request</a></li>
-      </ul> 
-      <h2 class="btn-3">in Deine eigene Seite einbetten</h2><br />
-      <ul>
-        <li><a href="embed-demo.html" target="_blank">https://makerspac.es/embed-demo.html</a></li>
-      </ul>
-    
-  </div> -->
+  <!-- Bibliotheks-JS: im Body → kein Render-Blocking -->
+  <script src="libs/leaflet/leaflet.js"></script>
+  <script src="libs/leaflet-markercluster/leaflet.markercluster.js"></script>
+  <script src="libs/maplibre-gl/maplibre-gl.js"></script>
+  <script src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
+  <script src="libs/qrcode.min.js"></script>
 
-  <!-- JavaScript-Dateien -->
+  <!-- App-JS -->
   <script src="utils.js"></script>
-
-  <!-- ✨ NEU: Zentrale Konfiguration (muss VOR icons.js geladen werden) -->
   <script src="config.js"></script>
-
-  <!-- <script src="icons.js"></script> --> <!-- DEAKTIVIERT: In config.js integriert -->
   <script src="spaceapi-static.js"></script>
   <script src="i18n.js"></script>
   <script>
     window.i18n = new I18n();
-    window.i18n.load().then(() => {
-      console.log('✅ Translations loaded and placeholder set');
-    });
+    window.i18n.load();
   </script>
 
-
-  <!-- Consent + Bookmark-System -->
-  <script src="datasync.js"></script> <!-- ConsentManager muss VOR bookmark-manager.js kommen -->
+  <!-- Consent + Bookmark-System (ConsentManager muss VOR bookmark-manager.js kommen) -->
+  <script src="datasync.js"></script>
   <script src="bookmark-manager.js"></script>
 
   <script src="data-store.js"></script>
-
   <script src="listing-core.js"></script>
   <script src="zoom-manager.js"></script>
-  <script src="search-filter.js"></script>   <!-- Filter-Logik -->
-  <script src="search-header.js"></script>   <!-- Pills, Autocomplete, Header -->
+  <script src="search-filter.js"></script>
+  <script src="search-header.js"></script>
   <script src="nearby-header.js"></script>
-
-  <!-- ✅ Embed-Modus Handler (muss VOR map.js geladen werden) -->
   <script src="embed.js"></script>
-
-  <!-- ✨ NEU: Orchestrator (muss VOR map.js geladen werden) -->
   <script src="main.js"></script>
   <script src="mobile-filter.js"></script>
 

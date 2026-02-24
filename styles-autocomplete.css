@@ -1,12 +1,3 @@
-/* FORCE SHOW für Debug
-.autocomplete-container.is-active {
-  display: flex !important;
-  background: rgba(255, 0, 0, 0.3) !important;
-  Rot = sichtbar
-  min-height: 50px !important;
-} */
-
-
 /*============================================AUTOCOMPLETE PILLS - Enhanced Search============================================*/
 
 /* Autocomplete Container - oberhalb der Searchbar */
@@ -66,7 +57,7 @@
   white-space: nowrap !important;
   display: flex !important;
   align-items: center !important;
-  font-family: 'Lato', sans-serif !important;
+  font-family: var(--font-family) !important;
   user-select: none !important;
 }
 
@@ -75,19 +66,10 @@
   transform: scale(1.02);
 }
 
-/* KORREKTUR: FOKUSSIERTE PILL - WEISSER HINTERGRUND, BLAUER FETTER TEXT */
 .autocomplete-pill.focused {
   background: #fff !important;
-  /* Weißer Hintergrund */
   color: #0066ff !important;
-  /* Blauer Text */
-  /* font-weight: 700 !important; */
-  outline-offset: 2px; outline: none !important;    /* <--- Diese Zeile sollte das Standard-Outline entfernen */
-}
-
-.autocomplete-pill.focused {
-  background: #0066ff;
-  outline: 2px solid rgba(0, 102, 255, 0.4);
+  outline: none !important;
   outline-offset: 2px;
 }
 
@@ -104,16 +86,11 @@
     color: #fff;
   }
   
-  /* KORREKTUR: FOKUSSIERTE PILL - Dark Mode */
   .autocomplete-pill.focused {
     background: #fff !important;
-    /* Weißer Hintergrund */
     color: #000 !important;
-    /* Schwarzer Text (oder sehr dunkles Blau) für besseren Kontrast */
     font-weight: 700 !important;
-    /* Fetter Text */
     outline: 2px solid #0066ff !important;
-    /* Blauer Outline */
     outline-offset: 2px;
   }
 }
@@ -253,30 +230,16 @@
 
 /* Remove Button (×) */
 .search-pill-remove {
-  /* cursor: pointer;
-  font-size: 1.2em;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-  line-height: 1;
-  margin-left: 2px; */
   display: none !important;
 }
 
-/* .search-pill-remove:hover {
-  opacity: 1;
-} */
-
-/* Pill Type Colors (optional) */
-/* Spezifität erhöhen, um !important zu vermeiden */
+/* Pill Type Colors */
 .search-input-wrapper .search-pill[data-type="city"] {
-  /* NEU: Spezifität erhöht */
-  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
   background-color: #000;
   color: #fff;
 }
 
 .search-input-wrapper .search-pill[data-type="city"]:hover {
-  /* NEU: Spezifität erhöht */
   background-color: #dd4444;
 }
 
@@ -299,12 +262,8 @@
 }
 
 /* Searchbar mit Pills - Text-Offset */
-/* ✨ KORREKTUR: Verwende die JS-gesetzte CSS-Variable */
 #search-bar.has-pills {
-  /* Altes padding: 0.6em 2.2em 0.6em 1em; */
-  /* padding-left: calc(var(--pills-width, 0px) + 16px); - Alte Logik */
   padding-left: var(--dynamic-pill-padding, 1em);
-  /* NEU: CSS Variable */
   transition: padding-left 0.2s ease;
 }
 

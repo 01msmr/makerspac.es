@@ -15,7 +15,7 @@
   color: white;
   padding: 0 12px 0 0;
   border-radius: 20px;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: 0.85em;
   display: flex;
   align-items: center;
@@ -390,10 +390,10 @@
     max-width: 100% !important;
     border-radius: 20px 20px 0 0 !important;
     max-height: 70vh !important;
-    animation: slideUp 0.3s ease-out;
+    animation: nearbySlideUp 0.3s ease-out;
   }
 
-  @keyframes slideUp {
+  @keyframes nearbySlideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
   }

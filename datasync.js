@@ -208,7 +208,6 @@ window.consent = new ConsentManager();
     const ids = bookmarks.split('.').map(Number).filter(n => !isNaN(n) && n > 0);
     if (ids.length) localStorage.setItem('makerspace_bookmarks', JSON.stringify(ids));
   }
-  console.log('✅ Settings from URL hash applied');
 })();
 
 
@@ -575,7 +574,6 @@ class BookmarkSync {
     // Speichern
     window.consent.set('user-settings', JSON.stringify(currentSettings));
 
-    console.log('✅ Settings synced:', currentSettings);
   }
 
   /**
@@ -633,23 +631,19 @@ window.BookmarkSync = BookmarkSync;
 
 
 // ✅ AUTO-INIT
-console.log('🔵 datasync.js loaded, starting auto-init...');
 
 const initBookmarkSync = () => {
   if (window.bookmarkManager) {
-    console.log('✅ bookmarkManager found, creating instance...');
     window.bookmarkSync = new BookmarkSync(window.bookmarkManager);
 
     // Warte auf Translations
     const checkTranslations = setInterval(() => {
       if (window.translations && window.translations.sync) {
         window.bookmarkSync.init(window.translations);
-        console.log('✅ BookmarkSync fully initialized');
         clearInterval(checkTranslations);
       }
     }, 50);
   } else {
-    console.log('⏳ Waiting for bookmarkManager...');
     setTimeout(initBookmarkSync, 100);
   }
 };

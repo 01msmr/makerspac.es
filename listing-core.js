@@ -798,6 +798,5 @@
 
   window.ListingCore = ListingCore;
 
-  console.log('✅ ListingCore loaded');
 
 })();

@@ -268,7 +268,7 @@ class MobileFilterUI {
       style:     { icon: 'fas fa-people-group',       label: window.i18n?.t('filter.style')     || 'Style' },
       doorState: { icon: 'fas fa-door-open',          label: window.i18n?.t('filter.status')    || 'Status' },
       weekly:    { icon: 'fas fa-calendar-day',       label: window.i18n?.t('filter.weekly')    || 'Meeting' },
-      workshops: { icon: 'fas fa-screwdriver-wrench', label: window.i18n?.t('filter.workshops') || 'Werkstätten' },
+      workshops: { icon: 'fas fa-wrench', label: window.i18n?.t('filter.workshops') || 'Werkstätten' },
       country:   { icon: 'fas fa-flag',               label: window.i18n?.t('filter.country')   || 'Land' },
       bookmarks: { icon: 'fas fa-bookmark',           label: window.i18n?.t('filter.bookmarks') || 'Favoriten' },
     };

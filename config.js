@@ -36,6 +36,23 @@
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // WORKSHOP-TYPEN  (Single Source of Truth – ID → Definition)
+  // Übersetzungen: lang.json unter workshops.*
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const WORKSHOP_TYPES = {
+    '3d':          { icon: 'fas fa-cube' },
+    'laser':       { icon: 'fas fa-wand-magic-sparkles' },
+    'electronics': { icon: 'fas fa-microchip' },
+    'wood':        { icon: 'fas fa-hammer' },
+    'metal':       { icon: 'fas fa-gears' },
+    'textile':     { icon: 'fas fa-scissors' },
+    'cnc':         { icon: 'fas fa-industry' },
+    'bio':         { icon: 'fas fa-flask' },
+    'vr':          { icon: 'fas fa-vr-cardboard' }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // ICON-KLASSEN (FontAwesome)
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -73,21 +90,11 @@
       peopleGroup: 'fas fa-people-group',
       doorOpen: 'fas fa-door-open',
       calendarDay: 'fas fa-calendar-day',
-      workshops: 'fas fa-screwdriver-wrench'
+      workshops: 'fas fa-wrench'
     },
 
-    // Workshop-Arten-Icons
-    workshops: {
-      '3d': 'fas fa-cube',
-      'laser': 'fas fa-wand-magic-sparkles',
-      'electronics': 'fas fa-microchip',
-      'wood': 'fas fa-hammer',
-      'metal': 'fas fa-gears',
-      'textile': 'fas fa-scissors',
-      'cnc': 'fas fa-industry',
-      'bio': 'fas fa-flask',
-      'vr': 'fas fa-vr-cardboard'
-    }
+    // Workshop-Icons – abgeleitet aus WORKSHOP_TYPES (nicht manuell pflegen)
+    workshops: Object.fromEntries(Object.entries(WORKSHOP_TYPES).map(([id, def]) => [id, def.icon]))
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -174,8 +181,8 @@
       iconOnly: true
     },
     workshops: {
-      icon: 'fas fa-screwdriver-wrench',
-      options: ['3d', 'laser', 'electronics', 'wood', 'metal', 'textile', 'cnc', 'bio', 'vr']
+      icon: 'fas fa-wrench',
+      options: Object.keys(WORKSHOP_TYPES)
     }
   };
 
@@ -212,7 +219,7 @@
   }
 
   function getWorkshopIcon(key) {
-    return ICONS.workshops[key] || '';
+    return WORKSHOP_TYPES[key]?.icon || '';
   }
 
   function getWorkshopsTooltip(workshops) {
@@ -369,6 +376,7 @@
     // Konstanten
     colours: COLOURS,
     icons: ICONS,
+    workshopTypes: WORKSHOP_TYPES,
     countryCodes: COUNTRY_CODES,
     settings: SETTINGS,
     filterCategories: FILTER_CATEGORIES,
@@ -420,6 +428,5 @@
   // Bei Dark/Light Mode Wechsel aktualisieren
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyCssColours);
 
-  console.log('✅ AppConfig loaded');
 
 })();

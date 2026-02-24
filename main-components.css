@@ -9,7 +9,7 @@
 
 /* Microtip Farben (zentral ueberschrieben) */
 [aria-label][role~="tooltip"]::after {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
     font-size: 13px !important;  /* Fixe Textgröße */
     line-height: 16px !important;  /* Fixe Zeilenhöhe */
     font-weight: 600;  /* Einheitliche Dicke */
@@ -87,7 +87,7 @@
    =================================== */
 
 .settings-popover {
-  font-family: Lato, sans-serif;
+  font-family: var(--font-family);
   position: absolute;
   right: 0;
   top: 0;
@@ -318,33 +318,18 @@
    LEAFLET MARKERS & ZOOM PERFORMANCE
    =================================== */
 
-/* Pin Stabilization (ohne Hover-Animation im CSS) */
+/* Pin Stabilization */
 .leaflet-marker-icon {
-  /* --marker-scale: 1;   Neue Zeile */
   transition: transform 0.2s ease-out !important;
   will-change: transform !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
-  /* transform: scale(var(--marker-scale)) !important; */
 }
 
-/* === PERFORMANCE-OPTIMIERUNG für den ZOOM (VERFEINERT) === */
-
-/* 1. Definiert eine weiche Transition auf den Markern und Schatten selbst.
-   Dies sorgt dafür, dass sie sowohl ein- als auch ausblenden (Dauer: 0.2s). */
 .leaflet-marker-pane .leaflet-marker-icon,
 .leaflet-shadow-pane img {
   transition: opacity 0.2s ease-in-out !important;
 }
-
-/* 2. Die Klasse .map-is-zooming setzt die Deckkraft auf 0 und löst damit
-   die oben definierte Transition (das Ausblenden) aus. */
-/* #map.map-is-zooming .leaflet-marker-pane .leaflet-marker-icon,
-#map.map-is-zooming .leaflet-shadow-pane img {
-  opacity: 0 !important;
-  pointer-events: none !important;
-} */
-
 
 /* Während Zoom: NUR Leaflets Zoom-Animation blockieren, NICHT unsere Scale-Transition */
 .leaflet-zoom-animated .leaflet-marker-icon {
@@ -356,11 +341,6 @@
   transition: none !important;
   animation: none !important;
 }
-
-/* Map-weites Zooming - hier komplett ohne Transition */
-/* #map.map-is-zooming .leaflet-marker-icon {
-  transition: none !important;
-} */
 
 
 /* ===================================
@@ -384,21 +364,11 @@
 .leaflet-popup-content-wrapper {
   overflow: visible;
   z-index: 800;
-
-  /* Erhöht die maximal erlaubte Breite des Popups.
-    Der Standardwert von Leaflet ist 300px. Passen Sie diesen Wert
-    nach Bedarf an. */
-  /* max-width: 380px !important; */
-
-  /* Sorgt dafür, dass die Breite flexibel bleibt und sich dem
-    Inhalt anpasst, bis die max-width erreicht ist. */
   width: auto !important;
 }
 
-/* Das eigentliche Content-Element mit Padding */
 .leaflet-popup-content {
   margin: 12px !important;
-  /* Leaflet nutzt margin statt padding für den Innenabstand */
 }
 
 @keyframes popupFadeIn {
@@ -889,7 +859,7 @@ a#titleurl:hover h3.space-unknown .fas {
   width: 90%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
 }
 
 .sync-dialog h2 {
@@ -978,7 +948,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* QR Code Container */
 .sync-qr-container {
-  font-family: 'Lato', sans-serif !important;
+  font-family: var(--font-family) !important;
   display: flex;
   justify-content: center;
   padding: 20px;
@@ -1080,7 +1050,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background: var(--microtip-background-color);
   color: var(--microtip-color);
   border: 3px solid var(--microtip-border-color);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: var(--microtip-font-size, 12px);
   font-weight: var(--microtip-font-weight, 600);
   white-space: nowrap;
@@ -1112,7 +1082,7 @@ a#titleurl:hover h3.space-unknown .fas {
   background: var(--microtip-background-color);
   color: var(--microtip-color);
   border: 3px solid var(--microtip-border-color);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: var(--microtip-font-size, 12px);
   font-weight: var(--microtip-font-weight, 600);
   white-space: pre-line;
@@ -1153,7 +1123,7 @@ a#titleurl:hover h3.space-unknown .fas {
   border-radius: 4px;
   background: transparent;
   color: var(--microtip-color);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: var(--microtip-font-size, 12px);
   font-weight: 700;
   cursor: pointer;
@@ -1234,7 +1204,6 @@ a#titleurl:hover h3.space-unknown .fas {
   align-items: center;
   justify-content: center;
   text-align: center;
-  line-height: 26px;
   font-size: 14px;
   font-weight: bold;
   pointer-events: none;
@@ -1362,7 +1331,7 @@ body.consent-active #map { pointer-events: none; }
 
 .consent-earth-text {
   color: rgba(255, 255, 255, 0.95);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: 0.8em;
   font-weight: 600;
   line-height: 1.5;
@@ -1455,7 +1424,7 @@ body.consent-active #map { pointer-events: none; }
 
 .consent-sun-text {
   color: #4e2a00;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: 0.88em;
   font-weight: 600;
   line-height: 1.4;
@@ -1558,7 +1527,7 @@ body.consent-active #map { pointer-events: none; }
 /* Labels im Mond: gegen Rotation zurückdrehen → waagerecht */
 .consent-moon-label {
   transform: rotate(-30deg);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: 1.08em;
   font-weight: 700;
   white-space: nowrap;

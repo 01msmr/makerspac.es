@@ -320,7 +320,7 @@ class EmbedMapExtended {
     const workshopColor = window.AppConfig.getDynamicSpaceColor(space);
     const workshopsHtml = workshopsCount > 0 ? `
       <span class="listing-workshops" style="color: ${workshopColor}; font-weight: bold; margin-left: 8px; font-size: 0.8em; opacity: 1;">
-        <i class="fas fa-screwdriver-wrench"></i> ${workshopsCount}
+        <i class="fas fa-wrench"></i> ${workshopsCount}
       </span>` : '';
 
     item.innerHTML = `

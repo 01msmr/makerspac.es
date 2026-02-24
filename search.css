@@ -40,7 +40,7 @@
 }
 
 #search-bar {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   width: 100%;
   font-size: 1em;
   padding: .6em 2.2em .6em 1em;
@@ -102,7 +102,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--space-hover);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   border: 1px solid var(--space-hover);
   border-radius: 50%;
   width: 28px;
@@ -128,16 +128,42 @@
   cursor: pointer;
 }
 
+.search-counter.is-pill {
+  width: auto;
+  min-width: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+}
+
 .search-counter .counter-x {
   position: absolute;
-  top: 35%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 45px;
-  font-weight: 200;
-  color: white;
+  width: 30px;
+  height: 30px;
   opacity: 0;
   pointer-events: none;
+}
+
+.search-counter .counter-x::before,
+.search-counter .counter-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 4px;
+  background: white;
+  border-radius: 1px;
+}
+
+.search-counter .counter-x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.search-counter .counter-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .search-counter.is-clearable:hover {
@@ -156,7 +182,6 @@
 
 .search-counter.no-results {
   border: none;
-  visibility: hidden;
   display: none;
 }
 
@@ -249,7 +274,7 @@
    ================================================================= */
 
 .filter-pill {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -334,7 +359,7 @@
    ================================================================= */
 
 .filter-popover {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   position: fixed;
   margin-top: 4px;
   background-color: var(--dropdown-bg);
@@ -348,7 +373,7 @@
 }
 
 .filter-popover-item {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   padding: 4px 12px;
   cursor: pointer;
   font-size: 0.9em;
@@ -382,7 +407,7 @@
 }
 
 .filter-popover-item.filter-clear-option {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   text-align: center;
   font-weight: bold;
   font-size: 0.8em;
@@ -409,7 +434,7 @@
    ================================================================= */
 
 .country-group-header {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   font-size: 0.9em;
   padding: 2px 16px;
   background-color: var(--dropdown-alt-bg);
@@ -561,14 +586,6 @@
     background-color: black;
     padding-bottom: 0;
   }
-
-  /* Overlap-Trick zurücksetzen (war für downward flow) */
-  /* #suggestions-dropdown {
-    margin-top: 0 !important;
-    padding-top: 8px !important;
-    border-radius: 20px 20px 0 0;
-    max-height: 50vh;
-  } */
 
   .active-filters-section {
     margin-top: 0 !important;

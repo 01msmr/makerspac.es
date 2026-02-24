@@ -125,10 +125,9 @@ jobs:
             // locations.json laden
             let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
 
-            // ID Management (Template an Index 0)
-            const nextId = parseInt(locations[0].ID);
+            // ID Management: höchste vorhandene ID + 1
+            const nextId = Math.max(...locations.map(l => parseInt(l.ID) || 0)) + 1;
             core.setOutput('next_id', nextId);
-            locations[0].ID = nextId + 1;
 
             // Neuen Eintrag erstellen
             const newEntry = {
@@ -213,11 +212,10 @@ jobs:
             console.log("=== END NEW ENTRY ===");
 
             // Einfügeposition finden (sortiert nach Land > PLZ > Name)
-            let dataOnly = locations.slice(1);
-            let insertIndex = dataOnly.length;
+            let insertIndex = locations.length;
 
-            for (let i = 0; i < dataOnly.length; i++) {
-              const item = dataOnly[i];
+            for (let i = 0; i < locations.length; i++) {
+              const item = locations[i];
 
               const cComp = (item.loc?.country || "").localeCompare(newEntry.loc.country);
               if (cComp > 0) { insertIndex = i; break; }
@@ -233,12 +231,9 @@ jobs:
               }
             }
 
-            // Einfügen
-            dataOnly.splice(insertIndex, 0, newEntry);
-
-            // Speichern
-            const finalData = [locations[0], ...dataOnly];
-            fs.writeFileSync('locations.json', JSON.stringify(finalData, null, 2));
+            // Einfügen und speichern
+            locations.splice(insertIndex, 0, newEntry);
+            fs.writeFileSync('locations.json', JSON.stringify(locations, null, 2));
 
             // Ausgabe für Titel
             core.setOutput('space_name', name);

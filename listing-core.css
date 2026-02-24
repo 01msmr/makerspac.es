@@ -4,7 +4,7 @@
    ================================================================= */
 
 .listing-item {
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-family);
   padding: 8px 6px;
   border-top-right-radius: 14px;
   border-bottom-right-radius: 14px;
@@ -217,7 +217,7 @@
   flex-shrink: 0;
   margin-left: auto;
   padding-right: 2px;
-  font-size: 0.8em;
+  font-size: 1.1em;
   font-weight: bold;
   color: var(--status-color, var(--text-color));
   white-space: nowrap;

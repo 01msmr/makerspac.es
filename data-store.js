@@ -6,9 +6,6 @@ class DataStore {
     const savedLang = window.consent.get('preferred_language');
     this.currentLanguage = savedLang || 'de'; // Fallback zu 'de'
 
-    console.log('🔧 DataStore constructor:');
-    console.log('   - savedLang from localStorage:', savedLang);
-    console.log('   - this.currentLanguage set to:', this.currentLanguage);
 
     this.container = null;
     this.settingsPopover = null;
@@ -44,7 +41,7 @@ class DataStore {
       clustering: 'Orte clustern',
       clusteringOn: 'aktivieren',
       clusteringOff: 'deaktivieren',
-      mapService: 'Navigation',
+      mapService: 'Kartendienst',
       light: 'Hell',
       auto: 'Automatisch',
       dark: 'Dunkel',
@@ -71,6 +68,11 @@ class DataStore {
     settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSettingsPopover();
+    });
+    settingsButton.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.zoomManager?.toggleZoomIndicator();
     });
 
     this.container.appendChild(settingsButton);
@@ -179,24 +181,27 @@ class DataStore {
     const clusteringHeader = document.createElement('div');
     clusteringHeader.className = 'settings-header';
 
+    const isClusteringActive = window.mapUtils ? window.mapUtils.isClusteringEnabled() : true;
     clusteringHeader.innerHTML = `
       <div class="settings-header-content">
         <i class="fas fa-circle-nodes"></i>
         <span>${this.t('clustering')}</span>
       </div>
       <div class="settings-header-icons">
-        <span class="settings-icon-btn" id="clustering-toggle-btn" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-toggle-on"></i></span>
+        <span class="settings-icon-btn ${isClusteringActive ? 'active' : ''}" id="clustering-btn-cluster" aria-label="${this.t('clusteringOn')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-circle-nodes"></i></span>
+        <span class="settings-icon-btn ${!isClusteringActive ? 'active' : ''}" id="clustering-btn-pin" aria-label="${this.t('clusteringOff')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-location-dot"></i></span>
       </div>
     `;
 
-    const toggleBtn = clusteringHeader.querySelector('#clustering-toggle-btn');
-    toggleBtn.addEventListener('click', (e) => {
+    clusteringHeader.querySelector('#clustering-btn-cluster').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (window.mapUtils && typeof window.mapUtils.isClusteringEnabled === 'function') {
-        const isCurrentlyEnabled = window.mapUtils.isClusteringEnabled();
-        window.mapUtils.toggleClustering(!isCurrentlyEnabled);
-        this.updateClusteringToggleUI();
-      }
+      window.mapUtils?.toggleClustering(true);
+      this.updateClusteringToggleUI();
+    });
+    clusteringHeader.querySelector('#clustering-btn-pin').addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.mapUtils?.toggleClustering(false);
+      this.updateClusteringToggleUI();
     });
 
     this.settingsPopover.appendChild(clusteringHeader);
@@ -591,11 +596,10 @@ class DataStore {
     if (deleteBtn) deleteBtn.setAttribute('aria-label', this.t('deleteAll'));
 
     // Clustering aria-label Update
-    const toggleBtn = this.settingsPopover.querySelector('#clustering-toggle-btn');
-    if (toggleBtn && window.mapUtils) {
-      const isClusteringActive = window.mapUtils.isClusteringEnabled();
-      toggleBtn.setAttribute('aria-label', isClusteringActive ? this.t('clusteringOff') : this.t('clusteringOn'));
-    }
+    const clusterBtn = this.settingsPopover.querySelector('#clustering-btn-cluster');
+    const pinBtn = this.settingsPopover.querySelector('#clustering-btn-pin');
+    if (clusterBtn) clusterBtn.setAttribute('aria-label', this.t('clusteringOn'));
+    if (pinBtn) pinBtn.setAttribute('aria-label', this.t('clusteringOff'));
   }
 
   /**
@@ -603,25 +607,12 @@ class DataStore {
    */
   updateClusteringToggleUI() {
     if (!this.settingsPopover) return;
-
-    const toggleBtn = this.settingsPopover.querySelector('#clustering-toggle-btn');
-    if (!toggleBtn) return;
-
-    // Liest den Zustand direkt aus mapUtils
-    const isClusteringActive = window.mapUtils && window.mapUtils.isClusteringEnabled();
-
-    if (typeof isClusteringActive !== 'boolean') return;
-
-    const toggleIcon = toggleBtn.querySelector('i');
-    if (isClusteringActive) {
-      toggleBtn.classList.add('active'); // Hintergrund an
-      if (toggleIcon) toggleIcon.classList.replace('fa-toggle-off', 'fa-toggle-on');
-      toggleBtn.setAttribute('aria-label', this.t('clusteringOff')); // Tooltip sagt was beim Klick passiert
-    } else {
-      toggleBtn.classList.remove('active'); // Hintergrund aus (passiv)
-      if (toggleIcon) toggleIcon.classList.replace('fa-toggle-on', 'fa-toggle-off');
-      toggleBtn.setAttribute('aria-label', this.t('clusteringOn'));
-    }
+    const clusterBtn = this.settingsPopover.querySelector('#clustering-btn-cluster');
+    const pinBtn = this.settingsPopover.querySelector('#clustering-btn-pin');
+    if (!clusterBtn || !pinBtn) return;
+    const isClusteringActive = window.mapUtils?.isClusteringEnabled() ?? true;
+    clusterBtn.classList.toggle('active', isClusteringActive);
+    pinBtn.classList.toggle('active', !isClusteringActive);
   }
 
   _getConsentStateText() {

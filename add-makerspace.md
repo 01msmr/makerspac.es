@@ -1,15 +1,25 @@
-## add makerspace:
+## Makerspace manuell hinzufügen
 
-1. load locations.json
-2. add data as in the example (at the end)
-  3. add everything you have
-  4. curate correctly as …
-    5. "only for students & youth",
-    6. "only for students // commercial",
-    7. "only for students",
-    8. "only for youth",
-    9. "commercial",
-    10. "for all",
-11. don´t bother me
-12. {Thanks} 
-13. send pull request
+1. `locations.json` öffnen
+2. Neuen Eintrag an der richtigen Stelle einfügen (sortiert: Land > PLZ > Name)
+3. ID: nächste freie ID verwenden (höchste vorhandene ID + 1)
+4. Felder korrekt befüllen:
+
+**style** – eines der folgenden Werte:
+- `"for all"`
+- `"for youth"`
+- `"for students"`
+- `"commercial"`
+
+**workshops** – Array mit Workshop-IDs (leer = `[]`):
+- `"3d"` – 3D-Druck / 3D printing
+- `"laser"` – Laser / Laser cutting
+- `"electronics"` – Elektronik / Electronics
+- `"wood"` – Holzwerkstatt / Woodworking
+- `"metal"` – Metallwerkstatt / Metalworking
+- `"textile"` – Textil / Textile
+- `"cnc"` – CNC / CNC machining
+- `"bio"` – Bio/Labor / Bio/Lab
+- `"vr"` – VR
+
+5. Pull Request erstellen – danke! 💛

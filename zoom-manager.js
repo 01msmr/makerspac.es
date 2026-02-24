@@ -21,7 +21,11 @@
       this.overlapCheckInterval = null;
       this.overlapCheckFunction = null;
 
-      console.log('✅ ZoomManager created');
+      // Zoom Indicator
+      this.zoomIndicator = null;
+      this.zoomIndicatorActive = false;
+      this._moveZoomIndicator = null;
+      this._updateZoomIndicator = null;
     }
 
     /**
@@ -32,7 +36,6 @@
       this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
       this.searchBar = document.getElementById('search-bar');
 
-      console.log('✅ ZoomManager initialized');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -451,6 +454,55 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // ZOOM INDICATOR (Rechtsklick auf Settings-Icon)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    toggleZoomIndicator() {
+      if (this.zoomIndicatorActive) {
+        this.deactivateZoomIndicator();
+      } else {
+        this.activateZoomIndicator();
+      }
+    }
+
+    activateZoomIndicator() {
+      if (this.zoomIndicatorActive) return;
+      this.zoomIndicatorActive = true;
+      this._createZoomIndicator();
+      this.zoomIndicator.style.display = 'block';
+      this.map.on('zoomend', this._updateZoomIndicator, this);
+      document.addEventListener('mousemove', this._moveZoomIndicator);
+    }
+
+    deactivateZoomIndicator() {
+      if (!this.zoomIndicatorActive) return;
+      this.zoomIndicatorActive = false;
+      if (this.zoomIndicator) {
+        this.zoomIndicator.style.display = 'none';
+      }
+      this.map.off('zoomend', this._updateZoomIndicator, this);
+      document.removeEventListener('mousemove', this._moveZoomIndicator);
+    }
+
+    _createZoomIndicator() {
+      if (this.zoomIndicator) return;
+      this.zoomIndicator = document.createElement('div');
+      this.zoomIndicator.id = 'zoom-indicator';
+      this.zoomIndicator.textContent = Math.round(this.map.getZoom());
+      document.body.appendChild(this.zoomIndicator);
+
+      this._moveZoomIndicator = (e) => {
+        const offset = -3;
+        this.zoomIndicator.style.left = (e.clientX + offset) + 'px';
+        this.zoomIndicator.style.top = (e.clientY + offset) + 'px';
+      };
+
+      this._updateZoomIndicator = () => {
+        this.zoomIndicator.textContent = Math.round(this.map.getZoom());
+      };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // RESET
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -475,6 +527,5 @@
   // Singleton-Instanz erstellen
   window.zoomManager = new ZoomManager();
 
-  console.log('✅ ZoomManager loaded');
 
 })();
