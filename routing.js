@@ -1,69 +1,242 @@
 // routing.js (ES MODULE)
-// URL-basiertes Routing für Filter + Pills, NEU: **HASH-MODE**
-
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
-    window.routingManager = this; // <--- Das muss ganz oben stehen!
+    window.routingManager = this;
     this.styleFilterManager = styleFilterManager;
     this.searchManager = searchManager;
     this.json = json;
 
-    // === Daten vorbereiten: Initialisierung verzögern (Private Properties) ===
     this._countries = null;
     this._routes = null;
     this._citiesWithMultipleSpaces = null;
     this._cityRoutes = null;
 
-    // ✅ NEU: Flag um hashchange nach eigenem navigateToLocations zu ignorieren
     this._isNavigating = false;
-
-    // ✅ Flag: Zeigt an, dass wir gerade eine Location-Route anzeigen
     this._isOnLocationRoute = false;
-
-    // ✅ Aktiver Country-Filter (für URL-Updates)
     this._activeCountryFilter = null;
 
-    // ✨ NEU: Übersetzungstabelle für Städte (Deutsch -> Englisch für Slugs)
     this._cityTranslationMap = {
-      'München': 'Munich',
-      'Köln': 'Cologne',
-      'Nürnberg': 'Nuremberg',
-      'Wien': 'Vienna',
-      'Zürich': 'Zurich',
-      'Genf': 'Geneva',
-      'Basel': 'Basel',
-      'Graz': 'Graz',
-      'Linz': 'Linz',
-      'Bern': 'Bern'
-      // Weitere Städte könnten hier bei Bedarf hinzugefügt werden
+      'München': 'Munich', 'Köln': 'Cologne', 'Nürnberg': 'Nuremberg',
+      'Wien': 'Vienna', 'Zürich': 'Zurich', 'Genf': 'Geneva',
+      'Basel': 'Basel', 'Graz': 'Graz', 'Linz': 'Linz', 'Bern': 'Bern'
     };
 
-
-    // Init mit Pills-Support
+    // WICHTIG: Erst am Ende des Constructors aufrufen
     this.initRoutingListeners();
   }
 
-  // === LAZY GETTER: Stellt sicher, dass die Daten nur einmal geladen werden ===
   _ensureDataLoaded() {
-    // 1. Prüft, ob die Extraktion bereits erfolgreich war
     if (this._countries !== null) return;
+    if (!this.json || this.json.length === 0) return;
 
-    // 2. Prüft, ob this.json gefüllt ist. Wenn nicht, brechen wir ab.
-    if (this.json.length === 0) {
-      return;
-    }
-
-    // DATENEXTRAKTION WIRD JETZT AUSGEFÜHRT (mit korrekter Reihenfolge)
     this._countries = this._findAllCountries();
     this._citiesWithMultipleSpaces = this._findCitiesWithMultipleSpaces();
     this._routes = this._createRoutes();
     this._cityRoutes = this._createCityRoutes();
-
   }
 
   // ========================================
-  // DATA EXTRACTION (Private Helfer)
+  // NEU: AUTO-DETECTION & TOAST
   // ========================================
+
+  autoDetectAndApplyCountry() {
+    this._ensureDataLoaded();
+    if (!this._countries) return;
+
+    const userLangs = navigator.languages || [navigator.language];
+    const codeToName = {
+      'DE': 'Germany', 'AT': 'Austria', 'CH': 'Switzerland',
+      'FR': 'France', 'NL': 'Netherlands', 'BE': 'Belgium',
+      'IT': 'Italy', 'ES': 'Spain', 'UA': 'Ukraine', 'DK': 'Denmark'
+    };
+
+    let detectedCountry = null;
+    for (const lang of userLangs) {
+      const code = lang.split('-')[1]?.toUpperCase() || lang.split('-')[0]?.toUpperCase();
+      if (code && codeToName[code] && this._countries.includes(codeToName[code])) {
+        detectedCountry = codeToName[code];
+        break;
+      }
+    }
+
+    if (detectedCountry) {
+      this.applyCountryFilter(detectedCountry);
+      const countryLabel = window.i18n.t(`countries.${detectedCountry}`) || detectedCountry;
+      const message = window.i18n.t('filter.autoDetected').replace('{country}', countryLabel);
+      this.showCenteredToast(message);
+    } else {
+      // Fallback falls nichts erkannt wurde
+      this.handleRouteWithPills();
+    }
+  }
+
+  showCenteredToast(text) {
+    const toast = document.createElement('div');
+    toast.className = 'settings-hash-toast';
+    toast.innerHTML = text;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+
+    setTimeout(() => {
+      toast.classList.add('zoom-out');
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+
+  // ========================================
+  // ROUTING LOGIK
+  // ========================================
+
+  initRoutingListeners() {
+    window.addEventListener('hashchange', () => this.handleRouteWithPills());
+
+    const hash = window.location.hash;
+    // Wenn kein Filter in der URL ist -> Autodetect
+    if (!hash || hash === '#' || hash === '#/') {
+      // Kleiner Delay damit i18n/DataStore sicher bereit sind
+      setTimeout(() => this.autoDetectAndApplyCountry(), 150);
+    } else {
+      this.handleRouteWithPills();
+    }
+  }
+
+  handleRouteWithPills() {
+    this._ensureDataLoaded();
+
+    if (this._isNavigating) {
+      this._isNavigating = false;
+      return;
+    }
+
+    const hash = window.location.hash;
+
+    // Short-ID Match
+    const shortIdMatch = hash.match(/^#\/(\d+)$/);
+    if (shortIdMatch) {
+      const id = parseInt(shortIdMatch[1], 10);
+      const location = window.locationById?.get(id);
+      if (location) {
+        this.navigateToLocations([id]);
+        return;
+      }
+    }
+
+    if (hash.startsWith('#/bookmarks/')) {
+      this.handleBookmarkRoute(hash);
+      return;
+    }
+
+    const hierarchicalMatch = hash.match(/^#\/([^/]+)\/([^/]+)\/(\d+(?:,\d+)*)/);
+    if (hierarchicalMatch) {
+      this.handleLocationRoute(hash);
+      return;
+    }
+
+    this._isOnLocationRoute = false;
+
+    // Country-Filter Match
+    const singleCountryMatch = hash.match(/^#\/([^/+]+)\/?$/);
+    if (singleCountryMatch) {
+      const slug = singleCountryMatch[1];
+      const countryName = this.findCountryBySlug(slug);
+      if (countryName) {
+        this.applyCountryFilter(countryName);
+        return;
+      }
+    }
+
+    // City-Filter Match
+    const countryCityMatch = hash.match(/^#\/([^/+]+)\/([^/+]+)\/?$/);
+    if (countryCityMatch) {
+      const countrySlug = countryCityMatch[1];
+      const citySlug = countryCityMatch[2];
+      const countryName = this.findCountryBySlug(countrySlug);
+      const cityName = this.findCityBySlug(citySlug);
+      if (countryName && cityName) {
+        this.applyCityFilter(cityName);
+        return;
+      }
+    }
+
+    const pills = this.loadPillsFromURL();
+    if (!pills.length) {
+      this.clearAllPillsAndFilters();
+      if (!this._isOnLocationRoute) {
+        this.updatePageMeta('Makerspace Map', 'Find makerspaces, fablabs and hackerspaces...');
+      }
+      return;
+    }
+
+    if (this.searchManager?.pillsManager) {
+      this._activeCountryFilter = null;
+      this.searchManager.pillsManager.loadPills(pills);
+      this.updatePageMeta(
+        `Makerspaces in ${pills.map(p => p.text).join(', ')}`,
+        `Find makerspaces in ${pills.map(p => p.text).join(', ')}`
+      );
+    }
+  }
+
+  // --- Helfer Methoden (gekürzt für Übersicht, müssen in deiner Datei bleiben) ---
+
+  findCountryBySlug(slug) {
+    this._ensureDataLoaded();
+    const countries = this._countries || [];
+    for (const country of countries) {
+      if (this.countryToSlug(country) === slug) return country;
+    }
+    return null;
+  }
+
+  findCityBySlug(slug) {
+    this._ensureDataLoaded();
+    for (const location of this.json) {
+      const city = location.loc?.city;
+      if (city && city !== 'CITY_CITY') {
+        if (this.cityToSlug(city) === slug) return city;
+      }
+    }
+    return null;
+  }
+
+  applyCountryFilter(countryName) {
+    const bar = this.searchManager.searchBar;
+    const SearchTerm = bar.value;
+    this._isNavigating = true;
+
+    if (this._activeCountryFilter === countryName) {
+      this.clearAllPillsAndFilters();
+      return;
+    }
+
+    this._activeCountryFilter = countryName;
+    if (this.searchManager?.pillsManager) this.searchManager.pillsManager.clear();
+    window.location.hash = `#/${this.countryToSlug(countryName)}`;
+
+    setTimeout(() => {
+      bar.value = SearchTerm;
+      if (this.searchManager) this.searchManager.applyPillFilters([]);
+      this._isNavigating = false;
+    }, 50);
+  }
+
+  applyCityFilter(cityName) {
+    this._activeCountryFilter = null;
+    const cityPill = {
+      text: cityName,
+      type: 'city',
+      count: this.json.filter(loc => loc.loc?.city === cityName).length
+    };
+    if (this.searchManager?.pillsManager) {
+      this.searchManager.pillsManager.clear();
+      this.searchManager.pillsManager.addPill(cityPill);
+    }
+    this.updateURLFromPills([cityPill]);
+  }
 
   _findAllCountries() {
     const countries = new Set();
@@ -78,802 +251,207 @@ export class RoutingManager {
     const counts = new Map();
     this.json.forEach(loc => {
       const city = loc.loc?.city;
-      if (city && city !== 'CITY_CITY') {
-        counts.set(city, (counts.get(city) || 0) + 1);
-      }
+      if (city && city !== 'CITY_CITY') counts.set(city, (counts.get(city) || 0) + 1);
     });
-
     const result = new Map();
-    counts.forEach((count, city) => {
-      if (count >= 2) result.set(city, count);
-    });
+    counts.forEach((count, city) => { if (count >= 2) result.set(city, count); });
     return result;
   }
 
-  // ========================================
-  // ROUTES & SLUGS
-  // ========================================
-
-  /**
-   * ✅ Finde Country-Name anhand von Slug
-   */
-  findCountryBySlug(slug) {
-    this._ensureDataLoaded();
-    const countries = this._countries || [];
-
-    for (const country of countries) {
-      if (this.countryToSlug(country) === slug) {
-        return country;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * ✅ Finde City-Name anhand von Slug (mit Translation-Support)
-   */
-  findCityBySlug(slug) {
-    this._ensureDataLoaded();
-
-    // Prüfe alle Städte in den Daten
-    for (const location of this.json) {
-      const city = location.loc?.city;
-      if (city && city !== 'CITY_CITY') {
-        const citySlug = this.cityToSlug(city);
-        if (citySlug === slug) {
-          return city;
-        }
-      }
-    }
-    return null;
-  }
-
-
-
-  /**
- * ✅ Schützt Favoriten beim Togglen des Headers.
- */
-  applyCountryFilter(countryName) {
-    const bar = this.searchManager.searchBar;
-    const SearchTerm = bar.value;
-
-    this._isNavigating = true;
-
-    // Deaktivieren wenn schon aktiv
-    if (this._activeCountryFilter === countryName) {
-      this.clearAllPillsAndFilters();
-      return;
-    }
-
-    // Aktivieren
-    this._activeCountryFilter = countryName;
-
-    if (this.searchManager?.pillsManager) {
-      this.searchManager.pillsManager.clear();
-    }
-
-    window.location.hash = `#/${this.countryToSlug(countryName)}`;
-
-    setTimeout(() => {
-      bar.value = SearchTerm;
-      if (this.searchManager) {
-        // Hier bleiben Favoriten/Styles aktiv, da wir selectedStyles nicht löschen.
-        this.searchManager.applyPillFilters([]);
-      }
-      this._isNavigating = false;
-    }, 50);
-  }
-
-
-
-  /**
-   * ✅ Aktiviere City-Filter (als Pill!)
-   */
-  applyCityFilter(cityName) {
-
-    // 1. Country-Filter explizit deaktivieren
-    this._activeCountryFilter = null;
-
-    // 2. City-Pill erstellen
-    const cityPill = {
-      text: cityName,
-      type: 'city',
-      count: this.json.filter(loc => loc.loc?.city === cityName).length
-    };
-
-    // 3. Pills setzen
-    if (this.searchManager?.pillsManager) {
-      this.searchManager.pillsManager.clear();
-      this.searchManager.pillsManager.addPill(cityPill); // Triggert applyPillFilters
-    }
-
-    // 4. URL auf City-Ebene aktualisieren (Löscht #/germany und setzt #/germany/berlin)
-    this.updateURLFromPills([cityPill]);
-  }
-
-
   _createRoutes() {
     const routes = {};
-
     this._countries.forEach(country => {
-      routes[this.countryToSlug(country)] = {
-        type: 'country',
-        value: country
-      };
+      routes[this.countryToSlug(country)] = { type: 'country', value: country };
     });
-
-    routes['for-all'] = { type: 'style', value: 'for all' };
-    routes['for-students'] = { type: 'style', value: 'for students' };
-    routes['for-youth'] = { type: 'style', value: 'for youth' };
-    routes['commercial'] = { type: 'style', value: 'commercial' };
-    routes['open'] = { type: 'style', value: 'open' };
-    routes['closed'] = { type: 'style', value: 'closed' };
-
+    const styles = ['for all', 'for students', 'for youth', 'commercial', 'open', 'closed'];
+    styles.forEach(s => routes[s.replace(/\s+/g, '-')] = { type: 'style', value: s });
     return routes;
   }
 
   _createCityRoutes() {
     const cityRoutes = new Map();
-
     this._citiesWithMultipleSpaces.forEach((_, city) => {
       const slug = this.cityToSlug(city);
-      if (this._routes[slug]) {
-        cityRoutes.set(`city-${slug}`, city);
-      } else {
-        cityRoutes.set(slug, city);
-      }
+      cityRoutes.set(this._routes[slug] ? `city-${slug}` : slug, city);
     });
-
     return cityRoutes;
   }
 
-  countryToSlug(str) {
-    return this.normalizeSlug(str);
-  }
-
-  cityToSlug(str) {
-    // 1. Prüfe, ob eine englische/kanonische Übersetzung existiert
-    const translatedCity = this._cityTranslationMap[str] || str;
-
-    // 2. Erzeuge Slug aus der (ggf. übersetzten) Zeichenkette
-    return this.normalizeSlug(translatedCity);
-  }
-
+  countryToSlug(str) { return this.normalizeSlug(str); }
+  cityToSlug(str) { return this.normalizeSlug(this._cityTranslationMap[str] || str); }
   normalizeSlug(str) {
-    return str
-      .trim() // ✨ HINZUGEFÜGT: Entfernt führende/anhängende Leerzeichen
-      .toLowerCase()
-      .replace(/ä/g, 'ae')
-      .replace(/ö/g, 'oe')
-      .replace(/ü/g, 'ue')
-      .replace(/ß/g, 'ss')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+    return str.trim().toLowerCase()
+      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   }
-
-  // ========================================
-  // URL HELPERS (HASH-MODE)
-  // ========================================
-
-  // ✨ ENTFERNT: getQueryPath() ist im Hash-Mode nicht mehr nötig
 
   updateURLFromPills(pills) {
     this._ensureDataLoaded();
-
-    const slugs = pills
-      .map(p => this.findSlugByPill(p))
-      .filter(Boolean);
-
-    // Format: #/slug1+slug2
+    const slugs = pills.map(p => this.findSlugByPill(p)).filter(Boolean);
     const newHash = slugs.length > 0 ? `#/${slugs.join('+')}` : '';
-
-    // ✅ Nutze window.location.hash statt history.pushState
-    // Das triggert hashchange-Event, sodass handleRouteWithPills() aufgerufen wird
     if (newHash !== window.location.hash) {
-      this._isNavigating = true; // Verhindere Loop
-      window.location.hash = newHash || ''; // Setze Hash oder lösche ihn
+      this._isNavigating = true;
+      window.location.hash = newHash || '';
     }
   }
 
   findSlugByPill(pill) {
-    this._ensureDataLoaded();
-
-    // Fallback-Listen für sicheren Zugriff
-    const cityRoutes = this._cityRoutes || new Map();
-    const routes = this._routes || {};
-
-    // ✅ COUNTRY ENTFERNT - wird als Filter gehandhabt, nicht als Pill!
-
-    // ✅ City Slug HIERARCHISCH: country/city
     if (pill.type === 'city') {
-      const cityName = pill.text;
-      const citySlug = this.cityToSlug(cityName);
-
-      // Finde das Land dieser Stadt
-      const location = this.json.find(loc => loc.loc?.city === cityName);
-      if (location && location.loc?.country) {
-        const countrySlug = this.countryToSlug(location.loc.country);
-        return `${countrySlug}/${citySlug}`;  // ✅ Hierarchisch!
+      const location = this.json.find(loc => loc.loc?.city === pill.text);
+      if (location?.loc?.country) {
+        return `${this.countryToSlug(location.loc.country)}/${this.cityToSlug(pill.text)}`;
       }
-
-      // Fallback: nur City (sollte nicht vorkommen)
-      return citySlug;
+      return this.cityToSlug(pill.text);
     }
-
-    // Style Slugs
     if (pill.type === 'style') {
-      const slug = Object.keys(routes).find(key => routes[key].value === pill.text);
-      return slug;
+      return Object.keys(this._routes).find(key => this._routes[key].value === pill.text);
     }
-
     return null;
   }
 
-  // ========================================
-  // PILLS <-> URL (HASH-MODE)
-  // ========================================
-
   loadPillsFromURL() {
     this._ensureDataLoaded();
-
     const hash = window.location.hash;
     if (!hash || !hash.startsWith('#/')) return [];
-
-    let path = hash.slice(2);
-
-    // ✅ Entferne trailing slash: #/germany/ → germany
-    path = path.replace(/\/$/, '');
-
-    if (!path) return [];
-
-    // ✅ Verhindere hierarchische URLs als Pills
-    if (path.includes('/')) return [];
-
-    const slugs = path.split('+');
-    return slugs
-      .map(slug => this.findPillBySlug(slug))
-      .filter(Boolean);
+    let path = hash.slice(2).replace(/\/$/, '');
+    if (!path || path.includes('/')) return [];
+    return path.split('+').map(slug => this.findPillBySlug(slug)).filter(Boolean);
   }
 
   findPillBySlug(slug) {
     this._ensureDataLoaded();
-
-    // Fallback auf leere Strukturen
-    const countries = this._countries || [];
     const cityRoutes = this._cityRoutes || new Map();
-    const routes = this._routes || {};
-
-    // ✅ COUNTRY ENTFERNT - wird jetzt als Filter gehandhabt, nicht als Pill!
-
-    // 1. Suche nach CITY
-    let foundCityName = null;
-
-    // A. Prüfe CityRoutes (mit Kollisions-Slugs)
     for (const [routeSlug, city] of cityRoutes) {
-      if (routeSlug === slug) { // Prüft auf z.B. 'city-berlin'
-        foundCityName = city;
-        break;
+      if (routeSlug === slug) return { text: city, type: 'city', count: this._countLocationsByCity(city) };
+    }
+    for (const loc of this.json) {
+      if (loc.loc?.city && this.cityToSlug(loc.loc.city) === slug) {
+        return { text: loc.loc.city, type: 'city', count: this._countLocationsByCity(loc.loc.city) };
       }
     }
-
-    // B. Fallback: Prüfe alle Städte direkt (für Slugs ohne Kollisionspräfix)
-    if (!foundCityName) {
-      // ✨ KORREKTUR: Direkte Suche über die Rohdaten für den kanonischen Namen
-      for (const loc of this.json) {
-        if (loc.loc?.city) {
-          // Muss den Slug des *kanonischen* Namens (z.B. "Munich") mit dem Slug aus der URL vergleichen.
-          const expectedSlug = this.cityToSlug(loc.loc.city);
-
-          if (expectedSlug === slug) {
-            foundCityName = loc.loc.city;
-            break;
-          }
-        }
-      }
+    if (this._routes[slug]?.type === 'style') {
+      const style = this._routes[slug].value;
+      return { text: style, type: 'style', filterKey: style, count: this._countLocationsByStyle(style) };
     }
-
-    // Wenn ein City-Name gefunden wurde
-    if (foundCityName) {
-      return { text: foundCityName, type: 'city', count: this._countLocationsByCity(foundCityName) };
-    }
-
-    // 2. Suche nach STYLE
-    if (routes[slug]?.type === 'style') {
-      const style = routes[slug].value;
-      return {
-        text: style,
-        type: 'style',
-        filterKey: style,
-        count: this._countLocationsByStyle(style)
-      };
-    }
-
     return null;
   }
 
-  // ========================================
-  // COUNTS (Private, da sie intern sind)
-  // ========================================
-
-  _countLocationsByCountry(c) {
-    return this.json.filter(l => l.loc?.country === c).length;
-  }
-
-  _countLocationsByCity(c) {
-    return this.json.filter(l => l.loc?.city === c).length;
-  }
-
+  _countLocationsByCity(c) { return this.json.filter(l => l.loc?.city === c).length; }
   _countLocationsByStyle(style) {
     if (style === 'open') return this.json.filter(l => l.isOpen === true).length;
     if (style === 'closed') return this.json.filter(l => l.isOpen === false).length;
     return this.json.filter(l => l.style === style).length;
   }
 
-  // ========================================
-  // META
-  // ========================================
-
   updatePageMeta(title, desc) {
-    // Wenn Titel schon mit "makerspac.es" beginnt, nicht nochmal anhängen
     document.title = title.startsWith('makerspac.es') ? title : `${title} | makerspac.es`;
-
     let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'description';
-      document.head.appendChild(meta);
-    }
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
     meta.content = desc;
   }
 
-  // ✨ NEU: Erzwingt einen erneuten Aufruf der Routenbehandlung
-  rerunRouteHandler() {
-    this._ensureDataLoaded(); // Stellt sicher, dass die Daten extrahiert werden
-    this.handleRouteWithPills();
-  }
-
-  // ========================================
-  // ROUTING CORE
-  // ========================================
-
-
-
-  /**
- * ✅ Schützt Favoriten, wenn die URL leer ist.
- */
   clearAllPillsAndFilters() {
-
-    // ✅ FIX: Nur Country-Filter deaktivieren, Pills und Style-Filter NICHT löschen
     this._activeCountryFilter = null;
-
-    // Text retten
     const bar = this.searchManager?.searchBar;
     const rescuedText = bar ? bar.value : '';
-
     this._isNavigating = true;
 
-    // ✅ FIX: URL-Update berücksichtigt Bookmarks und Pills
     const currentPills = this.searchManager?.pillsManager?.getPillsArray() || [];
     const hasBookmarkFilter = this.styleFilterManager?.selectedStyles?.has('bookmarked');
 
     if (hasBookmarkFilter && window.bookmarkManager) {
-      // Bookmark-Filter aktiv → URL auf Bookmark-IDs setzen
-      const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
-      if (allBookmarkedIds.length > 0) {
-        this.navigateToLocations(allBookmarkedIds);
-      } else {
-        // Keine Bookmarks → URL leeren
-        window.location.hash = '';
-      }
+      const ids = window.bookmarkManager.getBookmarkedIds();
+      ids.length > 0 ? this.navigateToLocations(ids) : window.location.hash = '';
     } else if (currentPills.length > 0) {
-      // Pills vorhanden → URL auf Pills-Basis setzen
       this.updateURLFromPills(currentPills);
     } else {
-      // Nichts aktiv → URL komplett leeren
       window.location.hash = '';
     }
 
-    // ✅ FIX: applyPillFilters mit den aktuellen Pills
     setTimeout(() => {
       if (bar) bar.value = rescuedText;
-      if (this.searchManager) {
-        this.searchManager.applyPillFilters(currentPills);
-      }
+      if (this.searchManager) this.searchManager.applyPillFilters(currentPills);
       this._isNavigating = false;
     }, 50);
   }
 
-
-
-
-
-  handleRouteWithPills() {
-    this._ensureDataLoaded(); // <--- DATEN LADEN BEI ERSTEM AUFRUF
-
-    // ✅ LÖSUNG 2: Ignoriere hashchange wenn WIR die URL gesetzt haben
-    if (this._isNavigating) {
-      this._isNavigating = false;
-      return;
-    }
-
-    const hash = window.location.hash;
-
-    // ✅ KURZ-URL: #/123 → Umleitung zu hierarchischer URL
-    const shortIdMatch = hash.match(/^#\/(\d+)$/);
-    if (shortIdMatch) {
-      const id = parseInt(shortIdMatch[1], 10);
-      const location = window.locationById.get(id);
-      if (location) {
-        this.navigateToLocations([id]);
-        return;
-      }
-    }
-
-    // ✅ BOOKMARK-ROUTING: #/bookmarks/1,5,12
-    if (hash.startsWith('#/bookmarks/')) {
-      this.handleBookmarkRoute(hash);
-      return;
-    }
-
-    // ✅ HIERARCHISCHES ROUTING: #/country/city/ID/name
-    // Format: #/germany/markdorf/1/toolbox-bodensee
-    // Regex: Land/Stadt/ID(s)/optionaler-Name
-    const hierarchicalMatch = hash.match(/^#\/([^/]+)\/([^/]+)\/(\d+(?:,\d+)*)/);
-    if (hierarchicalMatch) {
-      this.handleLocationRoute(hash);
-      return;
-    }
-
-    // ✅ Kein Location-Route Match → Flag zurücksetzen
-    this._isOnLocationRoute = false;
-
-    // ✅ COUNTRY-FILTER: #/germany oder #/germany/
-    // Prüfe ob URL ein einzelnes Land ist (mit optionalem trailing slash)
-    const singleCountryMatch = hash.match(/^#\/([^/+]+)\/?$/);
-    if (singleCountryMatch) {
-      const slug = singleCountryMatch[1];
-      const countryName = this.findCountryBySlug(slug);
-
-      if (countryName) {
-        // Aktiviere Country-Filter (KEIN Pill!)
-        this.applyCountryFilter(countryName);
-        return;
-      }
-    }
-
-    // ✅ CITY-FILTER: #/country/city oder #/country/city/
-    const countryCityMatch = hash.match(/^#\/([^/+]+)\/([^/+]+)\/?$/);
-    if (countryCityMatch) {
-      const countrySlug = countryCityMatch[1];
-      const citySlug = countryCityMatch[2];
-
-      const countryName = this.findCountryBySlug(countrySlug);
-      const cityName = this.findCityBySlug(citySlug);
-
-      if (countryName && cityName) {
-        // Aktiviere City-Filter (als Pill!)
-        this.applyCityFilter(cityName);
-        return;
-      }
-    }
-
-    const pills = this.loadPillsFromURL();
-
-    // Debugging-Zeile
-
-    if (!pills.length) {
-      this.clearAllPillsAndFilters();
-      // ✅ Titel nur setzen wenn NICHT auf einer Location-Route
-      if (!this._isOnLocationRoute) {
-        this.updatePageMeta(
-          'Makerspace Map',
-          'Find makerspaces, fablabs and hackerspaces in Germany, Austria and Switzerland'
-        );
-      }
-      return;
-    }
-
-    if (this.searchManager?.pillsManager) {
-      // ✅ Lösche aktiven Country-Filter
-      this._activeCountryFilter = null;
-
-      this.searchManager.pillsManager.loadPills(pills);
-      this.updatePageMeta(
-        `Makerspaces in ${pills.map(p => p.text).join(', ')}`,
-        `Find makerspaces in ${pills.map(p => p.text).join(', ')}`
-      );
-    } else {
-      console.error('❌ FATAL: SearchPillsManager is null during route handling.');
-    }
-  }
-
-  initRoutingListeners() {
-    // Horcht auf Änderungen des Hash-Fragments (z.B. manuelles Ändern oder Back/Forward-Button)
-    window.addEventListener('hashchange', () => this.handleRouteWithPills());
-
-    // Initialer Aufruf
-    this.handleRouteWithPills();
-
-  }
-
-  // ========================================
-  // ✅ NEU: ID-BASIERTES ROUTING
-  // ========================================
-
-  /**
-   * ✅ BOOKMARK ROUTING
-   * Handling für URLs: #/bookmarks/ID1,ID2,ID3
-   * 
-   * Beispiel:
-   * - #/bookmarks/1,5,12 → IDs 1, 5, 12
-   */
   handleBookmarkRoute(hash) {
-    // Format: #/bookmarks/IDs
-    const idsString = hash.replace('#/bookmarks/', '');
-
-
-    // Parse IDs
-    const ids = idsString.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
-
-    if (ids.length === 0) {
-      console.warn('⚠️ No valid IDs in bookmark route');
-      return;
-    }
-
-    // Hole Locations per ID (✅ O(1) Lookup!)
-    const locations = ids.map(id => window.locationById.get(id)).filter(Boolean);
-
-    if (locations.length === 0) {
-      console.warn('⚠️ No locations found for IDs:', ids);
-      return;
-    }
-
-
-    // Zeige diese Locations
-    this.showLocations(locations, ids);
+    const ids = hash.replace('#/bookmarks/', '').split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+    if (ids.length === 0) return;
+    const locations = ids.map(id => window.locationById?.get(id)).filter(Boolean);
+    if (locations.length > 0) this.showLocations(locations, ids);
   }
 
-  /**
-   * ✅ HIERARCHISCHES ROUTING
-   * Handling für URLs: #/country/city/ID/name
-   * 
-   * Beispiele:
-   * - #/germany/markdorf/1/toolbox-bodensee → ID 1
-   * - #/germany/berlin/5,12 → IDs 5, 12 (mehrere Spaces)
-   * - #/austria/vienna/42/happylab → ID 42
-   */
   handleLocationRoute(hash) {
-    // Format: #/country/city/IDs[/name]
-    // Extrahiere IDs aus Position 3
-    const parts = hash.substring(2).split('/'); // Entferne #/
-    const country = parts[0];
-    const city = parts[1];
-    const idsString = parts[2];
-    const name = parts[3]; // optional
-
-
-    const ids = idsString.split(',')
-      .map(id => parseInt(id.trim(), 10))
-      .filter(id => !isNaN(id) && id > 0);
-
-
-    if (ids.length === 0) {
-      console.warn('⚠️ No valid IDs found in route');
-      this.clearAllPillsAndFilters();
-      return;
-    }
-
-    // Hole Locations per ID (O(1) Zugriff!)
-    const locations = ids
-      .map(id => window.locationById.get(id))
-      .filter(loc => loc !== undefined);
-
-    if (locations.length === 0) {
-      console.warn('⚠️ No locations found for IDs:', ids);
-      this.clearAllPillsAndFilters();
-      return;
-    }
-
-
-    // Zeige diese Locations
-    this.showLocations(locations, ids);
+    const parts = hash.substring(2).split('/');
+    const ids = parts[2].split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0);
+    const locations = ids.map(id => window.locationById?.get(id)).filter(Boolean);
+    locations.length > 0 ? this.showLocations(locations, ids) : this.clearAllPillsAndFilters();
   }
 
-  /**
-   * Zeige spezifische Locations auf der Karte
-   */
   showLocations(locations, ids) {
-    if (!this.searchManager) {
-      console.error('❌ SearchManager not available');
-      return;
-    }
-
-    // ✅ Flag setzen BEVOR pillsManager.clear() Events triggert
+    if (!this.searchManager) return;
     this._isOnLocationRoute = true;
-
-    // Clear Pills (ID-Route hat keine Pills)
-    if (this.searchManager.pillsManager) {
-      this.searchManager.pillsManager.clear();
-    }
-
-    // Clear Style-Filter
+    if (this.searchManager.pillsManager) this.searchManager.pillsManager.clear();
     if (this.styleFilterManager) {
       this.styleFilterManager.selectedStyles.clear();
-    }
-
-    // Setze Pre-Filter auf diese Locations
-    if (this.styleFilterManager) {
       this.styleFilterManager.applyPreFilters(locations);
     }
-
-    // Update Search-Dropdown
     this.searchManager.createSuggestionItems(locations);
     this.searchManager.updateSearchCounter(locations.length);
     this.searchManager.updateDropdownUI(true);
-
-    // Zoom auf diese Locations
     this.zoomToLocations(locations);
+    if (locations.length === 1) setTimeout(() => this.openLocationPopup(locations[0]), 500);
 
-    // Wenn nur eine Location: Öffne Popup nach kurzem Delay
-    if (locations.length === 1) {
-      setTimeout(() => {
-        this.openLocationPopup(locations[0]);
-      }, 500); // Warte bis Zoom fertig
-    }
-
-    // Update Page Meta
-    const names = locations.map(l => l.name).join(', ');
+    // Meta Update
     if (locations.length === 1) {
       const loc = locations[0];
-      const countryCode = window.MapIcons.getCountryCode(loc.loc?.country).toUpperCase();
+      const cc = window.MapIcons?.getCountryCode(loc.loc?.country).toUpperCase();
       const plz = loc.loc?.plz ? window.zfill(loc.loc.plz, loc.loc.country) : '';
-      const city = loc.loc?.city || '';
-      // Format: makerspac.es > CC-PLZ City > Makerspace Name
-      this.updatePageMeta(
-        `makerspac.es > ${countryCode}-${plz} ${city} > ${loc.name}`,
-        `View ${loc.name} in ${countryCode}-${plz} ${city} on the map`
-      );
-    } else {
-      this.updatePageMeta(
-        `${locations.length} Makerspaces`,
-        `View ${names} on the map`
-      );
+      this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`);
     }
   }
 
-  /**
-   * Zoom auf Locations
-   */
   zoomToLocations(locations) {
     if (!window.map || locations.length === 0) return;
-
     if (locations.length === 1) {
-      // Einzelne Location: Direkter Zoom
-      const loc = locations[0];
-      window.map.setView([loc.loc.lat, loc.loc.long], 15);
+      window.map.setView([locations[0].loc.lat, locations[0].loc.long], 15);
     } else {
-      // Mehrere Locations: Fit Bounds
-      const bounds = L.latLngBounds(
-        locations.map(loc => [loc.loc.lat, loc.loc.long])
-      );
+      const bounds = L.latLngBounds(locations.map(loc => [loc.loc.lat, loc.loc.long]));
       window.map.fitBounds(bounds, { padding: [12, 12] });
     }
   }
 
-  /**
-   * Öffne Popup für eine Location
-   */
   openLocationPopup(location) {
-    const marker = window.markerById.get(location.ID);
-    if (marker) {
-      marker.openPopup();
-    }
+    const marker = window.markerById?.get(location.ID);
+    if (marker) marker.openPopup();
   }
 
-  /**
-   * ✅ Erstelle Location-URL (hierarchisch oder Bookmark)
-   * 
-   * Einzelner Space: #/country/city/ID/name (hierarchisch)
-   * Mehrere Spaces: #/bookmarks/ID1,ID2,ID3 (flach)
-   * 
-   * Beispiele: 
-   * - createLocationURL([1]) → "#/germany/markdorf/1/toolbox-bodensee"
-   * - createLocationURL([1, 5, 12]) → "#/bookmarks/1,5,12"
-   */
   createLocationURL(locationIds, includeNames = true) {
-    if (!Array.isArray(locationIds) || locationIds.length === 0) {
-      return '';
-    }
-
-    // Mehrere Spaces → Bookmark-URL
-    if (locationIds.length > 1) {
-      return `#/bookmarks/${locationIds.join(',')}`;
-    }
-
-    // Einzelner Space → Hierarchische URL
-    const location = window.locationById.get(locationIds[0]);
-    if (!location) {
-      console.warn('⚠️ Location not found:', locationIds[0]);
-      return '';
-    }
-
-    const country = location.loc?.country;
-    const city = location.loc?.city;
-
-    if (!country || !city) {
-      console.warn('⚠️ Location missing country or city:', location);
-      return '';
-    }
-
-    // Normalisiere zu Slugs
-    const countrySlug = this.normalizeSlug(country);
-    const citySlug = this.normalizeSlug(city);
-    const id = locationIds[0];
-
-    if (includeNames && location.name) {
-      const nameSlug = this.normalizeSlug(location.name);
-      return `#/${countrySlug}/${citySlug}/${id}/${nameSlug}`;
-    }
-
-    // Ohne Namen
-    return `#/${countrySlug}/${citySlug}/${id}`;
+    if (!locationIds.length) return '';
+    if (locationIds.length > 1) return `#/bookmarks/${locationIds.join(',')}`;
+    const loc = window.locationById?.get(locationIds[0]);
+    if (!loc) return '';
+    const slug = `${this.normalizeSlug(loc.loc.country)}/${this.normalizeSlug(loc.loc.city)}/${loc.ID}`;
+    return includeNames ? `#/${slug}/${this.normalizeSlug(loc.name)}` : `#/${slug}`;
   }
 
-  /**
-   * ✅ NEU: Navigiere zu Location(s) per ID
-   * Bei einem Space: URL enthält Namen-Slug
-   * Bei mehreren Spaces: Nur IDs
-   */
   navigateToLocations(locationIds) {
-    const url = this.createLocationURL(locationIds, true); // true = Namen inkludieren
+    const url = this.createLocationURL(locationIds, true);
     if (url) {
-      // ✅ LÖSUNG 2: Setze Flag VOR Hash-Änderung
       this._isNavigating = true;
       this._isOnLocationRoute = true;
       window.location.hash = url;
-
-      // ✅ Titel sofort setzen (für Lesezeichen)
-      if (locationIds.length === 1) {
-        const location = window.locationById.get(locationIds[0]);
-        if (location) {
-          const countryCode = window.MapIcons.getCountryCode(location.loc?.country).toUpperCase();
-          const plz = location.loc?.plz ? window.zfill(location.loc.plz, location.loc.country) : '';
-          const city = location.loc?.city || '';
-          document.title = `makerspac.es > ${countryCode}-${plz} ${city} > ${location.name}`;
-        }
-      } else {
-        document.title = `${locationIds.length} Makerspaces | makerspac.es`;
-      }
     }
   }
 
-  /**
-   * ✅ NEU: Zurücksetzen der Location-URL
-   * Kehrt zurück zu Bookmark-URL, Filter-URL oder Home
-   */
   clearLocationURL() {
-    // ✅ Prüfe zuerst ob Bookmark-Filter aktiv ist
     const isBookmarkFilterActive = this.styleFilterManager?.selectedStyles?.has('bookmarked');
-
     if (isBookmarkFilterActive && window.bookmarkManager) {
-      // Bookmark-Filter aktiv → Zurück zu Bookmark-URLs
-      const allBookmarkedIds = window.bookmarkManager.getBookmarkedIds();
-      if (allBookmarkedIds.length > 0) {
-        this.navigateToLocations(allBookmarkedIds);
-        return;
-      }
+      const ids = window.bookmarkManager.getBookmarkedIds();
+      if (ids.length > 0) { this.navigateToLocations(ids); return; }
     }
-
-    // Prüfe ob Pills aktiv sind
     const pills = this.searchManager?.pillsManager?.getPillsArray() || [];
-
-    if (pills.length > 0) {
-      // Zurück zur Filter-URL (Pills)
-      this.updateURLFromPills(pills);
-    } else {
-      // Zurück zu Home (keine Filter)
-      this._isNavigating = true;
-      window.location.hash = '';
-    }
+    pills.length > 0 ? this.updateURLFromPills(pills) : (this._isNavigating = true, window.location.hash = '');
   }
 }

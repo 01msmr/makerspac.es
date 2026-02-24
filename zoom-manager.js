@@ -472,6 +472,8 @@
       this.zoomIndicator.style.display = 'block';
       this.map.on('zoomend', this._updateZoomIndicator, this);
       document.addEventListener('mousemove', this._moveZoomIndicator);
+      const nearbyHint = window.nearbySpacesManager?.hintElement;
+      if (nearbyHint) nearbyHint.style.display = 'none';
     }
 
     deactivateZoomIndicator() {
@@ -482,6 +484,8 @@
       }
       this.map.off('zoomend', this._updateZoomIndicator, this);
       document.removeEventListener('mousemove', this._moveZoomIndicator);
+      const nearbyHint = window.nearbySpacesManager?.hintElement;
+      if (nearbyHint) nearbyHint.style.display = '';
     }
 
     _createZoomIndicator() {
