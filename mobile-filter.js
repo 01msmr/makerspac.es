@@ -8,6 +8,16 @@ class MobileFilterUI {
     this._navClickTimers = { up: null, down: null };
   }
 
+  // Spiegelt die CSS-Bedingungen: aktiv wenn <= 1024px ODER Touch-Tablet (pointer: coarse)
+  _isMobileUI() {
+    return window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
+  }
+
+  // Tablet: Touch-Gerät mit Mindestbreite 768px (portrait + landscape)
+  _isTablet() {
+    return window.matchMedia('(min-width: 768px) and (pointer: coarse)').matches;
+  }
+
   // ISO 3166-1 alpha-2 → Länderbezeichnung (wie in locations.json verwendet)
   static COUNTRY_CODE_MAP = {
     'AT': 'Austria', 'BE': 'Belgium', 'CH': 'Switzerland', 'CZ': 'Czechia',
@@ -40,8 +50,16 @@ class MobileFilterUI {
     // Grid-Snapping auf Dropdown-Items setzen wenn Inhalt sich ändert
     const dropdown = document.getElementById('suggestions-dropdown');
     if (dropdown) {
-      new MutationObserver(() => {
+      new MutationObserver((mutations) => {
+        // Ghost-Items ignorieren (würden sonst Endlosschleife erzeugen)
+        const ghostOnly = mutations.every(m =>
+          [...m.addedNodes, ...m.removedNodes].every(node =>
+            node.classList?.contains('mf-ghost-item')
+          )
+        );
+        if (ghostOnly) return;
         this.applyGridSnapping(dropdown);
+        this._updateItemNumbers(dropdown);
         this._resetNavClick('up');
         this._resetNavClick('down');
         this._updateEndIndicators();
@@ -49,24 +67,24 @@ class MobileFilterUI {
 
       // Maus-Wheel → Snap-Pages auf Mobile
       dropdown.addEventListener('wheel', (e) => {
-        if (window.innerWidth > 767) return;
+        if (!this._isMobileUI()) return;
         e.preventDefault();
         this.scrollDropdown(e.deltaY > 0 ? 1 : -1);
       }, { passive: false });
 
       dropdown.addEventListener('touchstart', () => {
-        if (window.innerWidth > 767) return;
+        if (!this._isMobileUI()) return;
         this._touchFastDir = null; // erlaubt Re-Aktivierung pro Geste
       }, { passive: true });
 
       dropdown.addEventListener('touchend', () => {
-        if (window.innerWidth > 767) return;
+        if (!this._isMobileUI()) return;
         this._updateEndIndicators();
       }, { passive: true });
 
       // Scroll-Event: End-Indikatoren + kumulative Fast-Scroll-Erkennung
       dropdown.addEventListener('scroll', () => {
-        if (window.innerWidth > 767) return;
+        if (!this._isMobileUI()) return;
         this._updateEndIndicators();
         if (this._scrollRaf) return; // programmatischen Scroll ausschließen
 
@@ -111,8 +129,10 @@ class MobileFilterUI {
   scrollDropdown(direction) {
     const dropdown = document.getElementById('suggestions-dropdown');
     if (!dropdown) return;
-    const rowH = 116; // 2 Zeilen × 58px
-    // Basis auf nächste 116px-Grenze runden → sauberes Snapping auch nach Touch
+    const isTablet   = this._isTablet();
+    const landscape  = isTablet && window.matchMedia('(orientation: landscape)').matches;
+    const rowH = landscape ? 174 : isTablet ? 232 : 116; // Landscape: 3×58=174, Portrait: 4×58=232, Phone: 2×58=116
+    // Basis auf nächste rowH-Grenze runden → sauberes Snapping auch nach Touch
     const base = Math.round((this._scrollTarget ?? dropdown.scrollTop) / rowH) * rowH;
     this._scrollTarget = base + direction * rowH;
     this._smoothScroll(dropdown, this._scrollTarget, 420);
@@ -148,7 +168,7 @@ class MobileFilterUI {
   }
 
   _navClick(direction) {
-    if (window.innerWidth > 767) return;
+    if (!this._isMobileUI()) return;
     clearTimeout(this._navClickTimers[direction]);
     this._navClickCounts[direction] = (this._navClickCounts[direction] || 0) + 1;
     const count = this._navClickCounts[direction];
@@ -162,7 +182,7 @@ class MobileFilterUI {
     if (count === 1) {
       this.scrollDropdown(direction === 'up' ? -1 : 1);
     } else if (count === 2) {
-      this.scrollDropdown(direction === 'up' ? -5 : 5);
+      this.scrollDropdown(direction === 'up' ? -4 : 4);
     } else {
       // Triple-Klick: an den Rand springen, to-line Icon während Animation halten
       this._scrollingToEnd = true;
@@ -189,7 +209,7 @@ class MobileFilterUI {
 
   _updateEndIndicators() {
     const dropdown = document.getElementById('suggestions-dropdown');
-    if (!dropdown || window.innerWidth > 767) return;
+    if (!dropdown || !this._isMobileUI()) return;
     const atTop    = dropdown.scrollTop <= 1;
     const atBottom = dropdown.scrollTop >= dropdown.scrollHeight - dropdown.clientHeight - 1;
     const upBtn    = document.getElementById('dropdown-nav-up');
@@ -463,7 +483,7 @@ class MobileFilterUI {
       : '';
 
     bar.innerHTML = chips.join('') + clearAllHtml;
-    bar.style.display = (chips.length && window.innerWidth <= 767) ? 'flex' : 'none';
+    bar.style.display = (chips.length && this._isMobileUI()) ? 'flex' : 'none';
 
     bar.querySelectorAll('.mf-chip').forEach(chip => {
       chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
@@ -501,45 +521,108 @@ class MobileFilterUI {
     }
   }
 
-  // Scroll-Snapping + Border-Radius: erste/letzte Items im 2-Spalten-Grid
+  // Laufende Nummer unten rechts in jedem Item-Badge (nur Mobile)
+  _updateItemNumbers(dropdown) {
+    if (!this._isMobileUI()) return;
+    const items = dropdown.querySelectorAll('.listing-item');
+    items.forEach((item, i) => {
+      let num = item.querySelector('.item-number');
+      if (!num) {
+        num = document.createElement('span');
+        num.className = 'item-number';
+        item.appendChild(num);
+      }
+      num.textContent = i + 1;
+    });
+  }
+
+  // Scroll-Snapping + Border-Radius:
+  // Phone: 2x2
+  // Tablet Portrait: 4x4 (16 Items)
+  // Tablet Landscape: 3x5 (15 Items)
   applyGridSnapping(dropdown) {
-    if (window.innerWidth > 767) return; // Desktop: nicht eingreifen
+    if (!this._isMobileUI()) return;
+
+    // Bestehende Ghost-Items entfernen
+    dropdown.querySelectorAll('.mf-ghost-item').forEach(el => el.remove());
+
+    const isTablet = this._isTablet();
+    const isLandscape = isTablet && window.matchMedia('(orientation: landscape)').matches;
+
+    let cols, rowsPerPage;
+
+    if (isTablet) {
+      if (isLandscape) {
+        cols = 5;         // 5 Spalten
+        rowsPerPage = 3;  // 3 Zeilen
+      } else {
+        cols = 4;         // 4 Spalten
+        rowsPerPage = 4;  // 4 Zeilen
+      }
+    } else {
+      // Phone Default
+      cols = 2;
+      rowsPerPage = 2;
+    }
+
+    const itemsPerPage = cols * rowsPerPage;
+    const rowH = 58;
     const items = Array.from(dropdown.querySelectorAll('.listing-item'));
     const n = items.length;
 
-    const lastRowIdx = Math.floor((n - 1) / 2); // 0-basierter Index der letzten Zeile
-
-    items.forEach((item, i) => {
-      item.style.borderRadius = '0';
-      item.style.scrollSnapAlign = (i % 4 === 0) ? 'start' : 'none';
-      item.style.scrollSnapStop  = (i % 4 === 0) ? 'always' : 'normal'; // erzwingt Stopp, kein Überfliegen
-
-      // Nur innere Borders: rechts nur linke Spalte, unten nur nicht-letzte Zeile
-      item.style.border = 'none';
-      if (i % 2 === 0) item.style.borderRight = '1px solid white';
-      if (Math.floor(i / 2) !== lastRowIdx) item.style.borderBottom = '1px solid white';
-    });
-
-    // Obere Ecken (erste Zeile)
-    if (n >= 1) items[0].style.borderTopLeftRadius = '12px';
-    if (n >= 2) items[1].style.borderTopRightRadius = '12px';
-
-    // Untere Ecken (letzte Zeile)
-    if (n >= 1) {
-      const lastCol = (n - 1) % 2;
-      if (lastCol === 1) {
-        // gerade Anzahl: letztes rechts, vorletztes links
-        items[n - 1].style.borderBottomRightRadius = '12px';
-        if (n >= 2) items[n - 2].style.borderBottomLeftRadius = '12px';
-      } else {
-        // ungerade Anzahl: letztes ist allein links
-        items[n - 1].style.borderBottomLeftRadius = '12px';
-      }
+    // Letzte Zeile mit Ghost-Items auffüllen
+    const remainder = n % cols;
+    const ghostCount = remainder === 0 ? 0 : cols - remainder;
+    for (let g = 0; g < ghostCount; g++) {
+      const ghost = document.createElement('div');
+      ghost.className = 'mf-ghost-item';
+      ghost.style.height = rowH + 'px';
+      ghost.style.background = '#555555';
+      ghost.style.boxSizing = 'border-box';
+      dropdown.appendChild(ghost);
     }
 
-    // max-height auf genau 2 Zeilen fixieren
-    const rowH = 58;
-    if (n > 0) dropdown.style.maxHeight = (2 * rowH) + 'px';
+    // Alle Items (real + ghost) für Border-/Radius-Berechnung
+    const allItems = Array.from(dropdown.querySelectorAll('.listing-item, .mf-ghost-item'));
+    const total = allItems.length;
+    const lastRowIdx = total > 0 ? Math.floor((total - 1) / cols) : 0;
+
+    allItems.forEach((item, i) => {
+      // Reset styles
+      item.style.borderRadius = '0';
+      item.style.border = 'none';
+
+      // Snapping nur für reale Items
+      if (!item.classList.contains('mf-ghost-item')) {
+        item.style.scrollSnapAlign = (i % itemsPerPage === 0) ? 'start' : 'none';
+        item.style.scrollSnapStop = (i % itemsPerPage === 0) ? 'always' : 'normal';
+      }
+
+      // Innere Borders: rechts außer in der letzten Spalte, unten außer in der letzten Zeile
+      if (i % cols !== cols - 1) {
+        item.style.borderRight = '1px solid white';
+      }
+      if (Math.floor(i / cols) !== lastRowIdx) {
+        item.style.borderBottom = '1px solid white';
+      }
+    });
+
+    // Abrundung der Ecken des Gesamt-Grids
+    if (total >= 1) {
+      allItems[0].style.borderTopLeftRadius = '12px';
+      allItems[Math.min(total, cols) - 1].style.borderTopRightRadius = '12px';
+
+      const lastRowStart = Math.floor((total - 1) / cols) * cols;
+      allItems[lastRowStart].style.borderBottomLeftRadius = '12px';
+
+      // Letzte Zeile ist immer voll → unten rechts immer runden
+      allItems[total - 1].style.borderBottomRightRadius = '12px';
+    }
+
+    // Container-Höhe auf exakt die Anzahl der Zeilen fixieren
+    if (total > 0) {
+      dropdown.style.maxHeight = (rowsPerPage * rowH) + 'px';
+    }
   }
 }
 

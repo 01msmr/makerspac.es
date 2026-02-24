@@ -547,7 +547,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
   /* Search Container: unten fixiert, wächst nach oben */
   .search-container {
     position: fixed !important;
@@ -558,7 +558,8 @@
     width: auto !important;
     display: flex;
     flex-direction: column-reverse;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    background-color: black;
+    padding-bottom: 0;
   }
 
   /* Overlap-Trick zurücksetzen (war für downward flow) */
@@ -579,7 +580,7 @@
   /* Search input row: min 36px (collapsed bar), wächst wenn bar expandiert */
   .search-input-row {
     background-color: black;
-    padding: 7px 8px;
+    padding: 0 8px 0;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -914,6 +915,20 @@
     overflow: hidden;
     align-items: flex-start;
     scroll-snap-align: none; /* Snap nur auf 2-Row-Grenzen (s.u.) */
+    position: relative;
+  }
+
+  /* Laufende Nummer: unten rechts im Badge */
+  #suggestions-dropdown .listing-item .item-number {
+    position: absolute;
+    bottom: 3px;
+    right: 5px;
+    font-size: 0.7em;
+    font-style: italic;
+    color: white !important;
+    opacity: 0.66;
+    pointer-events: none;
+    line-height: 1;
   }
 
   /* Snap-Punkt alle 2 Rows = jedes 4. Item (2-Spalten-Grid, viewport = 2 Rows) */
@@ -1065,5 +1080,86 @@
 
   .search-container:not(.bar-focused) .search-counter .counter-x {
     font-size: 22px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   TABLET-OVERRIDES (portrait + landscape, pointer: coarse)
+   ═══════════════════════════════════════════════════════ */
+
+@media (min-width: 768px) and (pointer: coarse) {
+
+  /* Search-Container ganz an den unteren Rand rücken */
+  .search-container {
+    bottom: 0 !important;
+    /* Entfernt den "Schwebe-Effekt" */
+    margin-bottom: 0 !important;
+    /* Kein zusätzlicher Außenabstand */
+
+    /* Nutzt nur den technisch notwendigen Platz für den Home-Indicator */
+    /* Die 8px sind ein optionaler optischer Puffer - auf 0 setzen für absolute Kante */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
+
+    transition: bottom 0.3s ease;
+  }
+
+  /* 4 Spalten × 4 Zeilen Dropdown-Grid (Portrait) */
+  #suggestions-dropdown.is-active {
+    grid-template-columns: repeat(4, 1fr);
+    min-height: 232px;
+    /* 4 × 58px */
+    max-height: 232px;
+    /* Damit das Dropdown nach oben wächst, falls der Platz unten knapp wird */
+    bottom: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* Searchbar: immer volle Höhe, kein Höhen-Transition */
+  #search-bar {
+    height: 36px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    transition: opacity 0.5s ease-in-out, border-color 0.5s, box-shadow 0.5s;
+  }
+
+  .search-container:not(.bar-focused) #search-bar {
+    height: 36px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  #filter-toggle-btn {
+    transition: none;
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Pill-Darstellung: zentriert im rechten Border-Radius der Searchbar */
+  .search-counter {
+    transition: opacity 0.3s ease-in-out;
+    border-radius: 999px !important;
+    width: auto !important;
+    height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 0.94em !important;
+    right: 3px !important;
+  }
+
+  .search-container:not(.bar-focused) .search-counter {
+    height: 30px !important;
+    font-size: 0.94em !important;
+    border-radius: 999px !important;
+    padding: 0 8px !important;
+    right: 3px !important;
+  }
+}
+
+/* Tablet Landscape: 5 Spalten × 3 Zeilen */
+@media (min-width: 768px) and (pointer: coarse) and (orientation: landscape) {
+  #suggestions-dropdown.is-active {
+    grid-template-columns: repeat(5, 1fr);
+    min-height: 174px;
+    /* 3 × 58px */
+    max-height: 174px;
   }
 }

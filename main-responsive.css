@@ -331,14 +331,86 @@
     height: 100%;
   }
 
+  /* Safe-Area-Zonen schwarz hinterlegen.
+     Map (inset:0) deckt den html-Hintergrund oben ab — nur unten sichtbar. */
+  html, body {
+    background-color: black;
+  }
+
+  /* Kein weißer Hintergrund hinter der Statusbar sichtbar */
+  .leaflet-container {
+    background: #aad3df;
+  }
+
   /* Language-Switcher unabhängig von search-container */
   .language-switcher {
-    right: 1.5em !important;
+    right: calc(1.5em + 7px) !important;
+  }
+
+  /* Obere UI-Elemente 24px tiefer (unterhalb der Statusbar) */
+  .title-bar {
+    top: calc(1em + 44px);
+    gap: 0.2em;
+  }
+
+  .language-switcher {
+    top: calc(1em + 16px);
   }
 
   /* Home-Link: auf 140px verkleinert (proportional) */
   .title {
-    font-size: 1.05em;
+    font-size: 0.945em;
+  }
+
+  /* Tool-Icons: je ein Quadrat mit der Höhe der .title, nebeneinander */
+  .title-tools {
+    flex-direction: row;
+    align-self: stretch;
+    gap: 0.2em;
+  }
+
+  .title-tools a {
+    font-size: 2em;
+    flex: none;
+    aspect-ratio: 1;
+    align-self: stretch;
+    padding: 0;
+  }
+
+  /* Space-URL im Marker-Popup ausblenden */
+  a#url {
+    display: none !important;
+  }
+}
+
+
+/* ═════════════════════════════════════════════════════════
+   RESPONSIVE – Tablet (portrait + landscape, pointer: coarse)
+   ═════════════════════════════════════════════════════════ */
+
+@media (min-width: 768px) and (pointer: coarse) {
+
+  /* Volle Bildschirmfläche, schwarze Safe-Area-Zonen */
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+  }
+
+  .leaflet-container {
+    background: #aad3df;
+  }
+
+  /* Title wie Desktop, aber 12px mehr Abstand zu den Rändern */
+  .title-bar {
+    top: calc(1em + 12px);
+    left: calc(1em + 12px);
+  }
+
+  /* Settings wie Desktop, aber 12px mehr Abstand zu den Rändern */
+  .language-switcher {
+    top: calc(1.2em + 12px) !important;
+    right: calc(1.5em + 300px + 24px) !important;
   }
 
   /* Space-URL im Marker-Popup ausblenden */

@@ -52,7 +52,7 @@ body {
   inset: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
   #map {
     bottom: var(--mobile-ui-height, 0px);
   }
