@@ -633,8 +633,7 @@ async function loadData() {
 
     const rawData = await response.json();
 
-    // ✅ FILTER: Entferne das erste Objekt (TEMPLATE) - enthält die nächste zu verwendende ID
-    window.json = rawData.slice(1); // Überspringe Index 0
+    window.json = rawData;
     json = window.json;
 
 
