@@ -4,8 +4,7 @@
 
 @font-face {
   font-family: 'Roboto';
-  src: url('fonts/Roboto-SemiBold.woff2') format('woff2'),
-       url('fonts/Roboto-SemiBold.ttf') format('truetype');
+  src: url('fonts/Roboto-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -16,7 +15,6 @@
   --font-family: 'Roboto', sans-serif;
 
   --title-background: rgba(111, 233, 166, 1);
-  --nearby-title: rgba(111, 233, 166, 0.66);
   --bg-color: white;
   --text-color: black;
   --border-color: #ccc;

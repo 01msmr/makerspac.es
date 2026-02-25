@@ -20,16 +20,15 @@
 
     // Hover/Interaktive Farben
     hoverLight: '#0000ff',
-    hoverDark: '#66b3ff',
+    hoverDark: '#2288ee',
 
     // Dark Mode
     darkModeDefault: '#666666',
 
-    // UI Farben
-    textLight: '#2c2c2c',
-    textDark: '#e0e0e0',
-    backgroundLight: '#ffffff',
-    backgroundDark: '#2c2c2c',
+    // Dark Mode Varianten (heller für dunklen Hintergrund)
+    darkOpen: '#00bb00',
+    darkClosed: '#ff5555',
+    darkUnknown: '#ffaa00',
 
     // Feature-spezifische Farben
     nearbyTitle: 'rgba(111, 233, 166, 0.66)'
@@ -414,12 +413,11 @@
     const root = document.documentElement;
     const dark = isDarkMode();
 
-    root.style.setProperty('--space-hover', dark ? COLOURS.hoverDark : COLOURS.hoverLight);
-    root.style.setProperty('--space-open', COLOURS.open);
-    root.style.setProperty('--space-closed', COLOURS.closed);
-    root.style.setProperty('--space-unknown', COLOURS.unknown);
-    root.style.setProperty('--color-default', dark ? COLOURS.darkModeDefault : COLOURS.default);
-    root.style.setProperty('--color-highlight', dark ? COLOURS.darkModeDefault : COLOURS.highlight);
+    root.style.setProperty('--space-hover',   dark ? COLOURS.hoverDark   : COLOURS.hoverLight);
+    root.style.setProperty('--space-open',    dark ? COLOURS.darkOpen    : COLOURS.open);
+    root.style.setProperty('--space-closed',  dark ? COLOURS.darkClosed  : COLOURS.closed);
+    root.style.setProperty('--space-unknown',  dark ? COLOURS.darkUnknown : COLOURS.unknown);
+    root.style.setProperty('--nearby-title',   COLOURS.nearbyTitle);
   }
 
   // Sofort anwenden

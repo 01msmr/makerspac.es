@@ -119,51 +119,6 @@
 }
 
 
-/* ===================================
-   DARK MODE – Navigation Icons
-   =================================== */
-
-@media (prefers-color-scheme: dark) {
-  .popup-street-line.status-open .navigation-icon {
-    color: #00bb00;
-  }
-
-  .popup-street-line.status-closed .navigation-icon {
-    color: #ff5555;
-  }
-
-  .popup-street-line.status-unknown .navigation-icon {
-    color: #ffaa00;
-  }
-
-  .popup-street-line.status-default .navigation-icon {
-    color: #66b3ff;
-  }
-}
-
-
-/* ===================================
-   HIGH CONTRAST – Navigation Icons
-   =================================== */
-
-@media (prefers-contrast: high) {
-  .popup-street-line.status-open .navigation-icon {
-    color: #008800;
-  }
-
-  .popup-street-line.status-closed .navigation-icon {
-    color: #cc0000;
-  }
-
-  .popup-street-line.status-unknown .navigation-icon {
-    color: #ff6600;
-  }
-
-  .popup-street-line.status-default .navigation-icon {
-    color: #0000dd;
-  }
-}
-
 
 /* ===================================
    DARK MODE – Bookmark Sync
