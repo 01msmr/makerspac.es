@@ -32,6 +32,12 @@ jobs:
             echo "status.json wurde aktualisiert"
           fi
 
+      - name: Upload-Verzeichnis vorbereiten
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          mkdir -p /tmp/ftp-upload
+          cp status.json /tmp/ftp-upload/
+
       - name: status.json zu Netcup hochladen (FTP)
         if: steps.check.outputs.changed == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -39,10 +45,8 @@ jobs:
           server: ${{ secrets.NETCUP_FTP_HOST }}
           username: ${{ secrets.NETCUP_FTP_USER }}
           password: ${{ secrets.NETCUP_FTP_PASSWORD }}
-          local-dir: ./
+          local-dir: /tmp/ftp-upload/
           server-dir: /
-          include: |
-            status.json
 
       - name: status.json ins Repo committen
         if: steps.check.outputs.changed == 'true'
