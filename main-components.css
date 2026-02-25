@@ -521,17 +521,17 @@ hr {
 /* *** Door-Icon Klassen *** */
 .space-name-open,
 .door-icon-open {
-  color: var(--space-open);
+  color: var(--space-open, #0e9000);
 }
 
 .space-name-closed,
 .door-icon-closed {
-  color: var(--space-closed);
+  color: var(--space-closed, #DD0000);
 }
 
 .space-name-unknown,
 .door-icon-unknown {
-  color: var(--space-unknown);
+  color: var(--space-unknown, #f67b00);
 }
 
 .space-name-default {

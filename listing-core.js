@@ -159,11 +159,11 @@
 
       const _t = (k) => window.i18n ? window.i18n.t(k) : '';
       if (location.isOpen === true) {
-        return `<i class="${CONFIG.icons.status.open} door-icon-open" aria-label="${_t('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="right"></i> `;
+        return `<span aria-label="${_t('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="right"><i class="${CONFIG.icons.status.open} door-icon-open"></i></span> `;
       } else if (location.isOpen === false) {
-        return `<i class="${CONFIG.icons.status.closed} door-icon-closed" aria-label="${_t('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="right"></i> `;
+        return `<span aria-label="${_t('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="right"><i class="${CONFIG.icons.status.closed} door-icon-closed"></i></span> `;
       } else {
-        return `<i class="${CONFIG.icons.status.unknown} door-icon-unknown" aria-label="${_t('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="right"></i> `;
+        return `<span aria-label="${_t('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="right"><i class="${CONFIG.icons.status.unknown} door-icon-unknown"></i></span> `;
       }
     }
 

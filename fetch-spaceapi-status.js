@@ -11,23 +11,26 @@ const MAX_RETRIES = 3; // 3 Versuche
 const RETRY_DELAY_MS = 5000; // 5 Sekunden zwischen Versuchen
 
 // Helper: Parst SpaceAPI-JSON, Plaintext "0"/"1", ThingSpeak-JSON
+// Gibt { status, message } zurück
 function parseOpenStatus(text) {
   const trimmed = text.trim();
-  if (trimmed === '0') return false;
-  if (trimmed === '1') return true;
+  if (trimmed === '0') return { status: false };
+  if (trimmed === '1') return { status: true };
   try {
     const data = JSON.parse(trimmed);
     const rawOpen = data.state?.open;
     if (rawOpen !== undefined) {
-      if (rawOpen === 1 || rawOpen === true) return true;
-      if (rawOpen === 0 || rawOpen === false) return false;
+      if (rawOpen === 1 || rawOpen === true) return { status: true };
+      if (rawOpen === 0 || rawOpen === false) return { status: false };
     }
     if (data.field1 !== undefined) {
-      if (data.field1 === '1' || data.field1 === 1 || data.field1 === true) return true;
-      if (data.field1 === '0' || data.field1 === 0 || data.field1 === false) return false;
+      if (data.field1 === '1' || data.field1 === 1 || data.field1 === true) return { status: true };
+      if (data.field1 === '0' || data.field1 === 0 || data.field1 === false) return { status: false };
     }
+    const message = (typeof data.state?.message === 'string' && data.state.message.trim()) || null;
+    return { status: null, message };
   } catch (e) {}
-  return null;
+  return { status: null };
 }
 
 // Helper: Sleep
@@ -83,17 +86,18 @@ async function fetchSpaceStatus(space) {
     }
 
     const text = await response.text();
-    const isOpen = parseOpenStatus(text);
+    const { status: isOpen, message } = parseOpenStatus(text);
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
       isOpen === false ? '🔴 CLOSED' :
         '🟠 UNKNOWN';
-    console.log(`✅ ${space.name}: ${statusEmoji}`);
+    console.log(`✅ ${space.name}: ${statusEmoji}${message ? ' – ' + message : ''}`);
 
     return {
       name: space.name,
       endpoint: space.endpoint,
       status: isOpen,
+      ...(isOpen === null && message ? { message } : {}),
       lastUpdate: new Date().toISOString(),
       error: null
     };

@@ -768,7 +768,9 @@ function createMarkerForLocation(location) {
       nameClass = 'space-closed';
     }
     else if (location.spaceapi && location.spaceapi.endpoint) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-question-circle"></i></span> `;
+      const tipLabel = location.statusMessage || getTooltip('tooltips.spaceStatusLoading');
+      const tipPos = location.statusMessage ? 'top-right' : 'bottom';
+      statusIconHtml = `<span aria-label="${tipLabel}" role="tooltip" data-microtip-position="${tipPos}"><i class="fas fa-question-circle"></i></span> `;
       nameClass = 'space-unknown';
     }
 

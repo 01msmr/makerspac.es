@@ -983,8 +983,7 @@
     text-overflow: ellipsis;
     max-width: 100%;
   }
-  #suggestions-dropdown .listing-item-address { gap: 0; }
-  #suggestions-dropdown .listing-status-icon  { display: none; }
+  #suggestions-dropdown .listing-item-address { gap: 4px; }
   #suggestions-dropdown .listing-item-details { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #suggestions-dropdown .listing-meeting-today { display: none; }
   #suggestions-dropdown .listing-workshops     { display: none; }

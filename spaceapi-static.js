@@ -48,6 +48,7 @@ class StaticSpaceAPI {
 
           if (spaceData) {
             location.isOpen = spaceData.status;
+            location.statusMessage = spaceData.message || null;
             applied++;
 
             // Feuer Event für Live-Update
