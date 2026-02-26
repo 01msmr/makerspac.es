@@ -41,7 +41,7 @@ jobs:
             | grep -vE '\.(md|py|afdesign)$' \
             | grep -v '^sitemap\.xml$' \
             | grep -v '^locations\.json$' \
-            > changed_files.txt
+            > changed_files.txt || true
           cat changed_files.txt
           echo "count=$(wc -l < changed_files.txt)" >> $GITHUB_OUTPUT
 
