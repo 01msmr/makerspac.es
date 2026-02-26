@@ -63,7 +63,7 @@ jobs:
                 -u "$FTP_USER:$FTP_PASS" \
                 "ftp://$FTP_HOST/$dir/" \
                 --ftp-create-dirs \
-                --ssl --ftp-pasv \
+                --ssl --insecure --ftp-pasv \
                 --silent --show-error \
                 -Q "CWD /$dir" 2>/dev/null || true
             fi
@@ -73,7 +73,7 @@ jobs:
               -u "$FTP_USER:$FTP_PASS" \
               "ftp://$FTP_HOST/$file" \
               --ftp-create-dirs \
-              --ssl --ftp-pasv \
+              --ssl --insecure --ftp-pasv \
               --silent --show-error
           done < changed_files.txt
 
