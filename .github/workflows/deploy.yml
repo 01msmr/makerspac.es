@@ -42,7 +42,6 @@ jobs:
             ':!*.md' \
             ':!*.py' \
             ':!*.afdesign' \
-            ':!status.json' \
             ':!sitemap.xml' \
             ':!locations.json' \
           > changed_files.txt
