@@ -2,8 +2,8 @@ name: "🔄 push status.json 2 srv"
 
 on:
   schedule:
-    - cron: '*/20 * * * *'   # alle 20 Minuten
-  workflow_dispatch:          # auch manuell auslösbar
+    - cron: '*/30 * * * *'   # Fallback alle 30 Min (primär via cron-job.de alle 15 Min)
+  workflow_dispatch:          # von cron-job.de und manuell auslösbar
 
 jobs:
   update:
@@ -21,19 +21,7 @@ jobs:
       - name: SpaceAPI Status abrufen
         run: node fetch-spaceapi-status.js
 
-      - name: Prüfen ob status.json verändert wurde
-        id: check
-        run: |
-          if git diff --quiet status.json; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Keine Änderungen in status.json"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "status.json wurde aktualisiert"
-          fi
-
       - name: status.json zu Netcup hochladen (FTP via curl)
-        if: steps.check.outputs.changed == 'true'
         env:
           FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}
           FTP_USER: ${{ secrets.NETCUP_FTP_USER }}
@@ -42,14 +30,5 @@ jobs:
           curl --ipv4 -T status.json \
             -u "$FTP_USER:$FTP_PASS" \
             "ftp://$FTP_HOST/status.json" \
-            --ftp-pasv \
+            --ssl --ftp-pasv \
             --silent --show-error
-
-      - name: status.json ins Repo committen
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add status.json
-          git commit -m "🤖 Update status.json [skip ci]"
-          git push

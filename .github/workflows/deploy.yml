@@ -1,0 +1,67 @@
+name: "🚀 Deploy to Netcup"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # [skip ci] Commits (z.B. status.json-Updates) nicht deployen
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (mit History für Diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Geänderte Dateien ermitteln
+        id: changed
+        run: |
+          git diff --name-only HEAD~1 HEAD \
+            -- . \
+            ':!.github/**' \
+            ':!_OLD/**' \
+            ':!*.md' \
+            ':!*.py' \
+            ':!*.afdesign' \
+            ':!status.json' \
+            ':!sitemap.xml' \
+            ':!locations.json' \
+          > changed_files.txt
+          cat changed_files.txt
+          echo "count=$(wc -l < changed_files.txt)" >> $GITHUB_OUTPUT
+
+      - name: Dateien zu Netcup hochladen
+        if: steps.changed.outputs.count > 0
+        env:
+          FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}
+          FTP_USER: ${{ secrets.NETCUP_FTP_USER }}
+          FTP_PASS: ${{ secrets.NETCUP_FTP_PASSWORD }}
+        run: |
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && echo "Gelöscht (übersprungen): $file" && continue
+
+            # Verzeichnis auf Server anlegen falls nötig
+            dir=$(dirname "$file")
+            if [ "$dir" != "." ]; then
+              curl --ipv4 \
+                -u "$FTP_USER:$FTP_PASS" \
+                "ftp://$FTP_HOST/$dir/" \
+                --ftp-create-dirs \
+                --ssl --ftp-pasv \
+                --silent --show-error \
+                -Q "CWD /$dir" 2>/dev/null || true
+            fi
+
+            echo "Uploading: $file"
+            curl --ipv4 -T "$file" \
+              -u "$FTP_USER:$FTP_PASS" \
+              "ftp://$FTP_HOST/$file" \
+              --ftp-create-dirs \
+              --ssl --ftp-pasv \
+              --silent --show-error
+          done < changed_files.txt
