@@ -1,4 +1,18 @@
-# ─── Gzip-Komprimierung ──────────────────────────────────────────────────────
+# ─── Brotli-Komprimierung (bevorzugt, ~15% besser als gzip) ──────────────────
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS \
+        text/html \
+        text/css \
+        text/javascript \
+        application/javascript \
+        application/json \
+        image/svg+xml \
+        font/ttf \
+        font/woff \
+        font/woff2
+</IfModule>
+
+# ─── Gzip-Komprimierung (Fallback) ───────────────────────────────────────────
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE \
         text/html \

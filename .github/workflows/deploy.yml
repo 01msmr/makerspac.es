@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write   # für git tag --push nach erfolgreichem Deploy
+
 jobs:
   deploy:
     # [skip ci] Commits (z.B. status.json-Updates) nicht deployen
@@ -12,15 +15,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (mit History für Diff)
+      - name: Checkout (mit vollständiger History)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0   # alle Commits + Tags
+
+      - name: Basis-SHA ermitteln (last-deployed Tag oder HEAD~1)
+        id: base
+        run: |
+          if git rev-parse last-deployed >/dev/null 2>&1; then
+            BASE=$(git rev-parse last-deployed)
+            echo "Basis: last-deployed ($BASE)"
+          else
+            BASE=$(git rev-parse HEAD~1)
+            echo "Basis: HEAD~1 ($BASE) — erster Deploy"
+          fi
+          echo "sha=$BASE" >> $GITHUB_OUTPUT
 
       - name: Geänderte Dateien ermitteln
         id: changed
         run: |
-          git diff --name-only HEAD~1 HEAD \
+          git diff --name-only ${{ steps.base.outputs.sha }} HEAD \
             -- . \
             ':!.github/**' \
             ':!_OLD/**' \
@@ -65,3 +80,9 @@ jobs:
               --ssl --ftp-pasv \
               --silent --show-error
           done < changed_files.txt
+
+      - name: last-deployed Tag aktualisieren
+        if: steps.changed.outputs.count > 0
+        run: |
+          git tag -f last-deployed
+          git push origin -f refs/tags/last-deployed
