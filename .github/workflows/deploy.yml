@@ -35,16 +35,13 @@ jobs:
       - name: Geänderte Dateien ermitteln
         id: changed
         run: |
-          git diff --name-only ${{ steps.base.outputs.sha }} HEAD \
-            -- . \
-            ':!.github' \
-            ':!_OLD' \
-            ':!*.md' \
-            ':!*.py' \
-            ':!*.afdesign' \
-            ':!sitemap.xml' \
-            ':!locations.json' \
-          > changed_files.txt
+          git diff --name-only ${{ steps.base.outputs.sha }} HEAD -- . \
+            | grep -v '^\.github/' \
+            | grep -v '^_OLD/' \
+            | grep -vE '\.(md|py|afdesign)$' \
+            | grep -v '^sitemap\.xml$' \
+            | grep -v '^locations\.json$' \
+            > changed_files.txt
           cat changed_files.txt
           echo "count=$(wc -l < changed_files.txt)" >> $GITHUB_OUTPUT
 
