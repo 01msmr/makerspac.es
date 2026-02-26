@@ -37,8 +37,8 @@ jobs:
         run: |
           git diff --name-only ${{ steps.base.outputs.sha }} HEAD \
             -- . \
-            ':!.github/**' \
-            ':!_OLD/**' \
+            ':!.github' \
+            ':!_OLD' \
             ':!*.md' \
             ':!*.py' \
             ':!*.afdesign' \
