@@ -730,21 +730,54 @@ function adjustPopupPosition(popup, map) {
   const maxShift = wrapperRect.width / 2 - br;
   const pad = 10;
 
+  // UI-Elemente die den nutzbaren Kartenbereich einschränken
+  const uiRects = ['.title-bar', '.search-container', '#suggestions-dropdown.is-active']
+    .map(sel => document.querySelector(sel))
+    .filter(el => el && el.offsetParent !== null)
+    .map(el => el.getBoundingClientRect())
+    .filter(r => r.width > 0 && r.height > 0);
+
+  const midY = mapRect.top + mapRect.height / 2;
+
+  // Horizontale Überlappung mit dem Popup prüfen (nur überlappende Elemente schränken ein)
+  const hOverlap = r => r.right > popupRect.left && r.left < popupRect.right;
+
+  // Obere Grenze: Unterkante der oberen UI-Elemente die horizontal mit dem Popup überlappen
+  const topBoundary = uiRects
+    .filter(r => r.top < midY && hOverlap(r))
+    .reduce((acc, r) => Math.max(acc, r.bottom), mapRect.top) + pad;
+
+  // Untere Grenze: Oberkante der unteren UI-Elemente die horizontal mit dem Popup überlappen
+  const bottomBoundary = uiRects
+    .filter(r => r.top >= midY && hOverlap(r))
+    .reduce((acc, r) => Math.min(acc, r.top), mapRect.bottom) - pad;
+
   // Vertikal: Popup über Oberkante → unter den Marker spiegeln
   // CSS `translate` addiert sich zu Leaflet's `transform` (beide Properties wirken unabhängig)
   // flipDy in Screen-Koordinaten: Popup-Oberkante → Marker-Y (Tip zeigt dann nach oben zum Marker)
-  const overflowTop = (mapRect.top + pad) - popupRect.top;
+  const overflowTop = topBoundary - popupRect.top;
   if (overflowTop > 0) {
     const markerContainerPt = map.latLngToContainerPoint(popup.getLatLng());
     const markerScreenY = mapRect.top + markerContainerPt.y;
-    const flipDy = markerScreenY - popupRect.top + 15;
-    el.style.setProperty('--flip-dy', `${flipDy}px`);
-    el.classList.add('popup-flipped');
+    const flippedBottom = markerScreenY + 15 + popupRect.height;
+    if (flippedBottom <= bottomBoundary) {
+      const flipDy = markerScreenY - popupRect.top + 15;
+      el.style.setProperty('--flip-dy', `${flipDy}px`);
+      el.classList.add('popup-flipped');
+    }
   }
 
-  // Horizontal: Popup links/rechts aus dem Container
+  // Horizontal: Popup links/rechts aus dem Container oder hinter UI-Elementen
+  const vOverlap = r => r.bottom > wrapperRect.top && r.top < wrapperRect.bottom;
+  const midX = mapRect.left + mapRect.width / 2;
+
+  // Rechte Grenze: Linkskante der rechten UI-Elemente, die vertikal mit dem Popup überlappen
+  const rightBoundary = uiRects
+    .filter(r => r.left > midX && vOverlap(r))
+    .reduce((acc, r) => Math.min(acc, r.left), mapRect.right - pad);
+
   const overflowL = (mapRect.left + pad) - wrapperRect.left;
-  const overflowR = wrapperRect.right - (mapRect.right - pad);
+  const overflowR = wrapperRect.right - rightBoundary;
 
   let shift = 0;
   if (overflowL > 0) {
