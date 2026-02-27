@@ -1,9 +1,7 @@
 name: "🔄 push status.json 2 srv"
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'   # Fallback alle 30 Min (primär via cron-job.de alle 15 Min)
-  workflow_dispatch:          # von cron-job.de und manuell auslösbar
+  workflow_dispatch:          # von cron-job.org und manuell auslösbar
 
 jobs:
   update:

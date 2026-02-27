@@ -217,11 +217,10 @@ export class RoutingManager {
     if (this.searchManager?.pillsManager) this.searchManager.pillsManager.clear();
     window.location.hash = `#/${this.countryToSlug(countryName)}`;
 
-    setTimeout(() => {
+    this._afterNavigation(() => {
       bar.value = SearchTerm;
       if (this.searchManager) this.searchManager.applyPillFilters([]);
-      this._isNavigating = false;
-    }, 50);
+    });
   }
 
   applyCityFilter(cityName) {
@@ -350,6 +349,22 @@ export class RoutingManager {
     meta.content = desc;
   }
 
+  // Führt callback aus nachdem der durch uns ausgelöste hashchange verarbeitet wurde.
+  // Robuster als setTimeout(fn, 50): wartet auf das tatsächliche Event statt auf einen
+  // festen Timeout. Fallback nach 200ms falls kein hashchange feuert (z.B. Hash bereits leer).
+  _afterNavigation(callback) {
+    let fired = false;
+    const handler = () => {
+      if (fired) return;
+      fired = true;
+      window.removeEventListener('hashchange', handler);
+      this._isNavigating = false;
+      callback();
+    };
+    window.addEventListener('hashchange', handler);
+    setTimeout(handler, 200);
+  }
+
   clearAllPillsAndFilters() {
     this._activeCountryFilter = null;
     const bar = this.searchManager?.searchBar;
@@ -368,11 +383,10 @@ export class RoutingManager {
       window.location.hash = '';
     }
 
-    setTimeout(() => {
+    this._afterNavigation(() => {
       if (bar) bar.value = rescuedText;
       if (this.searchManager) this.searchManager.applyPillFilters(currentPills);
-      this._isNavigating = false;
-    }, 50);
+    });
   }
 
   handleBookmarkRoute(hash) {
@@ -391,6 +405,10 @@ export class RoutingManager {
 
   showLocations(locations, ids) {
     if (!this.searchManager) return;
+    // Race-Condition: _isNavigating kann durch ältere Timer zurückgesetzt werden,
+    // bevor hashchange feuert. Wenn der User gerade manuell ein Item angeklickt hat,
+    // URL-Routing nicht anwenden – Popup und Filter wurden bereits korrekt gesetzt.
+    if (window.app?.searchHeader?._manualSpaceClick) return;
     this._isOnLocationRoute = true;
     if (this.searchManager.pillsManager) this.searchManager.pillsManager.clear();
     if (this.styleFilterManager) {

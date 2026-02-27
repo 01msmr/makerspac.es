@@ -1,6 +1,32 @@
 // map.js - Finale Anti-Flacker Version mit ID-basiertem State Management und Navigation
 
 import { RoutingManager } from './routing.js';
+import AppConfig from './config.js';
+import { I18n } from './i18n.js';
+import { StaticSpaceAPI } from './spaceapi-static.js';
+import { bookmarkManager } from './bookmark-manager.js';
+import { BookmarkSync, consent } from './datasync.js';
+import { dataStore } from './data-store.js';
+import { zoomManager } from './zoom-manager.js';
+import { initApp } from './main.js';
+import './embed.js';
+
+// i18n Singleton (ersetzt i18n-init.js)
+const i18n = new I18n();
+window.i18n = i18n;
+
+// Backward Compat für embed.js und andere Legacy-Zugriffe
+window.AppConfig = AppConfig;
+
+// BookmarkSync (ersetzt Auto-Init in datasync.js)
+const bookmarkSync = new BookmarkSync(bookmarkManager);
+window.bookmarkSync = bookmarkSync;
+window.consent = consent;
+
+// dataStore Backward Compat
+window.dataStore = dataStore;
+window.languageSwitcher = dataStore;
+window.zoomManager = zoomManager;
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -21,7 +47,6 @@ let map;
 let allMarkers = [];
 let connectionLine = null;
 let styleFilterManager;
-let searchManager;
 let currentStickyMarker = null;
 let isPopupSticky = false;
 
@@ -116,20 +141,19 @@ function toggleClustering(enable) {
   }
 
   // ✅ WICHTIG: Blockiere Auto-Zoom beim Clustering-Toggle IMMER!
-  if (window.searchManager) {
-    window.searchManager._manualSpaceClick = true;
+  if (window.app?.searchHeader) {
+    window.app.searchHeader._manualSpaceClick = true;
   }
 
   // 3. Filter-Kette neu starten
-  if (window.searchManager && typeof window.searchManager.applyPillFilters === 'function') {
-    const pills = window.searchManager.pillsManager.getPillsArray();
+  if (window.app?.searchHeader) {
     setTimeout(() => {
-      window.searchManager.applyPillFilters(pills);
+      window.app.searchHeader.triggerFilterUpdate();
 
       // ✅ Reset Flag nach Filter-Anwendung
       setTimeout(() => {
-        if (window.searchManager) {
-          window.searchManager._manualSpaceClick = false;
+        if (window.app?.searchHeader) {
+          window.app.searchHeader._manualSpaceClick = false;
         }
       }, 100);
     }, 50);
@@ -167,7 +191,7 @@ function updateNavigationIconAppearance(navLinkElement, location) {
   const parentContainer = navLinkElement.parentElement;
   if (!icon || !parentContainer) return;
 
-  const serviceToUse = window.consent.get('mapService') || 'default';
+  const serviceToUse = consent.get('mapService') || 'default';
   navLinkElement.setAttribute('data-service', serviceToUse);
 
   parentContainer.classList.remove('status-open', 'status-closed', 'status-unknown', 'status-default');
@@ -201,7 +225,7 @@ function handleNavigationClick(event, location) {
   const { lat, long } = location.loc;
   if (typeof lat !== 'number' || typeof long !== 'number') return;
 
-  const serviceToUse = window.consent.get('mapService') || 'google';
+  const serviceToUse = consent.get('mapService') || 'google';
   openMap(serviceToUse, lat, long);
 }
 
@@ -265,7 +289,7 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   const mapContainer = document.getElementById('map');
   const mapRect = mapContainer.getBoundingClientRect();
 
-  const connectionEndX = suggestionRect.left + window.AppConfig.connectorOffsetLeft - mapRect.left;
+  const connectionEndX = suggestionRect.left + AppConfig.connectorOffsetLeft - mapRect.left;
   const connectionEndY = suggestionRect.top + 0.4 + (suggestionRect.height / 2) - mapRect.top;
   const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
@@ -472,24 +496,6 @@ function getCountryCode(countryName) {
 // Füge updateMarkerIcon zu mapUtils hinzu
 window.mapUtils.updateMarkerIcon = updateMarkerIcon;
 
-// Main initialization
-async function initializeApp() {
-  try {
-    await window.i18n.load('./lang.json');
-    setupMap();
-    initializeClustering();
-    await loadData();
-
-    setupSearch();
-    setupStyleFilter();
-    setupRouting();
-    setupMapClickHandler();
-  } catch (error) {
-    console.error('⛔ A critical error occurred during app initialization:', error);
-    alert('The application could not be started. Please check the developer console.');
-  }
-}
-
 // GLOBAL: Map und MapLibre Layer
 let currentMapLibreLayer = null;
 
@@ -507,7 +513,7 @@ function setupMap() {
 
   function updateMapTiles() {
     let isDarkMode = false;
-    const colorScheme = window.consent.get('color-scheme') || 'auto';
+    const colorScheme = consent.get('color-scheme') || 'auto';
 
     if (colorScheme === 'dark') {
       isDarkMode = true;
@@ -565,7 +571,7 @@ function setupMap() {
   updateMapTiles();
 
   darkModeQuery.addEventListener('change', () => {
-    const currentScheme = window.consent.get('color-scheme') || 'auto';
+    const currentScheme = consent.get('color-scheme') || 'auto';
     if (currentScheme === 'auto') {
       updateMapTiles();
     }
@@ -694,8 +700,6 @@ async function loadData() {
 
       if (window.routingManager && typeof window.routingManager.rerunRouteHandler === 'function') {
         window.routingManager.rerunRouteHandler();
-      } else {
-        console.warn('⚠️ RoutingManager not available for re-run.');
       }
     });
 
@@ -793,6 +797,10 @@ function adjustPopupPosition(popup, map) {
   if (shift !== 0) wrapper.style.transform = `translateX(${shift}px)`;
 }
 
+// ============================================================================
+// MARKER CREATION
+// ============================================================================
+
 function createMarkerForLocation(location) {
   const lat = location.loc?.lat;
   const lng = location.loc?.long;
@@ -802,98 +810,67 @@ function createMarkerForLocation(location) {
     return null;
   }
 
-  const marker = L.marker([lat, lng], {
-    icon: icons.defaultIcon,
-    opacity: 0.66
-  });
-
+  const marker = L.marker([lat, lng], { icon: icons.defaultIcon, opacity: 0.66 });
   clusterGroup.addLayer(marker);
-
-  // ✅ OPTIMIERUNG: Verwende location.ID direkt
   marker.locationId = location.ID;
-
-  // ✅ OPTIMIERUNG: Speichere Marker im globalen Index für schnellen Zugriff
   window.markerById.set(location.ID, marker);
 
-  // ✅ NEU: Click-Handler für Auto-Zoom-Prevention + Re-Tap-Schutz
-  marker.on('click', () => {
-    // ✅ SAUBERE LÖSUNG: Verhindere Auto-Zoom bei Marker-Klick
-    if (window.searchManager) {
-      window.searchManager._manualSpaceClick = true;
-      clearTimeout(window.searchManager.zoomDebounceTimeout);
+  _applyMarkerClickHandler(marker);
+  marker.bindPopup(() => _buildPopupHTML(location), { maxWidth: 440, minWidth: 160, autoPan: false });
+  _applyPopupOpenHandler(marker, location);
+  _applyPopupCloseHandler(marker);
+  _applyMarkerHoverHandlers(marker, location);
 
-      // Reset nach 1000ms
-      setTimeout(() => {
-        window.searchManager._manualSpaceClick = false;
-      }, 1000);
-    }
+  allMarkers.push(marker);
+}
 
-    // Touch-Geräte: Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
-    if ('ontouchstart' in window && marker.isPopupOpen()) {
-      marker._retainPopup = true;
-    }
-    // URL-Update erfolgt automatisch durch popupopen-Event ✅
-  });
+// --- Popup HTML ---
 
-  marker.bindPopup((layer) => {
-    let statusIconHtml = '';
-    let nameClass = '';
+function _buildPopupHTML(location) {
+  let statusIconHtml = '';
+  let nameClass = '';
 
-    let statusColor = 'var(--space-hover)';
-    if (location.isOpen === true) {
-      statusColor = 'var(--space-open)';
-    }
-    else if (location.isOpen === false) {
-      statusColor = 'var(--space-closed)';
-    }
-    else if (location.spaceapi && location.spaceapi.endpoint) {
-      statusColor = 'var(--space-unknown)';
-    }
+  let statusColor = 'var(--space-hover)';
+  if (location.isOpen === true) statusColor = 'var(--space-open)';
+  else if (location.isOpen === false) statusColor = 'var(--space-closed)';
+  else if (location.spaceapi && location.spaceapi.endpoint) statusColor = 'var(--space-unknown)';
 
-    const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
+  const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
 
-    if (location.isOpen === true) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-door-open"></i></span> `;
-      nameClass = 'space-open';
-    }
-    else if (location.isOpen === false) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-lock"></i></span> `;
-      nameClass = 'space-closed';
-    }
-    else if (location.spaceapi && location.spaceapi.endpoint) {
-      const tipLabel = location.statusMessage || getTooltip('tooltips.spaceStatusLoading');
-      const tipPos = location.statusMessage ? 'top-right' : 'bottom';
-      statusIconHtml = `<span aria-label="${tipLabel}" role="tooltip" data-microtip-position="${tipPos}"><i class="fas fa-question-circle"></i></span> `;
-      nameClass = 'space-unknown';
-    }
+  if (location.isOpen === true) {
+    statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-door-open"></i></span> `;
+    nameClass = 'space-open';
+  } else if (location.isOpen === false) {
+    statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-lock"></i></span> `;
+    nameClass = 'space-closed';
+  } else if (location.spaceapi && location.spaceapi.endpoint) {
+    const tipLabel = location.statusMessage || getTooltip('tooltips.spaceStatusLoading');
+    const tipPos = location.statusMessage ? 'top-right' : 'bottom';
+    statusIconHtml = `<span aria-label="${tipLabel}" role="tooltip" data-microtip-position="${tipPos}"><i class="fas fa-question-circle"></i></span> `;
+    nameClass = 'space-unknown';
+  }
 
-    // ✅ REFACTORED: Nutze zentrale getStyleIcon Funktion
-    let styleIconHtml = '';
-    const locationStyle = location.style ? location.style.toLowerCase() : '';
-    const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
+  let styleIconHtml = '';
+  const locationStyle = location.style ? location.style.toLowerCase() : '';
+  const styleIconClass = window.MapIcons.getStyleIcon(locationStyle);
+  if (styleIconClass) {
+    const translatedStyle = window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style;
+    styleIconHtml = `<span aria-label="${translatedStyle}" role="tooltip" data-microtip-position="top"><i class="${styleIconClass}"></i></span>`;
+  }
 
-    if (styleIconClass) {
-      const translatedStyle = window.i18n ? window.i18n.t(styleTranslationMap[locationStyle]) : location.style;
-      styleIconHtml = `<span aria-label="${translatedStyle}" role="tooltip" data-microtip-position="top"><i class="${styleIconClass}"></i></span>`;
-    }
+  const streetName = location.loc?.street?.name || '';
+  const streetNumber = location.loc?.street?.number || '';
+  const streetExt = location.loc?.street?.ext || '';
+  const linkUrl = location.link?.url || '#';
+  const linkText = location.link?.text || linkUrl;
+  const countryName = location.loc?.country || '';
+  const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
+  const bookmarkIcon = bookmarkManager.createBookmarkIcon(location.ID, 'popup-bookmark');
 
-    const streetName = location.loc?.street?.name || '';
-    const streetNumber = location.loc?.street?.number || '';
-    const streetExt = location.loc?.street?.ext || '';
-    const linkUrl = location.link?.url || '#';
-    const linkText = location.link?.text || linkUrl;
-
-    const countryName = location.loc?.country || '';
-    const translatedCountry = window.i18n ? window.i18n.t(`countries.${countryName}`) : countryName;
-
-    const bookmarkIcon = window.bookmarkManager ?
-      window.bookmarkManager.createBookmarkIcon(location.ID, 'popup-bookmark') :
-      '';
-
-    return `
+  return `
             <div style="--status-color: ${statusColor};">
               <div class="popup-body-grid">
-                ${location.workshops && location.workshops.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${window.AppConfig.getWorkshopsTooltip(location.workshops)}" role="tooltip" data-microtip-position="top">${location.workshops.map(w => { const icon = window.AppConfig.getWorkshopIcon(w); return icon ? `<i class="${icon}"></i>` : ''; }).join('')}</div>` : ''}
+                ${location.workshops && location.workshops.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${AppConfig.getWorkshopsTooltip(location.workshops)}" role="tooltip" data-microtip-position="top">${location.workshops.map(w => { const icon = AppConfig.getWorkshopIcon(w); return icon ? `<i class="${icon}"></i>` : ''; }).join('')}</div>` : ''}
                 <div class="popup-style-cell">${styleIconHtml}</div>
                 <div class="popup-title-row">
                   <a id="titleurl" href="${linkUrl}" target="_blank">
@@ -915,20 +892,33 @@ function createMarkerForLocation(location) {
               </a>
               <a id="url" href="${linkUrl}" target="_blank"><b>${linkText}</b></a>
               `;
-  }, {
-    maxWidth: 440,
-    minWidth: 160,
-    autoPan: false
+}
+
+// --- Click Handler: Auto-Zoom-Prevention + Re-Tap-Schutz ---
+
+function _applyMarkerClickHandler(marker) {
+  marker.on('click', () => {
+    if (window.app?.searchHeader) {
+      window.app.searchHeader._manualSpaceClick = true;
+      clearTimeout(window.app.searchHeader.zoomDebounceTimeout);
+      setTimeout(() => { window.app.searchHeader._manualSpaceClick = false; }, 1000);
+    }
+    // Touch-Geräte: Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
+    if ('ontouchstart' in window && marker.isPopupOpen()) {
+      marker._retainPopup = true;
+    }
   });
+}
+
+// --- Popup Open: Sticky-Logic, URL-Navigation, Position, Hover-Enter ---
+
+function _applyPopupOpenHandler(marker, location) {
   marker.on('popupopen', (e) => {
-    // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!
     const wasOpenedByHover = marker._openedByHover;
 
     if (!wasOpenedByHover) {
-      // Popup wurde NICHT durch Hover geöffnet → Sofort sticky
       setStickyPopup(marker);
-
-      // Mobile: Entsprechendes Listing-Item im Dropdown als aktiv markieren
+      // Mobile: Listing-Item im Dropdown als aktiv markieren
       if (window.innerWidth <= 767) {
         const dropdown = document.getElementById('suggestions-dropdown');
         if (dropdown) {
@@ -942,14 +932,16 @@ function createMarkerForLocation(location) {
       }
     }
 
-    // Jetzt clearen (für nächstes Mal)
     marker._openedByHover = false;
 
-    // ✅ URL setzen wenn Popup STICKY ist
-    // Delay damit setStickyPopup() sicher ausgeführt wurde
+    // URL setzen wenn Popup sticky ist (Delay damit setStickyPopup sicher gelaufen ist)
     setTimeout(() => {
+      if (marker._openedByItemClick) {
+        marker._openedByItemClick = false;
+        marker._hasSetUrl = true;
+        return;
+      }
       if (currentStickyMarker === marker && isPopupSticky) {
-        // ✅ Popup ist sticky → URL setzen!
         if (window.routingManager && window.routingManager.navigateToLocations) {
           window.routingManager.navigateToLocations([location.ID]);
           marker._hasSetUrl = true;
@@ -961,37 +953,27 @@ function createMarkerForLocation(location) {
     const popupElement = popup._container;
     const logoElement = document.querySelector('.title');
 
+    // Popup-Klicks nicht an die Map durchleiten
     if (popupElement) {
       popupElement.addEventListener('mousedown', (event) => {
-        if (!event.target.closest('.leaflet-popup-close-button')) {
-          event.stopPropagation();
-        }
+        if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
       });
       popupElement.addEventListener('click', (event) => {
-        if (!event.target.closest('.leaflet-popup-close-button')) {
-          event.stopPropagation();
-        }
+        if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
       });
-      popupElement.addEventListener('dblclick', (event) => {
-        event.stopPropagation();
-      });
+      popupElement.addEventListener('dblclick', (event) => { event.stopPropagation(); });
     }
 
+    // Logo ausblenden wenn Popup überlappt
     if (popupElement && logoElement) {
       const popupRect = popupElement.getBoundingClientRect();
       const logoRect = logoElement.getBoundingClientRect();
-
-      const isOverlapping = !(popupRect.right < logoRect.left ||
-        popupRect.left > logoRect.right ||
-        popupRect.bottom < logoRect.top ||
-        popupRect.top > logoRect.bottom);
-
-      if (isOverlapping) {
-        logoElement.classList.add('popup-active');
-      }
+      const isOverlapping = !(popupRect.right < logoRect.left || popupRect.left > logoRect.right ||
+        popupRect.bottom < logoRect.top || popupRect.top > logoRect.bottom);
+      if (isOverlapping) logoElement.classList.add('popup-active');
     }
 
-    // Pan map if popup overlaps with active search dropdown
+    // Map seitlich verschieben wenn Popup das Dropdown überlappt
     if (popupElement && !wasOpenedByHover) {
       setTimeout(() => {
         const dropdown = document.getElementById('suggestions-dropdown');
@@ -1000,47 +982,35 @@ function createMarkerForLocation(location) {
         if (!searchContainer) return;
         const popupRect = popupElement.getBoundingClientRect();
         const containerRect = searchContainer.getBoundingClientRect();
-        const isOverlapping = !(popupRect.right < containerRect.left ||
-          popupRect.left > containerRect.right ||
-          popupRect.bottom < containerRect.top ||
-          popupRect.top > containerRect.bottom);
+        const isOverlapping = !(popupRect.right < containerRect.left || popupRect.left > containerRect.right ||
+          popupRect.bottom < containerRect.top || popupRect.top > containerRect.bottom);
         if (isOverlapping) {
           map.panBy([popupRect.right - containerRect.left + 12, 0], { animate: true, duration: 0.3 });
         }
       }, 350);
     }
 
+    // Maus-Enter ins Popup: Sticky setzen + URL
     if (popupElement) {
       const handlePopupEnter = () => {
         const state = window.markerStateManager.getState(marker.locationId);
-
         if (state.closeTimeout) {
           clearTimeout(state.closeTimeout);
           window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
         }
-
         if (currentStickyMarker !== marker) {
           window.markerStateManager.clearTimeouts(marker.locationId);
           setStickyPopup(marker);
-
-          // ✅ NEU: URL setzen nachdem Popup sticky wurde (durch Hover ins Popup)
           if (window.routingManager && window.routingManager.navigateToLocations) {
             window.routingManager.navigateToLocations([location.ID]);
             marker._hasSetUrl = true;
           }
         }
       };
-
       popupElement.removeEventListener('mouseenter', handlePopupEnter);
       popupElement.addEventListener('mouseenter', handlePopupEnter);
-
-      // ✅ OPTIMALE LÖSUNG: Nutze requestAnimationFrame
-      // Wartet auf nächsten Browser-Frame (wenn Popup garantiert gerendert ist)
       requestAnimationFrame(() => {
-        if (popupElement.matches(':hover')) {
-          // Maus ist bereits im Popup → Trigger handlePopupEnter
-          handlePopupEnter();
-        }
+        if (popupElement.matches(':hover')) handlePopupEnter();
       });
     }
 
@@ -1049,16 +1019,16 @@ function createMarkerForLocation(location) {
     const navLink = e.popup._container.querySelector('.navigation-icon');
     if (navLink) {
       updateNavigationIconAppearance(navLink, location);
-      navLink.addEventListener('click', (event) => {
-        handleNavigationClick(event, location);
-      });
+      navLink.addEventListener('click', (event) => { handleNavigationClick(event, location); });
     }
 
-    if (window.bookmarkManager) {
-      const popupContainer = e.popup._container;
-      window.bookmarkManager.initializeBookmarkListeners(popupContainer);
-    }
+    bookmarkManager.initializeBookmarkListeners(e.popup._container);
   });
+}
+
+// --- Popup Close: URL zurücksetzen, Sticky-State aufräumen ---
+
+function _applyPopupCloseHandler(marker) {
   marker.on('popupclose', () => {
     // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle)
     if (marker._retainPopup) {
@@ -1068,13 +1038,14 @@ function createMarkerForLocation(location) {
     }
 
     document.querySelector('.title').classList.remove('popup-active');
+
     // Mobile: Marker zurück in Cluster geben (war temporär direkt auf Map)
     if (marker._isTemporarilyUnclustered) {
       map.removeLayer(marker);
       marker._isTemporarilyUnclustered = false;
     }
 
-    // ✅ URL zurücksetzen wenn dieser Marker sticky war und URL gesetzt hatte
+    // URL zurücksetzen wenn dieser Marker sticky war
     if (marker._hasSetUrl && currentStickyMarker === marker) {
       if (window.routingManager && window.routingManager.clearLocationURL) {
         window.routingManager.clearLocationURL();
@@ -1087,7 +1058,12 @@ function createMarkerForLocation(location) {
       isPopupSticky = false;
     }
   });
-  marker.on('mouseover', (e) => {
+}
+
+// --- Hover: Popup öffnen (400ms), Sticky setzen (1500ms), Skalierung ---
+
+function _applyMarkerHoverHandlers(marker, location) {
+  marker.on('mouseover', () => {
     const state = window.markerStateManager.getState(marker.locationId);
     if (state.isHovering) return;
 
@@ -1098,11 +1074,7 @@ function createMarkerForLocation(location) {
       currentStickyMarker = null;
       isPopupSticky = false;
     }
-    allMarkers.forEach(m => {
-      if (m !== marker && m.isPopupOpen()) {
-        m.closePopup();
-      }
-    });
+    allMarkers.forEach(m => { if (m !== marker && m.isPopupOpen()) m.closePopup(); });
 
     window.markerStateManager.setState(marker.locationId, { isHovering: true });
     applyMarkerScale(marker, 1.15);
@@ -1119,8 +1091,6 @@ function createMarkerForLocation(location) {
       const currentState = window.markerStateManager.getState(marker.locationId);
       if (currentState.isHovering && marker.isPopupOpen()) {
         setStickyPopup(marker);
-
-        // ✅ NEU: URL setzen nachdem Popup sticky wurde
         if (window.routingManager && window.routingManager.navigateToLocations) {
           window.routingManager.navigateToLocations([location.ID]);
           marker._hasSetUrl = true;
@@ -1130,33 +1100,28 @@ function createMarkerForLocation(location) {
 
     window.markerStateManager.setState(marker.locationId, { hoverTimeout, stickyTimeout });
   });
-  marker.on('mouseout', (e) => {
+
+  marker.on('mouseout', () => {
     const state = window.markerStateManager.getState(marker.locationId);
     window.markerStateManager.setState(marker.locationId, { isHovering: false });
     window.markerStateManager.clearTimeouts(marker.locationId);
 
-    if (!state.isDropdownHovering) {
-      applyMarkerScale(marker, 1);
-    }
+    if (!state.isDropdownHovering) applyMarkerScale(marker, 1);
 
     const closeCheckTimeout = setTimeout(() => {
       if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
         marker.closePopup();
       }
-
       window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
-
       setTimeout(() => {
         if (!window.markerStateManager.isAnyHoverActive(marker.locationId)) {
           updateMarkerIcon(marker, location);
         }
       }, 50);
-
     }, 0);
 
     window.markerStateManager.setState(marker.locationId, { closeTimeout: closeCheckTimeout });
   });
-  allMarkers.push(marker);
 }
 // ============================================================================
 // OPTIMIERTE HILFSFUNKTIONEN: Nutzen ID statt find() - O(1) statt O(n)
@@ -1217,11 +1182,8 @@ function setupStyleFilter() {
   if (!window.StyleFilterManager) {
     return;
   }
-  styleFilterManager = new StyleFilterManager(window.json, allMarkers, icons, searchManager);
+  styleFilterManager = new StyleFilterManager(window.json, allMarkers, icons, window.app?.searchHeader);
   window.styleFilterManager = styleFilterManager;
-  if (searchManager) {
-    searchManager.setStyleFilterManager(styleFilterManager);
-  }
   const openCount = window.json.filter(loc => loc.isOpen === true).length;
   const closedCount = window.json.filter(loc => loc.isOpen === false).length;
   const unknownCount = window.json.filter(loc => loc.isOpen === null || loc.isOpen === undefined).length;
@@ -1234,19 +1196,12 @@ function setupSearch() {
     return;
   }
 
-  // ✨ NEU: Verwende AppMain.init() statt altem SearchManager
-  if (window.AppMain) {
-    window.AppMain.init({
-      map,
-      json: window.json,
-      allMarkers,
-      zfill
-    });
-    // searchManager wird von AppMain.init() gesetzt (Backward Compatibility)
-    searchManager = window.searchManager;
-  } else {
-    console.error('❌ AppMain not available');
-  }
+  initApp({
+    map,
+    json: window.json,
+    allMarkers,
+    zfill
+  });
 }
 function clearStickyPopup() {
   if (currentStickyMarker && isPopupSticky) {
@@ -1314,7 +1269,7 @@ function setupMapClickHandler() {
 function setupRouting() {
   const routingManager = new RoutingManager(
     window.styleFilterManager,
-    window.searchManager,
+    window.app?.searchHeader,
     window.json
   );
   window.routingManager = routingManager;
@@ -1389,6 +1344,7 @@ window.reportLocationIdStatus = function () {
 const init = async () => {
   try {
     await window.i18n.load('./lang.json');
+    bookmarkSync.init(window.translations);
     setupMap();
     initializeClustering();
     await loadData();
@@ -1400,7 +1356,7 @@ const init = async () => {
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {
     console.error('⛔ A critical error occurred during app initialization:', error);
-    alert('The application could not be started. Please check the developer console.');
+    alert('The application could not be started. Please check the developer console. — [F12]');
   }
 };
 

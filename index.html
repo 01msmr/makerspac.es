@@ -18,8 +18,6 @@
 
   <!-- Preload kritische Ressourcen (parallel zum HTML-Parsen) -->
   <link rel="preload" href="fonts/Roboto-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="locations.json" as="fetch" crossorigin />
-  <link rel="preload" href="status.json" as="fetch" crossorigin />
 
   <!-- Bibliotheks-CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
@@ -39,6 +37,9 @@
   <link rel="stylesheet" href="nearby.css" />
   <link rel="stylesheet" href="styles-autocomplete.css" />
 
+  <!-- Error Monitoring: so früh wie möglich laden (kein defer) -->
+  <script src="error-monitor.js"></script>
+
   <!-- Bibliotheks-JS: defer → paralleler Download, Ausführung nach DOM-Parsing -->
   <script defer src="libs/leaflet/leaflet.js"></script>
   <script defer src="libs/leaflet-markercluster/leaflet.markercluster.js"></script>
@@ -46,23 +47,7 @@
   <script defer src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
   <script defer src="libs/qrcode.min.js"></script>
 
-  <!-- App-JS: defer, Reihenfolge bleibt erhalten -->
-  <script defer src="utils.js"></script>
-  <script defer src="config.js"></script>
-  <script defer src="spaceapi-static.js"></script>
-  <script defer src="i18n.js"></script>
-  <script defer src="i18n-init.js"></script>
-  <script defer src="datasync.js"></script>
-  <script defer src="bookmark-manager.js"></script>
-  <script defer src="data-store.js"></script>
-  <script defer src="listing-core.js"></script>
-  <script defer src="zoom-manager.js"></script>
-  <script defer src="search-filter.js"></script>
-  <script defer src="search-header.js"></script>
-  <script defer src="nearby-header.js"></script>
-  <script defer src="embed.js"></script>
-  <script defer src="main.js"></script>
-  <script defer src="mobile-filter.js"></script>
+  <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->
   <script type="module" src="map.js"></script>
 
   <!-- Service Worker registrieren -->

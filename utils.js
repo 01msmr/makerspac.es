@@ -1,6 +1,6 @@
 // utils.js - Gemeinsame Hilfsfunktionen
 
-window.Utils = {
+export const Utils = {
   // PLZ-Formatierung
   zfill(plz, country) {
     const expectedLengths = {

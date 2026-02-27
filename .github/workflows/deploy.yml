@@ -32,6 +32,24 @@ jobs:
           fi
           echo "sha=$BASE" >> $GITHUB_OUTPUT
 
+      - name: SW-Version aktualisieren (max 1x täglich)
+        run: |
+          LAST=$(git log -1 --format="%as" -- sw.js 2>/dev/null || echo "1970-01-01")
+          TODAY=$(date +%Y-%m-%d)
+          if [ "$LAST" != "$TODAY" ]; then
+            CURRENT=$(sed -n "s/const VERSION = 'v\([0-9]*\)'.*/\1/p" sw.js)
+            NEW=$((CURRENT + 1))
+            sed -i "s/const VERSION = 'v${CURRENT}'/const VERSION = 'v${NEW}'/" sw.js
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add sw.js
+            git commit -m "bump SW version v${CURRENT} → v${NEW} [skip ci]"
+            git push
+            echo "✅ SW version bumped: v${CURRENT} → v${NEW}"
+          else
+            echo "ℹ️ SW version bereits heute aktualisiert (letzter Stand: $LAST)"
+          fi
+
       - name: Geänderte Dateien ermitteln
         id: changed
         run: |

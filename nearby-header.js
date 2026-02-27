@@ -1,10 +1,9 @@
 // nearby-header.js - Nearby-Popover-UI
 // Enthält: Popover mit Radius-Slider, Drag, Resize, Cursor-Hint
 
-(function() {
-  'use strict';
+import AppConfig from './config.js';
 
-  const CONFIG = window.AppConfig;
+const CONFIG = AppConfig;
 
   class NearbyHeader {
     constructor() {
@@ -1047,11 +1046,4 @@
 
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // GLOBALER EXPORT
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  window.NearbyHeader = NearbyHeader;
-
-
-})();
+export { NearbyHeader };

@@ -1,6 +1,6 @@
 // spaceapi-static.js - Lädt Status aus statischer JSON (GitHub Actions generiert)
 
-class StaticSpaceAPI {
+export class StaticSpaceAPI {
   constructor() {
     this.statusData = null;
     this.listeners = [];
@@ -138,6 +138,3 @@ class StaticSpaceAPI {
     return 0;
   }
 }
-
-// Export für globalen Zugriff
-window.StaticSpaceAPI = StaticSpaceAPI;

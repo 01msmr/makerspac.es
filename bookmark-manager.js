@@ -1,6 +1,9 @@
+import { consent } from './datasync.js';
+import AppConfig from './config.js';
+
 // bookmark-manager.js - Favoriten-Verwaltung mit LocalStorage
 
-class BookmarkManager {
+export class BookmarkManager {
   constructor() {
     this.storageKey = 'makerspace_bookmarks';
     this.bookmarks = new Set();
@@ -10,7 +13,7 @@ class BookmarkManager {
   // Lade Bookmarks aus LocalStorage
   loadBookmarks() {
     try {
-      const stored = window.consent.get(this.storageKey);
+      const stored = consent.get(this.storageKey);
       if (stored) {
         const bookmarksArray = JSON.parse(stored);
         this.bookmarks = new Set(bookmarksArray);
@@ -25,7 +28,7 @@ class BookmarkManager {
   saveBookmarks() {
     try {
       const bookmarksArray = Array.from(this.bookmarks);
-      window.consent.set(this.storageKey, JSON.stringify(bookmarksArray));
+      consent.set(this.storageKey, JSON.stringify(bookmarksArray));
     } catch (error) {
       console.error('❌ Error saving bookmarks:', error);
     }
@@ -66,8 +69,8 @@ class BookmarkManager {
 
     // ✅ REFACTORED: Nutze MapIcons.uiMap für Icon-Klassen
     const iconClass = isBookmarked
-      ? window.MapIcons.uiMap.BOOKMARK_FILLED
-      : window.MapIcons.uiMap.BOOKMARK_OUTLINE;
+      ? AppConfig.icons.ui.bookmarkFilled
+      : AppConfig.icons.ui.bookmarkOutline;
 
     const title = isBookmarked ?
       (window.i18n ? window.i18n.t('tooltips.removeBookmark') : 'Remove bookmark') :
@@ -175,4 +178,5 @@ class BookmarkManager {
 }
 
 // Globale Instanz erstellen
-window.bookmarkManager = new BookmarkManager();
+export const bookmarkManager = new BookmarkManager();
+window.bookmarkManager = bookmarkManager; // for backward-compat lazy access

@@ -1,9 +1,11 @@
 // data-store.js - Settings: Sprache, Farbschema, Clustering, Bookmarks, Consent
 
+import { consent } from './datasync.js';
+
 class DataStore {
   constructor() {
     // ✅ Lade Sprache SOFORT aus localStorage (synchron!)
-    const savedLang = window.consent.get('preferred_language');
+    const savedLang = consent.get('preferred_language');
     this.currentLanguage = savedLang || 'de'; // Fallback zu 'de'
 
 
@@ -151,7 +153,7 @@ class DataStore {
     // 2. DARK MODE SECTION
     const darkModeHeader = document.createElement('div');
     darkModeHeader.className = 'settings-header';
-    const currentMode = window.consent.get('color-scheme') || 'auto';
+    const currentMode = consent.get('color-scheme') || 'auto';
 
     darkModeHeader.innerHTML = `
       <div class="settings-header-content">
@@ -209,7 +211,7 @@ class DataStore {
     // 4. NAVIGATION SERVICE SECTION
     const navServiceHeader = document.createElement('div');
     navServiceHeader.className = 'settings-header';
-    const currentNavService = window.consent.get('mapService') || 'google';
+    const currentNavService = consent.get('mapService') || 'google';
 
     navServiceHeader.innerHTML = `
       <div class="settings-header-content">
@@ -227,8 +229,8 @@ class DataStore {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const service = btn.dataset.nav;
-        window.consent.set('mapService', service);
-        window.consent.remove('mapServiceTimestamp');
+        consent.set('mapService', service);
+        consent.remove('mapServiceTimestamp');
         navServiceHeader.querySelectorAll('[data-nav]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.querySelectorAll('.navigation-icon').forEach(navLink => {
@@ -484,7 +486,7 @@ class DataStore {
 
   // Color Scheme
   setColorScheme(mode) {
-    window.consent.set('color-scheme', mode);
+    consent.set('color-scheme', mode);
     if (mode === 'auto') {
       document.documentElement.removeAttribute('data-color-scheme');
     } else {
@@ -520,7 +522,7 @@ class DataStore {
   }
 
   loadColorScheme() {
-    const mode = window.consent.get('color-scheme') || 'auto';
+    const mode = consent.get('color-scheme') || 'auto';
     this.setColorScheme(mode);
   }
 
@@ -528,7 +530,7 @@ class DataStore {
   changeLanguage(langCode) {
     this.currentLanguage = langCode;
     window.currentLanguage = langCode;
-    window.consent.set('preferred_language', langCode);
+    consent.set('preferred_language', langCode);
 
     if (window.i18n) {
       window.i18n.setLanguage(langCode);
@@ -536,7 +538,7 @@ class DataStore {
 
     if (window.bookmarkSync && typeof window.bookmarkSync.syncSettings === 'function') {
       window.bookmarkSync.syncSettings({
-        colorScheme: window.consent.get('color-scheme') || 'auto',
+        colorScheme: consent.get('color-scheme') || 'auto',
         language: langCode
       });
     }
@@ -573,7 +575,7 @@ class DataStore {
       headers[5].textContent = this.t('savedSettings');
     }
 
-    const currentService = window.consent.get('mapService') || 'google';
+    const currentService = consent.get('mapService') || 'google';
     this.settingsPopover.querySelectorAll('[data-nav]').forEach(b => {
       b.classList.toggle('active', b.dataset.nav === currentService);
     });
@@ -616,7 +618,7 @@ class DataStore {
   }
 
   _getConsentStateText() {
-    const state = window.consent?._state || 'unknown';
+    const state = consent._state || 'unknown';
     if (state === 'accepted') return this.t('storageAllowed');
     if (state === 'declined') return this.t('storageDenied');
     return this.t('storageNotSet');
@@ -632,7 +634,7 @@ class DataStore {
   }
 
   loadLanguagePreference() {
-    const savedLang = window.consent.get('preferred_language');
+    const savedLang = consent.get('preferred_language');
     if (!savedLang && window.i18n && window.i18n.currentLang) {
       this.currentLanguage = window.i18n.currentLang;
     }
@@ -644,8 +646,8 @@ class DataStore {
 
   encodeSettingsHash() {
     const colorSchemes = ['auto', 'light', 'dark'];
-    const cs = colorSchemes.indexOf(window.consent.get('color-scheme') || 'auto');
-    const lang = window.consent.get('preferred_language') || 'de';
+    const cs = colorSchemes.indexOf(consent.get('color-scheme') || 'auto');
+    const lang = consent.get('preferred_language') || 'de';
 
     let hash = `#s=${Math.max(0, cs)}${lang}`;
 
@@ -705,6 +707,5 @@ class DataStore {
   }
 }
 
-// Initialize
-window.dataStore = new DataStore();
-// window.languageSwitcher = window.dataStore; // Rückwärtskompatibilität
+export { DataStore };
+export const dataStore = new DataStore();

@@ -1,10 +1,15 @@
 // main.js - Orchestrator für makerspac.es
 // Initialisiert und verbindet alle Module
 
-(function() {
-  'use strict';
+import AppConfig from './config.js';
+import { ListingCore } from './listing-core.js';
+import { SearchFilter } from './search-filter.js';
+import { SearchHeader } from './search-header.js';
+import { NearbyHeader } from './nearby-header.js';
+import { zoomManager } from './zoom-manager.js';
+import { MobileFilterUI } from './mobile-filter.js';
 
-  const CONFIG = window.AppConfig;
+const CONFIG = AppConfig;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // LEAFLET ICON FACTORY
@@ -152,26 +157,24 @@
     // ═══════════════════════════════════════════════════════════════════════
 
     // 1. ListingCore (Gemeinsame Item-Darstellung)
-    const listingCore = new window.ListingCore();
+    const listingCore = new ListingCore();
 
     // 2. SearchFilter (Such- und Filter-Logik)
-    const searchFilter = new window.SearchFilter(json, allMarkers, icons);
+    const searchFilter = new SearchFilter(json, allMarkers, icons);
 
     // 3. ZoomManager initialisieren
-    if (window.zoomManager) {
-      window.zoomManager.init(map);
-    }
+    zoomManager.init(map);
 
     // 4. SearchHeader (Searchbar-UI)
-    const searchHeader = new window.SearchHeader({
+    const searchHeader = new SearchHeader({
       map,
       json,
       zfill
     });
-    searchHeader.init(listingCore, searchFilter, window.zoomManager);
+    searchHeader.init(listingCore, searchFilter, zoomManager);
 
     // 5. NearbyHeader (Nearby-Popover-UI)
-    const nearbyHeader = new window.NearbyHeader();
+    const nearbyHeader = new NearbyHeader();
     nearbyHeader.init(map, listingCore);
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -183,53 +186,15 @@
       searchFilter,
       searchHeader,
       nearbyHeader,
-      zoomManager: window.zoomManager,
+      zoomManager,
       config: CONFIG,
       icons
     };
 
     // Mobile Filter UI
-    if (window.MobileFilterUI) {
-      window.app.mobileFilterUI = new window.MobileFilterUI();
-      window.app.mobileFilterUI.init();
-    }
-
-    // Backward Compatibility: window.searchManager
-    window.searchManager = {
-      // Referenz auf SearchHeader
-      _header: searchHeader,
-      _filter: searchFilter,
-      _listingCore: listingCore,
-
-      // Methoden für Backward Compatibility
-      applyHoverEffects: (item, location, weight) => listingCore.applyHoverEffects(item, location, weight),
-      removeHoverEffects: (location) => listingCore.removeHoverEffects(location),
-      updateHoverSVGPosition: () => listingCore.updateHoverSVGPosition(),
-      createConnectionLine: (item, marker, color, weight) => listingCore.createConnectionLine(item, marker, color, weight),
-      removeConnectionLine: () => listingCore.removeConnectionLine(),
-      cleanupHoverSVG: () => listingCore.cleanupHoverSVG(),
-      clearSearch: (focus) => searchHeader.clearSearch(focus),
-      applyPillFilters: (pills) => searchHeader.triggerFilterUpdate(),
-      closeDropdown: () => searchHeader.closeDropdown(),
-      createSuggestionItems: (locations, idMatch) => searchHeader.createSuggestionItems(locations, idMatch),
-      updateSearchCounter: (count) => searchHeader.updateSearchCounter(count),
-      updateDropdownUI: (show) => searchHeader.updateDropdownUI(show),
-      executeRightClickCleanup: () => {
-        searchHeader._manualSpaceClick = true;
-        searchHeader.closeDropdown();
-        if (document.activeElement === searchHeader.searchBar) {
-          searchHeader.searchBar.blur();
-        }
-        setTimeout(() => { searchHeader._manualSpaceClick = false; }, 100);
-      },
-      setStyleFilterManager: () => {}, // Nicht mehr nötig
-
-      // Getters für Kompatibilität
-      get styleFilterManager() { return searchFilter; },
-      get searchBar() { return searchHeader.searchBar; },
-      get pillsManager() { return searchHeader.pillsManager; },
-      get autocompleteManager() { return searchHeader.autocompleteManager; }
-    };
+    window.app.mobileFilterUI = new MobileFilterUI();
+    window.app.mobileFilterUI.init();
+    window.mobileFilterUI = window.app.mobileFilterUI;
 
     // Backward Compatibility: window.styleFilterManager
     window.styleFilterManager = searchFilter;
@@ -256,29 +221,7 @@
    * Für schrittweise Migration
    */
   function initLegacyMode(map, allMarkers, json, icons, zfill) {
-
-    // Wenn die neuen Module nicht geladen sind, nutze alte
-    if (!window.ListingCore || !window.SearchFilter || !window.SearchHeader) {
-      return null;
-    }
-
     return initApp({ map, json, allMarkers, zfill });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // GLOBALER EXPORT
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  window.AppMain = {
-    init: initApp,
-    initLegacy: initLegacyMode,
-    createLeafletIcon,
-    initializeLeafletIcons,
-    get icons() {
-      return initializeLeafletIcons();
-    },
-    CONFIG
-  };
-
-
-})();
+export { initApp, initLegacyMode, createLeafletIcon, initializeLeafletIcons };

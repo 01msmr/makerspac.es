@@ -190,7 +190,7 @@ class ConsentManager {
 }
 
 // Globale Instanz
-window.consent = new ConsentManager();
+export const consent = new ConsentManager();
 
 // Hash frühzeitig decodieren → localStorage schreiben, bevor BookmarkManager liest
 (function applySettingsFromHash() {
@@ -215,7 +215,7 @@ window.consent = new ConsentManager();
  * BookmarkSync - anonyme Synchronisierung
  * ================================================================= */
 
-class BookmarkSync {
+export class BookmarkSync {
   constructor(bookmarkManager) {
     this.bookmarkManager = bookmarkManager;
     window.translations = null;
@@ -567,12 +567,12 @@ class BookmarkSync {
    */
   syncSettings(settings) {
     const currentSettings = {
-      colorScheme: settings.colorScheme || window.consent.get('color-scheme') || 'auto',
-      language: settings.language || window.consent.get('preferred_language') || 'de'
+      colorScheme: settings.colorScheme || consent.get('color-scheme') || 'auto',
+      language: settings.language || consent.get('preferred_language') || 'de'
     };
 
     // Speichern
-    window.consent.set('user-settings', JSON.stringify(currentSettings));
+    consent.set('user-settings', JSON.stringify(currentSettings));
 
   }
 
@@ -587,7 +587,7 @@ class BookmarkSync {
       if (data.settings) {
         // Color Scheme anwenden
         if (data.settings.colorScheme) {
-          window.consent.set('color-scheme', data.settings.colorScheme);
+          consent.set('color-scheme', data.settings.colorScheme);
           if (window.languageSwitcher) {
             window.languageSwitcher.setColorScheme(data.settings.colorScheme);
           }
@@ -595,7 +595,7 @@ class BookmarkSync {
 
         // Sprache anwenden
         if (data.settings.language) {
-          window.consent.set('preferred_language', data.settings.language);
+          consent.set('preferred_language', data.settings.language);
           if (window.languageSwitcher) {
             window.languageSwitcher.changeLanguage(data.settings.language);
           }
@@ -613,7 +613,7 @@ class BookmarkSync {
    */
   generateSyncDataWithSettings() {
     const bookmarks = this.bookmarkManager ? this.bookmarkManager.getBookmarkedIds() : [];
-    const settings = JSON.parse(window.consent.get('user-settings') || '{}');
+    const settings = JSON.parse(consent.get('user-settings') || '{}');
 
     const syncData = {
       bookmarks: bookmarks,
@@ -625,28 +625,3 @@ class BookmarkSync {
   }
 }
 
-// Global instance
-window.BookmarkSync = BookmarkSync;
-
-
-
-// ✅ AUTO-INIT
-
-const initBookmarkSync = () => {
-  if (window.bookmarkManager) {
-    window.bookmarkSync = new BookmarkSync(window.bookmarkManager);
-
-    // Warte auf Translations
-    const checkTranslations = setInterval(() => {
-      if (window.translations && window.translations.sync) {
-        window.bookmarkSync.init(window.translations);
-        clearInterval(checkTranslations);
-      }
-    }, 50);
-  } else {
-    setTimeout(initBookmarkSync, 100);
-  }
-};
-
-// Starte Init
-setTimeout(initBookmarkSync, 100);

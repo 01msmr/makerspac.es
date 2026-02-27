@@ -1,10 +1,9 @@
 // search-header.js - Search UI-Komponenten
 // Enthält: SearchPillsManager, AutocompleteManager, SearchHeader
 
-(function() {
-  'use strict';
+import AppConfig from './config.js';
 
-  const CONFIG = window.AppConfig;
+const CONFIG = AppConfig;
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // SEARCH PILLS MANAGER
@@ -364,9 +363,7 @@
       this.styleFilterManager.applyFilters();
       this.styleFilterManager.updateCounter?.();
 
-      if (window.searchManager) {
-        window.searchManager.createActiveFiltersSection?.();
-      }
+      window.app?.searchHeader?.createActiveFiltersSection?.();
     }
 
     show() {
@@ -639,6 +636,11 @@
       const query = this.searchBar.value.trim();
       const filtered = this.searchFilter.filterByText(query, pills, this.zfill);
       this.searchFilter.applyPreFilters(filtered);
+    }
+
+    applyPillFilters(pillsArray) {
+      this.pillsManager?.loadPills(pillsArray);
+      this.triggerFilterUpdate();
     }
 
     handleEnterKey() {
@@ -1280,7 +1282,7 @@
     // ═══════════════════════════════════════════════════════════════════════════
 
     handleItemClick(location) {
-      const isMobile = window.innerWidth <= 767;
+      const isMobile = window.innerWidth <= 767 || ('ontouchstart' in window);
 
       // Doppelklick / Doppeltap erkennen
       if (!this._clickTimestamps) this._clickTimestamps = {};
@@ -1317,11 +1319,17 @@
         }
 
         const popupWasAlreadyOpen = targetMarker.isPopupOpen();
+        targetMarker._openedByItemClick = true; // Signal an popupopen: Navigation direkt hier erledigt
         targetMarker.openPopup();
         // Nur sticky setzen wenn Popup schon offen war (dann feuert popupopen nicht nochmal).
         // War es zu, übernimmt der popupopen-Handler das setStickyPopup.
         if (popupWasAlreadyOpen && window.mapUtils?.setStickyPopup) {
           window.mapUtils.setStickyPopup(targetMarker);
+        }
+
+        // URL direkt setzen – eliminiert Race Condition mit dem 50ms-Timer in popupopen
+        if (window.routingManager) {
+          window.routingManager.navigateToLocations([location.ID]);
         }
       }
 
@@ -1491,13 +1499,4 @@
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // GLOBALE EXPORTS
-  // ═══════════════════════════════════════════════════════════════════════════════
-
-  window.SearchPillsManager = SearchPillsManager;
-  window.AutocompleteManager = AutocompleteManager;
-  window.SearchHeader = SearchHeader;
-
-
-})();
+export { SearchPillsManager, AutocompleteManager, SearchHeader };

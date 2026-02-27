@@ -1,6 +1,6 @@
 // i18n.js - Simple translation helper
 
-class I18n {
+export class I18n {
   constructor() {
     this.translations = {};
     this.currentLang = 'en'; // Default
@@ -153,10 +153,3 @@ class I18n {
     return path; // Fallback
   }
 }
-
-// Usage example:
-// const i18n = new I18n();
-// await i18n.load();
-// console.log(i18n.t('filter.style')); // "Style" (if en)
-// i18n.setLanguage('de');
-// console.log(i18n.t('filter.style')); // "Stil"

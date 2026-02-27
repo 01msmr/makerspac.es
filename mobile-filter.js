@@ -1,4 +1,4 @@
-'use strict';
+import AppConfig from './config.js';
 
 class MobileFilterUI {
   constructor() {
@@ -275,7 +275,7 @@ class MobileFilterUI {
   }
 
   getOptions(key) {
-    const fc = window.AppConfig?.filterCategories;
+    const fc = AppConfig.filterCategories;
     if (key === 'weekly')    return [...(fc?.weekly?.options || []), 'any'];
     if (key === 'country')   return window.app?.searchFilter?.getUniqueCountries?.() || [];
     if (key === 'bookmarks') return ['bookmarked'];
@@ -297,7 +297,7 @@ class MobileFilterUI {
 
   // ISO-Code für fi fi-XX Flag-Icons
   getCountryCode(countryName) {
-    const code = window.AppConfig?.getCountryCode?.(countryName);
+    const code = AppConfig.getCountryCode(countryName);
     return (!code || code === 'un') ? null : code;
   }
 
@@ -478,7 +478,7 @@ class MobileFilterUI {
       ? `<span class="filter-pill filter-pill-clear-all mf-clear-all-btn" role="tooltip"
              data-microtip-position="top-left"
              aria-label="${window.i18n?.t('filter.clearAll') || 'clear all filters'}">
-           <i class="${window.AppConfig?.icons?.ui?.close || 'fas fa-xmark'}"></i>
+           <i class="${AppConfig.icons.ui.close}"></i>
          </span>`
       : '';
 
@@ -626,4 +626,4 @@ class MobileFilterUI {
   }
 }
 
-window.MobileFilterUI = MobileFilterUI;
+export { MobileFilterUI };

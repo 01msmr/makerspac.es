@@ -1,5 +1,7 @@
 // embed.js - Präzise Zentrierung mit Sidebar-Offset
 
+import { I18n } from './i18n.js';
+
 class EmbedMapExtended {
   constructor() {
     const params = new URLSearchParams(window.location.search);
@@ -30,11 +32,9 @@ class EmbedMapExtended {
 
   async init() {
     try {
-      // i18n laden (falls verfügbar)
-      if (typeof I18n !== 'undefined') {
-        window.i18n = new I18n();
-        await window.i18n.load();
-      }
+      // i18n laden
+      window.i18n = new I18n();
+      await window.i18n.load();
       await this.loadData();
       this.createMap();
       this.createMarkers();
