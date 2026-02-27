@@ -705,6 +705,61 @@ async function loadData() {
   }
 }
 
+// Positioniert das Popup smart:
+// - Horizontal: verschiebt content-wrapper seitlich (Pfeil bleibt am Marker)
+//   maxShift = wrapperBreite/2 − borderRadius (Pfeil bleibt auf der flachen Kante)
+// - Vertikal: spiegelt das Popup unter den Marker wenn es oben aus dem Screen ragt
+//   Nutzt CSS `translate`-Property (unabhängig von Leaflet's `transform`) + CSS-Variable
+function adjustPopupPosition(popup, map) {
+  const el = popup._container;
+  if (!el) return;
+
+  const wrapper = el.querySelector('.leaflet-popup-content-wrapper');
+  if (!wrapper) return;
+
+  // Reset
+  wrapper.style.transform = '';
+  el.classList.remove('popup-flipped');
+  el.style.removeProperty('--flip-dy');
+
+  const mapRect = map.getContainer().getBoundingClientRect();
+  const popupRect = el.getBoundingClientRect();
+  const wrapperRect = wrapper.getBoundingClientRect();
+  const br = parseFloat(getComputedStyle(wrapper).borderRadius) || 12;
+  // maxShift: Pfeil muss auf der flachen Kante bleiben → wrapperBreite/2 − borderRadius
+  const maxShift = wrapperRect.width / 2 - br;
+  const pad = 10;
+
+  // Vertikal: Popup über Oberkante → unter den Marker spiegeln
+  // CSS `translate` addiert sich zu Leaflet's `transform` (beide Properties wirken unabhängig)
+  // flipDy in Screen-Koordinaten: Popup-Oberkante → Marker-Y (Tip zeigt dann nach oben zum Marker)
+  const overflowTop = (mapRect.top + pad) - popupRect.top;
+  if (overflowTop > 0) {
+    const markerContainerPt = map.latLngToContainerPoint(popup.getLatLng());
+    const markerScreenY = mapRect.top + markerContainerPt.y;
+    const flipDy = markerScreenY - popupRect.top + 15;
+    el.style.setProperty('--flip-dy', `${flipDy}px`);
+    el.classList.add('popup-flipped');
+  }
+
+  // Horizontal: Popup links/rechts aus dem Container
+  const overflowL = (mapRect.left + pad) - wrapperRect.left;
+  const overflowR = wrapperRect.right - (mapRect.right - pad);
+
+  let shift = 0;
+  if (overflowL > 0) {
+    shift = Math.min(overflowL, maxShift);
+    const extra = overflowL - shift;
+    if (extra > 0) map.panBy([-extra, 0], { animate: true, duration: 0.3 });
+  } else if (overflowR > 0) {
+    shift = -Math.min(overflowR, maxShift);
+    const extra = overflowR - Math.abs(shift);
+    if (extra > 0) map.panBy([extra, 0], { animate: true, duration: 0.3 });
+  }
+
+  if (shift !== 0) wrapper.style.transform = `translateX(${shift}px)`;
+}
+
 function createMarkerForLocation(location) {
   const lat = location.loc?.lat;
   const lng = location.loc?.long;
@@ -825,8 +880,7 @@ function createMarkerForLocation(location) {
   }, {
     maxWidth: 440,
     minWidth: 160,
-    autoPanPaddingTopLeft: L.point(12, 12),
-    autoPanPaddingBottomRight: L.point(12, 54)
+    autoPan: false
   });
   marker.on('popupopen', (e) => {
     // ✅ WICHTIG: _openedByHover VOR dem Clearen prüfen!
@@ -952,6 +1006,8 @@ function createMarkerForLocation(location) {
       });
     }
 
+    requestAnimationFrame(() => adjustPopupPosition(popup, map));
+
     const navLink = e.popup._container.querySelector('.navigation-icon');
     if (navLink) {
       updateNavigationIconAppearance(navLink, location);
@@ -967,7 +1023,6 @@ function createMarkerForLocation(location) {
   });
   marker.on('popupclose', () => {
     document.querySelector('.title').classList.remove('popup-active');
-
     // Mobile: Marker zurück in Cluster geben (war temporär direkt auf Map)
     if (marker._isTemporarilyUnclustered) {
       map.removeLayer(marker);

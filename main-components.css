@@ -385,6 +385,23 @@
   }
 }
 
+/* Popup-Flip: Popup unter den Marker wenn oben kein Platz */
+/* CSS `translate` ist unabhängig von Leaflet's `transform` — beide addieren sich */
+.leaflet-popup.popup-flipped {
+  translate: -2px var(--flip-dy, 0px);
+}
+
+.leaflet-popup.popup-flipped .leaflet-popup-tip-container {
+  position: absolute;
+  top: 0;
+  bottom: auto;
+  transform: rotate(180deg);
+}
+
+.leaflet-popup.popup-flipped .leaflet-popup-content-wrapper {
+  margin-top: 20px; /* Platz für den nach oben gerichteten Pfeil */
+}
+
 @keyframes popupFadeOut {
   0% {
     opacity: 1;
