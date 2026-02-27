@@ -31,4 +31,4 @@ jobs:
             -u "$FTP_USER:$FTP_PASS" \
             "ftp://$FTP_HOST/status.json" \
             --ssl --insecure --ftp-pasv \
-            --silent --show-error
+            --silent --show-error --retry 3 --retry-delay 10
