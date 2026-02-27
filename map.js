@@ -498,7 +498,7 @@ function setupMap() {
   map = new L.Map('map', {
     maxZoom: 18,
     zoomControl: false,
-    closePopupOnClick: window.innerWidth > 767, // Mobile: false (verhindert sofortiges Schließen), Desktop: true (Standard)
+    closePopupOnClick: !('ontouchstart' in window), // Touch-Geräte (Phone + Tablet): false, Desktop: true
   });
 
   window.map = map;
@@ -733,7 +733,7 @@ function adjustPopupPosition(popup, map) {
   // UI-Elemente die den nutzbaren Kartenbereich einschränken
   const uiRects = ['.title-bar', '.search-container', '#suggestions-dropdown.is-active']
     .map(sel => document.querySelector(sel))
-    .filter(el => el && el.offsetParent !== null)
+    .filter(Boolean)
     .map(el => el.getBoundingClientRect())
     .filter(r => r.width > 0 && r.height > 0);
 
@@ -815,7 +815,7 @@ function createMarkerForLocation(location) {
   // ✅ OPTIMIERUNG: Speichere Marker im globalen Index für schnellen Zugriff
   window.markerById.set(location.ID, marker);
 
-  // ✅ NEU: Click-Handler für Auto-Zoom-Prevention
+  // ✅ NEU: Click-Handler für Auto-Zoom-Prevention + Re-Tap-Schutz
   marker.on('click', () => {
     // ✅ SAUBERE LÖSUNG: Verhindere Auto-Zoom bei Marker-Klick
     if (window.searchManager) {
@@ -826,6 +826,11 @@ function createMarkerForLocation(location) {
       setTimeout(() => {
         window.searchManager._manualSpaceClick = false;
       }, 1000);
+    }
+
+    // Touch-Geräte: Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
+    if ('ontouchstart' in window && marker.isPopupOpen()) {
+      marker._retainPopup = true;
     }
     // URL-Update erfolgt automatisch durch popupopen-Event ✅
   });
@@ -1055,6 +1060,13 @@ function createMarkerForLocation(location) {
     }
   });
   marker.on('popupclose', () => {
+    // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle)
+    if (marker._retainPopup) {
+      marker._retainPopup = false;
+      requestAnimationFrame(() => marker.openPopup());
+      return;
+    }
+
     document.querySelector('.title').classList.remove('popup-active');
     // Mobile: Marker zurück in Cluster geben (war temporär direkt auf Map)
     if (marker._isTemporarilyUnclustered) {
@@ -1256,6 +1268,36 @@ function setupMapClickHandler() {
       clearStickyPopup();
     }
   });
+
+  // 2-Finger-Doppeltap: eine Stufe herauszoomen (Phone + Tablet)
+  if ('ontouchstart' in window) {
+    let prevTwoFingerEnd = 0;
+    let twoFingerMoved = false;
+    const mapContainer = map.getContainer();
+
+    mapContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) twoFingerMoved = false;
+    }, { passive: true });
+
+    mapContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) twoFingerMoved = true;
+    }, { passive: true });
+
+    mapContainer.addEventListener('touchend', (e) => {
+      // Beide Finger gleichzeitig gehoben, keiner verbleibend
+      if (e.touches.length !== 0) return;
+      if (e.changedTouches.length < 2) return;
+      if (twoFingerMoved) { twoFingerMoved = false; return; } // War Pinch, kein Tap
+
+      const now = Date.now();
+      if (now - prevTwoFingerEnd < 350) {
+        map.zoomOut(1);
+        prevTwoFingerEnd = 0;
+      } else {
+        prevTwoFingerEnd = now;
+      }
+    }, { passive: true });
+  }
 
   // ✅ RECHTSKLICK - Nearby-Popover wird in nearby-header.js gehandhabt
   // Hier nur sticky Popup schließen, KEIN ESC-Cleanup mehr
