@@ -1359,18 +1359,19 @@ const CONFIG = AppConfig;
         }
         // Kein Auto-Zoom beim Tap auf ein Listing-Item – nur Marker öffnen
       } else {
-        // Desktop: flyTo; bei Doppelklick zusätzlich filtern + Namen eintragen
+        // Desktop: flyTo + Namen in Searchbar + Dropdown auf diesen Eintrag einschränken
         if (targetMarker) {
           this.zoomManager?.map?.flyTo(targetMarker.getLatLng(), 13, { duration: 1.0 });
         }
-        if (isDoubleClick) {
-          this.searchFilter.applyPreFilters([location]);
-          this.searchBar.value = location.name;
-          this.createSuggestionItems([location], null);
-          this.updateSearchCounter(1);
-          this.updateDropdownUI(true);
-          const activeItem = this.suggestionsDropdown.querySelector('.listing-item');
-          if (activeItem) activeItem.classList.add('active');
+        this.searchFilter.applyPreFilters([location]);
+        this.searchBar.value = location.name;
+        this.createSuggestionItems([location], null);
+        this.updateSearchCounter(1);
+        this.updateDropdownUI(true);
+        const activeItem = this.suggestionsDropdown.querySelector('.listing-item');
+        if (activeItem) {
+          activeItem.classList.add('active');
+          if (this.listingCore) this.listingCore.currentHoverItem = activeItem;
         }
       }
 
