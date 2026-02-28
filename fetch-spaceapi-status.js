@@ -1,6 +1,8 @@
 // scripts/fetch-spaceapi-status.js - OPTIMIERT + liest aus locations.json
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ✨ KEINE DOPPELTE PFLEGE MEHR!
 // SpaceAPI Endpoints werden direkt aus locations.json gelesen
