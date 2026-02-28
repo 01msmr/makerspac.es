@@ -73,10 +73,15 @@ const DATA_URLS = [
 ];
 
 // ─── Install: alle statischen Assets precachen ────────────────────────────────
+// Einzelne cache.add() mit Catch statt cache.addAll() — ein 404 bricht nicht alles ab.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_STATIC)
-      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(cache => Promise.all(
+        STATIC_ASSETS.map(url =>
+          cache.add(url).catch(() => console.warn(`SW: Precache miss – ${url}`))
+        )
+      ))
       .then(() => self.skipWaiting())
   );
 });
