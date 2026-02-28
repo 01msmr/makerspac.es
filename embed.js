@@ -313,7 +313,7 @@ class EmbedMapExtended {
       const weeklyTooltip = _t('weekly.tooltip') || 'wöchentliches Treffen';
       const timeStr = String(space.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
       const timeSuffix = _t('weekly.timeSuffix') || '';
-      meetingHtml = `<span class="listing-meeting-today" aria-label="${weeklyTooltip}: ${timeStr}${timeSuffix}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-calendar-day"></i> ${todayLabel}</span>`;
+      meetingHtml = `<span class="listing-meeting-today" aria-label="◷ ${timeStr}${timeSuffix} — ${weeklyTooltip}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-calendar-day"></i> ${todayLabel}</span>`;
     }
 
     const workshopsCount = space.workshops ? space.workshops.length : 0;
