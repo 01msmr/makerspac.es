@@ -1,0 +1,24 @@
+name: "✅ Validate & Test"
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate locations.json schema
+        run: node tests/validate-locations.js
+
+      - name: Run unit tests
+        run: node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js

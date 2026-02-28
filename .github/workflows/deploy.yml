@@ -32,6 +32,40 @@ jobs:
           fi
           echo "sha=$BASE" >> $GITHUB_OUTPUT
 
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: JSON-Splits generieren
+        run: node generate-map-splits.js
+
+      - name: Split-Dateien zu Netcup hochladen
+        env:
+          FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}
+          FTP_USER: ${{ secrets.NETCUP_FTP_USER }}
+          FTP_PASS: ${{ secrets.NETCUP_FTP_PASSWORD }}
+        run: |
+          # data/-Verzeichnis auf Server anlegen
+          curl --ipv4 \
+            -u "$FTP_USER:$FTP_PASS" \
+            "ftp://$FTP_HOST/data/" \
+            --ftp-create-dirs \
+            --ssl --insecure --ftp-pasv \
+            --silent --show-error \
+            -Q "CWD /data" 2>/dev/null || true
+
+          for file in data/markers.json data/spaces-*.json data/splits-manifest.json; do
+            [ -f "$file" ] || continue
+            echo "Uploading: $file"
+            curl --ipv4 -T "$file" \
+              -u "$FTP_USER:$FTP_PASS" \
+              "ftp://$FTP_HOST/$file" \
+              --ftp-create-dirs \
+              --ssl --insecure --ftp-pasv \
+              --silent --show-error
+          done
+
       - name: SW-Version aktualisieren (max 1x täglich)
         run: |
           LAST=$(git log -1 --format="%as" -- sw.js 2>/dev/null || echo "1970-01-01")

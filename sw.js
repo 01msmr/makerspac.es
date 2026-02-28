@@ -38,6 +38,9 @@ const STATIC_ASSETS = [
   '/app-context.js',
   '/error-monitor.js',
   '/utils.js',
+  '/colours.js',
+  '/workshop-types.js',
+  '/filter-config.js',
   '/config.js',
   '/spaceapi-static.js',
   '/i18n.js',
@@ -65,6 +68,8 @@ const STATIC_ASSETS = [
 const DATA_URLS = [
   '/locations.json',
   '/status.json',
+  '/data/markers.json',
+  '/data/splits-manifest.json',
 ];
 
 // ─── Install: alle statischen Assets precachen ────────────────────────────────
@@ -106,7 +111,8 @@ self.addEventListener('fetch', event => {
   }
 
   // JSON-Daten → Stale-While-Revalidate
-  if (DATA_URLS.some(u => path.endsWith(u))) {
+  // DATA_URLS: exakte Pfad-Matches; zusätzlich /data/spaces-*.json per Regex
+  if (DATA_URLS.some(u => path.endsWith(u)) || /^\/data\/spaces-[a-z]+\.json$/.test(path)) {
     event.respondWith(staleWhileRevalidate(request, CACHE_DATA));
     return;
   }

@@ -6,6 +6,11 @@ import { appContext } from './app-context.js';
 // Reine Geschäftslogik ohne UI-Komponenten
 
 class SearchFilter {
+  /**
+   * @param {import('./app-context.js').Location[]} json - Alle Makerspace-Einträge
+   * @param {Object[]} allMarkers - Leaflet-Marker-Array
+   * @param {{ greenIcon, redIcon, unknownStatusIcon, highlightIcon }} icons
+   */
   constructor(json, allMarkers, icons) {
     this.json = json;
     this.allMarkers = allMarkers;
@@ -101,7 +106,8 @@ class SearchFilter {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Wählt einen Style-Filter aus/ab
+   * Wählt einen Style-Filter aus/ab und wendet Filter sofort an.
+   * @param {string} style - z.B. 'for all', 'commercial', 'open'
    */
   toggleStyleSelection(style) {
     if (this.selectedStyles.has(style)) {
@@ -113,7 +119,9 @@ class SearchFilter {
   }
 
   /**
-   * Setzt einen Style-Filter
+   * Setzt einen Style-Filter (ohne sofortigen applyFilters()-Aufruf).
+   * @param {string} style
+   * @param {boolean} active
    */
   setStyleFilter(style, active) {
     if (active) {
@@ -131,14 +139,16 @@ class SearchFilter {
   }
 
   /**
-   * Prüft ob Filter aktiv sind
+   * Prüft ob irgendein Style-Filter aktiv ist.
+   * @returns {boolean}
    */
   hasActiveFilters() {
     return this.selectedStyles.size > 0;
   }
 
   /**
-   * Gibt aktive Filter zurück
+   * Gibt aktive Filter als Array zurück.
+   * @returns {string[]}
    */
   getSelectedStyles() {
     return Array.from(this.selectedStyles);
@@ -327,7 +337,8 @@ class SearchFilter {
   }
 
   /**
-   * Setzt den Callback für Ergebnis-Änderungen
+   * Registriert einen Callback für Ergebnis-Änderungen nach Filter/Suche.
+   * @param {(filtered: Location[], forZoom: Location[], idMatch: Location|null) => void} callback
    */
   onResultsChange(callback) {
     this._onResultsChange = callback;

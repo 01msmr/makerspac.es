@@ -41,10 +41,8 @@ export class StaticSpaceAPI {
       let applied = 0;
       locations.forEach(location => {
         if (location.spaceapi?.endpoint) {
-          // Finde den Space in den Status-Daten
-          const spaceData = this.statusData.spaces.find(
-            s => s.endpoint === location.spaceapi.endpoint
-          );
+          // O(1)-Lookup per Endpoint-Key
+          const spaceData = this.statusData.spaces[location.spaceapi.endpoint];
 
           if (spaceData) {
             location.isOpen = spaceData.status;
@@ -112,7 +110,7 @@ export class StaticSpaceAPI {
     }
 
     return {
-      total: this.statusData.spaces.length,
+      total: Object.keys(this.statusData.spaces).length,
       lastUpdate: this.statusData.stats.lastUpdate,
       open: this.statusData.stats.open,
       closed: this.statusData.stats.closed,

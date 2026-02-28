@@ -1,6 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "test": "node --test tests/app-context.test.js tests/search-filter.test.js"
+    "generate": "node generate-map-splits.js",
+    "test": "node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js",
+    "validate": "node tests/validate-locations.js",
+    "test:all": "npm test && npm run validate"
   }
 }

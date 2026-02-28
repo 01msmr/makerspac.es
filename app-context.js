@@ -7,6 +7,38 @@
 //   appContext.map  // Leaflet Map
 //   appContext.waitFor('app').then(() => { ... })
 
+/**
+ * @typedef {Object} Location
+ * @property {string}   name
+ * @property {number}   ID
+ * @property {LocationLoc} loc
+ * @property {string}   style - 'for all' | 'for youth' | 'for students' | 'commercial'
+ * @property {{ url: string, text: string }} [link]
+ * @property {{ endpoint: string }} [spaceapi]
+ * @property {boolean|null} [isOpen]  - Wird zur Laufzeit aus status.json gesetzt
+ * @property {{ space.init: number, datacheck.latest: number }} [dates]
+ * @property {{ weekday: number, time: number }} [weekly]
+ * @property {string[]} [workshops]
+ */
+
+/**
+ * @typedef {Object} LocationLoc
+ * @property {number} lat
+ * @property {number} long
+ * @property {number|string} [plz]
+ * @property {string} city
+ * @property {string} country
+ * @property {{ name: string, number: string|number, ext: string }} [street]
+ */
+
+/**
+ * @typedef {Object} Pill
+ * @property {string} text       - Anzeigetext (z.B. 'Berlin')
+ * @property {'city'|'style'|'country'} type
+ * @property {number} count      - Anzahl passender Locations
+ * @property {string} [filterKey]
+ */
+
 class AppContext extends EventTarget {
 
   // ─── Phase 1: Services (synchron beim Start) ──────────────────────────────

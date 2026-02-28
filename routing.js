@@ -290,7 +290,10 @@ export class RoutingManager {
   cityToSlug(str) { return this.normalizeSlug(this._cityTranslationMap[str] || str); }
   normalizeSlug(str) {
     return str.trim().toLowerCase()
+      // Deutsche Umlaute zuerst (ae/oe/ue, nicht nur a/o/u via NFD)
       .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      // Andere Akzente via Unicode-Normalisierung (é→e, à→a, ç→c, ...)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   }
 

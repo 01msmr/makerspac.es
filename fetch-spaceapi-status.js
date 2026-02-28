@@ -191,10 +191,16 @@ async function main() {
     duration: `${duration}s`
   };
 
-  // Ergebnis
+  // Ergebnis — spaces als Map (endpoint → { status, name, message? }) für O(1)-Lookup
   const output = {
     stats,
-    spaces: results
+    spaces: Object.fromEntries(
+      results.map(r => [r.endpoint, {
+        status: r.status,
+        name:   r.name,
+        ...(r.message ? { message: r.message } : {}),
+      }])
+    ),
   };
 
   // Schreibe JSON File

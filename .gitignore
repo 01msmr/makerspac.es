@@ -12,3 +12,8 @@ __*.js
 
 # Laufzeit-Daten (immer aktuell auf dem Server)
 status.json
+
+# Generierte Datendateien (werden bei jedem Deploy neu erzeugt + hochgeladen)
+data/markers.json
+data/spaces-*.json
+data/splits-manifest.json

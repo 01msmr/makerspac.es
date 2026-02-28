@@ -650,52 +650,161 @@ function initializeClustering() {
   window.clusterGroup = clusterGroup; // backward compat
 }
 
+// ─── Split-Loading Helpers ────────────────────────────────────────────────
+
+// URL-Slug → ISO-Code (stimmt mit routing.js normalizeSlug + config.js COUNTRY_CODES überein)
+const SLUG_TO_CODE = {
+  'germany': 'de', 'austria': 'at', 'switzerland': 'ch',
+  'france': 'fr', 'netherlands': 'nl', 'belgium': 'be',
+  'italy': 'it', 'spain': 'es', 'ukraine': 'ua',
+  'denmark': 'dk', 'poland': 'pl', 'luxembourg': 'lu',
+};
+
+// Frühzeitiger Prefetch: Browser lädt wahrscheinlichste Daten parallel zur JS-Initialisierung.
+// Wenn URL-Land bekannt → Country-Split vorladen; sonst markers.json (alle Pins, minimal).
+{
+  const _seg  = window.location.hash?.startsWith('#/')
+    ? window.location.hash.slice(2).split('/')[0].split('+')[0]
+    : null;
+  const _file = (_seg && SLUG_TO_CODE[_seg])
+    ? `./data/spaces-${SLUG_TO_CODE[_seg]}.json`
+    : './data/markers.json';
+  document.head.appendChild(
+    Object.assign(document.createElement('link'),
+      { rel: 'prefetch', href: _file, as: 'fetch', crossOrigin: 'anonymous' })
+  );
+}
+
+/**
+ * Erkennt den ISO-Länder-Code aus dem URL-Hash.
+ * '#/germany' → 'de', '#/germany/berlin/1,2' → 'de', '#/for-all' → null
+ * @returns {string|null}
+ */
+function detectCountryCodeFromURL() {
+  const hash = window.location.hash;
+  if (!hash?.startsWith('#/')) return null;
+  const firstSegment = hash.slice(2).split('/')[0].split('+')[0];
+  return SLUG_TO_CODE[firstSegment] ?? null;
+}
+
+/**
+ * Indexiert + erstellt Marker für eine Batch neuer Locations.
+ * Überspringt bekannte IDs (Duplikat-Schutz beim Merge).
+ * @param {import('./app-context.js').Location[]} newLocs
+ */
+function processNewLocations(newLocs) {
+  const idSet = new Set(appContext.locationById.keys());
+  let issues = 0;
+
+  for (const loc of newLocs) {
+    if (typeof loc.ID !== 'number') {
+      console.error(`❌ "${loc.name}" hat ungültige ID: ${loc.ID}`);
+      issues++;
+      continue;
+    }
+    if (idSet.has(loc.ID)) {
+      console.error(`❌ Doppelte ID ${loc.ID} für "${loc.name}"`);
+      issues++;
+      continue;
+    }
+    idSet.add(loc.ID);
+    appContext.locationById.set(loc.ID, loc);
+  }
+
+  if (issues > 0) console.error(`❌ ${issues} ID-Probleme gefunden`);
+
+  for (const loc of newLocs) {
+    if (loc.loc && typeof loc.loc.lat === 'number' && typeof loc.loc.long === 'number') {
+      createMarkerForLocation(loc);
+    }
+  }
+}
+
+/**
+ * Lädt fehlende Spaces aus spaces-all.json nach und mergt sie in die laufende App.
+ * Wird im Hintergrund nach dem Laden eines Länder-Splits aufgerufen.
+ */
+async function loadAndMergeFullData() {
+  try {
+    const r = await fetch('./data/spaces-all.json');
+    if (!r.ok) return;
+    const allData = await r.json();
+
+    // Bekannte Locations in-place anreichern (ergänzt link, workshops, weekly, street etc.),
+    // unbekannte (andere Länder nach Country-Split) als neue Locations hinzufügen.
+    const newLocs = [];
+    for (const fullLoc of allData) {
+      const existing = appContext.locationById.get(fullLoc.ID);
+      if (existing) {
+        Object.assign(existing, fullLoc);
+      } else {
+        newLocs.push(fullLoc);
+      }
+    }
+
+    if (newLocs.length) {
+      appContext.locations.push(...newLocs);
+      processNewLocations(newLocs);
+    }
+
+    appContext.spaceAPI?.enrichLocationData(appContext.locations);
+    appContext.searchFilter?.refreshStyleStats();
+
+    console.log(`✅ Stage 2: ${allData.length} Spaces angereichert, ${newLocs.length} neue hinzugefügt`);
+  } catch { /* Hintergrund-Fehler sind nicht kritisch */ }
+}
+
+// ─── Haupt-Laderoutine ────────────────────────────────────────────────────
+
 async function loadData() {
   try {
-    const response = await fetch("./locations.json");
-    if (!response.ok) throw new Error(`Network response was not ok: ${response.statusStatus}`);
+    let rawData = null;
+    let needsEnrichment = false;
+    const countryCode = detectCountryCodeFromURL();
 
-    const rawData = await response.json();
+    // Stage 1a: Länderspezifischer Split (URL-Land bekannt → volle Daten, prefetched)
+    if (countryCode) {
+      try {
+        const r = await fetch(`./data/spaces-${countryCode}.json`);
+        if (r.ok) {
+          rawData = await r.json();
+          needsEnrichment = true;
+          console.log(`⚡ Stage 1a: spaces-${countryCode}.json (${rawData.length} Spaces)`);
+        }
+      } catch { /* Fallback */ }
+    }
 
+    // Stage 1b: markers.json (alle Spaces, minimal → sofortige Anzeige aller Pins)
+    if (!rawData?.length) {
+      try {
+        const r = await fetch('./data/markers.json');
+        if (r.ok) {
+          rawData = await r.json();
+          needsEnrichment = true;
+          console.log(`⚡ Stage 1b: markers.json (${rawData.length} Pins)`);
+        }
+      } catch { /* Fallback */ }
+    }
+
+    // Letzter Fallback: vollständiger Datensatz direkt (alter Server-Stand / kein data/)
+    if (!rawData?.length) {
+      try {
+        const r = await fetch('./data/spaces-all.json');
+        if (r.ok) rawData = await r.json();
+      } catch { /* nächster Fallback */ }
+    }
+    if (!rawData?.length) {
+      const r2 = await fetch('./locations.json');
+      if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+      rawData = await r2.json();
+    }
+
+    // Daten in App-Kontext setzen
     appContext.locations = rawData;
     window.json = rawData; // backward compat
     json = rawData;
 
-    // ✅ OPTIMIERUNG: Baue Index für schnellen ID-Zugriff
-    const idSet = new Set();
-    let issuesFound = 0;
-
-    json.forEach((location, index) => {
-      // 1. Prüfe ob ID existiert
-      if (typeof location.ID !== 'number') {
-        console.error(`❌ Location "${location.name}" (index ${index}) has invalid ID: ${location.ID}`);
-        issuesFound++;
-        return;
-      }
-
-      // 2. Prüfe auf Duplikate
-      if (idSet.has(location.ID)) {
-        console.error(`❌ DUPLICATE ID ${location.ID} found for "${location.name}" (index ${index})`);
-        issuesFound++;
-        return;
-      }
-
-      // 3. Speichere im Index (appContext.locationById === window.locationById, gleiche Referenz)
-      idSet.add(location.ID);
-      appContext.locationById.set(location.ID, location);
-    });
-
-    if (issuesFound > 0) {
-      console.error(`❌ Found ${issuesFound} ID issues - some locations may not work correctly`);
-    } else {
-    }
-
-    json.forEach((location, index) => {
-      if (location.loc && typeof location.loc.lat === 'number' && typeof location.loc.long === 'number') {
-        createMarkerForLocation(location);
-      }
-    });
-
+    processNewLocations(rawData);
 
     const spaceAPI = new StaticSpaceAPI();
     appContext.spaceAPI = spaceAPI;
@@ -708,17 +817,17 @@ async function loadData() {
     appContext.ready('data');
 
     spaceAPI.enrichLocationData(json).then(() => {
-      if (appContext.searchFilter && typeof appContext.searchFilter.refreshStyleStats === 'function') {
-        appContext.searchFilter.refreshStyleStats();
-      }
-
-      if (appContext.routingManager && typeof appContext.routingManager.rerunRouteHandler === 'function') {
-        appContext.routingManager.rerunRouteHandler();
-      }
+      if (appContext.searchFilter?.refreshStyleStats) appContext.searchFilter.refreshStyleStats();
+      if (appContext.routingManager?.rerunRouteHandler) appContext.routingManager.rerunRouteHandler();
     });
 
+    // Stage 2: vollständige Daten nachladen + in-place anreichern (nach App-Init)
+    if (needsEnrichment) {
+      appContext.waitFor('app').then(() => loadAndMergeFullData());
+    }
+
   } catch (error) {
-    console.error("Error fetching or parsing locations.json:", error);
+    console.error("Error fetching or parsing location data:", error);
     alert("Failed to load location pins.");
   }
 }

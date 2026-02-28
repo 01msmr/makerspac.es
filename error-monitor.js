@@ -123,6 +123,26 @@ class ErrorMonitor {
 
   // ─── Öffentliche API ─────────────────────────────────────────────────────
 
+  /**
+   * Explizites Error-Reporting aus Modulen heraus.
+   * Ersetzt verstreute console.error()-Aufrufe in try/catch-Blöcken.
+   *
+   * @param {string} context - Kurzbeschreibung wo der Fehler auftrat, z.B. 'SpaceAPI fetch'
+   * @param {Error|unknown} error - Der aufgetretene Fehler
+   *
+   * @example
+   * try {
+   *   await fetch(endpoint);
+   * } catch (e) {
+   *   errorMonitor.report('SpaceAPI fetch', e);
+   * }
+   */
+  report(context, error) {
+    const wrapped = error instanceof Error ? error : new Error(String(error));
+    wrapped.message = `[${context}] ${wrapped.message}`;
+    this.#record('reported', wrapped);
+  }
+
   getLogs()    { return [...this.#logs]; }
   exportLogs() { return JSON.stringify(this.#logs, null, 2); }
   clear()      { this.#logs = []; this.#updateBadge(); }
