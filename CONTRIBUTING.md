@@ -110,7 +110,7 @@ node -e "
 
 ## Deployment
 
-Push auf `main` → GitHub Actions deployed automatisch auf Netcup via FTPS.
+Push auf `main` → GitHub Actions deployed automatisch auf www via FTPS.
 Nur geänderte Dateien werden übertragen (Delta-Sync via `git diff`).
 
-`status.json` ist nicht in git — wird alle 30 Minuten via separatem Workflow regeneriert.
+`status.json` ist nicht in git — wird alle 15 Minuten via separatem Workflow aktualisiert.
