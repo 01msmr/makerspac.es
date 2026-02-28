@@ -1,5 +1,6 @@
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
+import { appContext } from './app-context.js';
 
 // search-filter.js - Zentrale Such- und Filter-Logik
 // Reine Geschäftslogik ohne UI-Komponenten
@@ -298,18 +299,18 @@ class SearchFilter {
    * Handhabt URL-Updates basierend auf Filter-Status
    */
   _handleURLUpdate(bookmarkFilterActive, finalFiltered) {
-    const hasActiveCountry = window.routingManager?._activeCountryFilter;
-    const isNavigating = window.routingManager?._isNavigating;
+    const hasActiveCountry = appContext.routingManager?._activeCountryFilter;
+    const isNavigating = appContext.routingManager?._isNavigating;
 
     if (!hasActiveCountry && !isNavigating) {
       if (bookmarkFilterActive && bookmarkManager) {
         const allBookmarkedIds = bookmarkManager.getBookmarkedIds();
-        if (allBookmarkedIds.length > 0 && window.routingManager?.navigateToLocations) {
-          window.routingManager.navigateToLocations(allBookmarkedIds);
+        if (allBookmarkedIds.length > 0 && appContext.routingManager?.navigateToLocations) {
+          appContext.routingManager.navigateToLocations(allBookmarkedIds);
         }
       } else if (!bookmarkFilterActive && this.selectedStyles.size === 0 && finalFiltered.length === this.json.length) {
-        if (window.routingManager?.clearLocationURL) {
-          window.routingManager.clearLocationURL();
+        if (appContext.routingManager?.clearLocationURL) {
+          appContext.routingManager.clearLocationURL();
         }
       }
     }
@@ -344,7 +345,7 @@ class SearchFilter {
    * @returns {Array} Gefilterte Locations
    */
   filterByText(query, pills = [], zfill = (plz) => plz) {
-    const router = window.routingManager;
+    const router = appContext.routingManager;
     const hasCityPill = pills.some(p => p.type === 'city');
 
     // City-Pill deaktiviert Country-Filter
@@ -366,7 +367,7 @@ class SearchFilter {
       // ID-Match prüfen
       if (/^\d+$/.test(normalizedQuery)) {
         const idNum = parseInt(normalizedQuery, 10);
-        const idMatchLocation = window.locationById?.get(idNum);
+        const idMatchLocation = appContext.locationById.get(idNum);
         this._currentIdMatch = idMatchLocation || null;
       } else {
         this._currentIdMatch = null;
@@ -438,15 +439,15 @@ class SearchFilter {
    * Aktualisiert die Marker auf der Karte
    */
   updateMarkers(filteredLocations) {
-    const clusterGroup = window.clusterGroup;
-    const map = window.map;
+    const clusterGroup = appContext.clusterGroup;
+    const map = appContext.map;
     if (!clusterGroup || !map) return;
 
-    const isClusteringActive = window.mapUtils?.isClusteringEnabled();
+    const isClusteringActive = appContext.mapUtils?.isClusteringEnabled();
     const filteredIds = new Set(filteredLocations.map(loc => loc.ID));
 
     this.allMarkers.forEach(marker => {
-      const location = window.locationById?.get(marker.locationId);
+      const location = appContext.locationById.get(marker.locationId);
 
       // 1. ENTFERNEN von allen Layern
       if (clusterGroup.hasLayer(marker)) {

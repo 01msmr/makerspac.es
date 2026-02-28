@@ -10,23 +10,33 @@ import { dataStore } from './data-store.js';
 import { zoomManager } from './zoom-manager.js';
 import { initApp } from './main.js';
 import './embed.js';
+import { appContext } from './app-context.js';
+import { errorMonitor } from './error-monitor.js';
+errorMonitor.init();
 
 // i18n Singleton (ersetzt i18n-init.js)
 const i18n = new I18n();
-window.i18n = i18n;
+appContext.i18n = i18n;
+window.i18n = i18n; // backward compat
 
 // Backward Compat für embed.js und andere Legacy-Zugriffe
-window.AppConfig = AppConfig;
+appContext.config = AppConfig;
+window.AppConfig = AppConfig; // backward compat
 
 // BookmarkSync (ersetzt Auto-Init in datasync.js)
 const bookmarkSync = new BookmarkSync(bookmarkManager);
-window.bookmarkSync = bookmarkSync;
-window.consent = consent;
+appContext.bookmarkSync = bookmarkSync;
+appContext.bookmarks = bookmarkManager;
+appContext.consent = consent;
+appContext.dataStore = dataStore;
+appContext.zoomManager = zoomManager;
+window.bookmarkSync = bookmarkSync; // backward compat
+window.consent = consent;           // backward compat
+window.dataStore = dataStore;       // backward compat
+window.languageSwitcher = dataStore; // backward compat
+window.zoomManager = zoomManager;   // backward compat
 
-// dataStore Backward Compat
-window.dataStore = dataStore;
-window.languageSwitcher = dataStore;
-window.zoomManager = zoomManager;
+appContext.ready('services');
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
@@ -38,8 +48,10 @@ window.addEventListener("keydown", (e) => {
 })
 
 // ✅ OPTIMIERUNG: Globale Indizes für schnellen ID-Zugriff
-window.locationById = new Map();
-window.markerById = new Map();
+appContext.locationById = new Map();
+appContext.markerById = new Map();
+window.locationById = appContext.locationById; // backward compat (gleiche Map-Referenz)
+window.markerById   = appContext.markerById;
 
 // *** Modul-Scope Start ***
 
@@ -52,10 +64,10 @@ let isPopupSticky = false;
 
 // *** WICHTIG: json als globale Variable ***
 window.json = [];
-let json = window.json;
+let json = [];
 
 // ZENTRALISIERTER MARKER-STATE MANAGEMENT
-window.markerStateManager = {
+appContext.markerStateManager = {
   states: new Map(),
 
   setState(locationId, state) {
@@ -101,6 +113,7 @@ window.markerStateManager = {
     this.setState(locationId, state);
   }
 };
+window.markerStateManager = appContext.markerStateManager; // backward compat
 
 // ✅ REFACTORED: Icons über icons-Namespace (Lazy Loading)
 const icons = {
@@ -163,7 +176,7 @@ function toggleClustering(enable) {
 let clusterGroup = null;
 
 // Map Utils für Search Manager
-window.mapUtils = {
+appContext.mapUtils = {
   createConnectionLine: createConnectionLine,
   removeConnectionLine: removeConnectionLine,
   clearStickyPopup: clearStickyPopup,
@@ -175,6 +188,7 @@ window.mapUtils = {
   toggleClustering: toggleClustering,
   isClusteringEnabled: isClusteringCurrentlyEnabled
 };
+window.mapUtils = appContext.mapUtils; // backward compat
 
 // Map für Style-Übersetzungen
 const styleTranslationMap = {
@@ -507,7 +521,8 @@ function setupMap() {
     closePopupOnClick: !('ontouchstart' in window), // Touch-Geräte (Phone + Tablet): false, Desktop: true
   });
 
-  window.map = map;
+  appContext.map = map;
+  window.map = map; // backward compat
 
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -576,6 +591,8 @@ function setupMap() {
       updateMapTiles();
     }
   });
+
+  appContext.ready('map');
 }
 
 function initializeClustering() {
@@ -629,7 +646,8 @@ function initializeClustering() {
   });
 
   map.addLayer(clusterGroup);
-  window.clusterGroup = clusterGroup;
+  appContext.clusterGroup = clusterGroup;
+  window.clusterGroup = clusterGroup; // backward compat
 }
 
 async function loadData() {
@@ -639,9 +657,9 @@ async function loadData() {
 
     const rawData = await response.json();
 
-    window.json = rawData;
-    json = window.json;
-
+    appContext.locations = rawData;
+    window.json = rawData; // backward compat
+    json = rawData;
 
     // ✅ OPTIMIERUNG: Baue Index für schnellen ID-Zugriff
     const idSet = new Set();
@@ -662,9 +680,9 @@ async function loadData() {
         return;
       }
 
-      // 3. Speichere im globalen Index
+      // 3. Speichere im Index (appContext.locationById === window.locationById, gleiche Referenz)
       idSet.add(location.ID);
-      window.locationById.set(location.ID, location);
+      appContext.locationById.set(location.ID, location);
     });
 
     if (issuesFound > 0) {
@@ -680,26 +698,22 @@ async function loadData() {
 
 
     const spaceAPI = new StaticSpaceAPI();
-    window.spaceAPI = spaceAPI;
-
+    appContext.spaceAPI = spaceAPI;
+    window.spaceAPI = spaceAPI; // backward compat
 
     spaceAPI.onStatusUpdate((location) => {
       updateMarkerIconForLocation(location);
     });
 
+    appContext.ready('data');
+
     spaceAPI.enrichLocationData(json).then(() => {
-      const openCount = json.filter(loc => loc.isOpen === true).length;
-      const closedCount = json.filter(loc => loc.isOpen === false).length;
-      const nullCount = json.filter(loc => loc.isOpen === null).length;
-      const undefinedCount = json.filter(loc => loc.isOpen === undefined).length;
-
-
-      if (window.styleFilterManager && typeof window.styleFilterManager.refreshStyleStats === 'function') {
-        window.styleFilterManager.refreshStyleStats();
+      if (appContext.searchFilter && typeof appContext.searchFilter.refreshStyleStats === 'function') {
+        appContext.searchFilter.refreshStyleStats();
       }
 
-      if (window.routingManager && typeof window.routingManager.rerunRouteHandler === 'function') {
-        window.routingManager.rerunRouteHandler();
+      if (appContext.routingManager && typeof appContext.routingManager.rerunRouteHandler === 'function') {
+        appContext.routingManager.rerunRouteHandler();
       }
     });
 
@@ -759,20 +773,27 @@ function adjustPopupPosition(popup, map) {
   // Vertikal: Popup über Oberkante → unter den Marker spiegeln
   // CSS `translate` addiert sich zu Leaflet's `transform` (beide Properties wirken unabhängig)
   // flipDy in Screen-Koordinaten: Popup-Oberkante → Marker-Y (Tip zeigt dann nach oben zum Marker)
+  let flipDy = 0;
   const overflowTop = topBoundary - popupRect.top;
   if (overflowTop > 0) {
-    const markerContainerPt = map.latLngToContainerPoint(popup.getLatLng());
+    const latlng = popup.getLatLng();
+    if (!latlng) return;
+    const markerContainerPt = map.latLngToContainerPoint(latlng);
     const markerScreenY = mapRect.top + markerContainerPt.y;
     const flippedBottom = markerScreenY + 15 + popupRect.height;
     if (flippedBottom <= bottomBoundary) {
-      const flipDy = markerScreenY - popupRect.top + 15;
+      flipDy = markerScreenY - popupRect.top + 15;
       el.style.setProperty('--flip-dy', `${flipDy}px`);
       el.classList.add('popup-flipped');
     }
   }
 
   // Horizontal: Popup links/rechts aus dem Container oder hinter UI-Elementen
-  const vOverlap = r => r.bottom > wrapperRect.top && r.top < wrapperRect.bottom;
+  // Nach einem Flip hat sich das Popup vertikal um flipDy verschoben; wrapperRect ist aber
+  // noch vor dem Flip gemessen → effektive Position berechnen statt stale Rect verwenden.
+  const effectiveWrapperTop    = wrapperRect.top    + flipDy;
+  const effectiveWrapperBottom = wrapperRect.bottom + flipDy;
+  const vOverlap = r => r.bottom > effectiveWrapperTop && r.top < effectiveWrapperBottom;
   const midX = mapRect.left + mapRect.width / 2;
 
   // Rechte Grenze: Linkskante der rechten UI-Elemente, die vertikal mit dem Popup überlappen
@@ -978,14 +999,15 @@ function _applyPopupOpenHandler(marker, location) {
       setTimeout(() => {
         const dropdown = document.getElementById('suggestions-dropdown');
         if (!dropdown || !dropdown.classList.contains('is-active')) return;
-        const searchContainer = dropdown.closest('.search-container');
-        if (!searchContainer) return;
         const popupRect = popupElement.getBoundingClientRect();
-        const containerRect = searchContainer.getBoundingClientRect();
-        const isOverlapping = !(popupRect.right < containerRect.left || popupRect.left > containerRect.right ||
-          popupRect.bottom < containerRect.top || popupRect.top > containerRect.bottom);
+        // Nur gegen das Dropdown selbst prüfen, nicht gegen searchContainer:
+        // searchContainer.getBoundingClientRect() schließt die gesamte Dropdown-Höhe ein,
+        // was zu falsch-positivem Overlap führt wenn das Popup unterhalb des Dropdowns passt.
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const isOverlapping = !(popupRect.right < dropdownRect.left || popupRect.left > dropdownRect.right ||
+          popupRect.bottom < dropdownRect.top || popupRect.top > dropdownRect.bottom);
         if (isOverlapping) {
-          map.panBy([popupRect.right - containerRect.left + 12, 0], { animate: true, duration: 0.3 });
+          map.panBy([popupRect.right - dropdownRect.left + 12, 0], { animate: true, duration: 0.3 });
         }
       }, 350);
     }
@@ -1268,11 +1290,12 @@ function setupMapClickHandler() {
 
 function setupRouting() {
   const routingManager = new RoutingManager(
-    window.styleFilterManager,
-    window.app?.searchHeader,
-    window.json
+    appContext.searchFilter,
+    appContext.searchHeader,
+    appContext.locations
   );
-  window.routingManager = routingManager;
+  // appContext.routingManager wird im RoutingManager-Konstruktor gesetzt (Schritt 4)
+  window.routingManager = routingManager; // backward compat
 }
 // ============================================================================
 // NEUE UTILITY-FUNKTIONEN: ID-basierte Validierung

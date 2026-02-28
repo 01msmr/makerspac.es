@@ -2,6 +2,7 @@
 // Enthält: Popover mit Radius-Slider, Drag, Resize, Cursor-Hint
 
 import AppConfig from './config.js';
+import { appContext } from './app-context.js';
 
 const CONFIG = AppConfig;
 
@@ -194,14 +195,14 @@ const CONFIG = AppConfig;
       if (document.body.classList.contains('consent-active')) return;
 
       // ✨ Suche und alle Filter löschen beim Aktivieren von Nearby (silent = kein UI-Update)
-      if (window.app?.searchHeader) {
-        window.app.searchHeader._manualSpaceClick = true;
-        window.app.searchHeader.clearSearch(false, true); // (shouldFocus=false, silent=true)
-        window.app.searchHeader.clearAllFilters(true);    // (silent=true)
-        window.app.searchHeader.closeDropdown?.();
+      if (appContext.searchHeader) {
+        appContext.searchHeader._manualSpaceClick = true;
+        appContext.searchHeader.clearSearch(false, true); // (shouldFocus=false, silent=true)
+        appContext.searchHeader.clearAllFilters(true);    // (silent=true)
+        appContext.searchHeader.closeDropdown?.();
         setTimeout(() => {
-          if (window.app?.searchHeader) {
-            window.app.searchHeader._manualSpaceClick = false;
+          if (appContext.searchHeader) {
+            appContext.searchHeader._manualSpaceClick = false;
           }
         }, 500);
       }
@@ -292,9 +293,9 @@ const CONFIG = AppConfig;
 
 
     updateNearbyData(lat, lon) {
-      if (!window.json) return;
+      if (!appContext.locations) return;
 
-      const allWithDist = window.json.map(loc => ({
+      const allWithDist = appContext.locations.map(loc => ({
         ...loc,
         distance: CONFIG.calculateDistance(lat, lon, loc.loc.lat, loc.loc.long)
       })).sort((a, b) => a.distance - b.distance);
@@ -759,7 +760,7 @@ const CONFIG = AppConfig;
               });
 
               if (targetItem) {
-                const location = window.locationById?.get(savedDragState.locationId);
+                const location = appContext.locationById.get(savedDragState.locationId);
                 if (location) {
                   // keyboardIndex wiederherstellen
                   this.listingCore.keyboardIndex = targetIndex;
@@ -851,9 +852,9 @@ const CONFIG = AppConfig;
       const listContainer = this.popoverElement.querySelector('.nearby-popover-list');
       this.listingCore?.setupItemListeners(listContainer, {
         onItemClick: (location) => {
-          const marker = window.markerById?.get(location.id);
+          const marker = appContext.markerById.get(location.id);
           if (marker) {
-            window.map.flyTo(marker.getLatLng(), CONFIG.settings.defaultZoomLevel);
+            appContext.map.flyTo(marker.getLatLng(), CONFIG.settings.defaultZoomLevel);
             setTimeout(() => {
               marker.openPopup();
               this.hide();

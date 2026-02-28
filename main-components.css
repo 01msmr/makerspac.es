@@ -388,7 +388,7 @@
 /* Popup-Flip: Popup unter den Marker wenn oben kein Platz */
 /* CSS `translate` ist unabhängig von Leaflet's `transform` — beide addieren sich */
 .leaflet-popup.popup-flipped {
-  translate: -2px var(--flip-dy, 0px);
+  translate: 0px var(--flip-dy, 0px);
 }
 
 .leaflet-popup.popup-flipped .leaflet-popup-tip-container {

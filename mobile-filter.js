@@ -1,4 +1,5 @@
 import AppConfig from './config.js';
+import { appContext } from './app-context.js';
 
 class MobileFilterUI {
   constructor() {
@@ -277,14 +278,14 @@ class MobileFilterUI {
   getOptions(key) {
     const fc = AppConfig.filterCategories;
     if (key === 'weekly')    return [...(fc?.weekly?.options || []), 'any'];
-    if (key === 'country')   return window.app?.searchFilter?.getUniqueCountries?.() || [];
+    if (key === 'country')   return appContext.searchFilter?.getUniqueCountries?.() || [];
     if (key === 'bookmarks') return ['bookmarked'];
     return fc?.[key]?.options || [];
   }
 
   // Ermittelt das Land des Nutzers anhand der Browser-Sprache
   getUserCountry() {
-    const available = window.app?.searchFilter?.getUniqueCountries?.() || [];
+    const available = appContext.searchFilter?.getUniqueCountries?.() || [];
     const langs = navigator.languages?.length ? Array.from(navigator.languages) : [navigator.language || ''];
     for (const lang of langs) {
       const code = lang.split('-')[1]?.toUpperCase();
@@ -306,7 +307,7 @@ class MobileFilterUI {
 
     // Starte mit aktiver Filter-Kategorie, sonst mit Länder-Filter
     const activeCategory = Object.keys(this.getCategories()).find(key =>
-      key !== 'bookmarks' && window.app?.searchHeader?.getActiveFilterForCategory(key)
+      key !== 'bookmarks' && appContext.searchHeader?.getActiveFilterForCategory(key)
     );
     this.selectedCategory = activeCategory || 'country';
 
@@ -364,7 +365,7 @@ class MobileFilterUI {
   renderCategories(container) {
     container.innerHTML = '';
     Object.entries(this.getCategories()).forEach(([key, cfg]) => {
-      const active = window.app?.searchHeader?.getActiveFilterForCategory(key);
+      const active = appContext.searchHeader?.getActiveFilterForCategory(key);
 
       const item = document.createElement('div');
       item.className = 'mf-cat-item'
@@ -378,11 +379,11 @@ class MobileFilterUI {
       item.addEventListener('click', () => {
         // Bookmarks: direkt toggling, keine zweite Ebene
         if (key === 'bookmarks') {
-          const isActive = window.app?.searchHeader?.getActiveFilterForCategory('bookmarks');
+          const isActive = appContext.searchHeader?.getActiveFilterForCategory('bookmarks');
           if (isActive) {
-            window.app?.searchHeader?.clearCategoryFilter('bookmarks');
+            appContext.searchHeader?.clearCategoryFilter('bookmarks');
           } else {
-            window.app?.searchHeader?.selectCategoryOption('bookmarks', 'bookmarked');
+            appContext.searchHeader?.selectCategoryOption('bookmarks', 'bookmarked');
           }
           this.close();
           return;
@@ -403,7 +404,7 @@ class MobileFilterUI {
     oldContainer.replaceWith(container);
 
     const options = this.getOptions(key);
-    const activeValue = window.app?.searchHeader?.getActiveFilterForCategory(key);
+    const activeValue = appContext.searchHeader?.getActiveFilterForCategory(key);
 
     // Ggf. User-Land vormarkieren (nur bei country ohne aktiven Filter)
     const userCountry = (key === 'country' && !activeValue) ? this.getUserCountry() : null;
@@ -432,7 +433,7 @@ class MobileFilterUI {
         item.textContent = this.translateValue(key, opt);
       }
       item.addEventListener('click', () => {
-        window.app?.searchHeader?.selectCategoryOption(key, opt);
+        appContext.searchHeader?.selectCategoryOption(key, opt);
         this.close();
       });
       container.appendChild(item);
@@ -447,7 +448,7 @@ class MobileFilterUI {
   translateValue(key, value) {
     if (key === 'bookmarks') return window.i18n?.t('filter.bookmarks') || 'Favoriten';
     // Delegate to SearchHeader's canonical translation (avoids duplication)
-    return window.app?.searchHeader?.translateFilterValue(key, value) ?? value;
+    return appContext.searchHeader?.translateFilterValue(key, value) ?? value;
   }
 
   updateChipBar() {
@@ -456,7 +457,7 @@ class MobileFilterUI {
 
     const activeEntries = Object.entries(this.getCategories())
       .map(([key, cfg]) => {
-        const val = window.app?.searchHeader?.getActiveFilterForCategory(key);
+        const val = appContext.searchHeader?.getActiveFilterForCategory(key);
         return val ? { key, cfg, val } : null;
       })
       .filter(Boolean);
@@ -488,14 +489,14 @@ class MobileFilterUI {
     bar.querySelectorAll('.mf-chip').forEach(chip => {
       chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
         e.stopPropagation();
-        window.app?.searchHeader?.clearCategoryFilter(chip.dataset.key);
+        appContext.searchHeader?.clearCategoryFilter(chip.dataset.key);
         this.updateChipBar();
       });
     });
 
     bar.querySelector('.mf-clear-all-btn')?.addEventListener('click', e => {
       e.stopPropagation();
-      window.app?.searchHeader?.clearAllFilters();
+      appContext.searchHeader?.clearAllFilters();
       this.updateChipBar();
     });
 

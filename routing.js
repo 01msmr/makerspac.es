@@ -1,10 +1,13 @@
 // routing.js (ES MODULE)
+import { appContext } from './app-context.js';
+
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
-    window.routingManager = this;
-    this.styleFilterManager = styleFilterManager;
-    this.searchManager = searchManager;
-    this.json = json;
+    appContext.routingManager = this;
+    window.routingManager = this; // backward compat
+    this.styleFilterManager = styleFilterManager ?? appContext.searchFilter;
+    this.searchManager      = searchManager      ?? appContext.searchHeader;
+    this.json               = json?.length        ? json : appContext.locations;
 
     this._countries = null;
     this._routes = null;
@@ -61,8 +64,9 @@ export class RoutingManager {
 
     if (detectedCountry) {
       this.applyCountryFilter(detectedCountry);
-      const countryLabel = window.i18n.t(`countries.${detectedCountry}`) || detectedCountry;
-      const message = window.i18n.t('filter.autoDetected').replace('{country}', countryLabel);
+      const i18n = appContext.i18n;
+      const countryLabel = i18n?.t(`countries.${detectedCountry}`) || detectedCountry;
+      const message = i18n?.t('filter.autoDetected').replace('{country}', countryLabel) || countryLabel;
       this.showCenteredToast(message);
     } else {
       // Fallback falls nichts erkannt wurde
@@ -95,13 +99,19 @@ export class RoutingManager {
     window.addEventListener('hashchange', () => this.handleRouteWithPills());
 
     const hash = window.location.hash;
-    // Wenn kein Filter in der URL ist -> Autodetect
-    if (!hash || hash === '#' || hash === '#/') {
-      // Kleiner Delay damit i18n/DataStore sicher bereit sind
-      setTimeout(() => this.autoDetectAndApplyCountry(), 150);
-    } else {
-      this.handleRouteWithPills();
-    }
+    // Warten bis appContext.ready('app') — stellt sicher dass searchHeader/searchFilter bereit sind
+    appContext.waitFor('app').then(() => {
+      // Sync mit aktuellsten Referenzen (könnten sich nach Konstruktor-Aufruf geändert haben)
+      if (!this.styleFilterManager) this.styleFilterManager = appContext.searchFilter;
+      if (!this.searchManager)      this.searchManager      = appContext.searchHeader;
+      if (!this.json?.length)       this.json               = appContext.locations;
+
+      if (!hash || hash === '#' || hash === '#/') {
+        this.autoDetectAndApplyCountry();
+      } else {
+        this.handleRouteWithPills();
+      }
+    });
   }
 
   handleRouteWithPills() {
@@ -118,7 +128,7 @@ export class RoutingManager {
     const shortIdMatch = hash.match(/^#\/(\d+)$/);
     if (shortIdMatch) {
       const id = parseInt(shortIdMatch[1], 10);
-      const location = window.locationById?.get(id);
+      const location = appContext.locationById.get(id);
       if (location) {
         this.navigateToLocations([id]);
         return;
@@ -374,8 +384,8 @@ export class RoutingManager {
     const currentPills = this.searchManager?.pillsManager?.getPillsArray() || [];
     const hasBookmarkFilter = this.styleFilterManager?.selectedStyles?.has('bookmarked');
 
-    if (hasBookmarkFilter && window.bookmarkManager) {
-      const ids = window.bookmarkManager.getBookmarkedIds();
+    if (hasBookmarkFilter && appContext.bookmarks) {
+      const ids = appContext.bookmarks.getBookmarkedIds();
       ids.length > 0 ? this.navigateToLocations(ids) : window.location.hash = '';
     } else if (currentPills.length > 0) {
       this.updateURLFromPills(currentPills);
@@ -392,14 +402,14 @@ export class RoutingManager {
   handleBookmarkRoute(hash) {
     const ids = hash.replace('#/bookmarks/', '').split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
     if (ids.length === 0) return;
-    const locations = ids.map(id => window.locationById?.get(id)).filter(Boolean);
+    const locations = ids.map(id => appContext.locationById.get(id)).filter(Boolean);
     if (locations.length > 0) this.showLocations(locations, ids);
   }
 
   handleLocationRoute(hash) {
     const parts = hash.substring(2).split('/');
     const ids = parts[2].split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0);
-    const locations = ids.map(id => window.locationById?.get(id)).filter(Boolean);
+    const locations = ids.map(id => appContext.locationById.get(id)).filter(Boolean);
     locations.length > 0 ? this.showLocations(locations, ids) : this.clearAllPillsAndFilters();
   }
 
@@ -408,7 +418,7 @@ export class RoutingManager {
     // Race-Condition: _isNavigating kann durch ältere Timer zurückgesetzt werden,
     // bevor hashchange feuert. Wenn der User gerade manuell ein Item angeklickt hat,
     // URL-Routing nicht anwenden – Popup und Filter wurden bereits korrekt gesetzt.
-    if (window.app?.searchHeader?._manualSpaceClick) return;
+    if (appContext.searchHeader?._manualSpaceClick) return;
     this._isOnLocationRoute = true;
     if (this.searchManager.pillsManager) this.searchManager.pillsManager.clear();
     if (this.styleFilterManager) {
@@ -424,31 +434,31 @@ export class RoutingManager {
     // Meta Update
     if (locations.length === 1) {
       const loc = locations[0];
-      const cc = window.MapIcons?.getCountryCode(loc.loc?.country).toUpperCase();
-      const plz = loc.loc?.plz ? window.zfill(loc.loc.plz, loc.loc.country) : '';
+      const cc = appContext.mapIcons?.getCountryCode(loc.loc?.country).toUpperCase();
+      const plz = loc.loc?.plz ? window.zfill(loc.loc.plz, loc.loc.country) : ''; // zfill: step 5
       this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`);
     }
   }
 
   zoomToLocations(locations) {
-    if (!window.map || locations.length === 0) return;
+    if (!appContext.map || locations.length === 0) return;
     if (locations.length === 1) {
-      window.map.setView([locations[0].loc.lat, locations[0].loc.long], 15);
+      appContext.map.setView([locations[0].loc.lat, locations[0].loc.long], 15);
     } else {
       const bounds = L.latLngBounds(locations.map(loc => [loc.loc.lat, loc.loc.long]));
-      window.map.fitBounds(bounds, { padding: [12, 12] });
+      appContext.map.fitBounds(bounds, { padding: [12, 12] });
     }
   }
 
   openLocationPopup(location) {
-    const marker = window.markerById?.get(location.ID);
+    const marker = appContext.markerById.get(location.ID);
     if (marker) marker.openPopup();
   }
 
   createLocationURL(locationIds, includeNames = true) {
     if (!locationIds.length) return '';
     if (locationIds.length > 1) return `#/bookmarks/${locationIds.join(',')}`;
-    const loc = window.locationById?.get(locationIds[0]);
+    const loc = appContext.locationById.get(locationIds[0]);
     if (!loc) return '';
     const slug = `${this.normalizeSlug(loc.loc.country)}/${this.normalizeSlug(loc.loc.city)}/${loc.ID}`;
     return includeNames ? `#/${slug}/${this.normalizeSlug(loc.name)}` : `#/${slug}`;
@@ -465,8 +475,8 @@ export class RoutingManager {
 
   clearLocationURL() {
     const isBookmarkFilterActive = this.styleFilterManager?.selectedStyles?.has('bookmarked');
-    if (isBookmarkFilterActive && window.bookmarkManager) {
-      const ids = window.bookmarkManager.getBookmarkedIds();
+    if (isBookmarkFilterActive && appContext.bookmarks) {
+      const ids = appContext.bookmarks.getBookmarkedIds();
       if (ids.length > 0) { this.navigateToLocations(ids); return; }
     }
     const pills = this.searchManager?.pillsManager?.getPillsArray() || [];

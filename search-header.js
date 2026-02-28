@@ -618,7 +618,9 @@ const CONFIG = AppConfig;
       this.suggestionsDropdown.classList.add('is-active');
       this.searchBar.classList.add('has-suggestions');
 
+      this._skipAutoZoom = true;
       this.triggerFilterUpdate();
+      this._skipAutoZoom = false;
     }
 
     handleSearchBlur() {

@@ -8,6 +8,7 @@ import { SearchHeader } from './search-header.js';
 import { NearbyHeader } from './nearby-header.js';
 import { zoomManager } from './zoom-manager.js';
 import { MobileFilterUI } from './mobile-filter.js';
+import { appContext } from './app-context.js';
 
 const CONFIG = AppConfig;
 
@@ -82,7 +83,7 @@ const CONFIG = AppConfig;
   // MAPICONS NAMESPACE (Backward Compatibility)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  window.MapIcons = {
+  appContext.mapIcons = {
     // Leaflet Icon Instanzen (Lazy Loading via Getter)
     get icons() {
       return initializeLeafletIcons();
@@ -123,6 +124,7 @@ const CONFIG = AppConfig;
     getCountryCode: CONFIG.getCountryCode,
     getDefaultColor: CONFIG.getDefaultIconColor
   };
+  window.MapIcons = appContext.mapIcons; // backward compat
 
   // Weitere Backward Compatibility
   window.IC = CONFIG.colours;
@@ -178,30 +180,35 @@ const CONFIG = AppConfig;
     nearbyHeader.init(map, listingCore);
 
     // ═══════════════════════════════════════════════════════════════════════
-    // GLOBALE REFERENZEN (für Backward Compatibility)
+    // APP-KONTEXT BEFÜLLEN
     // ═══════════════════════════════════════════════════════════════════════
 
+    appContext.listingCore   = listingCore;
+    appContext.searchFilter  = searchFilter;
+    appContext.searchHeader  = searchHeader;
+    appContext.nearbyHeader  = nearbyHeader;
+
+    // Mobile Filter UI
+    const mobileFilterUI = new MobileFilterUI();
+    mobileFilterUI.init();
+    appContext.mobileFilterUI = mobileFilterUI;
+
+    // window.app als Proxy auf appContext (backward compat für noch nicht migrierte Dateien)
     window.app = {
-      listingCore,
-      searchFilter,
-      searchHeader,
-      nearbyHeader,
+      get listingCore()    { return appContext.listingCore; },
+      get searchFilter()   { return appContext.searchFilter; },
+      get searchHeader()   { return appContext.searchHeader; },
+      get nearbyHeader()   { return appContext.nearbyHeader; },
+      get mobileFilterUI() { return appContext.mobileFilterUI; },
       zoomManager,
       config: CONFIG,
       icons
     };
+    window.mobileFilterUI      = appContext.mobileFilterUI;   // backward compat
+    window.styleFilterManager  = searchFilter;                // backward compat
+    window.nearbySpacesManager = nearbyHeader;                // backward compat
 
-    // Mobile Filter UI
-    window.app.mobileFilterUI = new MobileFilterUI();
-    window.app.mobileFilterUI.init();
-    window.mobileFilterUI = window.app.mobileFilterUI;
-
-    // Backward Compatibility: window.styleFilterManager
-    window.styleFilterManager = searchFilter;
-
-    // Backward Compatibility: window.nearbySpacesManager
-    window.nearbySpacesManager = nearbyHeader;
-
+    appContext.ready('app');
 
     return {
       listingCore,

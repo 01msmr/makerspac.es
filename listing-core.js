@@ -1,5 +1,6 @@
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
+import { appContext } from './app-context.js';
 
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
@@ -280,12 +281,12 @@ class ListingCore {
     if (!newItem) return;
 
     const newLocationId = parseInt(newItem.dataset.locationId);
-    const newLocation = window.locationById?.get(newLocationId);
+    const newLocation = appContext.locationById.get(newLocationId);
 
     // 1. Altes Item: Effekte entfernen (wenn unterschiedlich)
     if (this.currentHoverItem && this.currentHoverItem !== newItem) {
       const oldLocationId = parseInt(this.currentHoverItem.dataset.locationId);
-      const oldLocation = window.locationById?.get(oldLocationId);
+      const oldLocation = appContext.locationById.get(oldLocationId);
       const oldIndex = Array.from(items).indexOf(this.currentHoverItem);
 
       // CSS-Klassen entfernen (Item + Nachbarn)
@@ -354,25 +355,25 @@ class ListingCore {
     const targetMarker = this.findMarkerByLocation(location);
 
     if (targetMarker) {
-      const clusterGroup = window.clusterGroup;
-      const isClusteringActive = window.mapUtils?.isClusteringEnabled();
+      const clusterGroup = appContext.clusterGroup;
+      const isClusteringActive = appContext.mapUtils?.isClusteringEnabled();
 
       // Marker aus Cluster holen wenn nötig
       if (isClusteringActive && clusterGroup) {
         const visibleParent = clusterGroup.getVisibleParent(targetMarker);
         if (visibleParent && visibleParent !== targetMarker) {
-          targetMarker.addTo(window.map);
+          targetMarker.addTo(appContext.map);
           targetMarker._isTemporarilyUnclustered = true;
         }
       }
 
       // Marker-State setzen
-      if (window.markerStateManager) {
-        window.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: true });
+      if (appContext.markerStateManager) {
+        appContext.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: true });
       }
 
-      if (window.mapUtils?.setMarkerDropdownHover) {
-        window.mapUtils.setMarkerDropdownHover(targetMarker, true);
+      if (appContext.mapUtils?.setMarkerDropdownHover) {
+        appContext.mapUtils.setMarkerDropdownHover(targetMarker, true);
       }
 
       // Hover-Icon setzen
@@ -411,17 +412,17 @@ class ListingCore {
     if (targetMarker) {
       // Marker zurück ins Cluster geben
       if (targetMarker._isTemporarilyUnclustered) {
-        window.map.removeLayer(targetMarker);
+        appContext.map.removeLayer(targetMarker);
         targetMarker._isTemporarilyUnclustered = false;
       }
 
       // Marker-State zurücksetzen
-      if (window.markerStateManager) {
-        window.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: false });
+      if (appContext.markerStateManager) {
+        appContext.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: false });
       }
 
-      if (window.mapUtils?.clearMarkerDropdownHover) {
-        window.mapUtils.clearMarkerDropdownHover(targetMarker);
+      if (appContext.mapUtils?.clearMarkerDropdownHover) {
+        appContext.mapUtils.clearMarkerDropdownHover(targetMarker);
       }
 
       // Popup schließen (außer sticky)
@@ -430,8 +431,8 @@ class ListingCore {
       }
 
       // Original-Icon wiederherstellen
-      if (window.mapUtils?.updateMarkerIcon) {
-        window.mapUtils.updateMarkerIcon(targetMarker, location);
+      if (appContext.mapUtils?.updateMarkerIcon) {
+        appContext.mapUtils.updateMarkerIcon(targetMarker, location);
       }
     }
   }
@@ -446,17 +447,17 @@ class ListingCore {
 
     // Marker zurück ins Cluster
     if (targetMarker._isTemporarilyUnclustered) {
-      window.map.removeLayer(targetMarker);
+      appContext.map.removeLayer(targetMarker);
       targetMarker._isTemporarilyUnclustered = false;
     }
 
     // Marker-State zurücksetzen
-    if (window.markerStateManager) {
-      window.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: false });
+    if (appContext.markerStateManager) {
+      appContext.markerStateManager.setState(targetMarker.locationId, { isDropdownHovering: false });
     }
 
-    if (window.mapUtils?.clearMarkerDropdownHover) {
-      window.mapUtils.clearMarkerDropdownHover(targetMarker);
+    if (appContext.mapUtils?.clearMarkerDropdownHover) {
+      appContext.mapUtils.clearMarkerDropdownHover(targetMarker);
     }
 
     // Popup schließen (außer sticky)
@@ -465,8 +466,8 @@ class ListingCore {
     }
 
     // Original-Icon wiederherstellen
-    if (window.mapUtils?.updateMarkerIcon) {
-      window.mapUtils.updateMarkerIcon(targetMarker, location);
+    if (appContext.mapUtils?.updateMarkerIcon) {
+      appContext.mapUtils.updateMarkerIcon(targetMarker, location);
     }
   }
 
@@ -480,7 +481,7 @@ class ListingCore {
 
     if (this.currentHoverItem) {
       const locationId = parseInt(this.currentHoverItem.dataset.locationId);
-      const location = window.locationById?.get(locationId);
+      const location = appContext.locationById.get(locationId);
       if (location) {
         this.removeHoverEffects(location);
       }
@@ -545,8 +546,8 @@ class ListingCore {
    */
   createConnectionLine(item, targetMarker, color = '#0000ff') {
     if (window.innerWidth <= 767) return;
-    if (window.mapUtils?.createConnectionLine) {
-      this.connectionLine = window.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);
+    if (appContext.mapUtils?.createConnectionLine) {
+      this.connectionLine = appContext.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);
     }
   }
 
@@ -554,8 +555,8 @@ class ListingCore {
    * Entfernt die Connection Line
    */
   removeConnectionLine() {
-    if (window.mapUtils?.removeConnectionLine) {
-      window.mapUtils.removeConnectionLine();
+    if (appContext.mapUtils?.removeConnectionLine) {
+      appContext.mapUtils.removeConnectionLine();
       this.connectionLine = null;
     }
   }
@@ -603,14 +604,14 @@ class ListingCore {
    * Findet einen Marker anhand der Location
    */
   findMarkerByLocation(location) {
-    return window.markerById?.get(location.ID) || null;
+    return appContext.markerById.get(location.ID) || null;
   }
 
   /**
    * Prüft ob ein Marker sticky ist
    */
   isStickyMarker(marker) {
-    return window.mapUtils?.isStickyMarker?.(marker) ?? false;
+    return appContext.mapUtils?.isStickyMarker?.(marker) ?? false;
   }
 
   /**
@@ -639,7 +640,7 @@ class ListingCore {
     const locationId = item.dataset.locationId;
     if (locationId) {
       const id = parseInt(locationId, 10);
-      return window.locationById?.get(id) || null;
+      return appContext.locationById.get(id) || null;
     }
     return null;
   }
@@ -725,7 +726,7 @@ class ListingCore {
 
     container.querySelectorAll('.listing-item').forEach(item => {
       const locationId = parseInt(item.dataset.locationId);
-      const location = window.locationById?.get(locationId);
+      const location = appContext.locationById.get(locationId);
       if (!location) return;
 
       // Mouseenter

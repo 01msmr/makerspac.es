@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v7'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v8'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA   = `ms-data-${VERSION}`;
 
@@ -35,6 +35,7 @@ const STATIC_ASSETS = [
   '/libs/maplibre-leaflet/leaflet-maplibre-gl.js',
   '/libs/qrcode.min.js',
   // App JS
+  '/app-context.js',
   '/error-monitor.js',
   '/utils.js',
   '/config.js',

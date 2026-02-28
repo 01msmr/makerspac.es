@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/app-context.test.js tests/search-filter.test.js"
+  }
+}
