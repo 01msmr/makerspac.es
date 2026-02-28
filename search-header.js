@@ -1293,7 +1293,7 @@ const CONFIG = AppConfig;
       this._clickTimestamps[location.ID] = now;
 
       this.searchFilter.currentIdMatch = null;
-      clearTimeout(this.zoomDebounceTimeout);
+      clearTimeout(this.zoomManager?.zoomDebounceTimeout);
       this._manualSpaceClick = true;
 
       const targetMarker = this.listingCore?.findMarkerByLocation(location);
@@ -1343,6 +1343,7 @@ const CONFIG = AppConfig;
           `.listing-item[data-location-id="${location.ID}"]`
         );
         if (clickedItem) clickedItem.classList.add('active');
+        this.searchBar.blur(); // Tastatur schließen
         if (isDoubleClick) {
           this.searchBar.value = location.name;
         }

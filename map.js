@@ -1030,7 +1030,7 @@ function _applyMarkerClickHandler(marker) {
   marker.on('click', () => {
     if (window.app?.searchHeader) {
       window.app.searchHeader._manualSpaceClick = true;
-      clearTimeout(window.app.searchHeader.zoomDebounceTimeout);
+      clearTimeout(window.app.searchHeader.zoomManager?.zoomDebounceTimeout);
       setTimeout(() => { window.app.searchHeader._manualSpaceClick = false; }, 1000);
     }
     // Touch-Geräte: Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
