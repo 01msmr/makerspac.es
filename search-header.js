@@ -920,6 +920,16 @@ const CONFIG = AppConfig;
         });
       }
 
+      if (activeFilter && categoryKey !== 'bookmarks') {
+        const clearX = document.createElement('i');
+        clearX.className = 'fas fa-times pill-clear-x';
+        clearX.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.clearCategoryFilter(categoryKey);
+        });
+        pill.appendChild(clearX);
+      }
+
       return pill;
     }
 

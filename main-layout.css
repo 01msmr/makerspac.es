@@ -83,7 +83,7 @@ body {
   background-color: var(--title-background);
   padding: .25em .75em .25em .50em;
   border-radius: .6em;
-  border: .30em dashed rgba(256, 256, 256, .77);
+  border: .30em dashed rgba(255, 255, 255, .77);
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
   font-weight: bold;
   font-size: 1.7em;
@@ -127,13 +127,13 @@ text-decoration: none;
   flex: 1;
   display: flex;
   justify-content: center;
-  vertical-align: auto;
+  vertical-align: middle;
   color: rgba(0, 0, 255, .3);
   background-color: var(--title-background);
   font-size: 1.7em;
   text-decoration: none;
   opacity: 0.6;
-  transition: color, box-shadow, 0.15s ease-in;
+  transition: color 0.15s ease-in, box-shadow 0.15s ease-in;
   padding: 0.1em 0em;
 }
 

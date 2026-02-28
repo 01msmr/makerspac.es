@@ -16,7 +16,7 @@
   color: var(--microtip-color);
   background: var(--microtip-background-color);
   border: 3px solid var(--microtip-border-color);
-  box-shadow: 3px 1px 10px 3px var(--micotip-shadow-color);
+  box-shadow: 3px 1px 10px 3px var(--microtip-shadow-color);
   padding: 3px 8px;
   border-radius: 8px;
   white-space: pre;
@@ -219,7 +219,7 @@
 }
 
 .settings-icon-btn {
-  width: 20px;
+  width: 32px;
   height: 20px;
   display: flex;
   align-items: center;
@@ -231,7 +231,6 @@
   flex-shrink: 0;
   text-align: center;
   vertical-align: middle !important;
-  width: 32px !important;
 }
 
 /* Flaggen: Größere Größe für sichtbare Flaggen */

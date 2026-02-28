@@ -283,7 +283,7 @@
   color: white;
   border-radius: 100px;
   font-size: 0.8em;
-  font-weight: light;
+  font-weight: 300;
   cursor: pointer;
   white-space: nowrap;
   position: relative;
@@ -294,6 +294,30 @@
 .filter-pill:hover {
   background-color: black;
   color: white;
+}
+
+/* Active filter pill: X-circle appears over the icon on hover → click clears that filter */
+.filter-pill-active .pill-clear-x {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #cc2222;
+  color: white;
+  font-size: 0.72em;
+  opacity: 0;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.filter-pill-active:hover .pill-clear-x {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .filter-pill-passive {
@@ -1026,7 +1050,7 @@
   }
 
   #dropdown-nav-down {
-    border-bottom: 1px solid grey;
+    border-top: 1px solid grey;
   }
 
   /* End-Indikatoren: Icon per transform verschieben — kein Effekt auf Box/Layout/Trennlinie */
