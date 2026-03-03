@@ -40,6 +40,9 @@ jobs:
       - name: JSON-Splits generieren
         run: node generate-map-splits.js
 
+      - name: CSS Bundle generieren
+        run: cat main-layout.css main-components.css main-responsive.css listing-core.css search.css nearby.css styles-autocomplete.css > app.bundle.css
+
       - name: Split-Dateien zu Netcup hochladen
         env:
           FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}

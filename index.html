@@ -18,6 +18,7 @@
 
   <!-- Preload kritische Ressourcen (parallel zum HTML-Parsen) -->
   <link rel="preload" href="fonts/Roboto-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="data/markers.json" as="fetch" crossorigin />
 
   <!-- Bibliotheks-CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
@@ -28,14 +29,8 @@
   <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
   <link rel="stylesheet" href="libs/fontawesome/css/subset.min.css" />
 
-  <!-- App CSS: direkte Links statt @import-Kette → paralleles Laden -->
-  <link rel="stylesheet" href="main-layout.css" />
-  <link rel="stylesheet" href="main-components.css" />
-  <link rel="stylesheet" href="main-responsive.css" />
-  <link rel="stylesheet" href="listing-core.css" />
-  <link rel="stylesheet" href="search.css" />
-  <link rel="stylesheet" href="nearby.css" />
-  <link rel="stylesheet" href="styles-autocomplete.css" />
+  <!-- App CSS: Konsolidiertes Bundle für minimale Requests -->
+  <link rel="stylesheet" href="app.bundle.css" />
 
   <!-- Bibliotheks-JS: defer → paralleler Download, Ausführung nach DOM-Parsing -->
   <script defer src="libs/leaflet/leaflet.js"></script>
@@ -67,12 +62,15 @@
 
   <div class="title-bar">
     <a href="./">
-      <div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span>
+      <div class="title">📍maker<span class="frame"><span class="spac">spac</span><span
+            class="smaller">.es</span></span>
       </div>
     </a>
     <div class="title-tools">
-      <a href="https://makerspac.es/embed-demo.html" target="_blank" class="tool-embed"><i class="fa-solid fa-code"></i></a>
-      <a href="https://github.com/01msmr/makerspac.es/issues/new?template=add-makerspace.yml" target="_blank" class="tool-add"><i class="fa-solid fa-square-plus"></i></a>
+      <a href="https://makerspac.es/embed-demo.html" target="_blank" class="tool-embed"><i
+          class="fa-solid fa-code"></i></a>
+      <a href="https://github.com/01msmr/makerspac.es/issues/new?template=add-makerspace.yml" target="_blank"
+        class="tool-add"><i class="fa-solid fa-square-plus"></i></a>
     </div>
   </div>
 
@@ -95,8 +93,10 @@
     <div id="mobile-active-filters" class="mobile-active-filters"></div>
     <div class="dropdown-wrap">
       <div id="dropdown-nav" class="dropdown-nav">
-        <button class="dropdown-nav-btn" id="dropdown-nav-up" aria-label="Seite hoch"><i class="fas fa-angle-up"></i></button>
-        <button class="dropdown-nav-btn" id="dropdown-nav-down" aria-label="Seite runter"><i class="fas fa-angle-down"></i></button>
+        <button class="dropdown-nav-btn" id="dropdown-nav-up" aria-label="Seite hoch"><i
+            class="fas fa-angle-up"></i></button>
+        <button class="dropdown-nav-btn" id="dropdown-nav-down" aria-label="Seite runter"><i
+            class="fas fa-angle-down"></i></button>
       </div>
       <div id="suggestions-dropdown"></div>
     </div>

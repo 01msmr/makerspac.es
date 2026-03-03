@@ -6,7 +6,8 @@
 
 const VERSION = 'v8'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
-const CACHE_DATA   = `ms-data-${VERSION}`;
+const CACHE_DATA = `ms-data-${VERSION}`;
+const CACHE_TILES = `ms-tiles-${VERSION}`;
 
 const STATIC_ASSETS = [
   // HTML
@@ -92,7 +93,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(k => k !== CACHE_STATIC && k !== CACHE_DATA)
+          .filter(k => k !== CACHE_STATIC && k !== CACHE_DATA && k !== CACHE_TILES)
           .map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
@@ -103,11 +104,16 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Nur eigene Origin abfangen, keine Tile-URLs etc.
-  if (url.origin !== self.location.origin) return;
-
   const path = url.pathname;
+
+  // 1. Map Tiles (External) → Cache-First (Spezial-Cache)
+  if (url.hostname.includes('tiles.openfreemap.org')) {
+    event.respondWith(cacheFirst(request, CACHE_TILES));
+    return;
+  }
+
+  // Nur eigene Origin abfangen (außer Tiles)
+  if (url.origin !== self.location.origin) return;
 
   // HTML → Network-First
   if (request.headers.get('accept')?.includes('text/html')) {

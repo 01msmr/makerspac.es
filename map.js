@@ -51,7 +51,7 @@ window.addEventListener("keydown", (e) => {
 appContext.locationById = new Map();
 appContext.markerById = new Map();
 window.locationById = appContext.locationById; // backward compat (gleiche Map-Referenz)
-window.markerById   = appContext.markerById;
+window.markerById = appContext.markerById;
 
 // *** Modul-Scope Start ***
 
@@ -660,20 +660,7 @@ const SLUG_TO_CODE = {
   'denmark': 'dk', 'poland': 'pl', 'luxembourg': 'lu',
 };
 
-// Frühzeitiger Prefetch: Browser lädt wahrscheinlichste Daten parallel zur JS-Initialisierung.
-// Wenn URL-Land bekannt → Country-Split vorladen; sonst markers.json (alle Pins, minimal).
-{
-  const _seg  = window.location.hash?.startsWith('#/')
-    ? window.location.hash.slice(2).split('/')[0].split('+')[0]
-    : null;
-  const _file = (_seg && SLUG_TO_CODE[_seg])
-    ? `./data/spaces-${SLUG_TO_CODE[_seg]}.json`
-    : './data/markers.json';
-  document.head.appendChild(
-    Object.assign(document.createElement('link'),
-      { rel: 'prefetch', href: _file, as: 'fetch', crossOrigin: 'anonymous' })
-  );
-}
+// (Manuelles Prefetch-Block entfernt, da nun über index.html preload optimiert gesteuert)
 
 /**
  * Erkennt den ISO-Länder-Code aus dem URL-Hash.
@@ -688,7 +675,7 @@ function detectCountryCodeFromURL() {
 }
 
 /**
- * Indexiert + erstellt Marker für eine Batch neuer Locations.
+ * Indexiert + erstellt Marker für eine Batch neuer Locations (Non-blocking).
  * Überspringt bekannte IDs (Duplikat-Schutz beim Merge).
  * @param {import('./app-context.js').Location[]} newLocs
  */
@@ -703,8 +690,7 @@ function processNewLocations(newLocs) {
       continue;
     }
     if (idSet.has(loc.ID)) {
-      console.error(`❌ Doppelte ID ${loc.ID} für "${loc.name}"`);
-      issues++;
+      // In-place enrichment occurs in Stage 2, so duplicates here are usually benign
       continue;
     }
     idSet.add(loc.ID);
@@ -713,10 +699,27 @@ function processNewLocations(newLocs) {
 
   if (issues > 0) console.error(`❌ ${issues} ID-Probleme gefunden`);
 
-  for (const loc of newLocs) {
-    if (loc.loc && typeof loc.loc.lat === 'number' && typeof loc.loc.long === 'number') {
-      createMarkerForLocation(loc);
+  // Non-blocking Marker-Erstellung in Chunks (für flüssige UI)
+  const locationsWithCoords = newLocs.filter(loc =>
+    loc.loc && typeof loc.loc.lat === 'number' && typeof loc.loc.long === 'number'
+  );
+
+  const CHUNK_SIZE = 50;
+  let index = 0;
+
+  function addNextChunk() {
+    const end = Math.min(index + CHUNK_SIZE, locationsWithCoords.length);
+    for (; index < end; index++) {
+      createMarkerForLocation(locationsWithCoords[index]);
     }
+
+    if (index < locationsWithCoords.length) {
+      requestAnimationFrame(addNextChunk);
+    }
+  }
+
+  if (locationsWithCoords.length > 0) {
+    addNextChunk();
   }
 }
 
@@ -771,19 +774,43 @@ async function loadData() {
           needsEnrichment = true;
           console.log(`⚡ Stage 1a: spaces-${countryCode}.json (${rawData.length} Spaces)`);
         }
-      } catch { /* Fallback */ }
+      } catch (err) {
+        console.warn(`Stage 1a (Country Split) failed for ${countryCode}:`, err.message);
+      }
     }
 
     // Stage 1b: markers.json (alle Spaces, minimal → sofortige Anzeige aller Pins)
     if (!rawData?.length) {
-      try {
-        const r = await fetch('./data/markers.json');
-        if (r.ok) {
-          rawData = await r.json();
+      // 1b-i: Check localStorage first for instant pins
+      const cachedMarkers = localStorage.getItem('ms-markers-cache');
+      if (cachedMarkers) {
+        try {
+          rawData = JSON.parse(cachedMarkers);
           needsEnrichment = true;
-          console.log(`⚡ Stage 1b: markers.json (${rawData.length} Pins)`);
+          console.log(`⚡ Stage 1b (Cache): markers.json (${rawData.length} Pins loaded from localStorage)`);
+        } catch (e) {
+          localStorage.removeItem('ms-markers-cache');
         }
-      } catch { /* Fallback */ }
+      }
+
+      // 1b-ii: Fetch network version
+      try {
+        const r = await fetch('./data/markers.json', { mode: 'cors' });
+        if (r.ok) {
+          const freshData = await r.json();
+          // If network data is different or cache was empty, update
+          if (!rawData || JSON.stringify(freshData) !== JSON.stringify(rawData)) {
+            rawData = freshData;
+            localStorage.setItem('ms-markers-cache', JSON.stringify(freshData));
+            needsEnrichment = true;
+            console.log(`⚡ Stage 1b (Network): markers.json (${rawData.length} Pins)`);
+          }
+        } else if (r.status === 404) {
+          console.error("❌ Critical: data/markers.json missing! Run 'node generate-map-splits.js' if in development.");
+        }
+      } catch (err) {
+        console.error("Stage 1b (Markers) fetch error:", err.message);
+      }
     }
 
     // Letzter Fallback: vollständiger Datensatz direkt (alter Server-Stand / kein data/)
@@ -822,8 +849,14 @@ async function loadData() {
     });
 
     // Stage 2: vollständige Daten nachladen + in-place anreichern (nach App-Init)
+    // Mobile-Optimierung: Defer enrichment to prioritize tile loading bandwidth
     if (needsEnrichment) {
-      appContext.waitFor('app').then(() => loadAndMergeFullData());
+      appContext.waitFor('app').then(() => {
+        const enrichmentDelay = (window.innerWidth <= 767) ? 3000 : 800;
+        setTimeout(() => {
+          loadAndMergeFullData();
+        }, enrichmentDelay);
+      });
     }
 
   } catch (error) {
@@ -900,7 +933,7 @@ function adjustPopupPosition(popup, map) {
   // Horizontal: Popup links/rechts aus dem Container oder hinter UI-Elementen
   // Nach einem Flip hat sich das Popup vertikal um flipDy verschoben; wrapperRect ist aber
   // noch vor dem Flip gemessen → effektive Position berechnen statt stale Rect verwenden.
-  const effectiveWrapperTop    = wrapperRect.top    + flipDy;
+  const effectiveWrapperTop = wrapperRect.top + flipDy;
   const effectiveWrapperBottom = wrapperRect.bottom + flipDy;
   const vOverlap = r => r.bottom > effectiveWrapperTop && r.top < effectiveWrapperBottom;
   const midX = mapRect.left + mapRect.width / 2;
