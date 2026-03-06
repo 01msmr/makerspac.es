@@ -35,7 +35,7 @@
   --microtip-transition-easing: ease-out;
   --microtip-font-size: 12px;
   --microtip-font-weight: 600;
-  --microtip-background-color: rgba(255,255,32,.92);
+  --microtip-background-color: rgba(255, 255, 32, .92);
   --microtip-color: black;
   --microtip-border-color: black;
   --microtip-shadow-color: rgba(0, 0, 0, 0.5);
@@ -43,7 +43,8 @@
   /* Space-Status-Farben werden von config.js gesetzt */
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -60,7 +61,8 @@ body {
   inset: 0;
 }
 
-@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
+@media (max-width: 1024px),
+(min-width: 768px) and (pointer: coarse) {
   #map {
     bottom: var(--mobile-ui-height, 0px);
   }
@@ -111,7 +113,7 @@ body {
 }
 
 .title-bar a {
-text-decoration: none;
+  text-decoration: none;
 }
 
 .title-tools {

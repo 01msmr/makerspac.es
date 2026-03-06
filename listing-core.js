@@ -724,6 +724,63 @@ class ListingCore {
     // Meeting-Tooltip Positionierung initialisieren
     this.initMeetingTooltipObserver(container);
 
+    // Mobile: Scroll vs. Tap – verzögertes visuelles Feedback
+    // touchstart → 30ms Timer → active-Klasse (nur wenn kein Scroll erkannt)
+    // touchmove  → Timer abbrechen, active-Klasse sofort entfernen
+    // touchend   → Tap auslösen, synthetic click unterdrücken
+    //
+    // WICHTIG: setupItemListeners wird bei jedem Dropdown-Rebuild aufgerufen.
+    // Alte Container-Listener werden entfernt, damit kein mehrfacher onItemClick entsteht.
+    let _touchStartX = 0, _touchStartY = 0, _touchDidMove = false;
+    let _tapTimer = null, _tapItem = null, _tapLoc = null, _tapFired = false;
+    const TAP_THRESHOLD = 8;
+
+    // Alte Listener vom vorherigen Aufruf entfernen
+    if (container._tapHandlers) {
+      container.removeEventListener('touchstart', container._tapHandlers.start);
+      container.removeEventListener('touchmove',  container._tapHandlers.move);
+      container.removeEventListener('touchend',   container._tapHandlers.end);
+    }
+
+    const onTouchStart = e => {
+      _touchStartX = e.touches[0].clientX;
+      _touchStartY = e.touches[0].clientY;
+      _touchDidMove = false;
+      _tapFired = false;
+      clearTimeout(_tapTimer);
+      const target = e.target.closest('.listing-item');
+      _tapItem = target;
+      _tapLoc = target ? appContext.locationById.get(parseInt(target.dataset.locationId)) : null;
+      if (_tapItem) {
+        _tapTimer = setTimeout(() => _tapItem?.classList.add('active'), 30);
+      }
+    };
+
+    const onTouchMove = e => {
+      if (Math.abs(e.touches[0].clientX - _touchStartX) > TAP_THRESHOLD ||
+          Math.abs(e.touches[0].clientY - _touchStartY) > TAP_THRESHOLD) {
+        _touchDidMove = true;
+        clearTimeout(_tapTimer);
+        _tapItem?.classList.remove('active');
+        _tapItem = null;
+      }
+    };
+
+    const onTouchEnd = () => {
+      clearTimeout(_tapTimer);
+      if (!_touchDidMove && _tapItem && _tapLoc && onItemClick) {
+        _tapFired = true;
+        onItemClick(_tapLoc, _tapItem);
+      }
+      _tapItem = null;
+      _tapLoc = null;
+    };
+
+    container._tapHandlers = { start: onTouchStart, move: onTouchMove, end: onTouchEnd };
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    container.addEventListener('touchend',   onTouchEnd,   { passive: true });
+
     container.querySelectorAll('.listing-item').forEach(item => {
       const locationId = parseInt(item.dataset.locationId);
       const location = appContext.locationById.get(locationId);
@@ -778,9 +835,16 @@ class ListingCore {
         this.removeHoverEffects(location);
       });
 
-      // Click
+      // Click (Desktop); Mobile wird über touchend abgehandelt
       if (onItemClick) {
-        item.addEventListener('click', (e) => { if (window.innerWidth <= 767) e.stopPropagation(); onItemClick(location, item); });
+        item.addEventListener('click', (e) => {
+          if (window.innerWidth <= 767) {
+            if (_tapFired) { _tapFired = false; return; }
+            if (_touchDidMove) return;
+            e.stopPropagation();
+          }
+          onItemClick(location, item);
+        });
       }
 
       // Bookmarks

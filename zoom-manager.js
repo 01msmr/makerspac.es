@@ -1,4 +1,5 @@
 import AppConfig from './config.js';
+import { appContext } from './app-context.js';
 
 // zoom-manager.js - Zentrale Zoom-Logik für die Karte
 // Enthält: Auto-Zoom, Three-Frame-Zoom, Zoom-Preview-Frames, Overlap-Detection
@@ -91,11 +92,12 @@ class ZoomManager {
 
       // Mobile: schneller, direkter Zoom ohne Frame-Effekte
       if (window.innerWidth <= 767) {
+        if (appContext.searchHeader?._manualSpaceClick) return;
         const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
         this.map.fitBounds(newBounds, {
           animate: true,
           duration: 0.35,
-          paddingTopLeft:     L.point(8, 8),
+          paddingTopLeft: L.point(8, 8),
           paddingBottomRight: L.point(8, 8 + uiH),
         });
         this.previousZoomBounds = newBounds;
@@ -191,9 +193,9 @@ class ZoomManager {
 
     const combinedBounds = L.latLngBounds([
       [Math.min(firstBounds.getSouth(), secondBounds.getSouth()),
-       Math.min(firstBounds.getWest(), secondBounds.getWest())],
+      Math.min(firstBounds.getWest(), secondBounds.getWest())],
       [Math.max(firstBounds.getNorth(), secondBounds.getNorth()),
-       Math.max(firstBounds.getEast(), secondBounds.getEast())]
+      Math.max(firstBounds.getEast(), secondBounds.getEast())]
     ]).pad(0.05);
 
     const mapContainer = document.getElementById('map');
@@ -236,7 +238,8 @@ class ZoomManager {
 
     setTimeout(() => {
       this.removeZoomPreviewFrame(secondFrameInfo?.layer);
-      if (window.innerWidth > 767) this.searchBar?.focus();
+      const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
+      if (!isMobile) this.searchBar?.focus();
     }, 800);
   }
 
@@ -262,7 +265,8 @@ class ZoomManager {
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);
       }
-      if (window.innerWidth > 767) this.searchBar?.focus();
+      const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
+      if (!isMobile) this.searchBar?.focus();
     });
   }
 

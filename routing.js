@@ -6,8 +6,8 @@ export class RoutingManager {
     appContext.routingManager = this;
     window.routingManager = this; // backward compat
     this.styleFilterManager = styleFilterManager ?? appContext.searchFilter;
-    this.searchManager      = searchManager      ?? appContext.searchHeader;
-    this.json               = json?.length        ? json : appContext.locations;
+    this.searchManager = searchManager ?? appContext.searchHeader;
+    this.json = json?.length ? json : appContext.locations;
 
     this._countries = null;
     this._routes = null;
@@ -103,8 +103,8 @@ export class RoutingManager {
     appContext.waitFor('app').then(() => {
       // Sync mit aktuellsten Referenzen (könnten sich nach Konstruktor-Aufruf geändert haben)
       if (!this.styleFilterManager) this.styleFilterManager = appContext.searchFilter;
-      if (!this.searchManager)      this.searchManager      = appContext.searchHeader;
-      if (!this.json?.length)       this.json               = appContext.locations;
+      if (!this.searchManager) this.searchManager = appContext.searchHeader;
+      if (!this.json?.length) this.json = appContext.locations;
 
       if (!hash || hash === '#' || hash === '#/') {
         this.autoDetectAndApplyCountry();
@@ -421,7 +421,7 @@ export class RoutingManager {
     // Race-Condition: _isNavigating kann durch ältere Timer zurückgesetzt werden,
     // bevor hashchange feuert. Wenn der User gerade manuell ein Item angeklickt hat,
     // URL-Routing nicht anwenden – Popup und Filter wurden bereits korrekt gesetzt.
-    if (appContext.searchHeader?._manualSpaceClick) return;
+    if (window.app?.searchHeader?._manualSpaceClick) return;
     this._isOnLocationRoute = true;
     if (this.searchManager.pillsManager) this.searchManager.pillsManager.clear();
     if (this.styleFilterManager) {
@@ -444,6 +444,8 @@ export class RoutingManager {
   }
 
   zoomToLocations(locations) {
+    if (window.innerWidth <= 767) return; // Mobile: kein URL-getriggerter Zoom
+    if (window.app?.searchHeader?._manualSpaceClick) return; // Kein Zoom bei direktem Marker-Klick/Tap
     if (!appContext.map || locations.length === 0) return;
     if (locations.length === 1) {
       appContext.map.setView([locations[0].loc.lat, locations[0].loc.long], 15);

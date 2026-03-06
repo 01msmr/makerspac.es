@@ -982,14 +982,12 @@
     color: white !important;
   }
 
-  /* Tap-Feedback: invertiert */
-  #suggestions-dropdown .listing-item:active,
+  /* Tap-Feedback: nur per .active-Klasse (kein :active-Flash beim Scrollen) */
   #suggestions-dropdown .listing-item.active {
     background: var(--bg-color);
     color: var(--status-color, var(--space-hover));
   }
 
-  #suggestions-dropdown .listing-item:active *,
   #suggestions-dropdown .listing-item.active * {
     color: var(--status-color, var(--space-hover)) !important;
   }

@@ -607,7 +607,7 @@ function initializeClustering() {
     spiderfyOnMaxZoom: true,
     spiderfyDistanceMultiplier: 2,
     showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
+    zoomToBoundsOnClick: !('ontouchstart' in window), // Mobile: kein Zoom bei Cluster-Tap
     animate: true,
     animateAddingMarkers: false,
     chunkedLoading: true,
@@ -699,28 +699,33 @@ function processNewLocations(newLocs) {
 
   if (issues > 0) console.error(`❌ ${issues} ID-Probleme gefunden`);
 
-  // Non-blocking Marker-Erstellung in Chunks (für flüssige UI)
+  // Non-blocking Marker-Erstellung in Chunks (für flüssige UI).
+  // Gibt ein Promise zurück, das auflöst wenn der letzte Chunk gerendert wurde.
   const locationsWithCoords = newLocs.filter(loc =>
     loc.loc && typeof loc.loc.lat === 'number' && typeof loc.loc.long === 'number'
   );
 
-  const CHUNK_SIZE = 50;
-  let index = 0;
+  return new Promise(resolve => {
+    if (locationsWithCoords.length === 0) { resolve(); return; }
 
-  function addNextChunk() {
-    const end = Math.min(index + CHUNK_SIZE, locationsWithCoords.length);
-    for (; index < end; index++) {
-      createMarkerForLocation(locationsWithCoords[index]);
+    const CHUNK_SIZE = 50;
+    let index = 0;
+
+    function addNextChunk() {
+      const end = Math.min(index + CHUNK_SIZE, locationsWithCoords.length);
+      for (; index < end; index++) {
+        createMarkerForLocation(locationsWithCoords[index]);
+      }
+
+      if (index < locationsWithCoords.length) {
+        requestAnimationFrame(addNextChunk);
+      } else {
+        resolve();
+      }
     }
 
-    if (index < locationsWithCoords.length) {
-      requestAnimationFrame(addNextChunk);
-    }
-  }
-
-  if (locationsWithCoords.length > 0) {
     addNextChunk();
-  }
+  });
 }
 
 /**
@@ -831,8 +836,7 @@ async function loadData() {
     window.json = rawData; // backward compat
     json = rawData;
 
-    processNewLocations(rawData);
-
+    // SpaceAPI setup runs in parallel with marker creation chunks
     const spaceAPI = new StaticSpaceAPI();
     appContext.spaceAPI = spaceAPI;
     window.spaceAPI = spaceAPI; // backward compat
@@ -840,6 +844,9 @@ async function loadData() {
     spaceAPI.onStatusUpdate((location) => {
       updateMarkerIconForLocation(location);
     });
+
+    // Await all marker chunks so ready('data') fires only when all pins are in the cluster
+    await processNewLocations(rawData);
 
     appContext.ready('data');
 
@@ -1066,9 +1073,11 @@ function _applyMarkerClickHandler(marker) {
       clearTimeout(window.app.searchHeader.zoomManager?.zoomDebounceTimeout);
       setTimeout(() => { window.app.searchHeader._manualSpaceClick = false; }, 1000);
     }
-    // Touch-Geräte: Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
-    if ('ontouchstart' in window && marker.isPopupOpen()) {
-      marker._retainPopup = true;
+    if ('ontouchstart' in window) {
+      // Kein URL-Routing beim Marker-Tap: _openedByItemClick überspringt navigateToLocations in popupopen
+      marker._openedByItemClick = true;
+      // Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
+      if (marker.isPopupOpen()) marker._retainPopup = true;
     }
   });
 }
@@ -1513,6 +1522,7 @@ const init = async () => {
     setupMap();
     initializeClustering();
     await loadData();
+
     setupSearch();
     setupStyleFilter();
     setupRouting();

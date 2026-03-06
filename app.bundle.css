@@ -35,7 +35,7 @@
   --microtip-transition-easing: ease-out;
   --microtip-font-size: 12px;
   --microtip-font-weight: 600;
-  --microtip-background-color: rgba(255,255,32,.92);
+  --microtip-background-color: rgba(255, 255, 32, .92);
   --microtip-color: black;
   --microtip-border-color: black;
   --microtip-shadow-color: rgba(0, 0, 0, 0.5);
@@ -43,7 +43,8 @@
   /* Space-Status-Farben werden von config.js gesetzt */
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -60,7 +61,8 @@ body {
   inset: 0;
 }
 
-@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
+@media (max-width: 1024px),
+(min-width: 768px) and (pointer: coarse) {
   #map {
     bottom: var(--mobile-ui-height, 0px);
   }
@@ -111,7 +113,7 @@ body {
 }
 
 .title-bar a {
-text-decoration: none;
+  text-decoration: none;
 }
 
 .title-tools {
@@ -154,6 +156,7 @@ text-decoration: none;
 .is-hidden {
   display: none !important;
 }
+
 /* ═════════════════════════════════════════════════════════
    MAIN-COMPONENTS.CSS – UI Component Styles
    ═════════════════════════════════════════════════════════ */
@@ -166,9 +169,12 @@ text-decoration: none;
 /* Microtip Farben (zentral ueberschrieben) */
 [aria-label][role~="tooltip"]::after {
   font-family: var(--font-family);
-    font-size: 13px !important;  /* Fixe Textgröße */
-    line-height: 16px !important;  /* Fixe Zeilenhöhe */
-    font-weight: 600;  /* Einheitliche Dicke */
+  font-size: 13px !important;
+  /* Fixe Textgröße */
+  line-height: 16px !important;
+  /* Fixe Zeilenhöhe */
+  font-weight: 600;
+  /* Einheitliche Dicke */
   color: var(--microtip-color);
   background: var(--microtip-background-color);
   border: 3px solid var(--microtip-border-color);
@@ -189,10 +195,29 @@ text-decoration: none;
 }
 
 
-[role~="tooltip"][data-microtip-position|="top"]::before    { border-top: 8px solid var(--microtip-border-color); border-bottom: 0; margin-bottom: 3px; }
-[role~="tooltip"][data-microtip-position|="bottom"]::before { border-bottom: 8px solid var(--microtip-border-color); border-top: 0; margin-top: 3px; }
-[role~="tooltip"][data-microtip-position="left"]::before    { border-left: 8px solid var(--microtip-border-color); border-right: 0; margin-right: 3px; }
-[role~="tooltip"][data-microtip-position="right"]::before   { border-right: 8px solid var(--microtip-border-color); border-left: 0; margin-left: 3px; }
+[role~="tooltip"][data-microtip-position|="top"]::before {
+  border-top: 8px solid var(--microtip-border-color);
+  border-bottom: 0;
+  margin-bottom: 3px;
+}
+
+[role~="tooltip"][data-microtip-position|="bottom"]::before {
+  border-bottom: 8px solid var(--microtip-border-color);
+  border-top: 0;
+  margin-top: 3px;
+}
+
+[role~="tooltip"][data-microtip-position="left"]::before {
+  border-left: 8px solid var(--microtip-border-color);
+  border-right: 0;
+  margin-right: 3px;
+}
+
+[role~="tooltip"][data-microtip-position="right"]::before {
+  border-right: 8px solid var(--microtip-border-color);
+  border-left: 0;
+  margin-left: 3px;
+}
 
 
 /* ===================================
@@ -554,7 +579,8 @@ text-decoration: none;
 }
 
 .leaflet-popup.popup-flipped .leaflet-popup-content-wrapper {
-  margin-top: 20px; /* Platz für den nach oben gerichteten Pfeil */
+  margin-top: 20px;
+  /* Platz für den nach oben gerichteten Pfeil */
 }
 
 @keyframes popupFadeOut {
@@ -732,7 +758,9 @@ a#titleurl h3 {
 }
 
 /* Styling für den Makerspace-Namen nach SpaceAPI-Status */
-a#titleurl h3.space-unknown { border-color: var(--space-unknown); }
+a#titleurl h3.space-unknown {
+  border-color: var(--space-unknown);
+}
 
 /* Icon im Namen: weiß, korrekt ausgerichtet */
 a#titleurl h3.space-open .fas,
@@ -808,7 +836,7 @@ a#titleurl:hover h3.space-unknown .fas {
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: rgba(255,255,255,0.66);
+  background-color: rgba(255, 255, 255, 0.66);
   background-image: linear-gradient(to bottom, transparent 50%, var(--status-color, var(--space-hover)) 50%);
   background-size: 100% 400%;
   background-position: 0 0;
@@ -1393,7 +1421,9 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Disable nearby popover during consent */
 body.consent-active .nearby-popover,
-body.consent-active #map { pointer-events: none; }
+body.consent-active #map {
+  pointer-events: none;
+}
 
 .consent-overlay {
   position: fixed;
@@ -1426,34 +1456,64 @@ body.consent-active #map { pointer-events: none; }
 /* ── Planet-Animationen: Skalieren + Bogen (GPU-beschleunigt) ── */
 /* Enter: von rechts oben herein */
 @keyframes earth-enter {
-  0%   { transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0); }
-  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  0% {
+    transform: scale3d(0.06, 0.06, 1) translate3d(350px, -100px, 0);
+  }
+
+  100% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
 }
 
 @keyframes sun-enter {
-  0%   { transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0); }
-  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  0% {
+    transform: scale3d(0.06, 0.06, 1) translate3d(200px, -80px, 0);
+  }
+
+  100% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
 }
 
 @keyframes moon-enter {
-  0%   { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0); }
-  100% { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
+  0% {
+    transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(100px, -60px, 0);
+  }
+
+  100% {
+    transform: rotate(30deg) scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
 }
 
 /* Exit: nach rechts hinaus */
 @keyframes earth-exit {
-  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
-  100% { transform: scale3d(0.06,0.06,1) translate3d(350px, 0, 0); }
+  0% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: scale3d(0.06, 0.06, 1) translate3d(350px, 0, 0);
+  }
 }
 
 @keyframes sun-exit {
-  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
-  100% { transform: scale3d(0.06,0.06,1) translate3d(250px, 0, 0); }
+  0% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: scale3d(0.06, 0.06, 1) translate3d(250px, 0, 0);
+  }
 }
 
 @keyframes moon-exit {
-  0%   { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
-  100% { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(150px, 0, 0); }
+  0% {
+    transform: rotate(30deg) scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(150px, 0, 0);
+  }
 }
 
 /* ── ERDE: Details (hinter Sonne) ── */
@@ -1484,7 +1544,7 @@ body.consent-active #map { pointer-events: none; }
     0 0 100px rgba(30, 100, 180, 0.2),
     0 0 160px rgba(30, 100, 180, 0.08);
   will-change: transform;
-  transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0);
+  transform: scale3d(0.06, 0.06, 1) translate3d(350px, -100px, 0);
 }
 
 .consent-overlay.visible .consent-earth {
@@ -1564,7 +1624,7 @@ body.consent-active #map { pointer-events: none; }
     0 0 150px rgba(255, 183, 0, 0.3),
     0 0 220px rgba(255, 160, 0, 0.12);
   will-change: transform;
-  transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0);
+  transform: scale3d(0.06, 0.06, 1) translate3d(200px, -80px, 0);
 }
 
 .consent-overlay.visible .consent-sun {
@@ -1616,7 +1676,7 @@ body.consent-active #map { pointer-events: none; }
   border-radius: 50%;
   overflow: hidden;
   will-change: transform;
-  transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0);
+  transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(100px, -60px, 0);
   box-shadow:
     0 0 40px rgba(100, 100, 120, 0.4),
     0 0 80px rgba(80, 80, 100, 0.15),
@@ -1709,6 +1769,7 @@ body.consent-active #map { pointer-events: none; }
   pointer-events: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
+
 /* ═════════════════════════════════════════════════════════
    MAIN-RESPONSIVE.CSS – Dark Mode, Color Schemes,
                           Responsive & High Contrast
@@ -1991,15 +2052,18 @@ body.consent-active #map { pointer-events: none; }
 }
 
 @media (max-width: 767px) {
+
   /* Volle Bildschirmhöhe/-breite für iPhone (kein weißer Rand) */
-  html, body {
+  html,
+  body {
     width: 100%;
     height: 100%;
   }
 
   /* Safe-Area-Zonen schwarz hinterlegen.
      Map (inset:0) deckt den html-Hintergrund oben ab — nur unten sichtbar. */
-  html, body {
+  html,
+  body {
     background-color: black;
   }
 
@@ -2057,7 +2121,8 @@ body.consent-active #map { pointer-events: none; }
 @media (min-width: 768px) and (pointer: coarse) {
 
   /* Volle Bildschirmfläche, schwarze Safe-Area-Zonen */
-  html, body {
+  html,
+  body {
     width: 100%;
     height: 100%;
     background-color: black;
@@ -2084,6 +2149,7 @@ body.consent-active #map { pointer-events: none; }
     display: none !important;
   }
 }
+
 /* =================================================================
    LISTING-CORE.CSS - Unified Item Styling (ListingCore Module)
    Einheitliches Styling für Such- und Nearby-Items
@@ -2130,7 +2196,7 @@ body.consent-active #map { pointer-events: none; }
 /* Alle Kindelemente weiß beim Hover - AUSSER Distanz-Badge und Bookmark */
 .listing-item.active .listing-item-content,
 .listing-item.active .listing-item-name,
-.listing-item.active .listing-item-name > span,
+.listing-item.active .listing-item-name>span,
 .listing-item.active .listing-item-details,
 .listing-item.active .style-icon,
 .listing-item.active .space-name-default,
@@ -2173,7 +2239,7 @@ body.consent-active #map { pointer-events: none; }
 }
 
 
-.listing-item-name > span {
+.listing-item-name>span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2332,6 +2398,7 @@ body.consent-active #map { pointer-events: none; }
 .listing-item .door-icon-unknown {
   margin-right: 4px;
 }
+
 /* =================================================================
    SEARCH.CSS - Search UI Styles
    Searchbar, Dropdown, Filters, Country Headers
@@ -2521,7 +2588,8 @@ body.consent-active #map { pointer-events: none; }
 
 /* microtip setzt position:relative – das hier stellt absolute wieder her */
 .search-counter[aria-label][role~="tooltip"] {
-  position: absolute; /* microtip overrides to relative; counter must stay absolute */
+  position: absolute;
+  /* microtip overrides to relative; counter must stay absolute */
 }
 
 /* Dark Mode */
@@ -2554,7 +2622,7 @@ body.consent-active #map { pointer-events: none; }
 }
 
 /* When filters section exists above, dropdown adjusts */
-.active-filters-section + #suggestions-dropdown {
+.active-filters-section+#suggestions-dropdown {
   margin-top: 0;
   padding-top: 0;
   border-radius: 0 0 20px 20px;
@@ -2930,7 +2998,9 @@ body.consent-active #map { pointer-events: none; }
   }
 }
 
-@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
+@media (max-width: 1024px),
+(min-width: 768px) and (pointer: coarse) {
+
   /* Search Container: unten fixiert, wächst nach oben */
   .search-container {
     position: fixed !important;
@@ -3014,7 +3084,8 @@ body.consent-active #map { pointer-events: none; }
   }
 
   .filter-active-indicator.has-filters {
-    display: none; /* Aktiver Filter nur als Chip-Bar (#mobile-active-filters) anzeigen, nicht doppelt */
+    display: none;
+    /* Aktiver Filter nur als Chip-Bar (#mobile-active-filters) anzeigen, nicht doppelt */
   }
 
   .filter-active-indicator .fi-sep {
@@ -3138,8 +3209,15 @@ body.consent-active #map { pointer-events: none; }
   }
 
   /* doorState-Pills: aktiv grün oder rot */
-  .mf-opt-item.mf-opt-door-open.mf-opt-active   { background: var(--space-open);   border-color: var(--space-open); }
-  .mf-opt-item.mf-opt-door-closed.mf-opt-active { background: var(--space-closed); border-color: var(--space-closed); }
+  .mf-opt-item.mf-opt-door-open.mf-opt-active {
+    background: var(--space-open);
+    border-color: var(--space-open);
+  }
+
+  .mf-opt-item.mf-opt-door-closed.mf-opt-active {
+    background: var(--space-closed);
+    border-color: var(--space-closed);
+  }
 
   /* Nutzer-Land (ohne aktiven Filter): dezent hervorgehoben */
   .mf-opt-item.mf-opt-user-country {
@@ -3174,14 +3252,16 @@ body.consent-active #map { pointer-events: none; }
   /* Länderflagge im Chip & Options-Pill: exakter Kreis, konzentrisch links */
   .mf-country-flag,
   .mf-opt-flag {
-    width: 24px !important;   /* überschreibt .fi-Klasse (1.333em) → perfekter Kreis */
+    width: 24px !important;
+    /* überschreibt .fi-Klasse (1.333em) → perfekter Kreis */
     height: 24px !important;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
     background-size: cover !important;
     background-position: center !important;
-    margin-left: -8px;        /* Kreis-Mittelpunkt bei x=12px = Chip-Halbkreis-Mittelpunkt */
+    margin-left: -8px;
+    /* Kreis-Mittelpunkt bei x=12px = Chip-Halbkreis-Mittelpunkt */
     margin-right: 4px;
   }
 
@@ -3196,8 +3276,13 @@ body.consent-active #map { pointer-events: none; }
   }
 
   /* Status-Chip Farben */
-  .mf-chip.mf-chip-open   { background: var(--space-open); }
-  .mf-chip.mf-chip-closed { background: var(--space-closed); }
+  .mf-chip.mf-chip-open {
+    background: var(--space-open);
+  }
+
+  .mf-chip.mf-chip-closed {
+    background: var(--space-closed);
+  }
 
   /* Clear-All-Button: exakter Kreis */
   .mobile-active-filters .filter-pill-clear-all {
@@ -3222,11 +3307,13 @@ body.consent-active #map { pointer-events: none; }
 
   /* === DROPDOWN-WRAP: unsichtbar wenn leer (0px Platz über Searchbar) === */
   .dropdown-wrap {
-    display: none; /* nur sichtbar wenn Dropdown aktiv */
+    display: none;
+    /* nur sichtbar wenn Dropdown aktiv */
     flex-direction: row;
     border-radius: 0;
     border-top: 3px solid black;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65); /* Schatten nach oben zur Karte */
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65);
+    /* Schatten nach oben zur Karte */
   }
 
   .dropdown-wrap:has(#suggestions-dropdown.is-active) {
@@ -3235,7 +3322,8 @@ body.consent-active #map { pointer-events: none; }
 
   /* === DROPDOWN: nur wenn aktiv, schwarzer HG, 2-Spalten-Grid === */
   #suggestions-dropdown {
-    display: none !important; /* versteckt wenn leer → 0px Platz über Searchbar */
+    display: none !important;
+    /* versteckt wenn leer → 0px Platz über Searchbar */
   }
 
   #suggestions-dropdown.is-active {
@@ -3244,18 +3332,22 @@ body.consent-active #map { pointer-events: none; }
     min-width: 0;
     background: black;
     grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 58px; /* Touch-Höhe je Space-Badge */
-    min-height: 116px; /* immer 2 Zeilen hoch: 2×58px */
+    grid-auto-rows: 58px;
+    /* Touch-Höhe je Space-Badge */
+    min-height: 116px;
+    /* immer 2 Zeilen hoch: 2×58px */
     max-height: 116px;
     overflow-y: auto;
     scroll-snap-type: y mandatory;
-    scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen */
+    scroll-padding-top: 0 !important;
+    /* Desktop-Wert (80px) zurücksetzen */
     padding: 0;
     gap: 0;
     margin-top: 0 !important;
     padding-top: 0 !important;
     border-radius: 0 !important;
-    box-shadow: none !important; /* kein Schatten nach unten */
+    box-shadow: none !important;
+    /* kein Schatten nach unten */
     /* border-bottom: 1px solid white; */
     touch-action: pan-y;
     overscroll-behavior: contain;
@@ -3289,7 +3381,8 @@ body.consent-active #map { pointer-events: none; }
     color: white !important;
     overflow: hidden;
     align-items: flex-start;
-    scroll-snap-align: none; /* Snap nur auf 2-Row-Grenzen (s.u.) */
+    scroll-snap-align: none;
+    /* Snap nur auf 2-Row-Grenzen (s.u.) */
     position: relative;
   }
 
@@ -3316,42 +3409,67 @@ body.consent-active #map { pointer-events: none; }
     color: white !important;
   }
 
-  /* Tap-Feedback: invertiert */
-  #suggestions-dropdown .listing-item:active,
+  /* Tap-Feedback: nur per .active-Klasse (kein :active-Flash beim Scrollen) */
   #suggestions-dropdown .listing-item.active {
     background: var(--bg-color);
     color: var(--status-color, var(--space-hover));
   }
 
-  #suggestions-dropdown .listing-item:active *,
   #suggestions-dropdown .listing-item.active * {
     color: var(--status-color, var(--space-hover)) !important;
   }
 
-  #suggestions-dropdown .listing-dist-badge { display: none; }
-  #suggestions-dropdown .listing-item-content { flex: 1; min-width: 0; width: 100%; }
+  #suggestions-dropdown .listing-dist-badge {
+    display: none;
+  }
+
+  #suggestions-dropdown .listing-item-content {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
   #suggestions-dropdown .listing-item-name {
     padding-bottom: 1px;
     font-size: 12px;
     gap: 0;
   }
-  #suggestions-dropdown .listing-item-name > span {
+
+  #suggestions-dropdown .listing-item-name>span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
   }
-  #suggestions-dropdown .listing-item-address { gap: 4px; }
-  #suggestions-dropdown .listing-item-details { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #suggestions-dropdown .listing-meeting-today { display: none; }
-  #suggestions-dropdown .listing-workshops     { display: none; }
+
+  #suggestions-dropdown .listing-item-address {
+    gap: 4px;
+  }
+
+  #suggestions-dropdown .listing-item-details {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #suggestions-dropdown .listing-meeting-today {
+    display: none;
+  }
+
+  #suggestions-dropdown .listing-workshops {
+    display: none;
+  }
 
   /* Straße ausblenden, nur PLZ+Stadt sichtbar */
-  #suggestions-dropdown .listing-item-address-lines > div:first-child { display: none; }
+  #suggestions-dropdown .listing-item-address-lines>div:first-child {
+    display: none;
+  }
 
   /* === SCROLL-NAV-BUTTONS (links vom Dropdown, weiß auf schwarz) === */
   .dropdown-nav {
-    display: none; /* sichtbar wenn Dropdown Inhalt hat */
+    display: none;
+    /* sichtbar wenn Dropdown Inhalt hat */
     flex-direction: column;
     background: black;
     flex-shrink: 0;
@@ -3537,6 +3655,7 @@ body.consent-active #map { pointer-events: none; }
     max-height: 174px;
   }
 }
+
 /* =================================================================
    NEARBY.CSS - Nearby Spaces Feature Styles
    Popover, Cursor Hint, Radius Slider
@@ -3745,9 +3864,20 @@ body.consent-active #map { pointer-events: none; }
 
 /* Flicker-Animation wenn Liste nicht weiter erweiterbar */
 @keyframes nearby-limit-flicker {
-  0%, 100% { background-color: var(--dropdown-bg); }
-  25%, 75% { background-color: var(--space-closed); }
-  50% { background-color: var(--dropdown-bg); }
+
+  0%,
+  100% {
+    background-color: var(--dropdown-bg);
+  }
+
+  25%,
+  75% {
+    background-color: var(--space-closed);
+  }
+
+  50% {
+    background-color: var(--dropdown-bg);
+  }
 }
 
 .nearby-resize-handle.limit-reached {
@@ -3933,8 +4063,13 @@ body.consent-active #map { pointer-events: none; }
   }
 
   @keyframes nearbySlideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
   }
 
   .nearby-cursor-hint {
@@ -3949,6 +4084,7 @@ body.consent-active #map { pointer-events: none; }
     display: none !important;
   }
 }
+
 /*============================================AUTOCOMPLETE PILLS - Enhanced Search============================================*/
 
 /* Autocomplete Container - oberhalb der Searchbar */
@@ -3974,8 +4110,10 @@ body.consent-active #map { pointer-events: none; }
   display: none !important;
 
   /* ✨ FIX: Flex-Eigenschaften für Pill-Anzeige in der Reihe */
-  flex-direction: row !important; /* Spalte -> Zeile */
-  flex-wrap: wrap !important; /* Umbruch, wenn kein Platz */
+  flex-direction: row !important;
+  /* Spalte -> Zeile */
+  flex-wrap: wrap !important;
+  /* Umbruch, wenn kein Platz */
 
   gap: 4px !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
@@ -3999,9 +4137,11 @@ body.consent-active #map { pointer-events: none; }
 .autocomplete-pill {
   background: #000 !important;
   color: #fff !important;
-  padding: 4px 8px !important; /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
+  padding: 4px 8px !important;
+  /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
   border-radius: 12px !important;
-  font-size: 0.75em !important; /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
+  font-size: 0.75em !important;
+  /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
   font-weight: 500 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
@@ -4030,13 +4170,13 @@ body.consent-active #map { pointer-events: none; }
     background: #fff;
     color: #000;
   }
-  
+
   .autocomplete-pill:hover,
   .autocomplete-pill.focused {
     background: #0066ff;
     color: #fff;
   }
-  
+
   .autocomplete-pill.focused {
     background: #fff !important;
     color: #000 !important;
@@ -4126,414 +4266,10 @@ body.consent-active #map { pointer-events: none; }
   pointer-events: auto;
   /* Pills sind klickbar */
   user-select: none;
-  position: relative; /* Wichtig für ::after-Positionierung */
-  overflow: hidden; /* Verhindert, dass Text/X bei der Transformation überläuft */
-}
-
-/* ✨ KORREKTUR: Roter Hover-Effekt (Löschen) */
-.search-pill:hover {
-  background: #dd4444;
-  /* Rot für Löschen */
-  /* color: white; - Entfernt, da wir jetzt .search-pill-text verwenden */
-}
-
-/* ✨ NEU: Verbirgt den Pill-Text beim Hover */
-.search-pill:hover .search-pill-text {
-  opacity: 0;
-  /* ✨ NEU: Text verschieben, damit er nicht über dem X liegt (Optional, da opacity=0) */
-  transform: translateX(-10px);
-  transition: opacity 0.1s ease-out, transform 0.1s ease-out;
-}
-
-/* ✨ NEU: Das rote "X" beim Hover einfügen (ersetzt den Text visuell) */
-.search-pill::after {
-  content: "X"; /* Inhalt ist das X */
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0); /* Standardmäßig in der Mitte, unsichtbar */
-  font-size: 1.2em;
-  font-weight: bold;
-  opacity: 0;
-  color: #fff;
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.search-pill:hover::after {
-  transform: translate(-50%, -50%) scale(1);
-  /* Sichtbar machen */
-  opacity: 1;
-}
-
-
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .search-pill {
-    background: #fff;
-    color: #000;
-  }
-  
-  .search-pill:hover {
-    background: #ddd;
-  }
-}
-
-/* Remove Button (×) */
-.search-pill-remove {
-  display: none !important;
-}
-
-/* Pill Type Colors */
-.search-input-wrapper .search-pill[data-type="city"] {
-  background-color: #000;
-  color: #fff;
-}
-
-.search-input-wrapper .search-pill[data-type="city"]:hover {
-  background-color: #dd4444;
-}
-
-.search-pill[data-type="zip"] {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: #fff;
-}
-
-.search-pill[data-type="zip"]:hover {
-  background: linear-gradient(135deg, #d97fe0 0%, #db4a5d 100%);
-}
-
-.search-pill[data-type="country"] {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #fff;
-}
-
-.search-pill[data-type="country"]:hover {
-  background: linear-gradient(135deg, #3d8fd8 0%, #00d4e0 100%);
-}
-
-/* Searchbar mit Pills - Text-Offset */
-#search-bar.has-pills {
-  padding-left: var(--dynamic-pill-padding, 1em);
-  transition: padding-left 0.2s ease;
-}
-
-/* Placeholder ausblenden wenn Pills aktiv */
-#search-bar.has-pills::placeholder {
-  opacity: 0;
-}
-
-
-/* ============================================
-   PILL ANIMATIONS
-   ============================================ */
-
-@keyframes pillSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateX(0);
-  }
-}
-
-@keyframes pillSlideOut {
-  from {
-    opacity: 1;
-    transform: scale(1) translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.8) translateX(-10px);
-  }
-}
-
-.search-pill {
-  animation: pillSlideIn 0.2s ease;
-}
-
-.search-pill.removing {
-  animation: pillSlideOut 0.15s ease;
-}
-
-
-/* ============================================
-   AUTOCOMPLETE SCROLLBAR (nur wenn nötig)
-   ============================================ */
-
-.autocomplete-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.autocomplete-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.autocomplete-container::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
-}
-
-.autocomplete-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-@media (prefers-color-scheme: dark) {
-  .autocomplete-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  
-  .autocomplete-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-}
-
-
-/* ============================================
-   RESPONSIVE ADJUSTMENTS
-   ============================================ */
-
-@media (max-width: 767px) {
-  .autocomplete-container {
-    position: fixed !important;
-    top: auto !important;
-    bottom: var(--mobile-ui-height, 50px) !important;
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    max-height: 40vh !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .autocomplete-container {
-    left: 2px;
-    right: 2px;
-  }
-  
-  .search-pills-container {
-    max-width: calc(100% - 60px);
-  }
-  
-  .search-pill {
-    font-size: 0.7em;
-    padding: 3px 6px;
-  }
-  
-  .autocomplete-pill {
-    font-size: 0.8em;
-    padding: 5px 10px;
-  }
-}
-
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-
-/* Focus-Visible für Keyboard-Navigation */
-.autocomplete-pill:focus-visible {
-  outline: 3px solid #0066ff;
-  outline-offset: 2px;
-}
-
-.search-pill:focus-visible {
-  outline: 2px solid #0066ff;
-  outline-offset: 1px;
-}
-
-/* Screen Reader Only Text */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  position: relative;
+  /* Wichtig für ::after-Positionierung */
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}/*============================================AUTOCOMPLETE PILLS - Enhanced Search============================================*/
-
-/* Autocomplete Container - oberhalb der Searchbar */
-.autocomplete-container {
-  position: absolute !important;
-  /* KORREKTUR: Positionierung UNTERHALB der Searchbar */
-  top: 48px !important;
-  /* Ca. 36px (Searchbar Höhe) + 12px Abstand */
-  transform: none !important;
-  /* Transformation entfernen */
-  margin-bottom: 0 !important;
-  /* Margin entfernen */
-
-  left: 5px !important;
-  right: 5px !important;
-  /* 10px schmäler als Searchbar */
-  z-index: 1002 !important;
-  /* Über Searchbar (1001), unter Modals */
-  background: rgba(0, 0, 0, 0.08) !important;
-  backdrop-filter: blur(10px) !important;
-  border-radius: 12px !important;
-  padding: 8px !important;
-  display: none !important;
-
-  /* ✨ FIX: Flex-Eigenschaften für Pill-Anzeige in der Reihe */
-  flex-direction: row !important; /* Spalte -> Zeile */
-  flex-wrap: wrap !important; /* Umbruch, wenn kein Platz */
-
-  gap: 4px !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-}
-
-.autocomplete-container.is-active {
-  display: flex !important;
-}
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .autocomplete-container {
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -2px 12px rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* Autocomplete Pills - Vorschläge */
-.autocomplete-pill {
-  background: #000 !important;
-  color: #fff !important;
-  padding: 4px 8px !important; /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
-  border-radius: 12px !important;
-  font-size: 0.75em !important; /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
-  white-space: nowrap !important;
-  display: flex !important;
-  align-items: center !important;
-  font-family: var(--font-family) !important;
-  user-select: none !important;
-}
-
-.autocomplete-pill:hover {
-  background: #0066ff;
-  transform: scale(1.02);
-}
-
-.autocomplete-pill.focused {
-  background: #fff !important;
-  color: #0066ff !important;
-  outline: none !important;
-  outline-offset: 2px;
-}
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .autocomplete-pill {
-    background: #fff;
-    color: #000;
-  }
-  
-  .autocomplete-pill:hover,
-  .autocomplete-pill.focused {
-    background: #0066ff;
-    color: #fff;
-  }
-  
-  .autocomplete-pill.focused {
-    background: #fff !important;
-    color: #000 !important;
-    font-weight: 700 !important;
-    outline: 2px solid #0066ff !important;
-    outline-offset: 2px;
-  }
-}
-
-/* Autocomplete Type Badges (optional: zur Unterscheidung) */
-.autocomplete-pill .type-badge {
-  font-size: 0.7em;
-  opacity: 0.6;
-  margin-left: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Autocomplete Count (Anzahl Makerspaces) */
-.autocomplete-pill .count-badge {
-  margin-left: 4px;
-  margin-right: 0px;
-  padding: 2px;
-  text-align: center;
-  width: 11px;
-  height: 11px;
-  font-size: 0.9em;
-  /* opacity: 0.85; */
-  color: black;
-  background-color: white;
-  border-radius: 100%;
-}
-
-.autocomplete-pill:focus .count-badge {
-  color: white;
-  background-color: black;
-}
-
-
-/* ============================================
-   SEARCH PILLS - In Searchbar
-   ============================================ */
-
-/* Container für Pills innerhalb der Searchbar */
-/* Spezifität erhöhen, um !important zu vermeiden */
-.search-input-wrapper .search-pills-container {
-  /* NEU: Spezifität erhöht */
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  z-index: 3;
-  max-width: calc(100% - 80px);
-  /* Platz für Counter + Padding */
-  overflow-x: auto;
-  scrollbar-width: none;
-  /* Firefox */
-  pointer-events: none;
-  /* Pills haben eigene pointer-events */
-}
-
-.search-pills-container::-webkit-scrollbar {
-  display: none;
-  /* Chrome/Safari */
-}
-
-/* Einzelne Search Pill */
-.search-pill {
-  background: #000;
-  /* !important entfernt */
-  color: #fff;
-  /* !important entfernt */
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.75em;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: default;
-  transition: all 0.2s ease;
-  pointer-events: auto;
-  /* Pills sind klickbar */
-  user-select: none;
-  position: relative; /* Wichtig für ::after-Positionierung */
-  overflow: hidden; /* Verhindert, dass Text/X bei der Transformation überläuft */
+  /* Verhindert, dass Text/X bei der Transformation überläuft */
 }
 
 /* ✨ KORREKTUR: Roter Hover-Effekt (Löschen) */
@@ -4553,11 +4289,13 @@ body.consent-active #map { pointer-events: none; }
 
 /* ✨ NEU: Das rote "X" beim Hover einfügen (ersetzt den Text visuell) */
 .search-pill::after {
-  content: "X"; /* Inhalt ist das X */
+  content: "X";
+  /* Inhalt ist das X */
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%) scale(0); /* Standardmäßig in der Mitte, unsichtbar */
+  transform: translate(-50%, -50%) scale(0);
+  /* Standardmäßig in der Mitte, unsichtbar */
   font-size: 1.2em;
   font-weight: bold;
   opacity: 0;
@@ -4579,7 +4317,7 @@ body.consent-active #map { pointer-events: none; }
     background: #fff;
     color: #000;
   }
-  
+
   .search-pill:hover {
     background: #ddd;
   }
@@ -4639,6 +4377,7 @@ body.consent-active #map { pointer-events: none; }
     opacity: 0;
     transform: scale(0.8) translateX(-10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateX(0);
@@ -4650,6 +4389,7 @@ body.consent-active #map { pointer-events: none; }
     opacity: 1;
     transform: scale(1) translateX(0);
   }
+
   to {
     opacity: 0;
     transform: scale(0.8) translateX(-10px);
@@ -4690,7 +4430,7 @@ body.consent-active #map { pointer-events: none; }
   .autocomplete-container::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
   }
-  
+
   .autocomplete-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
   }
@@ -4718,16 +4458,16 @@ body.consent-active #map { pointer-events: none; }
     left: 2px;
     right: 2px;
   }
-  
+
   .search-pills-container {
     max-width: calc(100% - 60px);
   }
-  
+
   .search-pill {
     font-size: 0.7em;
     padding: 3px 6px;
   }
-  
+
   .autocomplete-pill {
     font-size: 0.8em;
     padding: 5px 10px;
