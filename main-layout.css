@@ -56,6 +56,13 @@ body {
   color: var(--text-color);
 }
 
+/* DivIcon: Leaflet-Standard-Hintergrund/-Border entfernen */
+.ms-marker-icon,
+.ms-cluster-canvas {
+  background: none !important;
+  border: none !important;
+}
+
 #map {
   position: absolute;
   inset: 0;

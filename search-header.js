@@ -10,7 +10,14 @@ const CONFIG = AppConfig;
 // Pills innerhalb der Searchbar
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Verwaltet die Filter-Pills in der Suchleiste (Stadt, Land, Style).
+ * Pills werden als `Map<id, Pill>` gehalten; Änderungen triggern `onChangeCallback`.
+ */
 class SearchPillsManager {
+  /**
+   * @param {HTMLInputElement} searchBar - Das #search-bar Input-Element
+   */
   constructor(searchBar) {
     this.searchBar = searchBar;
     this.container = this.createContainer();
@@ -28,6 +35,10 @@ class SearchPillsManager {
     return container;
   }
 
+  /**
+   * Fügt eine neue Pill hinzu (ignoriert Duplikate).
+   * @param {import('./app-context.js').Pill} suggestion
+   */
   addPill(suggestion) {
     const id = this.generatePillId(suggestion);
     if (this.pills.has(id)) {
@@ -43,10 +54,19 @@ class SearchPillsManager {
     }
   }
 
+  /**
+   * Generiert eine eindeutige ID für eine Pill (z.B. 'city-berlin').
+   * @param {import('./app-context.js').Pill} suggestion
+   * @returns {string}
+   */
   generatePillId(suggestion) {
     return `${suggestion.type}-${suggestion.text.toLowerCase().replace(/\s+/g, '-')}`;
   }
 
+  /**
+   * Entfernt eine Pill anhand ihrer ID.
+   * @param {string} id
+   */
   removePill(id) {
     if (!this.pills.has(id)) return;
 
@@ -61,6 +81,10 @@ class SearchPillsManager {
     }
   }
 
+  /**
+   * Entfernt die zuletzt hinzugefügte Pill (z.B. bei Backspace in leerer Searchbar).
+   * @returns {boolean} false wenn keine Pills vorhanden
+   */
   removeLastPill() {
     if (this.pills.size === 0) return false;
 
@@ -136,6 +160,10 @@ class SearchPillsManager {
     });
   }
 
+  /**
+   * Gibt alle aktiven Pills als Array zurück.
+   * @returns {import('./app-context.js').Pill[]}
+   */
   getPillsArray() {
     return Array.from(this.pills.values());
   }
@@ -144,6 +172,11 @@ class SearchPillsManager {
     return Array.from(this.pills.keys());
   }
 
+  /**
+   * Prüft ob eine Pill bereits aktiv ist.
+   * @param {import('./app-context.js').Pill} suggestion
+   * @returns {boolean}
+   */
   hasPill(suggestion) {
     const id = this.generatePillId(suggestion);
     return this.pills.has(id);
@@ -153,10 +186,18 @@ class SearchPillsManager {
     return this.pills.size;
   }
 
+  /**
+   * Registriert einen Callback der bei jeder Pill-Änderung aufgerufen wird.
+   * @param {function(import('./app-context.js').Pill[]): void} callback
+   */
   onChange(callback) {
     this.onChangeCallback = callback;
   }
 
+  /**
+   * Lädt Pills aus einem Array (z.B. aus URL-Hash beim Start).
+   * @param {import('./app-context.js').Pill[]} pillsArray
+   */
   loadPills(pillsArray) {
     this.pills.clear();
     pillsArray.forEach(pill => {
@@ -205,7 +246,17 @@ class SearchPillsManager {
 // Smart Autocomplete mit Filter-Integration
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Autocomplete-Dropdown unterhalb der Suchleiste.
+ * Schlägt Städte, PLZ und Filter-Optionen vor (max. 5 Einträge).
+ * Tab/Enter wählt aus; Escape schließt.
+ */
 class AutocompleteManager {
+  /**
+   * @param {import('./app-context.js').Location[]} json - Alle Makerspace-Einträge
+   * @param {HTMLInputElement} searchBar - Das #search-bar Input-Element
+   * @param {import('./search-filter.js').SearchFilter} styleFilterManager
+   */
   constructor(json, searchBar, styleFilterManager) {
     this.json = json;
     this.searchBar = searchBar;
@@ -227,6 +278,11 @@ class AutocompleteManager {
     return container;
   }
 
+  /**
+   * Generiert Autocomplete-Vorschläge für den gegebenen Query-String.
+   * Verbirgt das Dropdown wenn < minChars Zeichen oder keine Treffer.
+   * @param {string} query
+   */
   generateSuggestions(query) {
     if (this.searchBar.value.endsWith(' ') || query.length < this.minChars) {
       this.hide();
@@ -328,6 +384,10 @@ class AutocompleteManager {
     }
   }
 
+  /**
+   * Wählt einen Vorschlag aus — fügt Filter-Pill hinzu oder ruft onSelectCallback auf.
+   * @param {number} [index] - Index in this.suggestions; Fallback auf focusedIndex
+   */
   selectSuggestion(index) {
     if (index === undefined) index = this.focusedIndex;
 
@@ -381,6 +441,10 @@ class AutocompleteManager {
     return this.container.classList.contains('is-active');
   }
 
+  /**
+   * Registriert einen Callback für Stadt/PLZ-Auswahl (nicht für Style/Status-Filter).
+   * @param {function(import('./app-context.js').Pill): void} callback
+   */
   onSelect(callback) {
     this.onSelectCallback = callback;
   }
@@ -453,7 +517,18 @@ class AutocompleteManager {
 // Searchbar-spezifische UI
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Haupt-UI-Klasse für die Suchleiste.
+ * Koordiniert SearchPillsManager, AutocompleteManager, SearchFilter und ListingCore.
+ * Rendert das Suggestions-Dropdown und verwaltet Keyboard-Navigation.
+ */
 class SearchHeader {
+  /**
+   * @param {object} options
+   * @param {L.Map} options.map
+   * @param {import('./app-context.js').Location[]} options.json
+   * @param {function(string|number, string): string} [options.zfill]
+   */
   constructor(options = {}) {
     this.map = options.map;
     this.json = options.json;
@@ -475,6 +550,13 @@ class SearchHeader {
 
   }
 
+  /**
+   * Verbindet SearchHeader mit den anderen Modulen und startet Event-Listener.
+   * Muss nach dem Konstruktor aufgerufen werden.
+   * @param {import('./listing-core.js').ListingCore} listingCore
+   * @param {import('./search-filter.js').SearchFilter} searchFilter
+   * @param {import('./zoom-manager.js').ZoomManager|null} [zoomManager]
+   */
   init(listingCore, searchFilter, zoomManager = null) {
     this.listingCore = listingCore;
     this.searchFilter = searchFilter;

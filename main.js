@@ -17,30 +17,24 @@ const CONFIG = AppConfig;
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Erstellt ein Leaflet Icon mit gegebener Farbe und Größe
+   * Erstellt ein Leaflet DivIcon mit inline-SVG (kein base64, CSS-targetierbar).
    * @param {string} color - Hex-Farbcode für die Icon-Füllung
    * @param {number} scale - Skalierungsfaktor (1.0 = normal, 1.5 = groß)
-   * @returns {L.Icon} Leaflet Icon Instanz
+   * @returns {L.DivIcon} Leaflet DivIcon Instanz
    */
   function createLeafletIcon(color, scale = 1.0) {
-    const baseSize = [25, 41];
-    const iconSize = [baseSize[0] * scale, baseSize[1] * scale];
-    const iconAnchor = [baseSize[0] * scale / 2, baseSize[1] * scale];
-    const popupAnchor = [1 * scale, -34 * scale];
-    const shadowSize = [41 * scale, 41 * scale];
-
-    return new L.Icon({
-      iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-          <path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-          <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-        </svg>
-      `),
-      shadowUrl: 'libs/leaflet/images/marker-shadow.png',
-      iconSize: iconSize,
-      iconAnchor: iconAnchor,
-      popupAnchor: popupAnchor,
-      shadowSize: shadowSize
+    const w = Math.round(25 * scale);
+    const h = Math.round(41 * scale);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
+      `<path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>` +
+      `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
+      `</svg>`;
+    return L.divIcon({
+      html: svg,
+      className: 'ms-marker-icon',
+      iconSize: [w, h],
+      iconAnchor: [w / 2, h],
+      popupAnchor: [Math.round(scale), Math.round(-34 * scale)],
     });
   }
 
@@ -48,8 +42,23 @@ const CONFIG = AppConfig;
   // LEAFLET ICON DEFINITIONEN (Lazy Loading)
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /**
+   * @typedef {Object} LeafletIconSet
+   * @property {L.Icon} defaultIcon
+   * @property {L.Icon} highlightIcon
+   * @property {L.Icon} hoverIcon
+   * @property {L.Icon} greenIcon
+   * @property {L.Icon} redIcon
+   * @property {L.Icon} unknownStatusIcon
+   */
+
+  /** @type {LeafletIconSet|null} */
   let LeafletIcons = null;
 
+  /**
+   * Initialisiert alle Leaflet-Icons (Lazy: nur einmal, nur wenn L verfügbar).
+   * @returns {LeafletIconSet|null} null wenn Leaflet noch nicht geladen
+   */
   function initializeLeafletIcons() {
     if (LeafletIcons || typeof L === 'undefined') {
       return LeafletIcons;
@@ -135,8 +144,18 @@ const CONFIG = AppConfig;
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Haupt-Initialisierungsfunktion
-   * Wird von map.js aufgerufen, wenn alle Daten geladen sind
+   * @typedef {Object} InitAppOptions
+   * @property {L.Map} map - Leaflet Map-Instanz
+   * @property {import('./app-context.js').Location[]} json - Alle Makerspace-Einträge
+   * @property {L.Marker[]} allMarkers - Alle Leaflet-Marker
+   * @property {function(string|number, string): string} zfill - PLZ-Formatierungsfunktion
+   */
+
+  /**
+   * Haupt-Initialisierungsfunktion — wird von map.js nach Phase 'data' aufgerufen.
+   * Erstellt alle UI-Module und verbindet sie via appContext.
+   * @param {InitAppOptions} options
+   * @returns {{ listingCore: ListingCore, searchFilter: SearchFilter, searchHeader: SearchHeader, nearbyHeader: NearbyHeader, icons: LeafletIconSet }|null}
    */
   function initApp(options = {}) {
     const {
@@ -224,8 +243,13 @@ const CONFIG = AppConfig;
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Erstellt Legacy-kompatible Manager-Instanzen
-   * Für schrittweise Migration
+   * Legacy-Wrapper um initApp — für noch nicht migrierte Aufrufer.
+   * @param {L.Map} map
+   * @param {L.Marker[]} allMarkers
+   * @param {import('./app-context.js').Location[]} json
+   * @param {LeafletIconSet} icons
+   * @param {function(string|number, string): string} zfill
+   * @returns {ReturnType<typeof initApp>}
    */
   function initLegacyMode(map, allMarkers, json, icons, zfill) {
     return initApp({ map, json, allMarkers, zfill });

@@ -5,6 +5,17 @@ import { appContext } from './app-context.js';
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
 
+/**
+ * Gemeinsame Rendering- und Interaktions-Logik für Listing-Items.
+ * Wird von SearchHeader (Suchdropdown) und NearbyHeader (Nearby-Popover) geteilt.
+ *
+ * Verantwortlich für:
+ * - Item-Erstellung (createItem)
+ * - Hover-Effekte inkl. Connection Line und SVG-Schweif
+ * - Keyboard-Navigation im Dropdown
+ * - Touch-Events (Tap vs. Scroll)
+ * - Gegenseitiger Ausschluss von Maus- und Tastatureingabe
+ */
 class ListingCore {
   constructor() {
     this.currentHoverItem = null;
@@ -123,7 +134,9 @@ class ListingCore {
   }
 
   /**
-   * Bestimmt die Status-Farbe für ein Item
+   * Bestimmt die CSS-Custom-Property für die Status-Farbe eines Items.
+   * @param {import('./app-context.js').Location} location
+   * @returns {string} CSS-Variable, z.B. 'var(--space-open)'
    */
   getStatusColor(location) {
     if (location.isOpen === true) {
@@ -137,7 +150,9 @@ class ListingCore {
   }
 
   /**
-   * Generiert das Style-Icon HTML
+   * Generiert das Style-Icon HTML (FontAwesome-Klasse als `<i>`).
+   * @param {import('./app-context.js').Location} location
+   * @returns {string} HTML-String oder ''
    */
   getStyleIconHtml(location) {
     const locationStyle = location.style ? location.style.toLowerCase() : '';
@@ -149,7 +164,9 @@ class ListingCore {
   }
 
   /**
-   * Generiert das Status-Icon HTML (SpaceAPI)
+   * Generiert das SpaceAPI-Status-Icon HTML (Tür offen/zu/unbekannt).
+   * @param {import('./app-context.js').Location} location
+   * @returns {string} HTML-String mit `<i>`-Element
    */
   getStatusIconHtml(location) {
     if (!location.spaceapi || !location.spaceapi.endpoint) {
@@ -167,7 +184,9 @@ class ListingCore {
   }
 
   /**
-   * Bestimmt die CSS-Klasse für den Namen
+   * Bestimmt die CSS-Klasse für den Makerspace-Namen (open/closed/unknown/default).
+   * @param {import('./app-context.js').Location} location
+   * @returns {'space-name-open'|'space-name-closed'|'space-name-unknown'|'space-name-default'}
    */
   getNameClass(location) {
     if (!location.spaceapi || !location.spaceapi.endpoint) {
@@ -179,7 +198,9 @@ class ListingCore {
   }
 
   /**
-   * Formatiert die Uhrzeit aus dem weekly-Format (z.B. 1900 → "19:00")
+   * Formatiert die Uhrzeit aus dem weekly-Format (z.B. 1900 → "19:00").
+   * @param {number} time - Vierstellige Zahl, z.B. 1900
+   * @returns {string} Formatierter String, z.B. '19:00'
    */
   formatWeeklyTime(time) {
     const str = String(time).padStart(4, '0');
@@ -187,7 +208,9 @@ class ListingCore {
   }
 
   /**
-   * Generiert das Meeting-Icon HTML (nur wenn Meeting heute ist)
+   * Generiert das Workshops-Badge HTML (Anzahl + Icon).
+   * @param {import('./app-context.js').Location} location
+   * @returns {string} HTML-String oder ''
    */
   getWorkshopsHtml(location) {
     if (!location.workshops || location.workshops.length === 0) return '';
@@ -201,6 +224,11 @@ class ListingCore {
   </span>`;
   }
 
+  /**
+   * Generiert das "Heute"-Meeting-Badge HTML (nur wenn wöchentliches Treffen heute stattfindet).
+   * @param {import('./app-context.js').Location} location
+   * @returns {string} HTML-String oder ''
+   */
   getMeetingIconHtml(location) {
     if (!location.weekly || !location.weekly.time || location.weekly.weekday > 6) return '';
     if (location.weekly.weekday !== new Date().getDay()) return '';
@@ -219,6 +247,7 @@ class ListingCore {
   /**
    * Registriert Scroll-Listener auf Dropdown-Containern,
    * um Meeting-Tooltips am unteren Rand nach oben zu klappen.
+   * @param {HTMLElement|null} container
    */
   initMeetingTooltipObserver(container) {
     if (!container) return;
@@ -228,6 +257,10 @@ class ListingCore {
     update();
   }
 
+  /**
+   * Aktualisiert data-microtip-position aller Meeting/Workshop-Badges im Container.
+   * @param {HTMLElement} container
+   */
   updateMeetingTooltipPositions(container) {
     const containerRect = container.getBoundingClientRect();
     const halfY = containerRect.top + containerRect.height / 2;
@@ -272,8 +305,9 @@ class ListingCore {
   }
 
   /**
-   * Aktualisiert die visuelle Keyboard-Selektion
+   * Aktualisiert die visuelle Keyboard-Selektion.
    * Verwendet die GLEICHEN Methoden wie Maus-Navigation!
+   * @param {NodeListOf<HTMLElement>} items
    */
   updateKeyboardSelection(items) {
     const newIndex = this.keyboardIndex;
@@ -317,7 +351,7 @@ class ListingCore {
   }
 
   /**
-   * Setzt die Keyboard-Navigation zurück
+   * Setzt Keyboard-Index und aktive CSS-Klassen zurück.
    */
   resetKeyboardNavigation() {
     this.keyboardIndex = -1;
@@ -325,7 +359,7 @@ class ListingCore {
   }
 
   /**
-   * Entfernt aktive Markierung von allen Items
+   * Entfernt `.active`-Klasse von allen `.listing-item`-Elementen im DOM.
    */
   clearActiveItem() {
     document.querySelectorAll('.listing-item.active').forEach(item => {
@@ -438,8 +472,9 @@ class ListingCore {
   }
 
   /**
-   * Setzt nur Marker-Effekte zurück (ohne currentHoverItem/SVG zu ändern)
-   * Wird verwendet beim Wechsel zwischen Items
+   * Setzt nur Marker-Effekte zurück (Icon, State, Popup) ohne currentHoverItem/SVG zu ändern.
+   * Wird beim Wechsel zwischen Items verwendet.
+   * @param {import('./app-context.js').Location} location
    */
   resetMarkerEffects(location) {
     const targetMarker = this.findMarkerByLocation(location);
@@ -472,7 +507,7 @@ class ListingCore {
   }
 
   /**
-   * Entfernt alle Hover-Effekte (für Cleanup)
+   * Entfernt alle Hover-Effekte im gesamten DOM (für vollständigen Cleanup, z.B. beim Schließen).
    */
   clearAllHoverEffects() {
     document.querySelectorAll('.listing-item.active').forEach(item => {
@@ -494,8 +529,11 @@ class ListingCore {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Erstellt das Hover-SVG für ein Item
-   * SVG im Body mit position:fixed - wird bei Scroll/Navigation aktualisiert
+   * Erstellt das Hover-SVG (Schweif vom Item zum Marker) im Body mit position:fixed.
+   * Wird bei Scroll/Navigation via updateHoverSVGPosition() aktualisiert.
+   * @param {HTMLElement} item
+   * @param {import('./app-context.js').Location} location
+   * @param {string} color - Hex-Farbcode
    */
   createHoverSVG(item, location, color = 'blue') {
     if (window.innerWidth <= 767) return;
@@ -505,7 +543,7 @@ class ListingCore {
   }
 
   /**
-   * Entfernt das Hover-SVG
+   * Entfernt das aktive Hover-SVG aus dem DOM.
    */
   cleanupHoverSVG() {
     AppConfig.cleanupConnectorSVG(this.currentHoverSVG);
@@ -542,7 +580,10 @@ class ListingCore {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Erstellt eine Connection Line zum Marker
+   * Erstellt eine Leaflet-Polylinie zwischen Item und Marker (nur Desktop).
+   * @param {HTMLElement} item
+   * @param {L.Marker} targetMarker
+   * @param {string} color - Hex-Farbcode
    */
   createConnectionLine(item, targetMarker, color = '#0000ff') {
     if (window.innerWidth <= 767) return;
@@ -552,7 +593,7 @@ class ListingCore {
   }
 
   /**
-   * Entfernt die Connection Line
+   * Entfernt die aktive Connection Line von der Karte.
    */
   removeConnectionLine() {
     if (appContext.mapUtils?.removeConnectionLine) {
@@ -601,40 +642,47 @@ class ListingCore {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Findet einen Marker anhand der Location
+   * Findet den Leaflet-Marker zur Location via appContext.markerById.
+   * @param {import('./app-context.js').Location} location
+   * @returns {L.Marker|null}
    */
   findMarkerByLocation(location) {
     return appContext.markerById.get(location.ID) || null;
   }
 
   /**
-   * Prüft ob ein Marker sticky ist
+   * Prüft ob ein Marker aktuell als sticky (Popup dauerhaft offen) markiert ist.
+   * @param {L.Marker} marker
+   * @returns {boolean}
    */
   isStickyMarker(marker) {
     return appContext.mapUtils?.isStickyMarker?.(marker) ?? false;
   }
 
   /**
-   * Erstellt ein Hover-Icon für Leaflet
+   * Erstellt ein vergrößertes Leaflet-Hover-DivIcon mit inline-SVG.
+   * @param {string} color - Hex-Farbcode
+   * @returns {L.DivIcon}
    */
   createHoverIcon(color) {
-    const iconSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41">
-        <path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>
-        <circle fill="#fff" cx="12.5" cy="12.5" r="3"/>
-      </svg>`;
-    return new L.Icon({
-      iconUrl: 'data:image/svg+xml;base64,' + btoa(iconSvg),
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-      iconSize: [37.5, 61.5],
-      iconAnchor: [18.75, 61.5],
+    const w = 37.5, h = 61.5;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
+      `<path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>` +
+      `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
+      `</svg>`;
+    return L.divIcon({
+      html: svg,
+      className: 'ms-marker-icon',
+      iconSize: [w, h],
+      iconAnchor: [w / 2, h],
       popupAnchor: [1.5, -51],
-      shadowSize: [61.5, 61.5]
     });
   }
 
   /**
-   * Holt Location-Objekt aus einem Item-Element
+   * Liest die Location aus dem `data-location-id`-Attribut eines Item-Elements.
+   * @param {HTMLElement} item
+   * @returns {import('./app-context.js').Location|null}
    */
   getLocationFromItem(item) {
     const locationId = item.dataset.locationId;
@@ -650,7 +698,8 @@ class ListingCore {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Setup Mousemove-Tracking für einen Container
+   * Registriert mousemove-Tracking auf einem Container für Maus/Tastatur-Mutex.
+   * @param {HTMLElement} container
    */
   setupMouseTracking(container) {
     container.addEventListener('mousemove', (e) => {
@@ -674,14 +723,16 @@ class ListingCore {
   }
 
   /**
-   * Prüft ob Maus sich bewegt hat (für mouseenter Events)
+   * Gibt an ob sich die Maus seit der letzten Tastatureingabe bewegt hat.
+   * Verhindert ungewollte mouseenter-Reaktionen nach Keyboard-Navigation.
+   * @returns {boolean}
    */
   hasMouseMoved() {
     return this._mouseHasMoved;
   }
 
   /**
-   * Setzt Maus-Tracking zurück (nach Keyboard-Aktion)
+   * Setzt das Maus-Bewegt-Flag zurück (nach Keyboard-Aktion).
    */
   resetMouseTracking() {
     this._mouseHasMoved = false;

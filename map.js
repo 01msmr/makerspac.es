@@ -660,6 +660,20 @@ const SLUG_TO_CODE = {
   'denmark': 'dk', 'poland': 'pl', 'luxembourg': 'lu',
 };
 
+// Geografisch benachbarte Länder-Splits → werden nach Stage-1a im Hintergrund prefetched
+const NEIGHBOR_SPLITS = {
+  'de': ['at', 'ch', 'nl', 'be', 'pl', 'lu'],
+  'at': ['de', 'ch', 'it'],
+  'ch': ['de', 'at', 'fr', 'it'],
+  'fr': ['be', 'ch', 'lu', 'it'],
+  'nl': ['de', 'be'],
+  'be': ['de', 'fr', 'nl', 'lu'],
+  'it': ['at', 'ch', 'fr'],
+  'pl': ['de'],
+  'dk': ['de'],
+  'lu': ['de', 'fr', 'be'],
+};
+
 // (Manuelles Prefetch-Block entfernt, da nun über index.html preload optimiert gesteuert)
 
 /**
@@ -678,8 +692,9 @@ function detectCountryCodeFromURL() {
  * Indexiert + erstellt Marker für eine Batch neuer Locations (Non-blocking).
  * Überspringt bekannte IDs (Duplikat-Schutz beim Merge).
  * @param {import('./app-context.js').Location[]} newLocs
+ * @param {{ idle?: boolean }} [opts] - idle:true → requestIdleCallback (für Stage-2-Hintergrund)
  */
-function processNewLocations(newLocs) {
+function processNewLocations(newLocs, { idle = false } = {}) {
   const idSet = new Set(appContext.locationById.keys());
   let issues = 0;
 
@@ -718,7 +733,11 @@ function processNewLocations(newLocs) {
       }
 
       if (index < locationsWithCoords.length) {
-        requestAnimationFrame(addNextChunk);
+        if (idle && 'requestIdleCallback' in window) {
+          requestIdleCallback(addNextChunk, { timeout: 2000 });
+        } else {
+          requestAnimationFrame(addNextChunk);
+        }
       } else {
         resolve();
       }
@@ -752,7 +771,7 @@ async function loadAndMergeFullData() {
 
     if (newLocs.length) {
       appContext.locations.push(...newLocs);
-      processNewLocations(newLocs);
+      processNewLocations(newLocs, { idle: true });
     }
 
     appContext.spaceAPI?.enrichLocationData(appContext.locations);
@@ -772,16 +791,36 @@ async function loadData() {
 
     // Stage 1a: Länderspezifischer Split (URL-Land bekannt → volle Daten, prefetched)
     if (countryCode) {
+      const splitCacheKey = `ms-split-${countryCode}`;
+      // Sofort aus localStorage zeigen (vor Netzwerk-Roundtrip)
+      try {
+        const cached = localStorage.getItem(splitCacheKey);
+        if (cached) {
+          rawData = JSON.parse(cached);
+          needsEnrichment = true;
+          console.log(`⚡ Stage 1a (Cache): spaces-${countryCode}.json (${rawData.length} Spaces)`);
+        }
+      } catch { localStorage.removeItem(splitCacheKey); }
+
+      // Immer frische Version holen + Cache aktualisieren
       try {
         const r = await fetch(`./data/spaces-${countryCode}.json`);
         if (r.ok) {
           rawData = await r.json();
           needsEnrichment = true;
+          try { localStorage.setItem(splitCacheKey, JSON.stringify(rawData)); } catch { /* quota */ }
           console.log(`⚡ Stage 1a: spaces-${countryCode}.json (${rawData.length} Spaces)`);
         }
       } catch (err) {
         console.warn(`Stage 1a (Country Split) failed for ${countryCode}:`, err.message);
       }
+
+      // Nachbarländer erst nach App-Start prefetchen (nicht während kritischem Ladepfad)
+      appContext.waitFor('app').then(() => {
+        (NEIGHBOR_SPLITS[countryCode] || []).forEach(code => {
+          fetch(`./data/spaces-${code}.json`, { priority: 'low' }).catch(() => {});
+        });
+      });
     }
 
     // Stage 1b: markers.json (alle Spaces, minimal → sofortige Anzeige aller Pins)
@@ -1517,11 +1556,12 @@ window.reportLocationIdStatus = function () {
 // Hauptinitialisierung
 const init = async () => {
   try {
-    await window.i18n.load('./lang.json');
-    bookmarkSync.init(window.translations);
+    // i18n und Map/Data parallel laden — map nicht auf lang.json warten lassen
+    const i18nPromise = window.i18n.load('./lang.json');
     setupMap();
     initializeClustering();
-    await loadData();
+    await Promise.all([i18nPromise, loadData()]);
+    bookmarkSync.init(window.translations);
 
     setupSearch();
     setupStyleFilter();
