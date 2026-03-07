@@ -478,7 +478,15 @@ class MobileFilterUI {
       label.textContent = this.translateValue(key, opt);
       item.appendChild(label);
 
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        // Bail out if the pane is already closing (this.sheet is null) or if the
+        // ghost click coordinates land outside the still-visible sheet area.
+        if (!this.sheet) return;
+        const sheetEl = this.sheet.querySelector('.mf-sheet');
+        if (sheetEl) {
+          const r = sheetEl.getBoundingClientRect();
+          if (e.clientY > r.bottom || e.clientY < r.top) return;
+        }
         this._hasInteracted = true;
         const isCurrentlyActive = item.classList.contains('mf-opt-active');
         if (isCurrentlyActive) {
