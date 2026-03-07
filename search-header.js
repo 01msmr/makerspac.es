@@ -840,6 +840,12 @@ class SearchHeader {
     filtersSection.classList.add('active-filters-section');
 
     const categories = {
+      bookmarks: {
+        icon: CONFIG.icons.ui.bookmarkFilled,
+        label: window.i18n?.t('filter.bookmarks') || 'Bookmarks',
+        options: ['bookmarked'],
+        iconOnly: true
+      },
       style: {
         icon: CONFIG.icons.ui.peopleGroup,
         label: window.i18n?.t('filter.style') || 'Style',
@@ -855,22 +861,16 @@ class SearchHeader {
         label: window.i18n?.t('filter.weekly') || 'Meeting',
         options: [...CONFIG.filterCategories.weekly.options, 'any']
       },
+      workshops: {
+        icon: CONFIG.icons.ui.workshops,
+        label: window.i18n?.t('filter.workshops') || 'Werkstätten',
+        options: CONFIG.filterCategories.workshops.options
+      },
       country: {
         icon: CONFIG.icons.ui.flag,
         label: window.i18n?.t('filter.country') || 'Country',
         options: this.searchFilter?.getUniqueCountries() || []
       },
-      bookmarks: {
-        icon: CONFIG.icons.ui.bookmarkFilled,
-        label: window.i18n?.t('filter.bookmarks') || 'Bookmarks',
-        options: ['bookmarked'],
-        iconOnly: true
-      },
-      workshops: {
-        icon: CONFIG.icons.ui.workshops,
-        label: window.i18n?.t('filter.workshops') || 'Werkstätten',
-        options: CONFIG.filterCategories.workshops.options
-      }
     };
 
     const categoryKeys = Object.keys(categories);
@@ -974,16 +974,10 @@ class SearchHeader {
         const countryCode = CONFIG.getCountryCode(activeFilter);
         pill.innerHTML = `<span class="fi fi-${countryCode} flag-in-pill"></span> ${countryCode.toUpperCase()}`;
         pill.setAttribute('aria-label', config.label);
-      } else if (categoryKey === 'style') {
-        const styleIconClass = CONFIG.getStyleIcon(activeFilter);
-        const translatedStyle = this.translateFilterValue('style', activeFilter);
-        pill.innerHTML = styleIconClass
-          ? `<i class="${styleIconClass}"></i> ${translatedStyle}`
-          : `<i class="${config.icon}"></i> ${translatedStyle}`;
-        pill.setAttribute('aria-label', config.label);
       } else {
+        const icon = this.getFilterIcon(categoryKey, activeFilter) || config.icon;
         const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
-        pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
+        pill.innerHTML = `<i class="${icon}"></i> ${translatedValue}`;
         pill.setAttribute('aria-label', config.label);
       }
     } else {
@@ -1067,6 +1061,12 @@ class SearchHeader {
       return window.i18n?.t(`workshops.${value}`) || value;
     }
     return value;
+  }
+
+  getFilterIcon(categoryKey, value) {
+    if (categoryKey === 'workshops') return CONFIG.getWorkshopIcon(value);
+    if (categoryKey === 'style')     return CONFIG.getStyleIcon(value);
+    return null;
   }
 
   toggleCategoryPopover(pill, categoryKey, config) {

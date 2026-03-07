@@ -1079,7 +1079,7 @@ function _buildPopupHTML(location) {
   return `
             <div style="--status-color: ${statusColor};">
               <div class="popup-body-grid">
-                ${location.workshops && location.workshops.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${AppConfig.getWorkshopsTooltip(location.workshops)}" role="tooltip" data-microtip-position="top">${location.workshops.map(w => { const icon = AppConfig.getWorkshopIcon(w); return icon ? `<i class="${icon}"></i>` : ''; }).join('')}</div>` : ''}
+                ${(() => { const kw = (location.workshops || []).filter(w => AppConfig.getWorkshopIcon(w)); return kw.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${AppConfig.getWorkshopsTooltip(kw)}" role="tooltip" data-microtip-position="top">${kw.map(w => `<i class="${AppConfig.getWorkshopIcon(w)}"></i>`).join('')}</div>` : ''; })()}
                 <div class="popup-style-cell">${styleIconHtml}</div>
                 <div class="popup-title-row">
                   <a id="titleurl" href="${linkUrl}" target="_blank">

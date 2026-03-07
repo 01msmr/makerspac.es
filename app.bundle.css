@@ -3179,8 +3179,9 @@ body.consent-active #map { pointer-events: none; }
   .mf-opt-item {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 4px;
+    padding-left: 6px;
     height: 32px;
     flex-shrink: 0;
     border-radius: 0;
@@ -3232,7 +3233,7 @@ body.consent-active #map { pointer-events: none; }
     color: white;
     border-radius: 12px;
     border: 1px solid white;
-    padding: 0 8px;
+    padding: 0 0 0 8px;
     font-size: 0.85em;
   }
 
@@ -3268,10 +3269,26 @@ body.consent-active #map { pointer-events: none; }
     background-position: center !important;
   }
 
+  .mf-opt-workshop-icon {
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
   .mf-chip-remove {
     cursor: pointer;
     opacity: 0.7;
-    margin-left: 2px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    margin-left: 1px;
+    /* margin-right: -1px; */
+  }
+
+  .mf-chip-remove i {
+    font-size: 14px;
   }
 
   .mf-chip-remove:hover {

@@ -4,13 +4,14 @@
 /** @type {Record<string, { icon: string }>} */
 export const WORKSHOP_TYPES = {
   '3d':          { icon: 'fas fa-cube' },
-  'laser':       { icon: 'fas fa-wand-magic-sparkles' },
+  'laser':       { icon: 'fas fa-explosion' },
   'electronics': { icon: 'fas fa-microchip' },
   'wood':        { icon: 'fas fa-hammer' },
   'metal':       { icon: 'fas fa-gears' },
   'textile':     { icon: 'fas fa-scissors' },
-  'cnc':         { icon: 'fas fa-industry' },
-  'bio':         { icon: 'fas fa-flask' },
+  'screenprint': { icon: 'fas fa-shirt' },
+  'music':       { icon: 'fas fa-music' },
+  'coding':      { icon: 'fas fa-laptop-code' },
   'vr':          { icon: 'fas fa-vr-cardboard' },
 };
 

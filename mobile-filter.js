@@ -473,6 +473,16 @@ class MobileFilterUI {
         }
       }
 
+      // Workshop icon
+      if (key === 'workshops') {
+        const iconClass = AppConfig.getWorkshopIcon(opt);
+        if (iconClass) {
+          const workshopIcon = document.createElement('i');
+          workshopIcon.className = `${iconClass} mf-opt-workshop-icon`;
+          item.appendChild(workshopIcon);
+        }
+      }
+
       // Label text
       const label = document.createElement('span');
       label.textContent = this.translateValue(key, opt);
@@ -665,14 +675,15 @@ class MobileFilterUI {
       activeEntries.forEach(({ key, cfg, val }) => {
         const statusClass = key === 'doorState' ? ` mf-chip-${val}` : '';
         const countryCode = key === 'country' ? this.getCountryCode(val) : null;
+        const specificIcon = appContext.searchHeader?.getFilterIcon(key, val);
         const iconHtml = countryCode
           ? `<span class="fi fi-${countryCode} mf-country-flag"></span>`
-          : `<i class="${cfg.icon}"></i>`;
+          : `<i class="${specificIcon || cfg.icon}"></i>`;
 
         const chip = document.createElement('span');
         chip.className = `mf-chip${statusClass}`;
         chip.dataset.key = key;
-        chip.innerHTML = `${iconHtml} <span class="mf-chip-label">${this.translateValue(key, val)}</span><span class="mf-chip-remove" aria-label="Filter entfernen">×</span>`;
+        chip.innerHTML = `${iconHtml} <span class="mf-chip-label">${this.translateValue(key, val)}</span><span class="mf-chip-remove" aria-label="Filter entfernen"><i class="fas fa-xmark"></i></span>`;
 
         chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
           e.stopPropagation();
@@ -684,7 +695,7 @@ class MobileFilterUI {
       });
 
       // Clear-all ganz rechts
-      if (activeEntries.length > 1) {
+      if (activeEntries.length >= 1) {
         const clearAll = document.createElement('span');
         clearAll.className = 'filter-pill filter-pill-clear-all mf-clear-all-btn';
         clearAll.setAttribute('role', 'tooltip');

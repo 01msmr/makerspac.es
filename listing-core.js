@@ -213,14 +213,15 @@ class ListingCore {
    * @returns {string} HTML-String oder ''
    */
   getWorkshopsHtml(location) {
-    if (!location.workshops || location.workshops.length === 0) return '';
+    const known = (location.workshops || []).filter(w => AppConfig.getWorkshopIcon(w));
+    if (known.length === 0) return '';
 
     return `
   <span class="listing-workshops"
-        aria-label="${AppConfig.getWorkshopsTooltip(location.workshops)}"
+        aria-label="${AppConfig.getWorkshopsTooltip(known)}"
         role="tooltip"
         data-microtip-position="bottom-left">
-    ${location.workshops.length} <i class="${AppConfig.icons.ui.workshops}"></i>
+    ${known.length} <i class="${AppConfig.icons.ui.workshops}"></i>
   </span>`;
   }
 
