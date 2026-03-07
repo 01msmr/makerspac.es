@@ -45,7 +45,19 @@
   <!-- Service Worker registrieren -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        // iOS PWA: periodisch auf Updates prüfen (alle 5 Min)
+        setInterval(() => reg.update(), 5 * 60_000);
+
+        reg.addEventListener('updatefound', () => {
+          reg.installing.addEventListener('statechange', function () {
+            if (this.state === 'installed' && navigator.serviceWorker.controller) {
+              // Neuer SW via skipWaiting aktiv → Seite neu laden
+              window.location.reload();
+            }
+          });
+        });
+      });
     }
   </script>
 
