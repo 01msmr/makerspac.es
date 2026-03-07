@@ -890,10 +890,12 @@ class ListingCore {
         this.removeHoverEffects(location);
       });
 
-      // Click (Desktop); Mobile wird über touchend abgehandelt
+      // Click (Desktop); Touch-Geräte (Phone + Tablet) werden über touchend abgehandelt.
+      // Der synthetic click ~300ms nach touchend muss auf ALLEN Touch-Geräten unterdrückt
+      // werden – sonst wird handleItemClick doppelt aufgerufen, was den Popup-Flicker verursacht.
       if (onItemClick) {
         item.addEventListener('click', (e) => {
-          if (window.innerWidth <= 767) {
+          if ('ontouchstart' in window) {
             if (_tapFired) { _tapFired = false; return; }
             if (_touchDidMove) return;
             e.stopPropagation();

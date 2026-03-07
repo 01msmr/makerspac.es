@@ -15,6 +15,11 @@ class ZoomManager {
     this.zoomDebounceTimeout = null;
     this.ZOOM_THRESHOLD = AppConfig?.settings?.zoomThreshold || 2;
 
+    // Mobile: Nutzer-Interaktion mit der Karte unterdrückt Auto-Zoom
+    // bis Searchbar fokussiert oder Suchtext geändert wird.
+    this._userMoved = false;
+    this._isAutoZooming = false;
+
     // Overlap Detection
     this.overlapCheckInterval = null;
     this.overlapCheckFunction = null;
@@ -34,6 +39,14 @@ class ZoomManager {
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchBar = document.getElementById('search-bar');
 
+    // Nutzer-Drag/-Zoom setzt _userMoved → Auto-Zoom pausiert bis Suchinteraktion
+    map.on('dragstart', () => { this._userMoved = true; });
+    map.on('zoomstart', () => { if (!this._isAutoZooming) this._userMoved = true; });
+  }
+
+  /** Setzt _userMoved zurück – aufgerufen wenn Searchbar fokussiert oder Text geändert */
+  resetUserMoved() {
+    this._userMoved = false;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -91,16 +104,20 @@ class ZoomManager {
       }
 
       // Mobile/Tablet: schneller, direkter Zoom ohne Frame-Effekte
+      // Nur wenn Nutzer die Karte nicht manuell bewegt hat (wird durch Searchbar-Fokus/Input zurückgesetzt)
       const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
       if (isMobileUI) {
         if (appContext.searchHeader?._manualSpaceClick) return;
+        if (this._userMoved) return;
         const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
+        this._isAutoZooming = true;
         this.map.fitBounds(newBounds, {
           animate: true,
           duration: 0.35,
           paddingTopLeft: L.point(8, 8),
           paddingBottomRight: L.point(8, 8 + uiH),
         });
+        this.map.once('moveend', () => { this._isAutoZooming = false; });
         this.previousZoomBounds = newBounds;
         return;
       }

@@ -693,10 +693,12 @@ class SearchHeader {
   }
 
   handleSearchInput() {
+    this.zoomManager?.resetUserMoved();
     this.triggerFilterUpdate();
   }
 
   handleSearchFocus() {
+    this.zoomManager?.resetUserMoved();
     if (window.innerWidth <= 767) {
       window.mobileFilterUI?.close();
       this.searchBar.closest('.search-container')?.classList.add('bar-focused');
