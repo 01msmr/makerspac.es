@@ -444,7 +444,7 @@ export class RoutingManager {
   }
 
   zoomToLocations(locations) {
-    if (window.innerWidth <= 767) return; // Mobile: kein URL-getriggerter Zoom
+    if ('ontouchstart' in window) return; // Touch-Geräte (Phone + Tablet): kein URL-getriggerter Zoom
     if (window.app?.searchHeader?._manualSpaceClick) return; // Kein Zoom bei direktem Marker-Klick/Tap
     if (!appContext.map || locations.length === 0) return;
     if (locations.length === 1) {

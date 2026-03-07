@@ -1274,6 +1274,11 @@ function _applyPopupCloseHandler(marker) {
 // --- Hover: Popup öffnen (400ms), Sticky setzen (1500ms), Skalierung ---
 
 function _applyMarkerHoverHandlers(marker, location) {
+  // Touch-Geräte (Phone + Tablet) haben kein Hover-Konzept.
+  // mouseover/mouseout werden dort durch Tap-Events simuliert und führen
+  // zu falschem isHovering-State und stickyTimeout-Fehlern (Popup-Schließen, ungewollter Zoom).
+  if ('ontouchstart' in window) return;
+
   marker.on('mouseover', () => {
     const state = window.markerStateManager.getState(marker.locationId);
     if (state.isHovering) return;
