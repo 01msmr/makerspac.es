@@ -1,6 +1,6 @@
-name: "➕ einen neuen Makerspace hinzufügen"
-description: "Trage hier die Daten für einen neuen Makerspace ein."
-title: "neuer Makerspace"
+name: "➕ Add a new Makerspace"
+description: "Submit the details for a new makerspace."
+title: "new makerspace"
 #labels: ["add-space"]
 body:
   - type: markdown
@@ -11,14 +11,14 @@ body:
   - type: input
     id: name
     attributes:
-      label: Name des Makerspaces
+      label: Name
       placeholder: "title of your makerspace"
     validations:
       required: true
   - type: dropdown
     id: country
     attributes:
-      label: Land
+      label: Country
       options:
         - "Germany"
         - "Austria"
@@ -33,50 +33,50 @@ body:
   - type: input
     id: city
     attributes:
-      label: Stadt
+      label: City
     validations:
       required: true
   - type: input
     id: plz
     attributes:
-      label: PLZ
+      label: Postal code
     validations:
       required: true
   - type: input
     id: street_name
     attributes:
-      label: Straße
+      label: Street
     validations:
       required: true
   - type: input
     id: street_number
     attributes:
-      label: Hausnummer
+      label: Street number
     validations:
       required: true
   - type: input
     id: street_ext
     attributes:
-      label: Adress-Zusatz
+      label: Address addition
       placeholder: "additional address details"
   - type: input
     id: lat
     attributes:
-      label: Latitude (Breitengrad)
+      label: Latitude
       placeholder: "47.7126816 - latitude w/ point"
     validations:
       required: true
   - type: input
     id: long
     attributes:
-      label: Longitude (Längengrad)
+      label: Longitude
       placeholder: "9.3995537 - longitude w/ point"
     validations:
       required: true
   - type: dropdown
     id: style
     attributes:
-      label: Kategorie / Style
+      label: Style
       options:
         - "for all"
         - "for youth"
@@ -87,54 +87,55 @@ body:
   - type: checkboxes
     id: workshops
     attributes:
-      label: Werkstatt-Arten / Workshop types (Optional)
+      label: Workshop types (optional)
       options:
-        - label: "3D-Druck / 3D printing"
-        - label: "Laser / Laser cutting"
-        - label: "Elektronik / Electronics"
-        - label: "Holzwerkstatt / Woodworking"
-        - label: "Metallwerkstatt / Metalworking"
-        - label: "Textil / Textile"
-        - label: "CNC / CNC machining"
-        - label: "Bio/Labor / Bio/Lab"
+        - label: "3D printing"
+        - label: "Laser cutting"
+        - label: "Electronics"
+        - label: "Woodworking"
+        - label: "Metalworking"
+        - label: "Textile"
+        - label: "Screen printing"
+        - label: "Music"
+        - label: "Coding"
         - label: "VR"
   - type: input
     id: url
     attributes:
-      label: Webseite (URL)
+      label: Website (URL)
       placeholder: "your makerspace homepage url"
     validations:
       required: true
   - type: input
     id: url_text
     attributes:
-      label: Link-Anzeigetext
+      label: Link display text
       placeholder: "short form of url - e.g. toolbox-bodensee.de"
     validations:
       required: true
   - type: dropdown
     id: weekly_weekday
     attributes:
-      label: Wochentag des offenen Treffens (Optional)
-      description: "An welchem Wochentag findet euer regelmäßiges offenes Treffen statt?"
+      label: Weekly open day (optional)
+      description: "Which weekday does your regular open meeting take place?"
       options:
-        - "keins / none"
-        - "Montag / Monday"
-        - "Dienstag / Tuesday"
-        - "Mittwoch / Wednesday"
-        - "Donnerstag / Thursday"
-        - "Freitag / Friday"
-        - "Samstag / Saturday"
-        - "Sonntag / Sunday"
+        - "none"
+        - "Monday"
+        - "Tuesday"
+        - "Wednesday"
+        - "Thursday"
+        - "Friday"
+        - "Saturday"
+        - "Sunday"
   - type: input
     id: weekly_time
     attributes:
-      label: Uhrzeit des offenen Treffens (Optional)
-      description: "Uhrzeit im HHMM-Format, z.B. 1900 für 19:00 Uhr."
+      label: Weekly open time (optional)
+      description: "Time in HHMM format, e.g. 1900 for 7:00 PM."
       placeholder: "1900"
   - type: input
     id: spaceapi
     attributes:
-      label: SpaceAPI Endpoint (Optional)
-      description: "Falls vorhanden, die URL zur JSON-Datei des Space-Status."
-      placeholder: "full url of. SpaceAPI endpoint"
+      label: SpaceAPI Endpoint (optional)
+      description: "If available, the URL to the SpaceAPI JSON endpoint."
+      placeholder: "full url of SpaceAPI endpoint"

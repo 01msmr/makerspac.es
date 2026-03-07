@@ -99,11 +99,11 @@ jobs:
             }
 
             // Pflichtfelder prüfen
-            const name = getField("Name des Makerspaces");
-            const country = getField("Land");
-            const city = getField("Stadt");
-            const lat = getNumber("Latitude (Breitengrad)");
-            const long = getNumber("Longitude (Längengrad)");
+            const name = getField("Name");
+            const country = getField("Country");
+            const city = getField("City");
+            const lat = getNumber("Latitude");
+            const long = getNumber("Longitude");
 
             if (!name) {
               core.setFailed("Fehler: Name des Makerspaces fehlt!");
@@ -136,24 +136,24 @@ jobs:
               "loc": {
                 "lat": lat,
                 "long": long,
-                "plz": getInt("PLZ"),
+                "plz": getInt("Postal code"),
                 "city": city,
                 "street": {
-                  "name": getField("Straße"),
-                  "number": getField("Hausnummer"),
-                  "ext": getField("Adress-Zusatz")
+                  "name": getField("Street"),
+                  "number": getField("Street number"),
+                  "ext": getField("Address addition")
                 },
                 "country": country
               },
-              "style": getField("Kategorie / Style", "for all"),
+              "style": getField("Style", "for all"),
               "link": {
-                "url": getField("Webseite (URL)"),
-                "text": getField("Link-Anzeigetext")
+                "url": getField("Website (URL)"),
+                "text": getField("Link display text")
               }
             };
 
             // SpaceAPI nur hinzufügen, wenn URL vorhanden
-            const spaceapi = getField("SpaceAPI Endpoint (Optional)");
+            const spaceapi = getField("SpaceAPI Endpoint (optional)");
             if (spaceapi && spaceapi.startsWith('http')) {
               newEntry.spaceapi = { "endpoint": spaceapi };
             }
@@ -167,17 +167,17 @@ jobs:
 
             // Weekly (offenes Treffen)
             const weekdayMap = {
-              "Sonntag / Sunday": 0,
-              "Montag / Monday": 1,
-              "Dienstag / Tuesday": 2,
-              "Mittwoch / Wednesday": 3,
-              "Donnerstag / Thursday": 4,
-              "Freitag / Friday": 5,
-              "Samstag / Saturday": 6
+              "Sunday": 0,
+              "Monday": 1,
+              "Tuesday": 2,
+              "Wednesday": 3,
+              "Thursday": 4,
+              "Friday": 5,
+              "Saturday": 6
             };
-            const weekdayRaw = getField("Wochentag des offenen Treffens (Optional)");
-            const weekday = weekdayMap[weekdayRaw] || 9;
-            const weeklyTime = getInt("Uhrzeit des offenen Treffens (Optional)", 0);
+            const weekdayRaw = getField("Weekly open day (optional)");
+            const weekday = weekdayMap[weekdayRaw] ?? 9;
+            const weeklyTime = getInt("Weekly open time (optional)", 0);
             newEntry.weekly = {
               "weekday": weekday,
               "time": weeklyTime
@@ -185,17 +185,18 @@ jobs:
 
             // Workshops (Checkboxen parsen)
             const workshopLabelMap = {
-              "3D-Druck / 3D printing": "3d",
-              "Laser / Laser cutting": "laser",
-              "Elektronik / Electronics": "electronics",
-              "Holzwerkstatt / Woodworking": "wood",
-              "Metallwerkstatt / Metalworking": "metal",
-              "Textil / Textile": "textile",
-              "CNC / CNC machining": "cnc",
-              "Bio/Labor / Bio/Lab": "bio",
+              "3D printing": "3d",
+              "Laser cutting": "laser",
+              "Electronics": "electronics",
+              "Woodworking": "wood",
+              "Metalworking": "metal",
+              "Textile": "textile",
+              "Screen printing": "screenprint",
+              "Music": "music",
+              "Coding": "coding",
               "VR": "vr"
             };
-            const workshopsRaw = getField("Werkstatt-Arten / Workshop types (Optional)", "");
+            const workshopsRaw = getField("Workshop types (optional)", "");
             const workshops = [];
             if (workshopsRaw) {
               for (const [label, key] of Object.entries(workshopLabelMap)) {
