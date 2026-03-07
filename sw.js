@@ -90,7 +90,9 @@ self.addEventListener('activate', event => {
           .filter(k => k !== CACHE_STATIC && k !== CACHE_DATA && k !== CACHE_TILES)
           .map(k => caches.delete(k))
       )
-    ).then(() => self.clients.claim())
+    )
+    // Kein clients.claim() — iOS Safari/PWA würde sonst bei SW-Update in einen Reload-Loop geraten.
+    // Neue Navigationen (Reload, neuer Tab) nutzen automatisch den neuen SW.
   );
 });
 
