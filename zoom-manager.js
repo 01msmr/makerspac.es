@@ -90,8 +90,9 @@ class ZoomManager {
         return;
       }
 
-      // Mobile: schneller, direkter Zoom ohne Frame-Effekte
-      if (window.innerWidth <= 767) {
+      // Mobile/Tablet: schneller, direkter Zoom ohne Frame-Effekte
+      const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
+      if (isMobileUI) {
         if (appContext.searchHeader?._manualSpaceClick) return;
         const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
         this.map.fitBounds(newBounds, {

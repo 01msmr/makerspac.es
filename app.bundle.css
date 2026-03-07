@@ -56,6 +56,13 @@ body {
   color: var(--text-color);
 }
 
+/* DivIcon: Leaflet-Standard-Hintergrund/-Border entfernen */
+.ms-marker-icon,
+.ms-cluster-canvas {
+  background: none !important;
+  border: none !important;
+}
+
 #map {
   position: absolute;
   inset: 0;
@@ -155,9 +162,7 @@ body {
 /* Utility-Klasse zum Ausblenden */
 .is-hidden {
   display: none !important;
-}
-
-/* ═════════════════════════════════════════════════════════
+}/* ═════════════════════════════════════════════════════════
    MAIN-COMPONENTS.CSS – UI Component Styles
    ═════════════════════════════════════════════════════════ */
 
@@ -169,12 +174,9 @@ body {
 /* Microtip Farben (zentral ueberschrieben) */
 [aria-label][role~="tooltip"]::after {
   font-family: var(--font-family);
-  font-size: 13px !important;
-  /* Fixe Textgröße */
-  line-height: 16px !important;
-  /* Fixe Zeilenhöhe */
-  font-weight: 600;
-  /* Einheitliche Dicke */
+    font-size: 13px !important;  /* Fixe Textgröße */
+    line-height: 16px !important;  /* Fixe Zeilenhöhe */
+    font-weight: 600;  /* Einheitliche Dicke */
   color: var(--microtip-color);
   background: var(--microtip-background-color);
   border: 3px solid var(--microtip-border-color);
@@ -195,29 +197,10 @@ body {
 }
 
 
-[role~="tooltip"][data-microtip-position|="top"]::before {
-  border-top: 8px solid var(--microtip-border-color);
-  border-bottom: 0;
-  margin-bottom: 3px;
-}
-
-[role~="tooltip"][data-microtip-position|="bottom"]::before {
-  border-bottom: 8px solid var(--microtip-border-color);
-  border-top: 0;
-  margin-top: 3px;
-}
-
-[role~="tooltip"][data-microtip-position="left"]::before {
-  border-left: 8px solid var(--microtip-border-color);
-  border-right: 0;
-  margin-right: 3px;
-}
-
-[role~="tooltip"][data-microtip-position="right"]::before {
-  border-right: 8px solid var(--microtip-border-color);
-  border-left: 0;
-  margin-left: 3px;
-}
+[role~="tooltip"][data-microtip-position|="top"]::before    { border-top: 8px solid var(--microtip-border-color); border-bottom: 0; margin-bottom: 3px; }
+[role~="tooltip"][data-microtip-position|="bottom"]::before { border-bottom: 8px solid var(--microtip-border-color); border-top: 0; margin-top: 3px; }
+[role~="tooltip"][data-microtip-position="left"]::before    { border-left: 8px solid var(--microtip-border-color); border-right: 0; margin-right: 3px; }
+[role~="tooltip"][data-microtip-position="right"]::before   { border-right: 8px solid var(--microtip-border-color); border-left: 0; margin-left: 3px; }
 
 
 /* ===================================
@@ -579,8 +562,7 @@ body {
 }
 
 .leaflet-popup.popup-flipped .leaflet-popup-content-wrapper {
-  margin-top: 20px;
-  /* Platz für den nach oben gerichteten Pfeil */
+  margin-top: 20px; /* Platz für den nach oben gerichteten Pfeil */
 }
 
 @keyframes popupFadeOut {
@@ -758,9 +740,7 @@ a#titleurl h3 {
 }
 
 /* Styling für den Makerspace-Namen nach SpaceAPI-Status */
-a#titleurl h3.space-unknown {
-  border-color: var(--space-unknown);
-}
+a#titleurl h3.space-unknown { border-color: var(--space-unknown); }
 
 /* Icon im Namen: weiß, korrekt ausgerichtet */
 a#titleurl h3.space-open .fas,
@@ -836,7 +816,7 @@ a#titleurl:hover h3.space-unknown .fas {
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: rgba(255, 255, 255, 0.66);
+  background-color: rgba(255,255,255,0.66);
   background-image: linear-gradient(to bottom, transparent 50%, var(--status-color, var(--space-hover)) 50%);
   background-size: 100% 400%;
   background-position: 0 0;
@@ -1421,9 +1401,7 @@ a#titleurl:hover h3.space-unknown .fas {
 
 /* Disable nearby popover during consent */
 body.consent-active .nearby-popover,
-body.consent-active #map {
-  pointer-events: none;
-}
+body.consent-active #map { pointer-events: none; }
 
 .consent-overlay {
   position: fixed;
@@ -1456,64 +1434,34 @@ body.consent-active #map {
 /* ── Planet-Animationen: Skalieren + Bogen (GPU-beschleunigt) ── */
 /* Enter: von rechts oben herein */
 @keyframes earth-enter {
-  0% {
-    transform: scale3d(0.06, 0.06, 1) translate3d(350px, -100px, 0);
-  }
-
-  100% {
-    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
+  0%   { transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0); }
+  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
 }
 
 @keyframes sun-enter {
-  0% {
-    transform: scale3d(0.06, 0.06, 1) translate3d(200px, -80px, 0);
-  }
-
-  100% {
-    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
+  0%   { transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0); }
+  100% { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
 }
 
 @keyframes moon-enter {
-  0% {
-    transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(100px, -60px, 0);
-  }
-
-  100% {
-    transform: rotate(30deg) scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
+  0%   { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0); }
+  100% { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
 }
 
 /* Exit: nach rechts hinaus */
 @keyframes earth-exit {
-  0% {
-    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: scale3d(0.06, 0.06, 1) translate3d(350px, 0, 0);
-  }
+  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(0.06,0.06,1) translate3d(350px, 0, 0); }
 }
 
 @keyframes sun-exit {
-  0% {
-    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: scale3d(0.06, 0.06, 1) translate3d(250px, 0, 0);
-  }
+  0%   { transform: scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: scale3d(0.06,0.06,1) translate3d(250px, 0, 0); }
 }
 
 @keyframes moon-exit {
-  0% {
-    transform: rotate(30deg) scale3d(1, 1, 1) translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(150px, 0, 0);
-  }
+  0%   { transform: rotate(30deg) scale3d(1,1,1) translate3d(0, 0, 0); }
+  100% { transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(150px, 0, 0); }
 }
 
 /* ── ERDE: Details (hinter Sonne) ── */
@@ -1544,7 +1492,7 @@ body.consent-active #map {
     0 0 100px rgba(30, 100, 180, 0.2),
     0 0 160px rgba(30, 100, 180, 0.08);
   will-change: transform;
-  transform: scale3d(0.06, 0.06, 1) translate3d(350px, -100px, 0);
+  transform: scale3d(0.06,0.06,1) translate3d(350px, -100px, 0);
 }
 
 .consent-overlay.visible .consent-earth {
@@ -1624,7 +1572,7 @@ body.consent-active #map {
     0 0 150px rgba(255, 183, 0, 0.3),
     0 0 220px rgba(255, 160, 0, 0.12);
   will-change: transform;
-  transform: scale3d(0.06, 0.06, 1) translate3d(200px, -80px, 0);
+  transform: scale3d(0.06,0.06,1) translate3d(200px, -80px, 0);
 }
 
 .consent-overlay.visible .consent-sun {
@@ -1676,7 +1624,7 @@ body.consent-active #map {
   border-radius: 50%;
   overflow: hidden;
   will-change: transform;
-  transform: rotate(30deg) scale3d(0.06, 0.06, 1) translate3d(100px, -60px, 0);
+  transform: rotate(30deg) scale3d(0.06,0.06,1) translate3d(100px, -60px, 0);
   box-shadow:
     0 0 40px rgba(100, 100, 120, 0.4),
     0 0 80px rgba(80, 80, 100, 0.15),
@@ -1769,7 +1717,6 @@ body.consent-active #map {
   pointer-events: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
-
 /* ═════════════════════════════════════════════════════════
    MAIN-RESPONSIVE.CSS – Dark Mode, Color Schemes,
                           Responsive & High Contrast
@@ -2052,18 +1999,15 @@ body.consent-active #map {
 }
 
 @media (max-width: 767px) {
-
   /* Volle Bildschirmhöhe/-breite für iPhone (kein weißer Rand) */
-  html,
-  body {
+  html, body {
     width: 100%;
     height: 100%;
   }
 
   /* Safe-Area-Zonen schwarz hinterlegen.
      Map (inset:0) deckt den html-Hintergrund oben ab — nur unten sichtbar. */
-  html,
-  body {
+  html, body {
     background-color: black;
   }
 
@@ -2121,8 +2065,7 @@ body.consent-active #map {
 @media (min-width: 768px) and (pointer: coarse) {
 
   /* Volle Bildschirmfläche, schwarze Safe-Area-Zonen */
-  html,
-  body {
+  html, body {
     width: 100%;
     height: 100%;
     background-color: black;
@@ -2196,7 +2139,7 @@ body.consent-active #map {
 /* Alle Kindelemente weiß beim Hover - AUSSER Distanz-Badge und Bookmark */
 .listing-item.active .listing-item-content,
 .listing-item.active .listing-item-name,
-.listing-item.active .listing-item-name>span,
+.listing-item.active .listing-item-name > span,
 .listing-item.active .listing-item-details,
 .listing-item.active .style-icon,
 .listing-item.active .space-name-default,
@@ -2239,7 +2182,7 @@ body.consent-active #map {
 }
 
 
-.listing-item-name>span {
+.listing-item-name > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2398,7 +2341,6 @@ body.consent-active #map {
 .listing-item .door-icon-unknown {
   margin-right: 4px;
 }
-
 /* =================================================================
    SEARCH.CSS - Search UI Styles
    Searchbar, Dropdown, Filters, Country Headers
@@ -2588,8 +2530,7 @@ body.consent-active #map {
 
 /* microtip setzt position:relative – das hier stellt absolute wieder her */
 .search-counter[aria-label][role~="tooltip"] {
-  position: absolute;
-  /* microtip overrides to relative; counter must stay absolute */
+  position: absolute; /* microtip overrides to relative; counter must stay absolute */
 }
 
 /* Dark Mode */
@@ -2622,7 +2563,7 @@ body.consent-active #map {
 }
 
 /* When filters section exists above, dropdown adjusts */
-.active-filters-section+#suggestions-dropdown {
+.active-filters-section + #suggestions-dropdown {
   margin-top: 0;
   padding-top: 0;
   border-radius: 0 0 20px 20px;
@@ -2998,9 +2939,7 @@ body.consent-active #map {
   }
 }
 
-@media (max-width: 1024px),
-(min-width: 768px) and (pointer: coarse) {
-
+@media (max-width: 1024px), (min-width: 768px) and (pointer: coarse) {
   /* Search Container: unten fixiert, wächst nach oben */
   .search-container {
     position: fixed !important;
@@ -3052,18 +2991,15 @@ body.consent-active #map {
     height: 28px;
     border-radius: 50%;
     border: 1px solid var(--border-color);
-    background-color: var(--search-bg);
-    color: var(--text-color);
+    background-color: var(--text-color);
+    color: var(--search-bg);
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1.15em;
   }
 
-  #filter-toggle-btn:hover {
-    background-color: var(--space-hover);
-    color: white;
-  }
+  /* #filter-toggle-btn:hover — color change disabled */
 
   /* === FILTER-INDICATOR (aktiver Filter inline neben Filter-Button) === */
   .filter-active-indicator {
@@ -3084,8 +3020,7 @@ body.consent-active #map {
   }
 
   .filter-active-indicator.has-filters {
-    display: none;
-    /* Aktiver Filter nur als Chip-Bar (#mobile-active-filters) anzeigen, nicht doppelt */
+    display: none; /* Aktiver Filter nur als Chip-Bar (#mobile-active-filters) anzeigen, nicht doppelt */
   }
 
   .filter-active-indicator .fi-sep {
@@ -3124,116 +3059,168 @@ body.consent-active #map {
   /* === MOBILE FILTER OVERLAY & SHEET === */
   .mf-overlay {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    /* left/right/bottom via JS — bottom = window.innerHeight - searchContainer.top */
+    /* Overlay sits above the entire search-container: dropdown always fully visible below */
     z-index: 10001;
     display: flex;
     align-items: flex-end;
-    /* bottom wird per JS dynamisch gesetzt (über Searchbar + Chip-Bar) */
   }
 
   .mf-sheet {
-    width: 100%;
-    background: var(--dropdown-bg);
-    border-radius: 20px 20px 0 0;
-    max-height: 60vh;
     display: flex;
     flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    background: white;
+    border-radius: 20px 20px 0 0;
     overflow: hidden;
-    opacity: 0.92;
+    opacity: 0.95;
+    position: relative;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
   }
 
-  .mf-categories {
-    width: 42%;
-    background: black;
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-    overflow-y: auto;
-    flex-shrink: 0;
+  .mf-sheet.mf-sheet-open {
+    transform: translateY(0);
   }
 
-  .mf-options {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 6px;
-    padding: 8px;
-  }
-
-  .mf-cat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.9em;
-  }
-
-  .mf-cat-item.mf-selected {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-  }
-
-  .mf-cat-item.mf-has-value {
-    color: white;
-  }
-
-  /* Filter-Optionen als Pills */
-  .mf-opt-item {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 100px;
-    cursor: pointer;
-    color: var(--text-color);
-    background: transparent;
-    font-size: 0.88em;
+  /* Closing countdown toast — centered in filter pane, microtip appearance */
+  .mf-closing-tip {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10002;
+    pointer-events: none;
+    background: var(--microtip-background-color);
+    color: var(--microtip-color);
+    border: 3px solid var(--microtip-border-color);
+    box-shadow: 3px 1px 10px 3px var(--microtip-shadow-color);
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
     white-space: nowrap;
   }
 
+  .mf-sections-track {
+    display: flex; /* overridden to grid by JS */
+    flex-direction: row;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Table borders: black background + 1px gap = grid lines; padding = outer border */
+    background: #dddddd;
+    gap: 1px;
+    padding: 1px;
+    box-sizing: border-box;
+  }
+
+  .mf-sections-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mf-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .mf-section-spacer {
+    display: none;
+  }
+
+  .mf-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-size: 0.65em;
+    letter-spacing: 0.08em;
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+    height: 32px;
+    box-sizing: border-box;
+    width: 100%;
+    background: #777;
+  }
+
+  .mf-section-title.mf-has-value {
+    background: #555;
+  }
+
+  .mf-opt-check {
+    opacity: 0;
+    font-size: 0.7em;
+    flex-shrink: 0;
+    width: 0.9em;
+  }
+
+  .mf-opt-item.mf-opt-active .mf-opt-check {
+    opacity: 1;
+    color: white;
+  }
+
+  /* Country sections have flags, no check icon needed */
+  .mf-section[data-key="country"] .mf-opt-check {
+    display: none;
+  }
+
+  .mf-nav-btn {
+    display: none;
+  }
+
+  /* Filter-Optionen als Tabellen-Zellen — fixed height for unified row alignment */
+  .mf-opt-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 0;
+    border: none;
+    cursor: pointer;
+    background: white;
+    color: black;
+    font-size: 0.82em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .mf-opt-item:hover {
-    border-color: var(--text-color);
-    opacity: 0.85;
+    opacity: 0.8;
   }
 
   .mf-opt-item.mf-opt-active {
     background: var(--space-hover);
-    border-color: var(--space-hover);
     color: white;
     font-weight: bold;
+    box-shadow: inset 0 0 0 2px var(--space-hover);
   }
 
-  /* doorState-Pills: aktiv grün oder rot */
-  .mf-opt-item.mf-opt-door-open.mf-opt-active {
-    background: var(--space-open);
-    border-color: var(--space-open);
-  }
+  /* doorState: aktiv grün oder rot */
+  .mf-opt-item.mf-opt-door-open.mf-opt-active   { background: var(--space-open);   box-shadow: inset 0 0 0 2px var(--space-open); }
+  .mf-opt-item.mf-opt-door-closed.mf-opt-active { background: var(--space-closed); box-shadow: inset 0 0 0 2px var(--space-closed); }
 
-  .mf-opt-item.mf-opt-door-closed.mf-opt-active {
-    background: var(--space-closed);
-    border-color: var(--space-closed);
-  }
-
-  /* Nutzer-Land (ohne aktiven Filter): dezent hervorgehoben */
-  .mf-opt-item.mf-opt-user-country {
-    border-color: rgba(0, 119, 255, 0.5);
-    color: var(--space-hover);
-  }
+  /* mf-opt-user-country: no special styling */
 
   /* === MOBILE ACTIVE FILTERS CHIP BAR === */
   .mobile-active-filters {
-    display: none;
+    display: none; /* flex when active filters exist */
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     padding: 4px 10px;
     background: black;
-    /* border-top: 1px solid var(--dropdown-border); */
   }
 
   .mf-chip {
@@ -3249,11 +3236,17 @@ body.consent-active #map {
     font-size: 0.85em;
   }
 
-  /* Länderflagge im Chip & Options-Pill: exakter Kreis, konzentrisch links */
-  .mf-country-flag,
-  .mf-opt-flag {
+  .mf-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Länderflagge im Chip: exakter Kreis, konzentrisch links */
+  .mf-country-flag {
     width: 24px !important;
-    /* überschreibt .fi-Klasse (1.333em) → perfekter Kreis */
     height: 24px !important;
     border-radius: 50%;
     overflow: hidden;
@@ -3261,8 +3254,18 @@ body.consent-active #map {
     background-size: cover !important;
     background-position: center !important;
     margin-left: -8px;
-    /* Kreis-Mittelpunkt bei x=12px = Chip-Halbkreis-Mittelpunkt */
     margin-right: 4px;
+  }
+
+  /* Länderflagge in Tabellen-Zelle: kleiner Kreis links */
+  .mf-opt-flag {
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
   }
 
   .mf-chip-remove {
@@ -3276,13 +3279,8 @@ body.consent-active #map {
   }
 
   /* Status-Chip Farben */
-  .mf-chip.mf-chip-open {
-    background: var(--space-open);
-  }
-
-  .mf-chip.mf-chip-closed {
-    background: var(--space-closed);
-  }
+  .mf-chip.mf-chip-open   { background: var(--space-open);   }
+  .mf-chip.mf-chip-closed { background: var(--space-closed); }
 
   /* Clear-All-Button: exakter Kreis */
   .mobile-active-filters .filter-pill-clear-all {
@@ -3307,13 +3305,11 @@ body.consent-active #map {
 
   /* === DROPDOWN-WRAP: unsichtbar wenn leer (0px Platz über Searchbar) === */
   .dropdown-wrap {
-    display: none;
-    /* nur sichtbar wenn Dropdown aktiv */
+    display: none; /* nur sichtbar wenn Dropdown aktiv */
     flex-direction: row;
     border-radius: 0;
     border-top: 3px solid black;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65);
-    /* Schatten nach oben zur Karte */
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65); /* Schatten nach oben zur Karte */
   }
 
   .dropdown-wrap:has(#suggestions-dropdown.is-active) {
@@ -3322,8 +3318,7 @@ body.consent-active #map {
 
   /* === DROPDOWN: nur wenn aktiv, schwarzer HG, 2-Spalten-Grid === */
   #suggestions-dropdown {
-    display: none !important;
-    /* versteckt wenn leer → 0px Platz über Searchbar */
+    display: none !important; /* versteckt wenn leer → 0px Platz über Searchbar */
   }
 
   #suggestions-dropdown.is-active {
@@ -3332,22 +3327,18 @@ body.consent-active #map {
     min-width: 0;
     background: black;
     grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 58px;
-    /* Touch-Höhe je Space-Badge */
-    min-height: 116px;
-    /* immer 2 Zeilen hoch: 2×58px */
+    grid-auto-rows: 58px; /* Touch-Höhe je Space-Badge */
+    min-height: 116px; /* immer 2 Zeilen hoch: 2×58px */
     max-height: 116px;
     overflow-y: auto;
     scroll-snap-type: y mandatory;
-    scroll-padding-top: 0 !important;
-    /* Desktop-Wert (80px) zurücksetzen */
+    scroll-padding-top: 0 !important; /* Desktop-Wert (80px) zurücksetzen */
     padding: 0;
     gap: 0;
     margin-top: 0 !important;
     padding-top: 0 !important;
     border-radius: 0 !important;
-    box-shadow: none !important;
-    /* kein Schatten nach unten */
+    box-shadow: none !important; /* kein Schatten nach unten */
     /* border-bottom: 1px solid white; */
     touch-action: pan-y;
     overscroll-behavior: contain;
@@ -3381,8 +3372,7 @@ body.consent-active #map {
     color: white !important;
     overflow: hidden;
     align-items: flex-start;
-    scroll-snap-align: none;
-    /* Snap nur auf 2-Row-Grenzen (s.u.) */
+    scroll-snap-align: none; /* Snap nur auf 2-Row-Grenzen (s.u.) */
     position: relative;
   }
 
@@ -3419,57 +3409,30 @@ body.consent-active #map {
     color: var(--status-color, var(--space-hover)) !important;
   }
 
-  #suggestions-dropdown .listing-dist-badge {
-    display: none;
-  }
-
-  #suggestions-dropdown .listing-item-content {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-  }
-
+  #suggestions-dropdown .listing-dist-badge { display: none; }
+  #suggestions-dropdown .listing-item-content { flex: 1; min-width: 0; width: 100%; }
   #suggestions-dropdown .listing-item-name {
     padding-bottom: 1px;
     font-size: 12px;
     gap: 0;
   }
-
-  #suggestions-dropdown .listing-item-name>span {
+  #suggestions-dropdown .listing-item-name > span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
   }
-
-  #suggestions-dropdown .listing-item-address {
-    gap: 4px;
-  }
-
-  #suggestions-dropdown .listing-item-details {
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #suggestions-dropdown .listing-meeting-today {
-    display: none;
-  }
-
-  #suggestions-dropdown .listing-workshops {
-    display: none;
-  }
+  #suggestions-dropdown .listing-item-address { gap: 4px; }
+  #suggestions-dropdown .listing-item-details { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #suggestions-dropdown .listing-meeting-today { display: none; }
+  #suggestions-dropdown .listing-workshops     { display: none; }
 
   /* Straße ausblenden, nur PLZ+Stadt sichtbar */
-  #suggestions-dropdown .listing-item-address-lines>div:first-child {
-    display: none;
-  }
+  #suggestions-dropdown .listing-item-address-lines > div:first-child { display: none; }
 
   /* === SCROLL-NAV-BUTTONS (links vom Dropdown, weiß auf schwarz) === */
   .dropdown-nav {
-    display: none;
-    /* sichtbar wenn Dropdown Inhalt hat */
+    display: none; /* sichtbar wenn Dropdown Inhalt hat */
     flex-direction: column;
     background: black;
     flex-shrink: 0;
@@ -3505,14 +3468,20 @@ body.consent-active #map {
     border-top: 1px solid grey;
   }
 
-  /* End-Indikatoren: Icon per transform verschieben — kein Effekt auf Box/Layout/Trennlinie */
+  /* End-Indikatoren: Icon an den äußeren Rand des Buttons rücken — 6px vom Außenrand */
+  .dropdown-nav-btn {
+    position: relative; /* Anker für absolute Icon-Positionierung */
+  }
+
   #dropdown-nav-up.at-end i {
-    transform: translateY(-14px);
+    position: absolute;
+    top: 16%;
     color: #666;
   }
 
   #dropdown-nav-down.at-end i {
-    transform: translateY(14px);
+    position: absolute;
+    bottom: 16%;
     color: #666;
   }
 
@@ -3548,7 +3517,8 @@ body.consent-active #map {
     transition: opacity 0.3s ease-in-out, height 0.2s ease, padding 0.2s ease, font-size 0.2s ease, border-radius 0.2s ease;
   }
 
-  /* Collapsed-Werte (kein Fokus) */
+  /* TODO (iPhone): searchbar collapse disabled — keep full height at all times */
+  /*
   .search-container:not(.bar-focused) #search-bar {
     height: 22px;
     padding-top: 2px;
@@ -3573,6 +3543,7 @@ body.consent-active #map {
   .search-container:not(.bar-focused) .search-counter .counter-x {
     font-size: 22px;
   }
+  */
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -3593,6 +3564,17 @@ body.consent-active #map {
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
 
     transition: bottom 0.3s ease;
+  }
+
+  /* Filter-Pane: 6-column grid (applied by JS), limit height, allow scroll */
+  .mf-sheet {
+    max-height: 60vh;
+    overflow: hidden;
+  }
+
+  .mf-sections-track {
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   /* 4 Spalten × 4 Zeilen Dropdown-Grid (Portrait) */
@@ -3646,6 +3628,23 @@ body.consent-active #map {
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   PHONE-ONLY: Filter-Pane — 3×2 stacked grid (two tables), no scroll
+   Grid layout applied by JS (_applyUnifiedGrid)
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* Pane grows to natural height — no clipping */
+  .mf-sheet {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .mf-sections-track {
+    overflow: visible;
+  }
+}
+
 /* Tablet Landscape: 5 Spalten × 3 Zeilen */
 @media (min-width: 768px) and (pointer: coarse) and (orientation: landscape) {
   #suggestions-dropdown.is-active {
@@ -3655,7 +3654,6 @@ body.consent-active #map {
     max-height: 174px;
   }
 }
-
 /* =================================================================
    NEARBY.CSS - Nearby Spaces Feature Styles
    Popover, Cursor Hint, Radius Slider
@@ -3864,20 +3862,9 @@ body.consent-active #map {
 
 /* Flicker-Animation wenn Liste nicht weiter erweiterbar */
 @keyframes nearby-limit-flicker {
-
-  0%,
-  100% {
-    background-color: var(--dropdown-bg);
-  }
-
-  25%,
-  75% {
-    background-color: var(--space-closed);
-  }
-
-  50% {
-    background-color: var(--dropdown-bg);
-  }
+  0%, 100% { background-color: var(--dropdown-bg); }
+  25%, 75% { background-color: var(--space-closed); }
+  50% { background-color: var(--dropdown-bg); }
 }
 
 .nearby-resize-handle.limit-reached {
@@ -4063,13 +4050,8 @@ body.consent-active #map {
   }
 
   @keyframes nearbySlideUp {
-    from {
-      transform: translateY(100%);
-    }
-
-    to {
-      transform: translateY(0);
-    }
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 
   .nearby-cursor-hint {
@@ -4084,7 +4066,6 @@ body.consent-active #map {
     display: none !important;
   }
 }
-
 /*============================================AUTOCOMPLETE PILLS - Enhanced Search============================================*/
 
 /* Autocomplete Container - oberhalb der Searchbar */
@@ -4110,10 +4091,8 @@ body.consent-active #map {
   display: none !important;
 
   /* ✨ FIX: Flex-Eigenschaften für Pill-Anzeige in der Reihe */
-  flex-direction: row !important;
-  /* Spalte -> Zeile */
-  flex-wrap: wrap !important;
-  /* Umbruch, wenn kein Platz */
+  flex-direction: row !important; /* Spalte -> Zeile */
+  flex-wrap: wrap !important; /* Umbruch, wenn kein Platz */
 
   gap: 4px !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
@@ -4137,11 +4116,9 @@ body.consent-active #map {
 .autocomplete-pill {
   background: #000 !important;
   color: #fff !important;
-  padding: 4px 8px !important;
-  /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
+  padding: 4px 8px !important; /* ✨ KORREKTUR: Padding reduziert (von 6px 12px) */
   border-radius: 12px !important;
-  font-size: 0.75em !important;
-  /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
+  font-size: 0.75em !important; /* ✨ KORREKTUR: Schriftgröße reduziert (von 0.85em) */
   font-weight: 500 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
@@ -4170,13 +4147,13 @@ body.consent-active #map {
     background: #fff;
     color: #000;
   }
-
+  
   .autocomplete-pill:hover,
   .autocomplete-pill.focused {
     background: #0066ff;
     color: #fff;
   }
-
+  
   .autocomplete-pill.focused {
     background: #fff !important;
     color: #000 !important;
@@ -4266,10 +4243,8 @@ body.consent-active #map {
   pointer-events: auto;
   /* Pills sind klickbar */
   user-select: none;
-  position: relative;
-  /* Wichtig für ::after-Positionierung */
-  overflow: hidden;
-  /* Verhindert, dass Text/X bei der Transformation überläuft */
+  position: relative; /* Wichtig für ::after-Positionierung */
+  overflow: hidden; /* Verhindert, dass Text/X bei der Transformation überläuft */
 }
 
 /* ✨ KORREKTUR: Roter Hover-Effekt (Löschen) */
@@ -4289,13 +4264,11 @@ body.consent-active #map {
 
 /* ✨ NEU: Das rote "X" beim Hover einfügen (ersetzt den Text visuell) */
 .search-pill::after {
-  content: "X";
-  /* Inhalt ist das X */
+  content: "X"; /* Inhalt ist das X */
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  /* Standardmäßig in der Mitte, unsichtbar */
+  transform: translate(-50%, -50%) scale(0); /* Standardmäßig in der Mitte, unsichtbar */
   font-size: 1.2em;
   font-weight: bold;
   opacity: 0;
@@ -4317,7 +4290,7 @@ body.consent-active #map {
     background: #fff;
     color: #000;
   }
-
+  
   .search-pill:hover {
     background: #ddd;
   }
@@ -4377,7 +4350,6 @@ body.consent-active #map {
     opacity: 0;
     transform: scale(0.8) translateX(-10px);
   }
-
   to {
     opacity: 1;
     transform: scale(1) translateX(0);
@@ -4389,7 +4361,6 @@ body.consent-active #map {
     opacity: 1;
     transform: scale(1) translateX(0);
   }
-
   to {
     opacity: 0;
     transform: scale(0.8) translateX(-10px);
@@ -4430,7 +4401,7 @@ body.consent-active #map {
   .autocomplete-container::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
   }
-
+  
   .autocomplete-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
   }
@@ -4458,16 +4429,16 @@ body.consent-active #map {
     left: 2px;
     right: 2px;
   }
-
+  
   .search-pills-container {
     max-width: calc(100% - 60px);
   }
-
+  
   .search-pill {
     font-size: 0.7em;
     padding: 3px 6px;
   }
-
+  
   .autocomplete-pill {
     font-size: 0.8em;
     padding: 5px 10px;

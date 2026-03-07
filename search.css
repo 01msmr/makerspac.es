@@ -648,18 +648,15 @@
     height: 28px;
     border-radius: 50%;
     border: 1px solid var(--border-color);
-    background-color: var(--search-bg);
-    color: var(--text-color);
+    background-color: var(--text-color);
+    color: var(--search-bg);
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1.15em;
   }
 
-  #filter-toggle-btn:hover {
-    background-color: var(--space-hover);
-    color: white;
-  }
+  /* #filter-toggle-btn:hover — color change disabled */
 
   /* === FILTER-INDICATOR (aktiver Filter inline neben Filter-Button) === */
   .filter-active-indicator {
@@ -719,109 +716,168 @@
   /* === MOBILE FILTER OVERLAY & SHEET === */
   .mf-overlay {
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    /* left/right/bottom via JS — bottom = window.innerHeight - searchContainer.top */
+    /* Overlay sits above the entire search-container: dropdown always fully visible below */
     z-index: 10001;
     display: flex;
     align-items: flex-end;
-    /* bottom wird per JS dynamisch gesetzt (über Searchbar + Chip-Bar) */
   }
 
   .mf-sheet {
-    width: 100%;
-    background: var(--dropdown-bg);
-    border-radius: 20px 20px 0 0;
-    max-height: 60vh;
     display: flex;
     flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    background: white;
+    border-radius: 20px 20px 0 0;
     overflow: hidden;
-    opacity: 0.92;
+    opacity: 0.95;
+    position: relative;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
   }
 
-  .mf-categories {
-    width: 42%;
-    background: black;
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-    overflow-y: auto;
-    flex-shrink: 0;
+  .mf-sheet.mf-sheet-open {
+    transform: translateY(0);
   }
 
-  .mf-options {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 6px;
-    padding: 8px;
-  }
-
-  .mf-cat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.9em;
-  }
-
-  .mf-cat-item.mf-selected {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-  }
-
-  .mf-cat-item.mf-has-value {
-    color: white;
-  }
-
-  /* Filter-Optionen als Pills */
-  .mf-opt-item {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 100px;
-    cursor: pointer;
-    color: var(--text-color);
-    background: transparent;
-    font-size: 0.88em;
+  /* Closing countdown toast — centered in filter pane, microtip appearance */
+  .mf-closing-tip {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10002;
+    pointer-events: none;
+    background: var(--microtip-background-color);
+    color: var(--microtip-color);
+    border: 3px solid var(--microtip-border-color);
+    box-shadow: 3px 1px 10px 3px var(--microtip-shadow-color);
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
     white-space: nowrap;
   }
 
+  .mf-sections-track {
+    display: flex; /* overridden to grid by JS */
+    flex-direction: row;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Table borders: black background + 1px gap = grid lines; padding = outer border */
+    background: #dddddd;
+    gap: 1px;
+    padding: 1px;
+    box-sizing: border-box;
+  }
+
+  .mf-sections-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mf-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .mf-section-spacer {
+    display: none;
+  }
+
+  .mf-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-size: 0.65em;
+    letter-spacing: 0.08em;
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+    height: 32px;
+    box-sizing: border-box;
+    width: 100%;
+    background: #777;
+  }
+
+  .mf-section-title.mf-has-value {
+    background: #555;
+  }
+
+  .mf-opt-check {
+    opacity: 0;
+    font-size: 0.7em;
+    flex-shrink: 0;
+    width: 0.9em;
+  }
+
+  .mf-opt-item.mf-opt-active .mf-opt-check {
+    opacity: 1;
+    color: white;
+  }
+
+  /* Country sections have flags, no check icon needed */
+  .mf-section[data-key="country"] .mf-opt-check {
+    display: none;
+  }
+
+  .mf-nav-btn {
+    display: none;
+  }
+
+  /* Filter-Optionen als Tabellen-Zellen — fixed height for unified row alignment */
+  .mf-opt-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 0;
+    border: none;
+    cursor: pointer;
+    background: white;
+    color: black;
+    font-size: 0.82em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .mf-opt-item:hover {
-    border-color: var(--text-color);
-    opacity: 0.85;
+    opacity: 0.8;
   }
 
   .mf-opt-item.mf-opt-active {
     background: var(--space-hover);
-    border-color: var(--space-hover);
     color: white;
     font-weight: bold;
+    box-shadow: inset 0 0 0 2px var(--space-hover);
   }
 
-  /* doorState-Pills: aktiv grün oder rot */
-  .mf-opt-item.mf-opt-door-open.mf-opt-active   { background: var(--space-open);   border-color: var(--space-open); }
-  .mf-opt-item.mf-opt-door-closed.mf-opt-active { background: var(--space-closed); border-color: var(--space-closed); }
+  /* doorState: aktiv grün oder rot */
+  .mf-opt-item.mf-opt-door-open.mf-opt-active   { background: var(--space-open);   box-shadow: inset 0 0 0 2px var(--space-open); }
+  .mf-opt-item.mf-opt-door-closed.mf-opt-active { background: var(--space-closed); box-shadow: inset 0 0 0 2px var(--space-closed); }
 
-  /* Nutzer-Land (ohne aktiven Filter): dezent hervorgehoben */
-  .mf-opt-item.mf-opt-user-country {
-    border-color: rgba(0, 119, 255, 0.5);
-    color: var(--space-hover);
-  }
+  /* mf-opt-user-country: no special styling */
 
   /* === MOBILE ACTIVE FILTERS CHIP BAR === */
   .mobile-active-filters {
-    display: none;
+    display: none; /* flex when active filters exist */
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     padding: 4px 10px;
     background: black;
-    /* border-top: 1px solid var(--dropdown-border); */
   }
 
   .mf-chip {
@@ -837,18 +893,36 @@
     font-size: 0.85em;
   }
 
-  /* Länderflagge im Chip & Options-Pill: exakter Kreis, konzentrisch links */
-  .mf-country-flag,
-  .mf-opt-flag {
-    width: 24px !important;   /* überschreibt .fi-Klasse (1.333em) → perfekter Kreis */
+  .mf-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Länderflagge im Chip: exakter Kreis, konzentrisch links */
+  .mf-country-flag {
+    width: 24px !important;
     height: 24px !important;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
     background-size: cover !important;
     background-position: center !important;
-    margin-left: -8px;        /* Kreis-Mittelpunkt bei x=12px = Chip-Halbkreis-Mittelpunkt */
+    margin-left: -8px;
     margin-right: 4px;
+  }
+
+  /* Länderflagge in Tabellen-Zelle: kleiner Kreis links */
+  .mf-opt-flag {
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
   }
 
   .mf-chip-remove {
@@ -862,7 +936,7 @@
   }
 
   /* Status-Chip Farben */
-  .mf-chip.mf-chip-open   { background: var(--space-open); }
+  .mf-chip.mf-chip-open   { background: var(--space-open);   }
   .mf-chip.mf-chip-closed { background: var(--space-closed); }
 
   /* Clear-All-Button: exakter Kreis */
@@ -1051,14 +1125,20 @@
     border-top: 1px solid grey;
   }
 
-  /* End-Indikatoren: Icon per transform verschieben — kein Effekt auf Box/Layout/Trennlinie */
+  /* End-Indikatoren: Icon an den äußeren Rand des Buttons rücken — 6px vom Außenrand */
+  .dropdown-nav-btn {
+    position: relative; /* Anker für absolute Icon-Positionierung */
+  }
+
   #dropdown-nav-up.at-end i {
-    transform: translateY(-14px);
+    position: absolute;
+    top: 16%;
     color: #666;
   }
 
   #dropdown-nav-down.at-end i {
-    transform: translateY(14px);
+    position: absolute;
+    bottom: 16%;
     color: #666;
   }
 
@@ -1094,7 +1174,8 @@
     transition: opacity 0.3s ease-in-out, height 0.2s ease, padding 0.2s ease, font-size 0.2s ease, border-radius 0.2s ease;
   }
 
-  /* Collapsed-Werte (kein Fokus) */
+  /* TODO (iPhone): searchbar collapse disabled — keep full height at all times */
+  /*
   .search-container:not(.bar-focused) #search-bar {
     height: 22px;
     padding-top: 2px;
@@ -1119,6 +1200,7 @@
   .search-container:not(.bar-focused) .search-counter .counter-x {
     font-size: 22px;
   }
+  */
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1139,6 +1221,17 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
 
     transition: bottom 0.3s ease;
+  }
+
+  /* Filter-Pane: 6-column grid (applied by JS), limit height, allow scroll */
+  .mf-sheet {
+    max-height: 60vh;
+    overflow: hidden;
+  }
+
+  .mf-sections-track {
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   /* 4 Spalten × 4 Zeilen Dropdown-Grid (Portrait) */
@@ -1189,6 +1282,23 @@
     border-radius: 999px !important;
     padding: 0 8px !important;
     right: 3px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PHONE-ONLY: Filter-Pane — 3×2 stacked grid (two tables), no scroll
+   Grid layout applied by JS (_applyUnifiedGrid)
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* Pane grows to natural height — no clipping */
+  .mf-sheet {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .mf-sections-track {
+    overflow: visible;
   }
 }
 

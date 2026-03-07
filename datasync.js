@@ -16,8 +16,8 @@ class ConsentManager {
 
     // Aktivierung nach vollständigem Laden (i18n-Translations verfügbar)
     window.addEventListener('load', () => { this._ready = true; });
-    // Banner-Text aktualisieren bei Sprachwechsel
-    document.addEventListener('languageChanged', () => this._updateBannerTexts());
+    // Banner-Text aktualisieren bei Sprachwechsel (Banner-System deaktiviert — kein Listener nötig)
+    // document.addEventListener('languageChanged', () => this._updateBannerTexts());
   }
 
   get(key) {

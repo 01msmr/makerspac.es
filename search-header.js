@@ -602,8 +602,9 @@ class SearchHeader {
 
     document.addEventListener('click', (e) => {
       // Klicks innerhalb des Filter-Popovers (auch nach Entfernen aus DOM) ignorieren
-      // Auf Mobile: kein closeDropdown bei Außenklick (Tastatur-Dismiss würde Nav-Buttons verbergen)
-      if (window.innerWidth > 767 &&
+      // Auf Mobile/Tablet-Touch: kein closeDropdown bei Außenklick
+      const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
+      if (!isMobileUI &&
         !e.target.closest('.search-container') && !e.target.closest('.mf-overlay')) {
         this.closeDropdown();
       }

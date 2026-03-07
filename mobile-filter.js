@@ -3,8 +3,11 @@ import { appContext } from './app-context.js';
 
 class MobileFilterUI {
   constructor() {
-    this.selectedCategory = null;
     this.sheet = null;
+    this._autoCloseTimer = null;
+    this._toastTimer = null;
+    this._resizeHandler = null;
+    this._hasInteracted = false;
     this._navClickCounts = { up: 0, down: 0 };
     this._navClickTimers = { up: null, down: null };
   }
@@ -266,12 +269,12 @@ class MobileFilterUI {
 
   getCategories() {
     return {
+      bookmarks: { icon: 'fas fa-bookmark',           label: window.i18n?.t('filter.bookmarks') || 'Favoriten' },
       style:     { icon: 'fas fa-people-group',       label: window.i18n?.t('filter.style')     || 'Style' },
       doorState: { icon: 'fas fa-door-open',          label: window.i18n?.t('filter.status')    || 'Status' },
       weekly:    { icon: 'fas fa-calendar-day',       label: window.i18n?.t('filter.weekly')    || 'Meeting' },
-      workshops: { icon: 'fas fa-wrench', label: window.i18n?.t('filter.workshops') || 'Werkstätten' },
+      workshops: { icon: 'fas fa-wrench',             label: window.i18n?.t('filter.workshops') || 'Werkstätten' },
       country:   { icon: 'fas fa-flag',               label: window.i18n?.t('filter.country')   || 'Land' },
-      bookmarks: { icon: 'fas fa-bookmark',           label: window.i18n?.t('filter.bookmarks') || 'Favoriten' },
     };
   }
 
@@ -305,42 +308,79 @@ class MobileFilterUI {
   open() {
     if (this.sheet) return;
 
-    // Starte mit aktiver Filter-Kategorie, sonst mit Länder-Filter
-    const activeCategory = Object.keys(this.getCategories()).find(key =>
-      key !== 'bookmarks' && appContext.searchHeader?.getActiveFilterForCategory(key)
-    );
-    this.selectedCategory = activeCategory || 'country';
-
     this.sheet = this.buildSheet();
     document.body.appendChild(this.sheet);
 
-    // Overlay-Unterkante dynamisch über Searchbar + Chip-Bar positionieren
+    // Position: bottom of overlay = top edge of search-input-row
+    // Filter pane covers the dropdown area; z-index: 10001 keeps it above dropdown
     const searchRow = document.querySelector('.search-input-row');
-    const chipBar   = document.getElementById('mobile-active-filters');
-    const rowH  = searchRow?.offsetHeight || 36;
-    const chipH = (chipBar && chipBar.style.display !== 'none') ? chipBar.offsetHeight : 0;
-    const safeArea = parseFloat(getComputedStyle(document.documentElement).paddingBottom) || 0;
-    this.sheet.style.bottom = (rowH + chipH + safeArea) + 'px';
+    const rect      = searchRow?.getBoundingClientRect();
+    const bottomPos = rect ? window.innerHeight - rect.top : 44;
+    this.sheet.style.left   = '0';
+    this.sheet.style.right  = '0';
+    this.sheet.style.bottom = bottomPos + 'px';
 
+    // Slide-in Animation
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      this.sheet?.querySelector('.mf-sheet')?.classList.add('mf-sheet-open');
+    }));
+
+    // Tippen auf Overlay-Hintergrund → schließen
     this.sheet.addEventListener('click', e => {
       if (e.target === this.sheet) this.close();
     });
 
-    // Außerhalb tippen → schließen (Filter-Button ausgenommen: der handled toggle selbst)
+    // Tippen innerhalb des Panels → Timer zurücksetzen (Panel bleibt offen)
+    this.sheet.querySelector('.mf-sheet')?.addEventListener('click', () => this._resetAutoClose());
+
+    // Außerhalb tippen → schließen (Filter-Button ausgenommen)
     this._outsideHandler = (e) => {
       const filterBtn = document.getElementById('filter-toggle-btn');
       if (this.sheet && !this.sheet.contains(e.target) && !filterBtn?.contains(e.target)) this.close();
     };
     setTimeout(() => document.addEventListener('pointerdown', this._outsideHandler), 0);
+
+    // Resize/Orientierungswechsel → sofort schließen
+    this._resizeHandler = () => this.close();
+    window.addEventListener('resize', this._resizeHandler, { once: true });
+
+    document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-angle-down');
+
+    this._hasInteracted = false;
+    this._resetAutoClose();
   }
 
   close() {
+    if (!this.sheet) return;
+    clearTimeout(this._autoCloseTimer);
+    this._autoCloseTimer = null;
+    clearTimeout(this._toastTimer);
+    this._toastTimer = null;
+    this._clearClosingTip();
+    if (this._resizeHandler) {
+      window.removeEventListener('resize', this._resizeHandler);
+      this._resizeHandler = null;
+    }
     document.removeEventListener('pointerdown', this._outsideHandler);
     this._outsideHandler = null;
-    this.sheet?.remove();
+
+    // Slide-out Animation, dann DOM-Entfernung
+    const overlay = this.sheet;
+    const panel = overlay.querySelector('.mf-sheet');
     this.sheet = null;
+    this._track = null;
+    this._prevBtn = null;
+    this._nextBtn = null;
+    if (panel) {
+      panel.classList.remove('mf-sheet-open');
+      panel.addEventListener('transitionend', () => overlay.remove(), { once: true });
+    } else {
+      overlay.remove();
+    }
+
+    document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-filter');
+
     this.updateChipBar();
-    document.querySelector('.search-container')?.classList.remove('bar-focused');
   }
 
   buildSheet() {
@@ -349,65 +389,61 @@ class MobileFilterUI {
 
     const panel = document.createElement('div');
     panel.className = 'mf-sheet';
-    panel.innerHTML = '<div class="mf-categories"></div><div class="mf-options"></div>';
 
-    this.renderCategories(panel.querySelector('.mf-categories'));
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'mf-nav-btn mf-nav-prev';
+    prevBtn.innerHTML = '&#8249;';
+    prevBtn.disabled = true;
 
-    // Optionen sofort für die vorgewählte Kategorie anzeigen
-    if (this.selectedCategory) {
-      this.renderOptions(panel.querySelector('.mf-options'), this.selectedCategory);
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'mf-nav-btn mf-nav-next';
+    nextBtn.innerHTML = '&#8250;';
+
+    const track = document.createElement('div');
+    track.className = 'mf-sections-track';
+
+    for (const [key, cfg] of Object.entries(this.getCategories())) {
+      track.appendChild(this.renderSection(key, cfg));
     }
+
+    this._applyUnifiedGrid(track);
+
+    prevBtn.addEventListener('click', () => this._navPrev());
+    nextBtn.addEventListener('click', () => this._navNext());
+    track.addEventListener('scroll', () => this._onTrackScroll(), { passive: true });
+
+    panel.appendChild(prevBtn);
+    panel.appendChild(track);
+    panel.appendChild(nextBtn);
+
+    this._track = track;
+    this._prevBtn = prevBtn;
+    this._nextBtn = nextBtn;
+
+    this._updateNavButtons();
 
     overlay.appendChild(panel);
     return overlay;
   }
 
-  renderCategories(container) {
-    container.innerHTML = '';
-    Object.entries(this.getCategories()).forEach(([key, cfg]) => {
-      const active = appContext.searchHeader?.getActiveFilterForCategory(key);
+  renderSection(key, cfg) {
+    const section = document.createElement('div');
+    section.className = 'mf-section';
+    section.dataset.key = key;
 
-      const item = document.createElement('div');
-      item.className = 'mf-cat-item'
-        + (this.selectedCategory === key ? ' mf-selected' : '')
-        + (active ? ' mf-has-value' : '');
-      // Kein activeLabel mehr – aktiver Wert steht in der Options-Spalte
-      item.innerHTML = `
-        <i class="${cfg.icon}"></i>
-        <span class="mf-cat-name">${cfg.label}</span>`;
-
-      item.addEventListener('click', () => {
-        // Bookmarks: direkt toggling, keine zweite Ebene
-        if (key === 'bookmarks') {
-          const isActive = appContext.searchHeader?.getActiveFilterForCategory('bookmarks');
-          if (isActive) {
-            appContext.searchHeader?.clearCategoryFilter('bookmarks');
-          } else {
-            appContext.searchHeader?.selectCategoryOption('bookmarks', 'bookmarked');
-          }
-          this.close();
-          return;
-        }
-        this.selectedCategory = key;
-        this.renderCategories(container);
-        const sheet = container.closest('.mf-sheet');
-        this.renderOptions(sheet.querySelector('.mf-options'), key);
-      });
-      container.appendChild(item);
-    });
-  }
-
-  renderOptions(oldContainer, key) {
-    // Frisches Element erstellen – altes komplett ersetzen
-    const container = document.createElement('div');
-    container.className = 'mf-options';
-    oldContainer.replaceWith(container);
-
-    const options = this.getOptions(key);
     const activeValue = appContext.searchHeader?.getActiveFilterForCategory(key);
 
-    // Ggf. User-Land vormarkieren (nur bei country ohne aktiven Filter)
+    const title = document.createElement('div');
+    title.className = 'mf-section-title' + (activeValue ? ' mf-has-value' : '');
+    title.textContent = (cfg.label || key).toUpperCase();
+
+    // Title first — becomes row 0 in the unified grid
+    section.appendChild(title);
+
+    const options = this.getOptions(key);
     const userCountry = (key === 'country' && !activeValue) ? this.getUserCountry() : null;
+
+    let activeItem = null;
 
     options.forEach(opt => {
       const isActive = opt === activeValue;
@@ -422,27 +458,174 @@ class MobileFilterUI {
         + (isDoorOpen    ? ' mf-opt-door-open'    : '')
         + (isDoorClosed  ? ' mf-opt-door-closed'  : '');
 
-      // Bei Country: Flagge als fi fi-XX Icon im Kreis voranstellen
+      // Check icon (always first, visible only when active via CSS)
+      const checkIcon = document.createElement('i');
+      checkIcon.className = 'fas fa-check mf-opt-check';
+      item.appendChild(checkIcon);
+
+      // Flag (country only)
       if (key === 'country') {
         const code = this.getCountryCode(opt);
-        const flagHtml = code
-          ? `<span class="fi fi-${code} mf-opt-flag"></span> `
-          : '';
-        item.innerHTML = flagHtml + this.translateValue(key, opt);
-      } else {
-        item.textContent = this.translateValue(key, opt);
+        if (code) {
+          const flag = document.createElement('span');
+          flag.className = `fi fi-${code} mf-opt-flag`;
+          item.appendChild(flag);
+        }
       }
-      item.addEventListener('click', () => {
-        appContext.searchHeader?.selectCategoryOption(key, opt);
-        this.close();
-      });
-      container.appendChild(item);
 
-      // Zum aktiven oder User-Land-Eintrag scrollen
-      if (isActive || isUserCountry) {
-        requestAnimationFrame(() => item.scrollIntoView({ block: 'nearest' }));
+      // Label text
+      const label = document.createElement('span');
+      label.textContent = this.translateValue(key, opt);
+      item.appendChild(label);
+
+      item.addEventListener('click', () => {
+        this._hasInteracted = true;
+        const isCurrentlyActive = item.classList.contains('mf-opt-active');
+        if (isCurrentlyActive) {
+          // Toggle off
+          appContext.searchHeader?.clearCategoryFilter(key);
+          item.classList.remove('mf-opt-active');
+          if (!section.querySelector('.mf-opt-active')) {
+            title.classList.remove('mf-has-value');
+          }
+        } else {
+          appContext.searchHeader?.selectCategoryOption(key, opt);
+          section.querySelectorAll('.mf-opt-item').forEach(el => el.classList.remove('mf-opt-active'));
+          item.classList.add('mf-opt-active');
+          title.classList.add('mf-has-value');
+        }
+        this._resetAutoClose();
+      });
+
+      // Direct child of section — becomes a grid row in the unified grid
+      section.appendChild(item);
+      if (isActive || isUserCountry) activeItem = item;
+    });
+
+    if (activeItem) {
+      requestAnimationFrame(() => activeItem.scrollIntoView({ block: 'nearest' }));
+    }
+
+    return section;
+  }
+
+  _resetAutoClose() {
+    clearTimeout(this._autoCloseTimer);
+    clearTimeout(this._toastTimer);
+    this._toastTimer = null;
+    this._clearClosingTip();
+    const delay = this._hasInteracted ? 3500 : 7000;
+    this._autoCloseTimer = setTimeout(() => this._startClosing(), delay);
+  }
+
+  _clearClosingTip() {
+    this._closingTip?.remove();
+    this._closingTip = null;
+  }
+
+  _startClosing() {
+    if (!this.sheet) return;
+    const pane = this.sheet.querySelector('.mf-sheet');
+    if (pane) {
+      const rect = pane.getBoundingClientRect();
+      const tip = document.createElement('div');
+      tip.className = 'mf-closing-tip';
+      tip.textContent = window.i18n?.t('filter.closingPane') || '… closing filter pane …';
+      tip.style.top = Math.round(rect.top + rect.height / 2) + 'px';
+      document.body.appendChild(tip);
+      this._closingTip = tip;
+    }
+    this._toastTimer = setTimeout(() => this.close(), 1750);
+  }
+
+  _navPrev() {
+    if (!this._track) return;
+    const sectionW = this._track.querySelector('.mf-section')?.offsetWidth || this._track.clientWidth;
+    this._track.scrollBy({ left: -sectionW, behavior: 'smooth' });
+    this._resetAutoClose();
+  }
+
+  _navNext() {
+    if (!this._track) return;
+    const sectionW = this._track.querySelector('.mf-section')?.offsetWidth || this._track.clientWidth;
+    this._track.scrollBy({ left: sectionW, behavior: 'smooth' });
+    this._resetAutoClose();
+  }
+
+  _onTrackScroll() {
+    this._updateNavButtons();
+  }
+
+  // Build a real CSS Grid across all sections so horizontal borders align.
+  // Phone: two 3-column tables stacked — second half on top, first half on bottom.
+  // Tablet: one 6-column table in normal order.
+  _applyUnifiedGrid(track) {
+    const sections = Array.from(track.querySelectorAll('.mf-section'));
+    const isPhone = window.matchMedia('(max-width: 767px)').matches && !this._isTablet();
+    const numCols = isPhone ? 3 : sections.length;
+    const numGroups = Math.ceil(sections.length / numCols);
+
+    track.style.display = 'grid';
+    track.style.gridTemplateColumns = `repeat(${numCols}, 1fr)`;
+
+    // Sections become transparent to the grid — their children are placed directly
+    sections.forEach(s => { s.style.display = 'contents'; });
+
+    // Max rows per group
+    const groupMaxRows = [];
+    for (let g = 0; g < numGroups; g++) {
+      let maxRows = 0;
+      for (let c = 0; c < numCols; c++) {
+        const s = sections[g * numCols + c];
+        if (s) maxRows = Math.max(maxRows, s.children.length);
+      }
+      groupMaxRows.push(maxRows);
+    }
+
+    // Phone: second group on top (rows start at 0), first group below it.
+    // Tablet: natural top-to-bottom order.
+    const groupOffsets = new Array(numGroups);
+    if (isPhone && numGroups === 2) {
+      groupOffsets[1] = 0;
+      groupOffsets[0] = groupMaxRows[1];
+    } else {
+      let offset = 0;
+      for (let g = 0; g < numGroups; g++) {
+        groupOffsets[g] = offset;
+        offset += groupMaxRows[g];
+      }
+    }
+
+    // Assign explicit grid-column and grid-row to every cell;
+    // add white ghost cells to fill shorter columns so track bg stays hidden
+    sections.forEach((section, i) => {
+      const colIdx   = i % numCols;
+      const groupIdx = Math.floor(i / numCols);
+      const rowBase  = groupOffsets[groupIdx];
+      Array.from(section.children).forEach((child, rowIdx) => {
+        child.style.gridColumn = String(colIdx + 1);
+        child.style.gridRow    = String(rowBase + rowIdx + 1);
+      });
+
+      const realRows = section.children.length;
+      for (let r = realRows; r < groupMaxRows[groupIdx]; r++) {
+        const ghost = document.createElement('div');
+        ghost.className = 'mf-ghost-cell';
+        ghost.style.gridColumn = String(colIdx + 1);
+        ghost.style.gridRow    = String(rowBase + r + 1);
+        ghost.style.background = 'white';
+        ghost.style.height     = '32px';
+        ghost.style.boxSizing  = 'border-box';
+        track.appendChild(ghost);
       }
     });
+  }
+
+  _updateNavButtons() {
+    if (!this._track || !this._prevBtn || !this._nextBtn) return;
+    const { scrollLeft, scrollWidth, clientWidth } = this._track;
+    this._prevBtn.disabled = scrollLeft <= 0;
+    this._nextBtn.disabled = scrollLeft >= scrollWidth - clientWidth - 1;
   }
 
   translateValue(key, value) {
@@ -455,50 +638,59 @@ class MobileFilterUI {
     const bar = document.getElementById('mobile-active-filters');
     if (!bar) return;
 
-    const activeEntries = Object.entries(this.getCategories())
-      .map(([key, cfg]) => {
+    const categories = this.getCategories();
+    const activeEntries = Object.keys(categories)
+      .map((key) => {
+        const cfg = categories[key];
         const val = appContext.searchHeader?.getActiveFilterForCategory(key);
         return val ? { key, cfg, val } : null;
       })
       .filter(Boolean);
 
-    // Chip-Bar (unter der Searchbar)
-    const chips = activeEntries.map(({ key, cfg, val }) => {
-      const statusClass = key === 'doorState' ? ` mf-chip-${val}` : '';
-      const countryCode = key === 'country' ? this.getCountryCode(val) : null;
-      const iconHtml = countryCode
-        ? `<span class="fi fi-${countryCode} mf-country-flag"></span>`
-        : `<i class="${cfg.icon}"></i>`;
-      return `<span class="mf-chip${statusClass}" data-key="${key}">
-        ${iconHtml} ${this.translateValue(key, val)}
-        <span class="mf-chip-remove" aria-label="Filter entfernen">×</span>
-      </span>`;
-    });
+    if (!activeEntries.length || !this._isMobileUI()) {
+      bar.style.display = 'none';
+      bar.innerHTML = '';
+    } else {
+      bar.style.display = 'flex';
+      bar.innerHTML = '';
 
-    const clearAllHtml = chips.length > 0
-      ? `<span class="filter-pill filter-pill-clear-all mf-clear-all-btn" role="tooltip"
-             data-microtip-position="top-left"
-             aria-label="${window.i18n?.t('filter.clearAll') || 'clear all filters'}">
-           <i class="${AppConfig.icons.ui.close}"></i>
-         </span>`
-      : '';
+      activeEntries.forEach(({ key, cfg, val }) => {
+        const statusClass = key === 'doorState' ? ` mf-chip-${val}` : '';
+        const countryCode = key === 'country' ? this.getCountryCode(val) : null;
+        const iconHtml = countryCode
+          ? `<span class="fi fi-${countryCode} mf-country-flag"></span>`
+          : `<i class="${cfg.icon}"></i>`;
 
-    bar.innerHTML = chips.join('') + clearAllHtml;
-    bar.style.display = (chips.length && this._isMobileUI()) ? 'flex' : 'none';
+        const chip = document.createElement('span');
+        chip.className = `mf-chip${statusClass}`;
+        chip.dataset.key = key;
+        chip.innerHTML = `${iconHtml} <span class="mf-chip-label">${this.translateValue(key, val)}</span><span class="mf-chip-remove" aria-label="Filter entfernen">×</span>`;
 
-    bar.querySelectorAll('.mf-chip').forEach(chip => {
-      chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
-        e.stopPropagation();
-        appContext.searchHeader?.clearCategoryFilter(chip.dataset.key);
-        this.updateChipBar();
+        chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
+          e.stopPropagation();
+          appContext.searchHeader?.clearCategoryFilter(key);
+          this.updateChipBar();
+        });
+
+        bar.appendChild(chip);
       });
-    });
 
-    bar.querySelector('.mf-clear-all-btn')?.addEventListener('click', e => {
-      e.stopPropagation();
-      appContext.searchHeader?.clearAllFilters();
-      this.updateChipBar();
-    });
+      // Clear-all ganz rechts
+      if (activeEntries.length > 1) {
+        const clearAll = document.createElement('span');
+        clearAll.className = 'filter-pill filter-pill-clear-all mf-clear-all-btn';
+        clearAll.setAttribute('role', 'tooltip');
+        clearAll.setAttribute('data-microtip-position', 'top-left');
+        clearAll.setAttribute('aria-label', window.i18n?.t('filter.clearAll') || 'clear all filters');
+        clearAll.innerHTML = `<i class="${AppConfig.icons.ui.close}"></i>`;
+        clearAll.addEventListener('click', e => {
+          e.stopPropagation();
+          appContext.searchHeader?.clearAllFilters();
+          this.updateChipBar();
+        });
+        bar.appendChild(clearAll);
+      }
+    }
 
     // Inline-Indicator in der Search-Input-Row
     const indicator = document.getElementById('filter-active-indicator');
