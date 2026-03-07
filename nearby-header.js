@@ -201,9 +201,7 @@ const CONFIG = AppConfig;
         appContext.searchHeader._manualSpaceClick = true;
         appContext.searchHeader.clearSearch(false, true); // (shouldFocus=false, silent=true)
         appContext.searchHeader.clearAllFilters(true);    // (silent=true)
-        // Touch-Geräte: Dropdown NICHT schließen — es ist das primäre Listing-UI auf Mobile/Tablet.
-        // Desktop: Dropdown schließen, da das Nearby-Popover die Suche ersetzt.
-        if (!('ontouchstart' in window)) appContext.searchHeader.closeDropdown?.();
+        appContext.searchHeader.closeDropdown?.();
         setTimeout(() => {
           if (appContext.searchHeader) {
             appContext.searchHeader._manualSpaceClick = false;

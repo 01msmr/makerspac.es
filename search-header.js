@@ -1502,6 +1502,10 @@ class SearchHeader {
   }
 
   closeDropdown() {
+    // Auf Touch-Geräten (Mobile + Tablet) wird der Dropdown NIEMALS geschlossen — keine Ausnahmen.
+    // Er ist das primäre Listing-UI und muss immer sichtbar bleiben.
+    if ('ontouchstart' in window) return;
+
     if (!this._manualSpaceClick && window.mapUtils?.clearStickyPopup) {
       window.mapUtils.clearStickyPopup();
     }

@@ -54,8 +54,11 @@ Neue Module müssen auf die passende Phase warten: `await appContext.waitFor('ph
 Nach `flyTo()` redrawn `updateHoverSVGPosition()` die Linie — **nur wenn `listingCore.currentHoverItem` gesetzt**.
 Bei Item-Clicks im Desktop-Modus: `listingCore.currentHoverItem = activeItem` setzen.
 
-### Dropdown — IMMER sichtbar, darf nie geschlossen werden
-Das `#suggestions-dropdown` ist ein festes UI-Element der App. Es darf durch keinen anderen Code geschlossen oder versteckt werden:
+### Dropdown — auf Touch-Geräten ABSOLUT NIEMALS schließen, keine Ausnahmen
+Auf Mobile + Tablet ist das `#suggestions-dropdown` das primäre Listing-UI. Es wird **niemals** geschlossen.
+- `closeDropdown()` in `search-header.js` enthält eine harte Guard: `if ('ontouchstart' in window) return;`
+- Das ist die einzige nötige Absicherung — kein anderes Modul muss etwas tun
+- Dieser Guard darf **niemals** entfernt oder umgangen werden
 - `mobile-filter.js`: `close()` darf **nicht** `bar-focused` entfernen — das würde den Dropdown ausblenden
 - Kein Modul darf `bar-focused` von `.search-container` entfernen außer dem Such-Header selbst
 - Der Filter-Pane (`mf-overlay`) liegt im Y-Bereich oberhalb der Search-Input-Row; der Dropdown bleibt darunter sichtbar
