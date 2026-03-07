@@ -1,7 +1,8 @@
 name: "➕ Add a new Makerspace"
 description: "Submit the details for a new makerspace."
 title: "new makerspace"
-labels: ["add-space"]
+labels:
+  - add-space
 body:
   - type: markdown
     attributes:
