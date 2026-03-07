@@ -612,14 +612,21 @@ const CONFIG = AppConfig;
       }).join('');
     }
 
+    // Untere Grenze des sichtbaren Kartenbereichs (exkl. Dropdown-UI am unteren Rand)
+    _visibleBottom() {
+      const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
+      return window.innerHeight - uiH;
+    }
+
     positionPopover(mouseX, mouseY) {
       if (!this.popoverElement) return;
 
       const popWidth = 320;
       const popHeight = this.popoverElement.offsetHeight;
+      const visBottom = this._visibleBottom();
 
       const left = Math.max(8, Math.min(mouseX + 15, window.innerWidth - popWidth - 8));
-      const top = Math.max(8, Math.min(mouseY + 15, window.innerHeight - popHeight - 8));
+      const top = Math.max(8, Math.min(mouseY + 15, visBottom - popHeight - 8));
 
       this.popoverElement.style.left = left + 'px';
       this.popoverElement.style.top = top + 'px';
@@ -729,7 +736,7 @@ const CONFIG = AppConfig;
         if (!isDragging) return;
 
         const newLeft = Math.max(8, Math.min(e.clientX - startPos.x, window.innerWidth - this.popoverElement.offsetWidth - 8));
-        const newTop = Math.max(8, Math.min(e.clientY - startPos.y, window.innerHeight - this.popoverElement.offsetHeight - 8));
+        const newTop = Math.max(8, Math.min(e.clientY - startPos.y, this._visibleBottom() - this.popoverElement.offsetHeight - 8));
 
         this.popoverElement.style.left = newLeft + 'px';
         this.popoverElement.style.top = newTop + 'px';
@@ -831,7 +838,7 @@ const CONFIG = AppConfig;
         // Viewport-Constraint: Popover inkl. Resize-Handle muss sichtbar bleiben (8px Abstand)
         const popTop = this.popoverElement.offsetTop;
         const nonListHeight = this.popoverElement.offsetHeight - list.offsetHeight;
-        const maxListHeight = window.innerHeight - popTop - nonListHeight - 8;
+        const maxListHeight = this._visibleBottom() - popTop - nonListHeight - 8;
         snappedHeight = Math.min(snappedHeight, Math.max(MIN_ITEMS * ITEM_HEIGHT, maxListHeight));
 
         list.style.maxHeight = snappedHeight + 'px';
