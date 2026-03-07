@@ -5,6 +5,9 @@ import { appContext } from './app-context.js';
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
 
+// Connection Line / SVG nur auf Desktop ohne Touch (nicht Smartphone/Tablet)
+const isDesktopNonTouch = () => window.innerWidth > 767 && !('ontouchstart' in window);
+
 /**
  * Gemeinsame Rendering- und Interaktions-Logik für Listing-Items.
  * Wird von SearchHeader (Suchdropdown) und NearbyHeader (Nearby-Popover) geteilt.
@@ -537,7 +540,7 @@ class ListingCore {
    * @param {string} color - Hex-Farbcode
    */
   createHoverSVG(item, location, color = 'blue') {
-    if (window.innerWidth <= 767) return;
+    if (!isDesktopNonTouch()) return;
     this.cleanupHoverSVG();
     const itemRect = item.getBoundingClientRect();
     this.currentHoverSVG = AppConfig.createConnectorSVG(itemRect, color);
@@ -587,7 +590,7 @@ class ListingCore {
    * @param {string} color - Hex-Farbcode
    */
   createConnectionLine(item, targetMarker, color = '#0000ff') {
-    if (window.innerWidth <= 767) return;
+    if (!isDesktopNonTouch()) return;
     if (appContext.mapUtils?.createConnectionLine) {
       this.connectionLine = appContext.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);
     }
@@ -840,7 +843,7 @@ class ListingCore {
 
       // Mouseenter
       item.addEventListener('mouseenter', () => {
-        if (window.innerWidth <= 767) return;
+        if (!isDesktopNonTouch()) return;
         if (!this.hasMouseMoved()) return;
         this.setMouseInput();
 
@@ -866,7 +869,7 @@ class ListingCore {
 
       // Mouseleave
       item.addEventListener('mouseleave', (e) => {
-        if (window.innerWidth <= 767) return;
+        if (!isDesktopNonTouch()) return;
         // Ignorieren wenn wir zu einem anderen Item wechseln
         if (e.relatedTarget?.closest('.listing-item')) return;
 

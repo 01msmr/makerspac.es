@@ -657,19 +657,18 @@ const SLUG_TO_CODE = {
   'germany': 'de', 'austria': 'at', 'switzerland': 'ch',
   'france': 'fr', 'netherlands': 'nl', 'belgium': 'be',
   'italy': 'it', 'spain': 'es', 'ukraine': 'ua',
-  'denmark': 'dk', 'poland': 'pl', 'luxembourg': 'lu',
+  'denmark': 'dk', 'luxembourg': 'lu',
 };
 
 // Geografisch benachbarte Länder-Splits → werden nach Stage-1a im Hintergrund prefetched
 const NEIGHBOR_SPLITS = {
-  'de': ['at', 'ch', 'nl', 'be', 'pl', 'lu'],
+  'de': ['at', 'ch', 'nl', 'be', 'lu'],
   'at': ['de', 'ch', 'it'],
   'ch': ['de', 'at', 'fr', 'it'],
   'fr': ['be', 'ch', 'lu', 'it'],
   'nl': ['de', 'be'],
   'be': ['de', 'fr', 'nl', 'lu'],
   'it': ['at', 'ch', 'fr'],
-  'pl': ['de'],
   'dk': ['de'],
   'lu': ['de', 'fr', 'be'],
 };
