@@ -20,6 +20,7 @@ import {
   WORKSHOP_TYPES,
   getWorkshopIcon,
   getWorkshopsTooltip,
+  getSortedWorkshops,
 } from './workshop-types.js';
 
 import {
@@ -232,6 +233,7 @@ const AppConfig = {
   getStyleIcon,
   getWorkshopIcon,
   getWorkshopsTooltip,
+  getSortedWorkshops,
   getStatusIcon,
   getCountryCode,
   isDarkMode,

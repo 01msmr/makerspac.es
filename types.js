@@ -31,6 +31,7 @@ export {};
  * @property {{ endpoint: string }} [spaceapi]
  * @property {{ 'space.init': number, 'datacheck.latest': number }} [dates]
  * @property {{ weekday: number, time: number }} [weekly]
+ * @property {string}           [events]        - URL zum Veranstaltungskalender
  * @property {WorkshopType[]}   [workshops]
  * @property {boolean|null}     [isOpen]        - Zur Laufzeit aus status.json gesetzt
  * @property {string}           [statusMessage] - Zur Laufzeit aus status.json gesetzt

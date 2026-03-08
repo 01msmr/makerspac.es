@@ -9,13 +9,13 @@ export const WORKSHOP_TYPES = {
   '3d':          { icon: 'fas fa-cube' },
   'laser':       { icon: 'fas fa-explosion' },
   'electronics': { icon: 'fas fa-microchip' },
+  'coding':      { icon: 'fas fa-laptop-code' },
+  'vr':          { icon: 'fas fa-vr-cardboard' },
+  'music':       { icon: 'fas fa-music' },
   'wood':        { icon: 'fas fa-hammer' },
   'metal':       { icon: 'fas fa-gears' },
   'textile':     { icon: 'fas fa-scissors' },
   'screenprint': { icon: 'fas fa-shirt' },
-  'music':       { icon: 'fas fa-music' },
-  'coding':      { icon: 'fas fa-laptop-code' },
-  'vr':          { icon: 'fas fa-vr-cardboard' },
 };
 
 /**
@@ -24,6 +24,21 @@ export const WORKSHOP_TYPES = {
  */
 export function getWorkshopIcon(key) {
   return WORKSHOP_TYPES[key]?.icon || '';
+}
+
+/** Canonical key order, computed once */
+const WORKSHOP_ORDER = Object.keys(WORKSHOP_TYPES);
+
+/**
+ * Filter to known workshops with icons, sorted by canonical WORKSHOP_TYPES order.
+ * Single source of truth — use everywhere workshops are rendered.
+ * @param {string[]} workshops
+ * @returns {string[]}
+ */
+export function getSortedWorkshops(workshops) {
+  return (workshops || [])
+    .filter(w => WORKSHOP_TYPES[w])
+    .sort((a, b) => WORKSHOP_ORDER.indexOf(a) - WORKSHOP_ORDER.indexOf(b));
 }
 
 /**

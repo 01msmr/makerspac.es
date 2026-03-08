@@ -1122,7 +1122,7 @@ function _buildPopupHTML(location) {
   return `
             <div style="--status-color: ${statusColor};">
               <div class="popup-body-grid">
-                ${(() => { const kw = (location.workshops || []).filter(w => AppConfig.getWorkshopIcon(w)); return kw.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${AppConfig.getWorkshopsTooltip(kw)}" role="tooltip" data-microtip-position="top">${kw.map(w => `<i class="${AppConfig.getWorkshopIcon(w)}"></i>`).join('')}</div>` : ''; })()}
+                ${(() => { const kw = AppConfig.getSortedWorkshops(location.workshops); return kw.length > 0 ? `<div></div><div class="popup-workshops" aria-label="${AppConfig.getWorkshopsTooltip(kw)}" role="tooltip" data-microtip-position="top">${kw.map(w => `<i class="${AppConfig.getWorkshopIcon(w)}"></i>`).join('')}</div>` : ''; })()}
                 <div class="popup-style-cell">${styleIconHtml}</div>
                 <div class="popup-title-row">
                   <a id="titleurl" href="${linkUrl}" target="_blank">
@@ -1132,7 +1132,7 @@ function _buildPopupHTML(location) {
                   </a>
                   ${bookmarkIcon}
                 </div>
-                ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); return `<div></div><div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_label} — ${_timeStr}${_suf}</div>`; })() : ''}
+                ${location.weekly && location.weekly.time && location.weekly.weekday <= 6 ? (() => { const _t = (k) => window.i18n ? window.i18n.t(k) : ''; const _isToday = location.weekly.weekday === new Date().getDay(); const _timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2'); const _suf = _t('weekly.timeSuffix'); const _label = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday); const _evLabel = _t('weekly.eventsCalendar'); const _calIcon = location.events ? `<a href="${location.events}" target="_blank" class="popup-events-link" aria-label="${_evLabel}" role="tooltip" data-microtip-position="bottom-right"><i class="fas fa-calendar-day"></i></a>` : `<i class="fas fa-calendar-day"></i>`; return `<div></div><div class="popup-weekly">${_calIcon} <span aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom">${_label} — ${_timeStr}${_suf}</span></div>`; })() : ''}
               </div>
               <a href="#" class="popup-street-line navigation-icon" aria-label="Route zu ${location.name || ''}" role="tooltip" data-microtip-position="bottom">
                 <i></i>

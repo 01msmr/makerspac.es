@@ -232,7 +232,7 @@ class ListingCore {
    * @returns {string} HTML-String oder ''
    */
   getWorkshopsHtml(location) {
-    const known = (location.workshops || []).filter(w => AppConfig.getWorkshopIcon(w));
+    const known = AppConfig.getSortedWorkshops(location.workshops);
     if (known.length === 0) return '';
 
     return `
@@ -257,7 +257,11 @@ class ListingCore {
     const weeklyTooltip = window.i18n ? window.i18n.t('weekly.tooltip') : 'wöchentliches Treffen';
     const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
     const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
-    return `<span class="listing-meeting-today" aria-label="◷ ${timeStr}${timeSuffix} — ${weeklyTooltip}" role="tooltip" data-microtip-position="bottom-left"><i class="${AppConfig.icons.ui.calendarDay}"></i> ${todayLabel}</span>`;
+    const eventsLabel = window.i18n ? window.i18n.t('weekly.eventsCalendar') : 'events calendar';
+    const calIcon = location.events
+      ? `<a href="${location.events}" target="_blank" class="popup-events-link" aria-label="${eventsLabel}" role="tooltip" data-microtip-position="bottom-left"><i class="${AppConfig.icons.ui.calendarDay}"></i></a>`
+      : `<i class="${AppConfig.icons.ui.calendarDay}"></i>`;
+    return `<span class="listing-meeting-today">${calIcon} <span aria-label="◷ ${timeStr}${timeSuffix} — ${weeklyTooltip}" role="tooltip" data-microtip-position="bottom-left">${todayLabel}</span></span>`;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
