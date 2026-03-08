@@ -1,0 +1,63 @@
+name: "✅ Apply Calendar Issues"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "apply"
+          - "report"
+          - "close-nulls"
+        default: "dry-run"
+      id:
+        description: "Einzelne Space-ID (0 = alle)"
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run Apply Script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "apply" ]; then
+            ARGS="$ARGS --apply"
+          elif [ "${{ inputs.mode }}" = "report" ]; then
+            ARGS="$ARGS --report"
+          elif [ "${{ inputs.mode }}" = "close-nulls" ]; then
+            ARGS="$ARGS --close-nulls"
+          fi
+          if [ "${{ inputs.id }}" != "0" ]; then
+            ARGS="$ARGS --id ${{ inputs.id }}"
+          fi
+          echo "Running: node tools/apply-calendar-issues.js $ARGS"
+          node tools/apply-calendar-issues.js $ARGS
+
+      - name: Commit locations.json
+        if: ${{ inputs.mode == 'apply' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add locations.json
+          git diff --staged --quiet || git commit -m "data: apply calendar links from issues"
+          git push
