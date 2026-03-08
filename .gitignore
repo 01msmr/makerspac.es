@@ -16,5 +16,9 @@ data/spaces-*.json
 data/splits-manifest.json
 data/countries.geojson
 
+# Dependencies (never deploy)
+node_modules/
+package-lock.json
+
 # AI / Internal
 .claude/
