@@ -29,8 +29,14 @@
   <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
   <link rel="stylesheet" href="libs/fontawesome/css/subset.min.css" />
 
-  <!-- App CSS: Konsolidiertes Bundle für minimale Requests -->
-  <link rel="stylesheet" href="app.bundle.css" />
+  <!-- App CSS -->
+  <link rel="stylesheet" href="main-layout.css" />
+  <link rel="stylesheet" href="main-components.css" />
+  <link rel="stylesheet" href="main-responsive.css" />
+  <link rel="stylesheet" href="listing-core.css" />
+  <link rel="stylesheet" href="search.css" />
+  <link rel="stylesheet" href="nearby.css" />
+  <link rel="stylesheet" href="styles-autocomplete.css" />
 
   <!-- Bibliotheks-JS: defer → paralleler Download, Ausführung nach DOM-Parsing -->
   <script defer src="libs/leaflet/leaflet.js"></script>
@@ -105,6 +111,7 @@
     <div id="mobile-active-filters" class="mobile-active-filters"></div>
     <div class="dropdown-wrap">
       <div id="dropdown-nav" class="dropdown-nav">
+        <button id="map-zoom-out-btn" class="map-zoom-out-btn" aria-label="Herauszoomen"><i class="fas fa-compress"></i></button>
         <button class="dropdown-nav-btn" id="dropdown-nav-up" aria-label="Seite hoch"><i
             class="fas fa-angle-up"></i></button>
         <button class="dropdown-nav-btn" id="dropdown-nav-down" aria-label="Seite runter"><i

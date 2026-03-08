@@ -10,10 +10,15 @@
 .search-container {
   z-index: 1001;
   position: absolute;
-  top: 1.2em;
-  right: 1.5em;
+  top: 1em;
+  right: 1em;
   width: 300px;
   overflow: visible;
+}
+
+/* Nur auf Mobile/Tablet sichtbar — wird per @media eingeblendet */
+.dropdown-nav {
+  display: none;
 }
 
 .search-input-wrapper {
@@ -926,7 +931,17 @@
     background-position: center !important;
   }
 
-  .mf-opt-workshop-icon {
+  .mf-opt-today-dot {
+    font-size: 0.5em;
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .mf-opt-workshop-icon,
+  .mf-opt-style-icon,
+  .mf-opt-door-icon,
+  .mf-opt-bookmark-icon {
     width: 16px;
     text-align: center;
     flex-shrink: 0;
@@ -1113,6 +1128,39 @@
     width: 46px;
     border-radius: 0;
     overflow: visible;
+    position: relative; /* Anker für .map-zoom-out-btn */
+  }
+
+  .map-zoom-out-btn {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 0 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 3px;
+    cursor: pointer;
+    font-size: 2em;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .map-zoom-out-btn.visible {
+    opacity: 0.5;
+    pointer-events: auto;
+    transition: opacity 0.5s;
+  }
+
+  .map-zoom-out-btn:active {
+    opacity: 0.9;
   }
 
   .dropdown-wrap:has(#suggestions-dropdown.is-active) .dropdown-nav {

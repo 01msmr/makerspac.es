@@ -5,5 +5,9 @@
     "test": "node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js",
     "validate": "node tests/validate-locations.js",
     "test:all": "npm test && npm run validate"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21",
+    "typescript": "^5.9.3"
   }
 }

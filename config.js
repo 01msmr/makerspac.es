@@ -1,3 +1,4 @@
+// @ts-check
 // config.js - Zentrale Konfiguration für makerspac.es
 // Assembliert AppConfig aus den Sub-Modulen:
 //   colours.js        → Farben & Dark-Mode-Helpers

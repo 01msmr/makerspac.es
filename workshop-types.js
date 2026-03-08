@@ -1,5 +1,8 @@
+// @ts-check
 // workshop-types.js — Single Source of Truth für Workshop-Definitionen
 // Übersetzungen: lang.json unter workshops.*
+
+/** @typedef {import('./types.js').WorkshopType} WorkshopType */
 
 /** @type {Record<string, { icon: string }>} */
 export const WORKSHOP_TYPES = {
@@ -24,7 +27,7 @@ export function getWorkshopIcon(key) {
 }
 
 /**
- * @param {string[]} workshops - Array von Workshop-IDs
+ * @param {WorkshopType[]} workshops - Array von Workshop-IDs
  * @returns {string} HTML-Tooltip-String
  */
 export function getWorkshopsTooltip(workshops) {

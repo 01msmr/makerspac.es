@@ -1,5 +1,15 @@
+// @ts-check
 // nearby-header.js - Nearby-Popover-UI
 // Enthält: Popover mit Radius-Slider, Drag, Resize, Cursor-Hint
+
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+
+/**
+ * Geo-Koordinaten des letzten Rechtsklick/Long-Tap auf die Karte.
+ * @typedef {Object} ClickLocation
+ * @property {number} lat
+ * @property {number} lon
+ */
 
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
@@ -42,6 +52,8 @@ const CONFIG = AppConfig;
 
     /**
      * Initialisiert das NearbyHeader-Modul
+     * @param {any} map - Leaflet Map-Instanz
+     * @param {import('./listing-core.js').ListingCore} listingCore
      */
     init(map, listingCore) {
       if (window.embedModeActive) return;

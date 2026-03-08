@@ -2055,6 +2055,24 @@ body.consent-active #map { pointer-events: none; }
   a#url {
     display: none !important;
   }
+
+  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - var(--mobile-ui-height, 120px) - 60px);
+    overflow-y: auto;
+  }
+
+  /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */
+  .leaflet-popup-content a#titleurl {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .leaflet-popup-content a#titleurl h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 
@@ -2090,6 +2108,24 @@ body.consent-active #map { pointer-events: none; }
   /* Space-URL im Marker-Popup ausblenden */
   a#url {
     display: none !important;
+  }
+
+  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+  }
+
+  /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */
+  .leaflet-popup-content a#titleurl {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .leaflet-popup-content a#titleurl h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -3269,7 +3305,17 @@ body.consent-active #map { pointer-events: none; }
     background-position: center !important;
   }
 
-  .mf-opt-workshop-icon {
+  .mf-opt-today-dot {
+    font-size: 0.5em;
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .mf-opt-workshop-icon,
+  .mf-opt-style-icon,
+  .mf-opt-door-icon,
+  .mf-opt-bookmark-icon {
     width: 16px;
     text-align: center;
     flex-shrink: 0;
@@ -3456,6 +3502,39 @@ body.consent-active #map { pointer-events: none; }
     width: 46px;
     border-radius: 0;
     overflow: visible;
+    position: relative; /* Anker für .map-zoom-out-btn */
+  }
+
+  .map-zoom-out-btn {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 0 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    cursor: pointer;
+    font-size: 2em;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .map-zoom-out-btn.visible {
+    opacity: 0.65;
+    pointer-events: auto;
+    transition: opacity 0.5s;
+  }
+
+  .map-zoom-out-btn:active {
+    opacity: 0.9;
   }
 
   .dropdown-wrap:has(#suggestions-dropdown.is-active) .dropdown-nav {

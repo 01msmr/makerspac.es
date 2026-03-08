@@ -6,35 +6,28 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Embedded Makerspace Map</title>
 
-  <!-- Leaflet -->
+  <!-- Libs CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
-
-  <!-- MapLibre GL -->
-  <link href="libs/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
-
-  <!-- Microtip Tooltips -->
+  <link rel="stylesheet" href="libs/maplibre-gl/maplibre-gl.css" />
   <link rel="stylesheet" href="libs/microtip.css" />
-
-  <!-- Main Styles (overrides microtip) -->
-  <link rel="stylesheet" type="text/css" href="main.css" />
-
-  <!-- Font Awesome für Icons -->
   <link rel="stylesheet" href="libs/fontawesome/css/subset.min.css" />
-
-  <!-- Flag Icons -->
   <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
 
-  <!-- Embed-Specific CSS -->
-  <link rel="stylesheet" type="text/css" href="embed.css" />
+  <!-- App CSS -->
+  <link rel="stylesheet" href="main-layout.css" />
+  <link rel="stylesheet" href="main-components.css" />
+  <link rel="stylesheet" href="listing-core.css" />
 
-  <!-- JS: defer → paralleler Download, kein Render-Blocking -->
+  <!-- Embed-Specific CSS -->
+  <link rel="stylesheet" href="embed.css" />
+
+  <!-- Libs JS -->
   <script defer src="libs/leaflet/leaflet.js"></script>
   <script defer src="libs/maplibre-gl/maplibre-gl.js"></script>
   <script defer src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
-  <script defer src="config.js"></script>
-  <script defer src="main.js"></script>
-  <script defer src="i18n.js"></script>
-  <script defer src="embed.js"></script>
+
+  <!-- Embed entry point (ES Module) -->
+  <script type="module" src="embed.js"></script>
 </head>
 
 <body>

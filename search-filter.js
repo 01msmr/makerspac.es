@@ -1,3 +1,4 @@
+// @ts-check
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
@@ -5,11 +6,14 @@ import { appContext } from './app-context.js';
 // search-filter.js - Zentrale Such- und Filter-Logik
 // Reine Geschäftslogik ohne UI-Komponenten
 
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+/** @typedef {import('./types.js').Pill} Pill */
+
 class SearchFilter {
   /**
-   * @param {import('./app-context.js').Location[]} json - Alle Makerspace-Einträge
-   * @param {Object[]} allMarkers - Leaflet-Marker-Array
-   * @param {{ greenIcon, redIcon, unknownStatusIcon, highlightIcon }} icons
+   * @param {MakerSpace[]} json - Alle Makerspace-Einträge
+   * @param {any[]} allMarkers - Leaflet-Marker-Array
+   * @param {{ greenIcon: any, redIcon: any, unknownStatusIcon: any, highlightIcon: any }} icons
    */
   constructor(json, allMarkers, icons) {
     this.json = json;
@@ -160,6 +164,7 @@ class SearchFilter {
 
   /**
    * Setzt die vorgefilterte Liste (von SearchHeader)
+   * @param {MakerSpace[]|null} locations
    */
   applyPreFilters(locations) {
     this.preFilteredLocations = locations;
@@ -328,6 +333,8 @@ class SearchFilter {
 
   /**
    * Benachrichtigt über Ergebnis-Änderungen
+   * @param {MakerSpace[]} filteredLocations
+   * @param {MakerSpace[]} locationsForZoom
    */
   _notifyResultsChange(filteredLocations, locationsForZoom) {
     if (this._onResultsChange) {
@@ -338,7 +345,7 @@ class SearchFilter {
 
   /**
    * Registriert einen Callback für Ergebnis-Änderungen nach Filter/Suche.
-   * @param {(filtered: Location[], forZoom: Location[], idMatch: Location|null) => void} callback
+   * @param {(filtered: MakerSpace[], forZoom: MakerSpace[], idMatch: MakerSpace|null) => void} callback
    */
   onResultsChange(callback) {
     this._onResultsChange = callback;
@@ -351,9 +358,9 @@ class SearchFilter {
   /**
    * Führt eine Text-Suche durch
    * @param {string} query - Suchbegriff
-   * @param {Array} pills - Aktive Pills
-   * @param {Function} zfill - PLZ-Formatierung
-   * @returns {Array} Gefilterte Locations
+   * @param {Pill[]} pills - Aktive Pills
+   * @param {(plz: any, country?: string) => string} zfill - PLZ-Formatierung
+   * @returns {MakerSpace[]} Gefilterte Locations
    */
   filterByText(query, pills = [], zfill = (plz) => plz) {
     const router = appContext.routingManager;
@@ -448,6 +455,7 @@ class SearchFilter {
 
   /**
    * Aktualisiert die Marker auf der Karte
+   * @param {MakerSpace[]} filteredLocations
    */
   updateMarkers(filteredLocations) {
     const clusterGroup = appContext.clusterGroup;
@@ -499,6 +507,7 @@ class SearchFilter {
 
   /**
    * Gibt alle einzigartigen Länder zurück, sortiert nach Anzahl
+   * @returns {string[]}
    */
   getUniqueCountries() {
     const countryCount = new Map();

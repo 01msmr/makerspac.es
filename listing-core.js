@@ -1,9 +1,31 @@
+// @ts-check
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
 
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
+
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+/** @typedef {import('leaflet').Marker} LeafletMarker */
+/** @typedef {import('leaflet').DivIcon} LeafletDivIcon */
+
+/**
+ * @typedef {Object} CreateItemOptions
+ * @property {boolean} [showDistance]  - Zeige km-Badge (nur nearby)
+ * @property {number|null} [distance]  - Entfernung in km
+ * @property {boolean} [showBookmark]  - Zeige Bookmark-Icon
+ * @property {boolean} [showStreet]    - Zeige Straßendetails
+ * @property {boolean} [showFlag]      - Zeige Länder-Flagge in Details
+ * @property {(plz: any, country?: string) => string} [zfill] - PLZ-Formatierung
+ */
+
+/**
+ * @typedef {Object} SetupItemListenersOptions
+ * @property {(location: MakerSpace, item: HTMLElement) => void} [onItemClick]
+ * @property {number} [connectionWeight]
+ * @property {boolean} [keepHoverOnLeave]
+ */
 
 // Connection Line / SVG nur auf Desktop ohne Touch (nicht Smartphone/Tablet)
 const isDesktopNonTouch = () => window.innerWidth > 767 && !('ontouchstart' in window);
@@ -42,14 +64,8 @@ class ListingCore {
 
   /**
    * Erstellt ein einheitliches Listing-Item
-   * @param {Object} location - Location-Objekt
-   * @param {Object} options - Optionen
-   * @param {boolean} options.showDistance - Zeige km-Badge (nur nearby)
-   * @param {number} options.distance - Entfernung in km
-   * @param {boolean} options.showBookmark - Zeige Bookmark-Icon
-   * @param {boolean} options.showStreet - Zeige Straßendetails
-   * @param {boolean} options.showFlag - Zeige Länder-Flagge in Details
-   * @param {Function} options.zfill - PLZ-Formatierung Funktion
+   * @param {MakerSpace} location
+   * @param {CreateItemOptions} [options]
    * @returns {HTMLElement} Das erstellte Item-Element
    */
   createItem(location, options = {}) {
@@ -138,7 +154,7 @@ class ListingCore {
 
   /**
    * Bestimmt die CSS-Custom-Property für die Status-Farbe eines Items.
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {string} CSS-Variable, z.B. 'var(--space-open)'
    */
   getStatusColor(location) {
@@ -154,7 +170,7 @@ class ListingCore {
 
   /**
    * Generiert das Style-Icon HTML (FontAwesome-Klasse als `<i>`).
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {string} HTML-String oder ''
    */
   getStyleIconHtml(location) {
@@ -168,7 +184,7 @@ class ListingCore {
 
   /**
    * Generiert das SpaceAPI-Status-Icon HTML (Tür offen/zu/unbekannt).
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {string} HTML-String mit `<i>`-Element
    */
   getStatusIconHtml(location) {
@@ -188,7 +204,7 @@ class ListingCore {
 
   /**
    * Bestimmt die CSS-Klasse für den Makerspace-Namen (open/closed/unknown/default).
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {'space-name-open'|'space-name-closed'|'space-name-unknown'|'space-name-default'}
    */
   getNameClass(location) {
@@ -212,7 +228,7 @@ class ListingCore {
 
   /**
    * Generiert das Workshops-Badge HTML (Anzahl + Icon).
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {string} HTML-String oder ''
    */
   getWorkshopsHtml(location) {
@@ -230,7 +246,7 @@ class ListingCore {
 
   /**
    * Generiert das "Heute"-Meeting-Badge HTML (nur wenn wöchentliches Treffen heute stattfindet).
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @returns {string} HTML-String oder ''
    */
   getMeetingIconHtml(location) {
@@ -378,8 +394,8 @@ class ListingCore {
   /**
    * Wendet Hover-Effekte auf ein Item an
    * @param {HTMLElement} item - Das Item-Element
-   * @param {Object} location - Location-Objekt
-   * @param {number} weight - Liniendicke für Connection Line
+   * @param {MakerSpace} location
+   * @param {number} [weight] - Liniendicke für Connection Line
    */
   applyHoverEffects(item, location, weight = AppConfig.settings.connectionWeightSearch) {
     this.connectionWeight = weight;
@@ -432,7 +448,7 @@ class ListingCore {
 
   /**
    * Entfernt Hover-Effekte
-   * @param {Object} location - Location-Objekt
+   * @param {MakerSpace} location
    */
   removeHoverEffects(location) {
     // NUR visuelle Effekte entfernen - CSS-Klassen werden woanders verwaltet!
@@ -478,7 +494,7 @@ class ListingCore {
   /**
    * Setzt nur Marker-Effekte zurück (Icon, State, Popup) ohne currentHoverItem/SVG zu ändern.
    * Wird beim Wechsel zwischen Items verwendet.
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    */
   resetMarkerEffects(location) {
     const targetMarker = this.findMarkerByLocation(location);
@@ -536,7 +552,7 @@ class ListingCore {
    * Erstellt das Hover-SVG (Schweif vom Item zum Marker) im Body mit position:fixed.
    * Wird bei Scroll/Navigation via updateHoverSVGPosition() aktualisiert.
    * @param {HTMLElement} item
-   * @param {import('./app-context.js').Location} location
+   * @param {MakerSpace} location
    * @param {string} color - Hex-Farbcode
    */
   createHoverSVG(item, location, color = 'blue') {
@@ -586,7 +602,7 @@ class ListingCore {
   /**
    * Erstellt eine Leaflet-Polylinie zwischen Item und Marker (nur Desktop).
    * @param {HTMLElement} item
-   * @param {L.Marker} targetMarker
+   * @param {LeafletMarker} targetMarker
    * @param {string} color - Hex-Farbcode
    */
   createConnectionLine(item, targetMarker, color = '#0000ff') {
@@ -647,8 +663,8 @@ class ListingCore {
 
   /**
    * Findet den Leaflet-Marker zur Location via appContext.markerById.
-   * @param {import('./app-context.js').Location} location
-   * @returns {L.Marker|null}
+   * @param {MakerSpace} location
+   * @returns {LeafletMarker|null}
    */
   findMarkerByLocation(location) {
     return appContext.markerById.get(location.ID) || null;
@@ -656,7 +672,7 @@ class ListingCore {
 
   /**
    * Prüft ob ein Marker aktuell als sticky (Popup dauerhaft offen) markiert ist.
-   * @param {L.Marker} marker
+   * @param {LeafletMarker} marker
    * @returns {boolean}
    */
   isStickyMarker(marker) {
@@ -666,7 +682,7 @@ class ListingCore {
   /**
    * Erstellt ein vergrößertes Leaflet-Hover-DivIcon mit inline-SVG.
    * @param {string} color - Hex-Farbcode
-   * @returns {L.DivIcon}
+   * @returns {LeafletDivIcon}
    */
   createHoverIcon(color) {
     const w = 37.5, h = 61.5;
@@ -686,7 +702,7 @@ class ListingCore {
   /**
    * Liest die Location aus dem `data-location-id`-Attribut eines Item-Elements.
    * @param {HTMLElement} item
-   * @returns {import('./app-context.js').Location|null}
+   * @returns {MakerSpace|null}
    */
   getLocationFromItem(item) {
     const locationId = item.dataset.locationId;
@@ -764,10 +780,7 @@ class ListingCore {
   /**
    * Setup Event-Listener für alle Items in einem Container
    * @param {HTMLElement} container - Der Container mit .listing-item Elementen
-   * @param {Object} options - Konfiguration
-   * @param {Function} options.onItemClick - Click-Handler (location, item) => void
-   * @param {number} options.connectionWeight - Liniendicke (default: connectionWeightSearch)
-   * @param {boolean} options.keepHoverOnLeave - Hover-Effekte beim Verlassen behalten (für Nearby)
+   * @param {SetupItemListenersOptions} [options]
    */
   setupItemListeners(container, options = {}) {
     const {

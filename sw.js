@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v14'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v16'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -13,8 +13,14 @@ const STATIC_ASSETS = [
   // HTML
   '/',
   '/index.html',
-  // App CSS (Bundle, generiert in CI aus den Quell-CSS-Dateien)
-  '/app.bundle.css',
+  // App CSS
+  '/main-layout.css',
+  '/main-components.css',
+  '/main-responsive.css',
+  '/listing-core.css',
+  '/search.css',
+  '/nearby.css',
+  '/styles-autocomplete.css',
   // Libs CSS
   '/libs/leaflet/leaflet.css',
   '/libs/leaflet-markercluster/MarkerCluster.css',
@@ -32,7 +38,6 @@ const STATIC_ASSETS = [
   // App JS
   '/app-context.js',
   '/error-monitor.js',
-  '/utils.js',
   '/colours.js',
   '/workshop-types.js',
   '/filter-config.js',

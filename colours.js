@@ -1,5 +1,8 @@
+// @ts-check
 // colours.js — Farbdefinitionen und Dark-Mode-Helpers
 // Importiert von config.js; kann auch direkt importiert werden.
+
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
 
 export const COLOURS = {
   // Standard
@@ -41,7 +44,7 @@ export function getHoverColor() {
 }
 
 /**
- * @param {{ spaceapi?: { endpoint?: string }, isOpen?: boolean|null }} location
+ * @param {Pick<MakerSpace, 'spaceapi'|'isOpen'>} location
  * @returns {string} Hex-Farbcode
  */
 export function getDynamicSpaceColor(location) {

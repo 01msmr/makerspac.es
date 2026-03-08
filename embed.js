@@ -1,6 +1,7 @@
 // embed.js - Präzise Zentrierung mit Sidebar-Offset
 
 import { I18n } from './i18n.js';
+import AppConfig from './config.js';
 
 class EmbedMapExtended {
   constructor() {
@@ -201,7 +202,7 @@ class EmbedMapExtended {
 
   createPopupContent(space, isTarget) {
     // 1. Farben und Status-Logik vorbereiten
-    const iconColor = window.AppConfig.getDynamicSpaceColor(space);
+    const iconColor = AppConfig.getDynamicSpaceColor(space);
     const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
 
     let statusIconHtml = '';
@@ -236,7 +237,7 @@ class EmbedMapExtended {
     const workshopsHtml = (location.workshops && location.workshops.length > 0) ? `
   <div class="popup-workshops" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; margin-bottom: 2px;">
     ${location.workshops.map(w => {
-      const icon = window.AppConfig.getWorkshopIcon(w);
+      const icon = AppConfig.getWorkshopIcon(w);
       const label = window.i18n?.t('workshops.' + w) || w;
       return icon ? `
         <span aria-label="${label}" role="tooltip" data-microtip-position="top" style="display: inline-block;">
@@ -317,7 +318,7 @@ class EmbedMapExtended {
     }
 
     const workshopsCount = space.workshops ? space.workshops.length : 0;
-    const workshopColor = window.AppConfig.getDynamicSpaceColor(space);
+    const workshopColor = AppConfig.getDynamicSpaceColor(space);
     const workshopsHtml = workshopsCount > 0 ? `
       <span class="listing-workshops" style="color: ${workshopColor}; font-weight: bold; margin-left: 8px; font-size: 0.8em; opacity: 1;">
         <i class="fas fa-wrench"></i> ${workshopsCount}

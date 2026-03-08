@@ -31,16 +31,9 @@ const isMobile = window.innerWidth <= 767 || ('ontouchstart' in window);
 - CSS-Breakpoint: `@media (max-width: 767px)`
 - Niemals Mobile-CSS außerhalb dieses Blocks schreiben
 
-### CSS-Bundle — PFLICHT nach jeder CSS-Änderung
-Der Browser lädt **`app.bundle.css`**, nicht die Einzeldateien. Nach jeder CSS-Änderung:
-```bash
-cat main-layout.css main-components.css main-responsive.css listing-core.css search.css nearby.css styles-autocomplete.css > app.bundle.css
-```
-Danach Tiefenprüfung:
-```bash
-node -e "const fs=require('fs'),css=fs.readFileSync('app.bundle.css','utf8');let d=0;for(const c of css){if(c==='{')d++;else if(c==='}')d--;}console.log('depth:',d,d===0?'✅':'❌');"
-```
-Gilt für jede CSS-Datei mit `@media`-Blöcken.
+### CSS-Dateien — kein Bundle mehr
+Der Browser lädt die CSS-Dateien direkt (einzelne `<link>`-Tags in `index.html`).
+Kein Build-Schritt nötig — Änderungen an CSS-Dateien sind sofort aktiv.
 
 ### CSS Custom Properties
 Alle Variablen (`--space-hover`, `--dropdown-bg`, etc.) sind in `main-layout.css` definiert.

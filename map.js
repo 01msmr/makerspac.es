@@ -1,4 +1,10 @@
+// @ts-check
 // map.js - Finale Anti-Flacker Version mit ID-basiertem State Management und Navigation
+
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+/** @typedef {import('leaflet').Map} LeafletMap */
+/** @typedef {import('leaflet').Marker} LeafletMarker */
+/** @typedef {import('leaflet').DivIcon} LeafletDivIcon */
 
 import { RoutingManager } from './routing.js';
 import AppConfig from './config.js';
@@ -61,6 +67,8 @@ let connectionLine = null;
 let styleFilterManager;
 let currentStickyMarker = null;
 let isPopupSticky = false;
+let _suppressUnspiderify = false; // verhindert unspiderify wenn gespiderfied Marker getippt wird
+let _lastMarkerTapTime = 0;       // verhindert clearStickyPopup durch map-click nach Marker-Tap
 
 // *** WICHTIG: json als globale Variable ***
 window.json = [];
@@ -492,7 +500,12 @@ function updateMarkerIcon(marker, location) {
   }
 }
 
-// Helper function
+/**
+ * Formatiert eine PLZ auf die landesspezifische Länge (mit führenden Nullen).
+ * @param {string|number} plz
+ * @param {string} country - Vollständiger Ländername (z.B. 'Germany')
+ * @returns {string}
+ */
 function zfill(plz, country) {
   const expectedLengths = { Germany: 5, Austria: 4, Belgium: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4, Ukraine: 5 };
   let plzStr = String(plz);
@@ -519,6 +532,7 @@ function setupMap() {
     maxZoom: 18,
     zoomControl: false,
     closePopupOnClick: !('ontouchstart' in window), // Touch-Geräte (Phone + Tablet): false, Desktop: true
+    doubleClickZoom: !('ontouchstart' in window),   // Eigener touchend-Handler übernimmt auf Touch
   });
 
   appContext.map = map;
@@ -648,6 +662,26 @@ function initializeClustering() {
   map.addLayer(clusterGroup);
   appContext.clusterGroup = clusterGroup;
   window.clusterGroup = clusterGroup; // backward compat
+
+  // Mobile/Tablet: Cluster-Tap → Spiderify statt Zoom
+  // (zoomToBoundsOnClick ist false auf Touch-Geräten, daher sonst kein Effekt)
+  // Bibliothek wählt automatisch: Kreis (<9 Marker) oder wachsende Spirale (≥9 Marker)
+  if ('ontouchstart' in window) {
+    clusterGroup.on('clusterclick', (e) => {
+      clearStickyPopup(); // offenes Popup schließen bevor Cluster aufspringt
+      e.layer.spiderfy();
+    });
+
+    // Patch: Die Bibliothek registriert map.on('click', _unspiderfyWrapper) beim addLayer.
+    // Auf Touch-Geräten löst ein Tap auf einen gespiderfied Marker ebenfalls einen map-click aus
+    // (Leaflet's Tap-Helper synthetisiert ihn unabhängig vom Marker-click),
+    // was _unspiderfyWrapper → _unspiderfy → closePopup() auf allen Markern auslöst.
+    // Lösung: Original-Handler ersetzen durch einen der _suppressUnspiderify prüft.
+    map.off('click', clusterGroup._unspiderfyWrapper, clusterGroup);
+    map.on('click', () => {
+      if (!_suppressUnspiderify) clusterGroup._unspiderfyWrapper();
+    });
+  }
 }
 
 // ─── Split-Loading Helpers ────────────────────────────────────────────────
@@ -690,7 +724,7 @@ function detectCountryCodeFromURL() {
 /**
  * Indexiert + erstellt Marker für eine Batch neuer Locations (Non-blocking).
  * Überspringt bekannte IDs (Duplikat-Schutz beim Merge).
- * @param {import('./app-context.js').Location[]} newLocs
+ * @param {MakerSpace[]} newLocs
  * @param {{ idle?: boolean }} [opts] - idle:true → requestIdleCallback (für Stage-2-Hintergrund)
  */
 function processNewLocations(newLocs, { idle = false } = {}) {
@@ -1009,6 +1043,11 @@ function adjustPopupPosition(popup, map) {
 // MARKER CREATION
 // ============================================================================
 
+/**
+ * Erstellt einen Leaflet-Marker für eine Location und registriert alle Event-Handler.
+ * @param {MakerSpace} location
+ * @returns {LeafletMarker|null}
+ */
 function createMarkerForLocation(location) {
   const lat = location.loc?.lat;
   const lng = location.loc?.long;
@@ -1024,7 +1063,7 @@ function createMarkerForLocation(location) {
   window.markerById.set(location.ID, marker);
 
   _applyMarkerClickHandler(marker);
-  marker.bindPopup(() => _buildPopupHTML(location), { maxWidth: 440, minWidth: 160, autoPan: false });
+  marker.bindPopup(() => _buildPopupHTML(location), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
   _applyPopupOpenHandler(marker, location);
   _applyPopupCloseHandler(marker);
   _applyMarkerHoverHandlers(marker, location);
@@ -1034,6 +1073,11 @@ function createMarkerForLocation(location) {
 
 // --- Popup HTML ---
 
+/**
+ * Baut den HTML-String für das Leaflet-Popup einer Location.
+ * @param {MakerSpace} location
+ * @returns {string}
+ */
 function _buildPopupHTML(location) {
   let statusIconHtml = '';
   let nameClass = '';
@@ -1104,24 +1148,51 @@ function _buildPopupHTML(location) {
 
 // --- Click Handler: Auto-Zoom-Prevention + Re-Tap-Schutz ---
 
+/**
+ * @param {LeafletMarker} marker
+ */
 function _applyMarkerClickHandler(marker) {
-  marker.on('click', () => {
+  marker.on('click', (e) => {
     if (window.app?.searchHeader) {
       window.app.searchHeader._manualSpaceClick = true;
       clearTimeout(window.app.searchHeader.zoomManager?.zoomDebounceTimeout);
       setTimeout(() => { window.app.searchHeader._manualSpaceClick = false; }, 1000);
     }
     if ('ontouchstart' in window) {
+      _lastMarkerTapTime = Date.now(); // map-click kommt nach marker-click → guard in setupMapClickHandler
+      // Gespiderfied: _suppressUnspiderify setzen damit unser gepatchter map-click-Handler
+      // _unspiderfyWrapper überspringt. Das Flag wird im selben Tick gesetzt und im nächsten
+      // Tick (nach dem synthetischen map-click) durch setTimeout zurückgesetzt.
+      if (marker._spiderLeg) {
+        _suppressUnspiderify = true;
+        setTimeout(() => { _suppressUnspiderify = false; }, 0);
+      }
+
       // Kein URL-Routing beim Marker-Tap: _openedByItemClick überspringt navigateToLocations in popupopen
       marker._openedByItemClick = true;
-      // Popup bei Re-Tap nicht schließen (Leaflet togglet sonst)
-      if (marker.isPopupOpen()) marker._retainPopup = true;
+      // WICHTIG: Unser Handler läuft VOR Leaflet's _openPopup (weil _applyMarkerClickHandler vor
+      // bindPopup aufgerufen wird). Deshalb NIEMALS marker.openPopup() hier aufrufen —
+      // das würde das Popup öffnen, dann sieht _openPopup es als bereits offen und toggle-schließt es.
+      // Stattdessen: _openPopup öffnet das Popup selbst. Für den Re-Tap-Fall (Popup ist schon offen)
+      // setzen wir _retainPopup = true, damit der popupclose-Handler es sofort wieder öffnet.
+      if (marker.isPopupOpen()) {
+        // Re-Tap: _openPopup wird toggle-schließen → _retainPopup verhindert das Schließen
+        marker._retainPopup = true;
+      } else if (!map.hasLayer(marker)) {
+        // Gruppierter Marker (Cluster): zum Map hinzufügen damit _openPopup Popup anzeigen kann
+        marker.addTo(map);
+        marker._isTemporarilyUnclustered = true;
+      }
     }
   });
 }
 
 // --- Popup Open: Sticky-Logic, URL-Navigation, Position, Hover-Enter ---
 
+/**
+ * @param {LeafletMarker} marker
+ * @param {MakerSpace} location
+ */
 function _applyPopupOpenHandler(marker, location) {
   marker.on('popupopen', (e) => {
     const wasOpenedByHover = marker._openedByHover;
@@ -1239,6 +1310,9 @@ function _applyPopupOpenHandler(marker, location) {
 
 // --- Popup Close: URL zurücksetzen, Sticky-State aufräumen ---
 
+/**
+ * @param {LeafletMarker} marker
+ */
 function _applyPopupCloseHandler(marker) {
   marker.on('popupclose', () => {
     // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle)
@@ -1273,6 +1347,11 @@ function _applyPopupCloseHandler(marker) {
 
 // --- Hover: Popup öffnen (400ms), Sticky setzen (1500ms), Skalierung ---
 
+/**
+ * Registriert mouseover/mouseout-Handler (nur Desktop-Non-Touch).
+ * @param {LeafletMarker} marker
+ * @param {MakerSpace} location
+ */
 function _applyMarkerHoverHandlers(marker, location) {
   // Touch-Geräte (Phone + Tablet) haben kein Hover-Konzept.
   // mouseover/mouseout werden dort durch Tap-Events simuliert und führen
@@ -1343,25 +1422,27 @@ function _applyMarkerHoverHandlers(marker, location) {
 // OPTIMIERTE HILFSFUNKTIONEN: Nutzen ID statt find() - O(1) statt O(n)
 // ============================================================================
 /**
- 
-Findet Location anhand ID
-*/
+ * Findet Location anhand ID. O(1) via locationById-Map.
+ * @param {number} id
+ * @returns {MakerSpace|undefined}
+ */
 function getLocationById(id) {
   return window.locationById.get(id);
 }
 
 /**
- 
-Findet Marker anhand Location ID
-*/
+ * Findet Marker anhand Location ID. O(1) via markerById-Map.
+ * @param {number} id
+ * @returns {LeafletMarker|undefined}
+ */
 function getMarkerByLocationId(id) {
   return window.markerById.get(id);
 }
 
 /**
- 
-Aktualisiert Marker-Icon für Location
-*/
+ * Aktualisiert Marker-Icon für eine Location (respektiert Hover/Sticky-State).
+ * @param {MakerSpace} location
+ */
 function updateMarkerIconForLocation(location) {
   const marker = getMarkerByLocationId(location.ID);
   if (!marker) return;
@@ -1421,51 +1502,125 @@ function setupSearch() {
 }
 function clearStickyPopup() {
   if (currentStickyMarker && isPopupSticky) {
-    currentStickyMarker.closePopup();
+    // Nur schließen wenn tatsächlich offen — Leaflet könnte es bereits extern geschlossen haben
+    if (currentStickyMarker.isPopupOpen()) {
+      currentStickyMarker.closePopup();
+    }
     currentStickyMarker = null;
     isPopupSticky = false;
   }
 }
 function setStickyPopup(marker) {
-  clearStickyPopup();
+  // Gleichen Marker nicht schließen und neu öffnen — das würde Cleanup in popupclose auslösen
+  if (marker !== currentStickyMarker) {
+    clearStickyPopup();
+  }
   currentStickyMarker = marker;
   isPopupSticky = true;
 }
+function setupZoomOutButton() {
+  const btn = document.getElementById('map-zoom-out-btn');
+  if (!btn) return;
+
+  function updateButtonVisibility() {
+    const shouldShow = !!zoomManager.previousZoomBounds && zoomManager._userMoved;
+    if (shouldShow) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }
+
+  // Show button when user drags or manually zooms
+  map.on('dragstart', () => setTimeout(updateButtonVisibility, 0));
+  map.on('moveend', updateButtonVisibility);
+  map.on('zoomend', updateButtonVisibility);
+
+  btn.addEventListener('click', () => {
+    if (!zoomManager.previousZoomBounds) return;
+    const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
+    // Treat like an auto-zoom so zoomstart doesn't re-set _userMoved
+    zoomManager._isAutoZooming = true;
+    zoomManager._userMoved = false;
+    map.once('moveend', () => { zoomManager._isAutoZooming = false; });
+    map.fitBounds(zoomManager.previousZoomBounds, {
+      animate: true,
+      duration: 0.35,
+      paddingTopLeft: L.point(8, 8),
+      paddingBottomRight: L.point(8, 8 + uiH),
+    });
+    updateButtonVisibility(); // fade out immediately
+  });
+}
+
 function setupMapClickHandler() {
   map.on('click', (e) => {
-    if (e.originalEvent && e.originalEvent.target &&
-      !e.originalEvent.target.closest('.leaflet-marker-icon') &&
-      !e.originalEvent.target.closest('.search-container')) {
-      clearStickyPopup();
+    // Touch: Leaflet's Tap-Helper feuert den map-click auf dem Map-Container (nicht auf dem Marker-Icon).
+    // Der .leaflet-marker-icon-Guard funktioniert deshalb auf Touch nicht — stattdessen prüfen
+    // ob ein Marker-Tap gerade stattgefunden hat (marker-click feuert immer vor dem map-click).
+    if ('ontouchstart' in window) {
+      if (Date.now() - _lastMarkerTapTime < 350) return;
+    } else {
+      if (!e.originalEvent?.target) return;
+      if (e.originalEvent.target.closest('.leaflet-marker-icon')) return;
+      if (e.originalEvent.target.closest('.search-container')) return;
     }
+    clearStickyPopup();
   });
 
+  // 1-Finger-Doppeltap: eine Stufe hereinzoomen (Phone + Tablet)
   // 2-Finger-Doppeltap: eine Stufe herauszoomen (Phone + Tablet)
+  // Leaflet's DoubleClickZoom basiert auf 'dblclick' — das wird auf Touch-Geräten
+  // vom Tap-Helper nicht synthetisiert, daher eigene touchend-Zählung nötig.
   if ('ontouchstart' in window) {
+    let prevOneFingerEnd = 0;
     let prevTwoFingerEnd = 0;
+    let oneFingerMoved = false;
     let twoFingerMoved = false;
+    let twoFingerActive = false; // wurde ein 2-Finger-Tap gestartet?
     const mapContainer = map.getContainer();
 
     mapContainer.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) twoFingerMoved = false;
+      if (e.touches.length === 1) { oneFingerMoved = false; twoFingerActive = false; }
+      if (e.touches.length === 2) { twoFingerMoved = false; twoFingerActive = true; }
     }, { passive: true });
 
     mapContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) oneFingerMoved = true;
       if (e.touches.length === 2) twoFingerMoved = true;
     }, { passive: true });
 
     mapContainer.addEventListener('touchend', (e) => {
-      // Beide Finger gleichzeitig gehoben, keiner verbleibend
-      if (e.touches.length !== 0) return;
-      if (e.changedTouches.length < 2) return;
-      if (twoFingerMoved) { twoFingerMoved = false; return; } // War Pinch, kein Tap
-
       const now = Date.now();
-      if (now - prevTwoFingerEnd < 350) {
-        map.zoomOut(1);
-        prevTwoFingerEnd = 0;
-      } else {
-        prevTwoFingerEnd = now;
+
+      // 2-Finger-Doppeltap → herauszoomen
+      // e.touches.length === 0: alle Finger gehoben (egal ob gleichzeitig oder nacheinander)
+      // twoFingerActive: es waren zuvor 2 Finger auf dem Bildschirm
+      if (twoFingerActive && e.touches.length === 0) {
+        twoFingerActive = false;
+        if (twoFingerMoved) { twoFingerMoved = false; prevTwoFingerEnd = 0; return; }
+        if (now - prevTwoFingerEnd < 350) {
+          map.zoomOut(1);
+          prevTwoFingerEnd = 0;
+        } else {
+          prevTwoFingerEnd = now;
+        }
+        return;
+      }
+
+      // 1-Finger-Doppeltap → hereinzoomen
+      if (!twoFingerActive && e.touches.length === 0 && e.changedTouches.length === 1) {
+        if (oneFingerMoved) { oneFingerMoved = false; prevOneFingerEnd = 0; return; }
+        // Kein Zoom auf Markern, Popups oder UI-Elementen
+        if (e.target.closest('.leaflet-marker-icon') ||
+            e.target.closest('.leaflet-popup') ||
+            e.target.closest('.search-container')) { prevOneFingerEnd = 0; return; }
+        if (now - prevOneFingerEnd < 350) {
+          map.zoomIn(1);
+          prevOneFingerEnd = 0;
+        } else {
+          prevOneFingerEnd = now;
+        }
       }
     }, { passive: true });
   }
@@ -1571,6 +1726,7 @@ const init = async () => {
     setupStyleFilter();
     setupRouting();
     setupMapClickHandler();
+    setupZoomOutButton();
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {

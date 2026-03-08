@@ -336,6 +336,24 @@
   a#url {
     display: none !important;
   }
+
+  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - var(--mobile-ui-height, 120px) - 60px);
+    overflow-y: auto;
+  }
+
+  /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */
+  .leaflet-popup-content a#titleurl {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .leaflet-popup-content a#titleurl h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 
@@ -371,5 +389,23 @@
   /* Space-URL im Marker-Popup ausblenden */
   a#url {
     display: none !important;
+  }
+
+  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+  }
+
+  /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */
+  .leaflet-popup-content a#titleurl {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .leaflet-popup-content a#titleurl h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

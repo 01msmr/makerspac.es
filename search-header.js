@@ -1,5 +1,9 @@
+// @ts-check
 // search-header.js - Search UI-Komponenten
 // Enthält: SearchPillsManager, AutocompleteManager, SearchHeader
+
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+/** @typedef {import('./types.js').Pill} Pill */
 
 import AppConfig from './config.js';
 
@@ -37,7 +41,7 @@ class SearchPillsManager {
 
   /**
    * Fügt eine neue Pill hinzu (ignoriert Duplikate).
-   * @param {import('./app-context.js').Pill} suggestion
+   * @param {Pill} suggestion
    */
   addPill(suggestion) {
     const id = this.generatePillId(suggestion);
@@ -56,7 +60,7 @@ class SearchPillsManager {
 
   /**
    * Generiert eine eindeutige ID für eine Pill (z.B. 'city-berlin').
-   * @param {import('./app-context.js').Pill} suggestion
+   * @param {Pill} suggestion
    * @returns {string}
    */
   generatePillId(suggestion) {
@@ -162,7 +166,7 @@ class SearchPillsManager {
 
   /**
    * Gibt alle aktiven Pills als Array zurück.
-   * @returns {import('./app-context.js').Pill[]}
+   * @returns {Pill[]}
    */
   getPillsArray() {
     return Array.from(this.pills.values());
@@ -174,7 +178,7 @@ class SearchPillsManager {
 
   /**
    * Prüft ob eine Pill bereits aktiv ist.
-   * @param {import('./app-context.js').Pill} suggestion
+   * @param {Pill} suggestion
    * @returns {boolean}
    */
   hasPill(suggestion) {
@@ -188,7 +192,7 @@ class SearchPillsManager {
 
   /**
    * Registriert einen Callback der bei jeder Pill-Änderung aufgerufen wird.
-   * @param {function(import('./app-context.js').Pill[]): void} callback
+   * @param {function(Pill[]): void} callback
    */
   onChange(callback) {
     this.onChangeCallback = callback;
@@ -196,7 +200,7 @@ class SearchPillsManager {
 
   /**
    * Lädt Pills aus einem Array (z.B. aus URL-Hash beim Start).
-   * @param {import('./app-context.js').Pill[]} pillsArray
+   * @param {Pill[]} pillsArray
    */
   loadPills(pillsArray) {
     this.pills.clear();
@@ -253,7 +257,7 @@ class SearchPillsManager {
  */
 class AutocompleteManager {
   /**
-   * @param {import('./app-context.js').Location[]} json - Alle Makerspace-Einträge
+   * @param {MakerSpace[]} json - Alle Makerspace-Einträge
    * @param {HTMLInputElement} searchBar - Das #search-bar Input-Element
    * @param {import('./search-filter.js').SearchFilter} styleFilterManager
    */
@@ -443,7 +447,7 @@ class AutocompleteManager {
 
   /**
    * Registriert einen Callback für Stadt/PLZ-Auswahl (nicht für Style/Status-Filter).
-   * @param {function(import('./app-context.js').Pill): void} callback
+   * @param {function(Pill): void} callback
    */
   onSelect(callback) {
     this.onSelectCallback = callback;
@@ -525,8 +529,8 @@ class AutocompleteManager {
 class SearchHeader {
   /**
    * @param {object} options
-   * @param {L.Map} options.map
-   * @param {import('./app-context.js').Location[]} options.json
+   * @param {any} options.map - Leaflet Map-Instanz
+   * @param {MakerSpace[]} options.json
    * @param {function(string|number, string): string} [options.zfill]
    */
   constructor(options = {}) {

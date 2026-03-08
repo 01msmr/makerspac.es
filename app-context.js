@@ -1,3 +1,4 @@
+// @ts-check
 // app-context.js — Zentraler App-Kontext
 // Ersetzt schrittweise die window.* Zuweisungen.
 // Phasen: idle → services → map → data → app
@@ -7,75 +8,70 @@
 //   appContext.map  // Leaflet Map
 //   appContext.waitFor('app').then(() => { ... })
 
+/** @typedef {import('./types.js').MakerSpace} MakerSpace */
+/** @typedef {import('./types.js').MakerSpaceAddress} MakerSpaceAddress */
+/** @typedef {import('./types.js').MarkerState} MarkerState */
+/** @typedef {import('./types.js').AppPhase} AppPhase */
+/** @typedef {import('./types.js').Pill} Pill */
+/** @typedef {import('leaflet').Map} LeafletMap */
+/** @typedef {import('leaflet').Marker} LeafletMarker */
+/** @typedef {import('leaflet').LayerGroup} LeafletLayerGroup */
+
 /**
- * @typedef {Object} Location
- * @property {string}   name
- * @property {number}   ID
- * @property {LocationLoc} loc
- * @property {string}   style - 'for all' | 'for youth' | 'for students' | 'commercial'
- * @property {{ url: string, text: string }} [link]
- * @property {{ endpoint: string }} [spaceapi]
- * @property {boolean|null} [isOpen]  - Wird zur Laufzeit aus status.json gesetzt
- * @property {{ space.init: number, datacheck.latest: number }} [dates]
- * @property {{ weekday: number, time: number }} [weekly]
- * @property {string[]} [workshops]
+ * Rückwärts-kompatibler Alias — neu: MakerSpace aus types.js verwenden.
+ * @typedef {MakerSpace} Location
  */
 
 /**
- * @typedef {Object} LocationLoc
- * @property {number} lat
- * @property {number} long
- * @property {number|string} [plz]
- * @property {string} city
- * @property {string} country
- * @property {{ name: string, number: string|number, ext: string }} [street]
- */
-
-/**
- * @typedef {Object} Pill
- * @property {string} text       - Anzeigetext (z.B. 'Berlin')
- * @property {'city'|'style'|'country'} type
- * @property {number} count      - Anzahl passender Locations
- * @property {string} [filterKey]
+ * Rückwärts-kompatibler Alias — neu: MakerSpaceAddress aus types.js verwenden.
+ * @typedef {MakerSpaceAddress} LocationLoc
  */
 
 class AppContext extends EventTarget {
 
   // ─── Phase 1: Services (synchron beim Start) ──────────────────────────────
-  i18n          = null;
-  config        = null;
-  bookmarks     = null;
-  consent       = null;
-  dataStore     = null;
-  zoomManager   = null;
-  bookmarkSync  = null;
+  /** @type {any} */ i18n          = null;
+  /** @type {any} */ config        = null;
+  /** @type {any} */ bookmarks     = null;
+  /** @type {any} */ consent       = null;
+  /** @type {any} */ dataStore     = null;
+  /** @type {any} */ zoomManager   = null;
+  /** @type {any} */ bookmarkSync  = null;
 
   // ─── Phase 2: Karte + Daten (nach Leaflet-Init + fetch) ──────────────────
-  locations     = [];       // Alle Makerspace-Einträge (locations.json)
+  /** @type {MakerSpace[]} */
+  locations     = [];
+  /** @type {Map<number, MakerSpace>} */
   locationById  = new Map();
+  /** @type {Map<number, LeafletMarker>} */
   markerById    = new Map();
-  map           = null;     // Leaflet Map-Instanz
-  clusterGroup  = null;
-  spaceAPI      = null;
-  mapIcons      = null;     // MapIcons-Namespace (Icons, Farben, Hilfsfunktionen)
-  markerStateManager = null;
-  mapUtils      = null;
+  /** @type {LeafletMap|null} */ map           = null;
+  /** @type {LeafletLayerGroup|null} */ clusterGroup  = null;
+  /** @type {any} */ spaceAPI      = null;
+  /** @type {any} */ mapIcons      = null;
+  /** @type {any} */ markerStateManager = null;
+  /** @type {any} */ mapUtils      = null;
 
   // ─── Phase 3: UI-Komponenten (nach initApp()) ─────────────────────────────
-  searchHeader  = null;
-  searchFilter  = null;
-  listingCore   = null;
-  nearbyHeader  = null;
-  mobileFilterUI = null;
-  routingManager = null;
+  /** @type {any} */ searchHeader  = null;
+  /** @type {any} */ searchFilter  = null;
+  /** @type {any} */ listingCore   = null;
+  /** @type {any} */ nearbyHeader  = null;
+  /** @type {any} */ mobileFilterUI = null;
+  /** @type {any} */ routingManager = null;
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
+  /** @type {AppPhase} */
   #phase = 'idle';
-  #phaseOrder = ['idle', 'services', 'map', 'data', 'app'];
+  #phaseOrder = /** @type {AppPhase[]} */ (['idle', 'services', 'map', 'data', 'app']);
 
+  /** @returns {AppPhase} */
   get phase() { return this.#phase; }
 
-  /** Setzt die aktuelle Phase und feuert ein 'phase'-Event. */
+  /**
+   * Setzt die aktuelle Phase und feuert ein 'phase'-Event.
+   * @param {AppPhase} phase
+   */
   ready(phase) {
     this.#phase = phase;
     this.dispatchEvent(new CustomEvent('phase', { detail: { phase } }));
@@ -85,7 +81,7 @@ class AppContext extends EventTarget {
    * Gibt ein Promise zurück, das auflöst sobald die Zielphase erreicht ist.
    * Löst sofort auf wenn die Phase bereits überschritten wurde.
    *
-   * @param {'services'|'map'|'data'|'app'} phase
+   * @param {Exclude<AppPhase, 'idle'>} phase
    * @returns {Promise<void>}
    */
   waitFor(phase) {

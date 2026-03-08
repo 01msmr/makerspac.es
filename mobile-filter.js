@@ -483,10 +483,42 @@ class MobileFilterUI {
         }
       }
 
+      // Style icon
+      if (key === 'style') {
+        const iconClass = AppConfig.getStyleIcon(opt);
+        if (iconClass) {
+          const styleIcon = document.createElement('i');
+          styleIcon.className = `${iconClass} mf-opt-style-icon`;
+          item.appendChild(styleIcon);
+        }
+      }
+
+      // Door state icon
+      if (key === 'doorState') {
+        const iconClass = isDoorOpen ? 'fas fa-door-open' : 'fas fa-door-closed';
+        const doorIcon = document.createElement('i');
+        doorIcon.className = `${iconClass} mf-opt-door-icon`;
+        item.appendChild(doorIcon);
+      }
+
+      // Bookmark icon
+      if (key === 'bookmarks') {
+        const bookmarkIcon = document.createElement('i');
+        bookmarkIcon.className = 'fas fa-bookmark mf-opt-bookmark-icon';
+        item.appendChild(bookmarkIcon);
+      }
+
       // Label text
       const label = document.createElement('span');
       label.textContent = this.translateValue(key, opt);
       item.appendChild(label);
+
+      // Today marker for weekly filter
+      if (key === 'weekly' && opt !== 'any' && parseInt(opt) === new Date().getDay()) {
+        const todayDot = document.createElement('i');
+        todayDot.className = 'fas fa-circle mf-opt-today-dot';
+        item.appendChild(todayDot);
+      }
 
       item.addEventListener('click', (e) => {
         // Bail out if the pane is already closing (this.sheet is null) or if the

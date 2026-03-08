@@ -1,5 +1,8 @@
+// @ts-check
 // filter-config.js — Filter-Kategorien, Style-Definitionen und Style-Helpers
 // Importiert WORKSHOP_TYPES aus workshop-types.js
+
+/** @typedef {import('./types.js').SpaceStyle} SpaceStyle */
 
 import { WORKSHOP_TYPES } from './workshop-types.js';
 
@@ -55,7 +58,7 @@ const STYLE_ICONS = {
 };
 
 /**
- * @param {string} style - Style-String (z.B. 'for all')
+ * @param {string} style - Style-String (z.B. 'for all') — string statt SpaceStyle wegen .toLowerCase()-Aufruf
  * @returns {string} FontAwesome-Klasse oder leerer String
  */
 export function getStyleIcon(style) {
