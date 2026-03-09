@@ -45,6 +45,11 @@ jobs:
           if [ -n "${{ inputs.id }}" ]; then ARGS="$ARGS --id ${{ inputs.id }}"; fi
           echo "args=$ARGS" >> $GITHUB_OUTPUT
 
+      - name: Label sicherstellen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create "workshop-data" --description "Workshop equipment data for a makerspace" --color "0075ca" 2>/dev/null || true
+
       - name: Crawler ausführen
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
