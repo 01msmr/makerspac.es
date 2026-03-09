@@ -866,6 +866,22 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: scale(1.2);
 }
 
+.leaflet-container .popup-events-line {
+  color: var(--space-hover);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: white;
+  padding: 3px 6px 3px 3px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.leaflet-container .popup-events-line:hover {
+  background: var(--space-hover);
+  color: white;
+}
+
 
 /* ===================================
    BOOKMARK SYNC STYLES
