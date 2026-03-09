@@ -613,7 +613,7 @@ async function main() {
     console.log('  3. node tools/workshop-crawler.js --create-issues');
   }
 
-  if (dryJson || createIssues) {
+  if (dryJson) {
     // enrichment.json aktualisieren (nur workshops, nur Lücken füllen)
     const enrichment = fs.existsSync(ENRICHMENT_FILE)
       ? JSON.parse(fs.readFileSync(ENRICHMENT_FILE, 'utf8'))
@@ -635,12 +635,9 @@ async function main() {
       Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
     );
     fs.writeFileSync(ENRICHMENT_FILE, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
-    console.log(`\n✅ enrichment.json: ${written} neue Workshop-Einträge geschrieben`);
-    if (dryJson && !createIssues) {
-      console.log('   (--create-issues weglassen = nur enrichment.json aktualisieren, keine Issues)');
-    }
-  } else if (!researchMode && stats.detected > 0) {
-    console.log(`\nMit --dry-json (nur Datei) oder --create-issues (Datei + Issues) fortfahren.`);
+    console.log(`\n✅ enrichment.json: ${written} neue Workshop-Einträge geschrieben (Vorschau, keine Issues)`);
+  } else if (!researchMode && !createIssues && stats.detected > 0) {
+    console.log(`\nMit --dry-json (nur Datei) oder --create-issues (Issues erstellen) fortfahren.`);
   }
 }
 
