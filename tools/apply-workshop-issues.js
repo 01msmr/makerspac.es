@@ -34,9 +34,11 @@ function fetchIssues() {
 
 const RE_ID        = /\*\*ID:\*\*\s*(\d+)/;
 const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
+const RE_APPROVED  = /- \[x\] Freigegeben/i;
 
 function parseIssue(issue) {
   if (!issue.title.startsWith('[Workshop-Daten]')) return null;
+  if (!RE_APPROVED.test(issue.body)) return null;  // not approved yet
 
   const idMatch        = issue.body.match(RE_ID);
   const workshopsMatch = issue.body.match(RE_WORKSHOPS);
