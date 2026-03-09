@@ -37,10 +37,11 @@
 │  │  CSS-Stack   │                        ▼                                  │
 │  │  (7 Dateien) │           ┌────────────────────────┐                      │
 │  └──────────────┘           │  Datenschicht (JSON)   │                      │
-│                             │  locations.json (168K) │                      │
-│  ┌──────────────┐           │  status.json (live)    │                      │
-│  │  sw.js       │           │  lang.json (i18n)      │                      │
-│  │  (Service    │           └────────────────────────┘                      │
+│                             │  data/spaces-{cc}.json │ ← Build aus          │
+│  ┌──────────────┐           │  data/spaces-all.json  │   locations.json +   │
+│  │  sw.js       │           │  status.json (live)    │   enrichment.json    │
+│  │  (Service    │           │  lang.json (i18n)      │                      │
+│  │   Worker)    │           └────────────────────────┘                      │
 │  │   Worker)    │                                                           │
 │  └──────────────┘                                                           │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -160,6 +161,31 @@ data-store.js
 ```
 
 **Zyklische Abhängigkeiten:** keine — `app-context.js` ist das einzige Shared-Leaf ohne Up-Dependencies.
+
+---
+
+## Datenschicht — Drei-Tier-Architektur
+
+| Datei | Inhalt | Gepflegt durch | Im Git |
+|-------|--------|---------------|--------|
+| `locations.json` | Manuell kuratierte Kerndaten (Name, Adresse, Coords, Style, Link) | Mensch | ✅ |
+| `enrichment.json` | Crawler-pflegbare Felder (workshops, events, spaceapi, weekly, dates.space.init) | Crawler-Tools | ✅ |
+| `status.json` | Live Open/Closed-Status | Cron (alle 15 Min) | ❌ |
+
+**Merge-Regel:** `generate-map-splits.js` kombiniert beide JSON-Dateien zur Build-Zeit.
+Echter Wert in `locations.json` gewinnt immer — `enrichment.json` füllt nur Lücken/Platzhalter.
+
+**Platzhalter-Erkennung:**
+- `weekly.weekday === 9 && weekly.time === 0` → kein echter Wert
+- `dates.space.init === 20010000` → kein echter Wert
+
+**Workflow für neue Crawler-Daten:**
+```
+node tools/workshop-crawler.js --dry-json   → schreibt enrichment.json
+node generate-map-splits.js                 → baut data/ neu (Merge findet hier statt)
+git add enrichment.json && git commit       → Commit
+git push                                    → Deploy (CI baut data/ automatisch neu)
+```
 
 ---
 

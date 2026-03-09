@@ -6,16 +6,20 @@
 
 /** @type {Record<string, { icon: string }>} */
 export const WORKSHOP_TYPES = {
-  '3d':          { icon: 'fas fa-cube' },
-  'laser':       { icon: 'fas fa-explosion' },
-  'electronics': { icon: 'fas fa-microchip' },
-  'coding':      { icon: 'fas fa-laptop-code' },
-  'vr':          { icon: 'fas fa-vr-cardboard' },
-  'music':       { icon: 'fas fa-music' },
-  'wood':        { icon: 'fas fa-hammer' },
-  'metal':       { icon: 'fas fa-gears' },
-  'textile':     { icon: 'fas fa-scissors' },
-  'screenprint': { icon: 'fas fa-shirt' },
+  '3d':          { icon: 'fas fa-cube' },        // digital fab
+  'laser':       { icon: 'fas fa-explosion' },   // digital fab
+  'cnc':         { icon: 'fas fa-gear' },         // digital fab
+  'electronics': { icon: 'fas fa-microchip' },   // tech
+  'coding':      { icon: 'fas fa-laptop-code' }, // tech
+  'vr':          { icon: 'fas fa-vr-cardboard' },// tech
+  'music':       { icon: 'fas fa-music' },        // creative studio
+  'photo':       { icon: 'fas fa-camera' },       // creative studio
+  'wood':        { icon: 'fas fa-hammer' },       // physical workshop
+  'metal':       { icon: 'fas fa-gears' },        // physical workshop
+  'bike':        { icon: 'fas fa-bicycle' },      // physical workshop
+  'textile':     { icon: 'fas fa-scissors' },    // craft
+  'screenprint': { icon: 'fas fa-shirt' },       // craft
+  'ceramics':    { icon: 'fas fa-jar' },          // craft
 };
 
 /**

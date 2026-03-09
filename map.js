@@ -890,17 +890,11 @@ async function loadData() {
       }
     }
 
-    // Letzter Fallback: vollständiger Datensatz direkt (alter Server-Stand / kein data/)
+    // Letzter Fallback: vollständiger Datensatz (alter Server-Stand / kein per-country Split)
     if (!rawData?.length) {
-      try {
-        const r = await fetch('./data/spaces-all.json');
-        if (r.ok) rawData = await r.json();
-      } catch { /* nächster Fallback */ }
-    }
-    if (!rawData?.length) {
-      const r2 = await fetch('./locations.json');
-      if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
-      rawData = await r2.json();
+      const r = await fetch('./data/spaces-all.json');
+      if (!r.ok) throw new Error(`HTTP ${r.status} — data/spaces-all.json fehlt. 'node generate-map-splits.js' ausführen.`);
+      rawData = await r.json();
     }
 
     // Daten in App-Kontext setzen

@@ -9,7 +9,7 @@
 //   data/spaces-all.json  → alle, vollständig (Stage 2 – Anreicherung)
 //   data/splits-manifest.json → Metadaten
 
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -34,9 +34,55 @@ const COUNTRY_CODES = {
   'Luxembourg':  'lu',
 };
 
-// Locations laden
+const PLACEHOLDER_WEEKDAY = 9;
+const PLACEHOLDER_INIT    = 20010000;
+
+// enrichment.json einlesen (optional — Defaults für crawler-pflegbare Felder)
+const enrichmentPath = path.join(__dirname, 'enrichment.json');
+const enrichment = existsSync(enrichmentPath)
+  ? JSON.parse(readFileSync(enrichmentPath, 'utf8'))
+  : {};
+
+/**
+ * Reichert einen Location-Eintrag mit Daten aus enrichment.json an.
+ * Regel: Echte Werte in locations.json gewinnen immer — enrichment füllt nur Lücken/Platzhalter.
+ * @param {object} loc
+ * @returns {object}
+ */
+function applyEnrichment(loc) {
+  const e = enrichment[String(loc.ID)];
+  if (!e) return loc;
+
+  const out = { ...loc };
+
+  if (e.workshops?.length && (!loc.workshops || loc.workshops.length === 0)) {
+    out.workshops = e.workshops;
+  }
+  if (e.events && !loc.events) {
+    out.events = e.events;
+  }
+  if (e.spaceapi?.endpoint && !loc.spaceapi?.endpoint) {
+    out.spaceapi = e.spaceapi;
+  }
+  if (e.weekly && (!loc.weekly || (loc.weekly.weekday === PLACEHOLDER_WEEKDAY && loc.weekly.time === 0))) {
+    out.weekly = e.weekly;
+  }
+  if (e.dates?.['space.init'] && loc.dates?.['space.init'] === PLACEHOLDER_INIT) {
+    out.dates = { ...loc.dates, 'space.init': e.dates['space.init'] };
+  }
+
+  return out;
+}
+
+// Locations laden + anreichern
 const locationsPath = path.join(__dirname, 'locations.json');
-const locations = JSON.parse(readFileSync(locationsPath, 'utf8'));
+const rawLocations  = JSON.parse(readFileSync(locationsPath, 'utf8'));
+const locations     = rawLocations.map(applyEnrichment);
+
+const enrichedCount = locations.filter((loc, i) => loc !== rawLocations[i]).length;
+if (enrichedCount > 0) {
+  console.log(`ℹ️  enrichment.json: ${enrichedCount} Spaces angereichert`);
+}
 
 // Output-Verzeichnis anlegen
 const outDir = path.join(__dirname, 'data');

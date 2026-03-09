@@ -172,6 +172,42 @@
       "nl": "VR",
       "da": "VR",
       "uk": "VR"
+    },
+    "cnc": {
+      "de": "CNC-Fräse",
+      "en": "CNC routing",
+      "fr": "fraisage CNC",
+      "it": "fresatura CNC",
+      "nl": "CNC-frezen",
+      "da": "CNC-fræsning",
+      "uk": "ЧПУ-фрезерування"
+    },
+    "ceramics": {
+      "de": "Töpferei",
+      "en": "ceramics",
+      "fr": "céramique",
+      "it": "ceramica",
+      "nl": "keramiek",
+      "da": "keramik",
+      "uk": "кераміка"
+    },
+    "photo": {
+      "de": "Fotografie",
+      "en": "photography",
+      "fr": "photographie",
+      "it": "fotografia",
+      "nl": "fotografie",
+      "da": "fotografi",
+      "uk": "фотографія"
+    },
+    "bike": {
+      "de": "Fahrradwerkstatt",
+      "en": "bike repair",
+      "fr": "atelier vélo",
+      "it": "officina bici",
+      "nl": "fietswerkplaats",
+      "da": "cykelværksted",
+      "uk": "велосипедна майстерня"
     }
   },
   "style": {
@@ -346,20 +382,20 @@
       "uk": "посібник користувача"
     },
     "shortcut": {
-      "de": "Tastenkombination:",
-      "en": "shortcut:",
-      "fr": "raccourci:",
-      "it": "scorciatoia:",
-      "nl": "sneltoets:",
-      "da": "genvej:",
-      "uk": "комбінація клавіш:"
+      "de": "Tastenkürzel",
+      "en": "shortcut",
+      "fr": "raccourci",
+      "it": "scorciatoia",
+      "nl": "sneltoets",
+      "da": "genvej",
+      "uk": "ярлик"
     },
-    "shortcutDesc": {
-      "de": "Strg-F / Cmd-F / F3 fokussiert Suche",
+    "shortcutText": {
+      "de": "Ctrl-F / Cmd-F / F3 fokussiert Suche",
       "en": "Ctrl-F / Cmd-F / F3 focuses search",
-      "fr": "Ctrl-F / Cmd-F / F3 met le focus sur la recherche",
-      "it": "Ctrl-F / Cmd-F / F3 focalizza la ricerca",
-      "nl": "Ctrl-F / Cmd-F / F3 focust op zoeken",
+      "fr": "Ctrl-F / Cmd-F / F3 active la recherche",
+      "it": "Ctrl-F / Cmd-F / F3 attiva la ricerca",
+      "nl": "Ctrl-F / Cmd-F / F3 focust zoeken",
       "da": "Ctrl-F / Cmd-F / F3 fokuserer søgning",
       "uk": "Ctrl-F / Cmd-F / F3 фокусує пошук"
     },
@@ -372,133 +408,106 @@
       "da": "Søg",
       "uk": "Пошук"
     },
-    "filterDesc": {
-      "de": "… nach Name, Stadt oder PLZ",
-      "en": "… by name, city or postal code",
-      "fr": "… par nom, ville ou code postal",
-      "it": "… per nome, città o codice postale",
-      "nl": "… op naam, stad of postcode",
-      "da": "… efter navn, by eller postnummer",
-      "uk": "… за назвою, містом або поштовим індексом"
+    "filterText": {
+      "de": "nach Name, Stadt oder PLZ",
+      "en": "by name, city or postal code",
+      "fr": "par nom, ville ou code postal",
+      "it": "per nome, città o codice postale",
+      "nl": "op naam, stad of postcode",
+      "da": "efter navn, by eller postnummer",
+      "uk": "за назвою, містом або індексом"
     },
     "count": {
-      "de": "Anzahl",
-      "en": "count",
-      "fr": "nombre",
-      "it": "conteggio",
-      "nl": "aantal",
-      "da": "antal",
-      "uk": "кількість"
+      "de": "Filtere auf",
+      "en": "filter on",
+      "fr": "filtrer sur",
+      "it": "filtra su",
+      "nl": "filter op",
+      "da": "filtrer på",
+      "uk": "фільтр на"
     },
-    "countDesc": {
-      "de": "… gefilterter Makerspaces",
-      "en": "… of filtered makerspaces",
-      "fr": "… de makerspaces filtrés",
-      "it": "… di makerspace filtrati",
-      "nl": "… van gefilterde makerspaces",
-      "da": "… af filtrerede makerspaces",
-      "uk": "… відфільтрованих мейкерспейси"
+    "countText": {
+      "de": "Stil, Öffnungsstatus oder Land",
+      "en": "style, state or country",
+      "fr": "style, statut ou pays",
+      "it": "stile, stato o paese",
+      "nl": "stijl, status of land",
+      "da": "stil, status eller land",
+      "uk": "стиль, статус або країна"
     },
     "autoZoom": {
       "de": "Auto-Zoom",
-      "en": "Auto-Zoom",
-      "fr": "Zoom Auto",
-      "it": "Zoom Automatico",
-      "nl": "Auto-Zoom",
-      "da": "Auto-Zoom",
-      "uk": "Авто-Зум"
+      "en": "auto-zoom",
+      "fr": "zoom auto",
+      "it": "zoom automatico",
+      "nl": "auto-zoom",
+      "da": "auto-zoom",
+      "uk": "авто-зум"
     },
-    "autoZoomDesc": {
-      "de": "… auf gefilterte Pins",
-      "en": "… to filtered pins",
-      "fr": "… sur les marqueurs filtrés",
-      "it": "… sui pin filtrati",
-      "nl": "… naar gefilterde pinnen",
-      "da": "… til filtrerede pins",
-      "uk": "… до відфільтрованих маркерів"
+    "autoZoomText": {
+      "de": "auf gefilterte Pins",
+      "en": "to filtered pins",
+      "fr": "sur les marqueur filtrés",
+      "it": "sui pin filtrati",
+      "nl": "naar gefilterde pins",
+      "da": "til filtrerede pins",
+      "uk": "на відфільтровані маркери"
     },
     "highlight": {
       "de": "Speichere",
-      "en": "Save",
-      "fr": "Sauvegarder",
-      "it": "Salva",
-      "nl": "Opslaan",
-      "da": "Gem",
-      "uk": "Зберегти"
+      "en": "save",
+      "fr": "sauvegarder",
+      "it": "salva",
+      "nl": "opslaan",
+      "da": "gem",
+      "uk": "зберегти"
     },
-    "highlightDesc": {
+    "highlightText": {
       "de": "Deine Lieblings-Makerspaces",
-      "en": "Your favorite makerspaces",
-      "fr": "Vos makerspaces favoris",
-      "it": "I tuoi makerspace preferiti",
-      "nl": "Je favoriete makerspaces",
-      "da": "Dine favorit-makerspaces",
-      "uk": "Свої улюблені мейкерспейси"
+      "en": "your favorite makerspaces",
+      "fr": "vos makerspaces favoris",
+      "it": "i tuoi makerspace preferiti",
+      "nl": "je favoriete makerspaces",
+      "da": "dine favorit-makerspaces",
+      "uk": "свої улюблені мейкерспейси"
     },
     "scroll": {
       "de": "Liste scrollen",
-      "en": "Scroll list",
-      "fr": "Faire défiler la liste",
-      "it": "Scorri l'elenco",
-      "nl": "Lijst scrollen",
-      "da": "Rul liste",
-      "uk": "Прокрутити список"
+      "en": "scroll list",
+      "fr": "faire défiler la liste",
+      "it": "scorri l'elenco",
+      "nl": "lijst scrollen",
+      "da": "rul liste",
+      "uk": "прокрутити список"
     },
-    "scrollDesc": {
-      "de": "… per Cursortasten",
-      "en": "… with cursor keys",
-      "fr": "… avec les touches du curseur",
-      "it": "… con i tasti cursore",
-      "nl": "… met cursortoetsen",
-      "da": "… med piletaster",
-      "uk": "… клавішами курсору"
-    },
-    "filterItem1": {
-      "de": "Filtere auf",
-      "en": "Filter on",
-      "fr": "Filtrer sur",
-      "it": "Filtra su",
-      "nl": "Filter op",
-      "da": "Filtrer på",
-      "uk": "Фільтр на"
-    },
-    "filterItem2": {
-      "de": "Makerspaces für alle",
-      "en": "makerspaces for all",
-      "fr": "makerspaces pour tous",
-      "it": "makerspace per tutti",
-      "nl": "makerspaces voor iedereen",
-      "da": "makerspaces for alle",
-      "uk": "мейкерспейси для всіх"
+    "scrollText": {
+      "de": "per Cursortasten",
+      "en": "using arrow keys",
+      "fr": "avec les touches fléchées",
+      "it": "con i tasti freccia",
+      "nl": "met pijltjestoetsen",
+      "da": "med piletaster",
+      "uk": "клавішами зі стрілками"
     }
   },
   "addMakerspace": {
     "title": {
-      "de": "+ deinen Makerspace [hinzufügen] 💛",
-      "en": "+ [add] your makerspace 💛",
-      "fr": "+ [ajouter] votre makerspace 💛",
-      "it": "+ [aggiungi] il tuo makerspace 💛",
-      "nl": "+ [voeg toe] jouw makerspace 💛",
-      "da": "+ [tilføj] din makerspace 💛",
-      "uk": "+ [додати] ваш мейкерспейс 💛"
+      "de": "Makerspace hinzufügen",
+      "en": "add makerspace",
+      "fr": "ajouter un makerspace",
+      "it": "aggiungi makerspace",
+      "nl": "makerspace toevoegen",
+      "da": "tilføj makerspace",
+      "uk": "додати мейкерспейс"
     },
-    "googleForms": {
-      "de": "per Google Forms",
-      "en": "by Google Forms",
-      "fr": "par Google Forms",
-      "it": "tramite Google Forms",
-      "nl": "via Google Forms",
-      "da": "via Google Forms",
-      "uk": "через Google Forms"
-    },
-    "githubPR": {
-      "de": "per GitHub Pull Request",
-      "en": "by GitHub pull request",
-      "fr": "par pull request GitHub",
-      "it": "tramite pull request GitHub",
-      "nl": "via GitHub pull request",
-      "da": "via GitHub pull request",
-      "uk": "через GitHub pull request"
+    "embed": {
+      "de": "in Website einbetten",
+      "en": "embed in website",
+      "fr": "intégrer dans un site",
+      "it": "incorpora in sito web",
+      "nl": "inbedden in website",
+      "da": "indlejr i websted",
+      "uk": "вбудувати в сайт"
     }
   },
   "searchPlaceholder": {
@@ -970,7 +979,7 @@
     "linkCopied": {
       "de": "Für Lesezeichen: Settings-Link kopiert",
       "en": "For bookmark: settings link copied",
-      "fr": "Pour marque-page\u00a0: lien paramètres copié",
+      "fr": "Pour marque-page : lien paramètres copié",
       "it": "Per segnalibro: link impostazioni copiato",
       "nl": "Voor bladwijzer: instellingen-link gekopieerd",
       "da": "Til bogmærke: indstillingslink kopieret",
@@ -1015,7 +1024,7 @@
     "confirmDeleteSettings": {
       "de": "Einstellungen und\nalle Favoriten löschen?",
       "en": "Delete settings and\nall bookmarks?",
-      "fr": "Supprimer paramètres et\ntous les favoris\u00a0?",
+      "fr": "Supprimer paramètres et\ntous les favoris ?",
       "it": "Eliminare impostazioni e\ntutti i segnalibri?",
       "nl": "Instellingen en\nalle bladwijzers verwijderen?",
       "da": "Slet indstillinger og\nalle bogmærker?",
@@ -1038,125 +1047,6 @@
       "nl": "kaartdienst",
       "da": "korttjeneste",
       "uk": "картографічний сервіс"
-    }
-  },
-  "userGuide": {
-    "title": {
-      "de": "Benutzerhandbuch",
-      "en": "user guide",
-      "fr": "guide d'utilisation",
-      "it": "guida utente",
-      "nl": "gebruikershandleiding",
-      "da": "brugervejledning",
-      "uk": "посібник користувача"
-    },
-    "shortcut": {
-      "de": "Tastenkürzel",
-      "en": "shortcut",
-      "fr": "raccourci",
-      "it": "scorciatoia",
-      "nl": "sneltoets",
-      "da": "genvej",
-      "uk": "ярлик"
-    },
-    "shortcutText": {
-      "de": "Ctrl-F / Cmd-F / F3 fokussiert Suche",
-      "en": "Ctrl-F / Cmd-F / F3 focuses search",
-      "fr": "Ctrl-F / Cmd-F / F3 active la recherche",
-      "it": "Ctrl-F / Cmd-F / F3 attiva la ricerca",
-      "nl": "Ctrl-F / Cmd-F / F3 focust zoeken",
-      "da": "Ctrl-F / Cmd-F / F3 fokuserer søgning",
-      "uk": "Ctrl-F / Cmd-F / F3 фокусує пошук"
-    },
-    "filter": {
-      "de": "Suche",
-      "en": "Search",
-      "fr": "Recherche",
-      "it": "Ricerca",
-      "nl": "Zoeken",
-      "da": "Søg",
-      "uk": "Пошук"
-    },
-    "filterText": {
-      "de": "nach Name, Stadt oder PLZ",
-      "en": "by name, city or postal code",
-      "fr": "par nom, ville ou code postal",
-      "it": "per nome, città o codice postale",
-      "nl": "op naam, stad of postcode",
-      "da": "efter navn, by eller postnummer",
-      "uk": "за назвою, містом або індексом"
-    },
-    "count": {
-      "de": "Filtere auf",
-      "en": "filter on",
-      "fr": "filtrer sur",
-      "it": "filtra su",
-      "nl": "filter op",
-      "da": "filtrer på",
-      "uk": "фільтр на"
-    },
-    "countText": {
-      "de": "Stil, Öffnungsstatus oder Land",
-      "en": "style, state or country",
-      "fr": "style, statut ou pays",
-      "it": "stile, stato o paese",
-      "nl": "stijl, status of land",
-      "da": "stil, status eller land",
-      "uk": "стиль, статус або країна"
-    },
-    "autoZoom": {
-      "de": "Auto-Zoom",
-      "en": "auto-zoom",
-      "fr": "zoom auto",
-      "it": "zoom automatico",
-      "nl": "auto-zoom",
-      "da": "auto-zoom",
-      "uk": "авто-зум"
-    },
-    "autoZoomText": {
-      "de": "auf gefilterte Pins",
-      "en": "to filtered pins",
-      "fr": "sur les marqueur filtrés",
-      "it": "sui pin filtrati",
-      "nl": "naar gefilterde pins",
-      "da": "til filtrerede pins",
-      "uk": "на відфільтровані маркери"
-    },
-    "highlight": {
-      "de": "Speichere",
-      "en": "save",
-      "fr": "sauvegarder",
-      "it": "salva",
-      "nl": "opslaan",
-      "da": "gem",
-      "uk": "зберегти"
-    },
-    "highlightText": {
-      "de": "Deine Lieblings-Makerspaces",
-      "en": "your favorite makerspaces",
-      "fr": "vos makerspaces favoris",
-      "it": "i tuoi makerspace preferiti",
-      "nl": "je favoriete makerspaces",
-      "da": "dine favorit-makerspaces",
-      "uk": "свої улюблені мейкерспейси"
-    },
-    "scroll": {
-      "de": "Liste scrollen",
-      "en": "scroll list",
-      "fr": "faire défiler la liste",
-      "it": "scorri l'elenco",
-      "nl": "lijst scrollen",
-      "da": "rul liste",
-      "uk": "прокрутити список"
-    },
-    "scrollText": {
-      "de": "per Cursortasten",
-      "en": "using arrow keys",
-      "fr": "avec les touches fléchées",
-      "it": "con i tasti freccia",
-      "nl": "met pijltjestoetsen",
-      "da": "med piletaster",
-      "uk": "клавішами зі стрілками"
     }
   },
   "nearbySpaces": {
@@ -1296,26 +1186,6 @@
       "nl": "De rest werkt ook zonder cookies",
       "da": "Resten fungerer også uden cookies",
       "uk": "Решта працює і без cookies"
-    }
-  },
-  "addMakerspace": {
-    "title": {
-      "de": "Makerspace hinzufügen",
-      "en": "add makerspace",
-      "fr": "ajouter un makerspace",
-      "it": "aggiungi makerspace",
-      "nl": "makerspace toevoegen",
-      "da": "tilføj makerspace",
-      "uk": "додати мейкерспейс"
-    },
-    "embed": {
-      "de": "in Website einbetten",
-      "en": "embed in website",
-      "fr": "intégrer dans un site",
-      "it": "incorpora in sito web",
-      "nl": "inbedden in website",
-      "da": "indlejr i websted",
-      "uk": "вбудувати в сайт"
     }
   },
   "weekdays": {

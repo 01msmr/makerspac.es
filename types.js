@@ -82,7 +82,7 @@ export {};
 
 /**
  * Alle gültigen Workshop-Typ-IDs (aus workshop-types.js).
- * @typedef {'3d'|'laser'|'electronics'|'wood'|'metal'|'textile'|'screenprint'|'music'|'coding'|'vr'} WorkshopType
+ * @typedef {'3d'|'laser'|'electronics'|'wood'|'metal'|'textile'|'screenprint'|'music'|'coding'|'vr'|'cnc'|'ceramics'|'photo'|'bike'} WorkshopType
  */
 
 /**

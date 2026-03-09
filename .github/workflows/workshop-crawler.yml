@@ -1,0 +1,60 @@
+name: "🔍 Workshop Crawler"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus"
+        required: true
+        default: "research"
+        type: choice
+        options:
+          - research        # Analyse + neue Typen erkennen, keine Issues
+          - create-issues   # Issues erstellen + enrichment.json aktualisieren
+      limit:
+        description: "Nur N Spaces (leer = alle)"
+        required: false
+        default: ""
+      id:
+        description: "Nur Space mit dieser ID"
+        required: false
+        default: ""
+
+permissions:
+  issues: write    # gh issue create
+  contents: write  # enrichment.json committen
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Argumente zusammenbauen
+        id: args
+        run: |
+          ARGS="--${{ inputs.mode }}"
+          if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          if [ -n "${{ inputs.id }}" ]; then ARGS="$ARGS --id ${{ inputs.id }}"; fi
+          echo "args=$ARGS" >> $GITHUB_OUTPUT
+
+      - name: Crawler ausführen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/workshop-crawler.js ${{ steps.args.outputs.args }}
+
+      - name: enrichment.json committen (nur bei create-issues)
+        if: inputs.mode == 'create-issues'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add enrichment.json
+          git diff --staged --quiet || git commit -m "data: workshop enrichment via crawler [skip ci]"
+          git push
