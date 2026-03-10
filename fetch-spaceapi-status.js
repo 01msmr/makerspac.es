@@ -116,41 +116,41 @@ async function fetchSpaceStatus(space) {
   }
 }
 
-// ✨ NEU: Lade SpaceAPI Endpoints aus locations.json
+// Lade SpaceAPI Endpoints aus locations.json + enrichment.json
 function loadSpaceAPIsFromLocations() {
   try {
-    // Lade locations.json (vom Script-Verzeichnis aus gesehen)
     const locationsPath = path.join(__dirname, 'locations.json');
 
     if (!fs.existsSync(locationsPath)) {
       console.error('❌ Error: locations.json not found at:', locationsPath);
-      console.error('💡 Make sure locations.json exists in the root directory');
       process.exit(1);
     }
 
-    const locationsData = fs.readFileSync(locationsPath, 'utf8');
-    const locations = JSON.parse(locationsData);
+    const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
 
-    // Extrahiere alle Locations mit SpaceAPI UND nicht-leerem Endpoint (TEMPLATE ausschließen)
-    const spacesWithAPI = locations.filter(loc =>
-      loc.name !== 'TEMPLATE' &&
-      loc.spaceapi &&
-      loc.spaceapi.endpoint &&
-      loc.spaceapi.endpoint.trim() !== '' // ✨ Filtere auch leere Strings!
-    );
+    // enrichment.json laden (optional)
+    const enrichmentPath = path.join(__dirname, 'enrichment.json');
+    const enrichment = fs.existsSync(enrichmentPath)
+      ? JSON.parse(fs.readFileSync(enrichmentPath, 'utf8'))
+      : {};
+
+    // spaceapi aus locations oder enrichment zusammenführen
+    const spacesWithAPI = locations
+      .filter(loc => loc.name !== 'TEMPLATE')
+      .map(loc => {
+        const endpoint = enrichment[String(loc.ID)]?.spaceapi?.endpoint || '';
+        return endpoint.trim() ? { name: loc.name, endpoint: endpoint.trim() } : null;
+      })
+      .filter(Boolean);
 
     console.log(`📂 Loaded locations.json: ${locations.length} total locations`);
     console.log(`🔌 Found ${spacesWithAPI.length} locations with SpaceAPI\n`);
 
     if (spacesWithAPI.length === 0) {
-      console.warn('⚠️ Warning: No spaces with SpaceAPI found in locations.json');
+      console.warn('⚠️ Warning: No spaces with SpaceAPI found');
     }
 
-    // Mappe auf unser Format
-    return spacesWithAPI.map(loc => ({
-      name: loc.name,
-      endpoint: loc.spaceapi.endpoint
-    }));
+    return spacesWithAPI;
 
   } catch (error) {
     console.error('❌ Error loading locations.json:', error.message);
