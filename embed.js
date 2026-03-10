@@ -81,10 +81,11 @@ class EmbedMapExtended {
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
         const allData = [this.targetSpace, ...this.friendSpaces];
-        statusData.spaces.forEach(statusEntry => {
-          const space = allData.find(s => s.name === statusEntry.name);
-          if (space && statusEntry.status !== undefined) {
-            space.isOpen = statusEntry.status;
+        allData.forEach(space => {
+          const entry = statusData.spaces[space.spaceapi?.endpoint];
+          if (entry && entry.status !== undefined) {
+            space.isOpen = entry.status;
+            if (entry.message) space.statusMessage = entry.message;
           }
         });
       }
