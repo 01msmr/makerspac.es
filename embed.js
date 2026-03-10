@@ -1,7 +1,7 @@
 // embed.js - Präzise Zentrierung mit Sidebar-Offset
 
 import { I18n } from './i18n.js';
-import AppConfig from './config.js';
+import AppConfig, { createLeafletIcon } from './config.js';
 
 class EmbedMapExtended {
   constructor() {
@@ -122,14 +122,8 @@ class EmbedMapExtended {
   }
 
   createMarker(space, isTarget) {
-    // ✅ KORRIGIERT: Zugriff über window.MapIcons.icons (lazy loaded getters)
-    let icon = window.MapIcons?.icons?.highlightIcon;
-    if (space.spaceapi && space.spaceapi.endpoint) {
-      if (space.isOpen === true) icon = window.MapIcons?.icons?.greenIcon;
-      else if (space.isOpen === false) icon = window.MapIcons?.icons?.redIcon;
-      else icon = window.MapIcons?.icons?.unknownStatusIcon;
-    }
-    if (!icon) icon = window.MapIcons?.icons?.defaultIcon;
+    const color = AppConfig.getDynamicSpaceColor(space);
+    const icon = createLeafletIcon(color, isTarget ? 1.2 : 1.0);
 
     const marker = L.marker([space.loc.lat, space.loc.long], {
       icon, riseOnHover: true, interactive: false

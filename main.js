@@ -1,7 +1,7 @@
 // main.js - Orchestrator für makerspac.es
 // Initialisiert und verbindet alle Module
 
-import AppConfig from './config.js';
+import AppConfig, { createLeafletIcon } from './config.js';
 import { ListingCore } from './listing-core.js';
 import { SearchFilter } from './search-filter.js';
 import { SearchHeader } from './search-header.js';
@@ -11,32 +11,6 @@ import { MobileFilterUI } from './mobile-filter.js';
 import { appContext } from './app-context.js';
 
 const CONFIG = AppConfig;
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // LEAFLET ICON FACTORY
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Erstellt ein Leaflet DivIcon mit inline-SVG (kein base64, CSS-targetierbar).
-   * @param {string} color - Hex-Farbcode für die Icon-Füllung
-   * @param {number} scale - Skalierungsfaktor (1.0 = normal, 1.5 = groß)
-   * @returns {L.DivIcon} Leaflet DivIcon Instanz
-   */
-  function createLeafletIcon(color, scale = 1.0) {
-    const w = Math.round(25 * scale);
-    const h = Math.round(41 * scale);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
-      `<path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>` +
-      `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
-      `</svg>`;
-    return L.divIcon({
-      html: svg,
-      className: 'ms-marker-icon',
-      iconSize: [w, h],
-      iconAnchor: [w / 2, h],
-      popupAnchor: [Math.round(scale), Math.round(-34 * scale)],
-    });
-  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // LEAFLET ICON DEFINITIONEN (Lazy Loading)
