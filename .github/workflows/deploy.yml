@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write   # für git tag --push nach erfolgreichem Deploy
@@ -11,7 +12,7 @@ permissions:
 jobs:
   deploy:
     # [skip ci] Commits (z.B. status.json-Updates) nicht deployen
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
     steps:
