@@ -92,14 +92,18 @@ body:
       options:
         - label: "3D printing"
         - label: "Laser cutting"
+        - label: "CNC"
         - label: "Electronics"
-        - label: "Woodworking"
-        - label: "Metalworking"
-        - label: "Textile"
-        - label: "Screen printing"
-        - label: "Music"
         - label: "Coding"
         - label: "VR"
+        - label: "Music"
+        - label: "Photography"
+        - label: "Woodworking"
+        - label: "Metalworking"
+        - label: "Bike repair"
+        - label: "Textile"
+        - label: "Screen printing"
+        - label: "Ceramics"
   - type: input
     id: url
     attributes:
@@ -139,3 +143,9 @@ body:
       label: SpaceAPI Endpoint (optional)
       description: "If available, the URL to the SpaceAPI JSON endpoint."
       placeholder: "full url of SpaceAPI endpoint"
+  - type: input
+    id: events_url
+    attributes:
+      label: Event calendar URL (optional)
+      description: "URL of your public event calendar (e.g. your events page or iCal feed)."
+      placeholder: "https://yourspace.org/events/"

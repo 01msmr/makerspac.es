@@ -152,18 +152,61 @@ jobs:
               }
             };
 
-            // SpaceAPI nur hinzufügen, wenn URL vorhanden
-            const spaceapi = getField("SpaceAPI Endpoint (optional)");
-            if (spaceapi && spaceapi.startsWith('http')) {
-              newEntry.spaceapi = { "endpoint": spaceapi };
-            }
-
             // Datum (Format: YYYYMMDD)
             const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
             newEntry.dates = {
-              "space.init": today,
+              "space.init": 20010000,
               "datacheck.latest": today
             };
+
+            // Debug: Neuen Eintrag ausgeben
+            console.log("=== NEW ENTRY (locations.json) ===");
+            console.log(JSON.stringify(newEntry, null, 2));
+            console.log("=== END NEW ENTRY ===");
+
+            // === enrichment.json: workshops, events, spaceapi, weekly ===
+
+            const enrichmentEntry = {};
+
+            // Workshops (Checkboxen parsen)
+            const workshopLabelMap = {
+              "3D printing":    "3d",
+              "Laser cutting":  "laser",
+              "CNC":            "cnc",
+              "Electronics":    "electronics",
+              "Coding":         "coding",
+              "VR":             "vr",
+              "Music":          "music",
+              "Photography":    "photo",
+              "Woodworking":    "wood",
+              "Metalworking":   "metal",
+              "Bike repair":    "bike",
+              "Textile":        "textile",
+              "Screen printing": "screenprint",
+              "Ceramics":       "ceramics"
+            };
+            const workshopsRaw = getField("Workshop types (optional)", "");
+            const workshops = [];
+            if (workshopsRaw) {
+              for (const [label, key] of Object.entries(workshopLabelMap)) {
+                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
+                  workshops.push(key);
+                }
+              }
+            }
+            if (workshops.length) enrichmentEntry.workshops = workshops;
+
+            // Events URL
+            const eventsUrl = getField("Event calendar URL (optional)");
+            if (eventsUrl && eventsUrl.startsWith('http')) {
+              enrichmentEntry.events = eventsUrl;
+            }
+
+            // SpaceAPI
+            const spaceapi = getField("SpaceAPI Endpoint (optional)");
+            if (spaceapi && spaceapi.startsWith('http')) {
+              enrichmentEntry.spaceapi = { "endpoint": spaceapi };
+            }
 
             // Weekly (offenes Treffen)
             const weekdayMap = {
@@ -178,39 +221,24 @@ jobs:
             const weekdayRaw = getField("Weekly open day (optional)");
             const weekday = weekdayMap[weekdayRaw] ?? 9;
             const weeklyTime = getInt("Weekly open time (optional)", 0);
-            newEntry.weekly = {
-              "weekday": weekday,
-              "time": weeklyTime
-            };
-
-            // Workshops (Checkboxen parsen)
-            const workshopLabelMap = {
-              "3D printing": "3d",
-              "Laser cutting": "laser",
-              "Electronics": "electronics",
-              "Woodworking": "wood",
-              "Metalworking": "metal",
-              "Textile": "textile",
-              "Screen printing": "screenprint",
-              "Music": "music",
-              "Coding": "coding",
-              "VR": "vr"
-            };
-            const workshopsRaw = getField("Workshop types (optional)", "");
-            const workshops = [];
-            if (workshopsRaw) {
-              for (const [label, key] of Object.entries(workshopLabelMap)) {
-                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
-                  workshops.push(key);
-                }
-              }
+            if (weekday !== 9) {
+              enrichmentEntry.weekly = { "weekday": weekday, "time": weeklyTime };
             }
-            newEntry.workshops = workshops;
 
-            // Debug: Neuen Eintrag ausgeben
-            console.log("=== NEW ENTRY ===");
-            console.log(JSON.stringify(newEntry, null, 2));
-            console.log("=== END NEW ENTRY ===");
+            // enrichment.json schreiben (nur wenn es Daten gibt)
+            if (Object.keys(enrichmentEntry).length > 0) {
+              let enrichment = {};
+              if (fs.existsSync('enrichment.json')) {
+                enrichment = JSON.parse(fs.readFileSync('enrichment.json', 'utf8'));
+              }
+              enrichment[String(nextId)] = enrichmentEntry;
+              // Sortiert nach ID schreiben
+              const sorted = Object.fromEntries(
+                Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
+              );
+              fs.writeFileSync('enrichment.json', JSON.stringify(sorted, null, 2) + '\n');
+              console.log(`✅ enrichment.json: ID ${nextId} eingetragen (${Object.keys(enrichmentEntry).join(', ')})`);
+            }
 
             // Einfügeposition finden (sortiert nach Land > PLZ > Name)
             let insertIndex = locations.length;
@@ -239,7 +267,7 @@ jobs:
             // Ausgabe für Titel
             core.setOutput('space_name', name);
 
-            console.log(`✅ Space "${name}" mit ID ${nextId} an Position ${insertIndex + 1} eingefügt.`);
+            console.log(`✅ Space "${name}" mit ID ${nextId} an Position ${insertIndex + 1} in locations.json eingefügt.`);
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
