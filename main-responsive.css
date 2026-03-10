@@ -337,11 +337,9 @@
     display: none !important;
   }
 
-  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  /* Popup: Breite begrenzen; kein overflow-y (würde microtips clippen) */
   .leaflet-popup-content-wrapper {
     max-width: calc(100vw - 24px) !important;
-    max-height: calc(100dvh - var(--mobile-ui-height, 120px) - 60px);
-    overflow-y: auto;
   }
 
   /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */
@@ -391,11 +389,9 @@
     display: none !important;
   }
 
-  /* Popup: Breite und Höhe auf sichtbaren Kartenbereich begrenzen */
+  /* Popup: Breite begrenzen; kein overflow-y (würde microtips clippen) */
   .leaflet-popup-content-wrapper {
     max-width: calc(100vw - 24px) !important;
-    max-height: calc(100dvh - 80px);
-    overflow-y: auto;
   }
 
   /* Langer Makerspace-Name: mit "…" abschneiden statt Popup aufblasen */

@@ -884,6 +884,288 @@ a#titleurl:hover h3.space-unknown .fas {
 
 
 /* ===================================
+   EMBED OVERLAY
+   =================================== */
+
+/* Full-screen backdrop */
+.embed-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 100000;
+  animation: fadeIn 0.2s ease;
+  padding: 40px 16px;
+  box-sizing: border-box;
+}
+
+/* Shift modal right of title-bar (logo + 2 buttons) only when viewport is wide enough
+   that the modal keeps its full 860px — breakpoint: 860 + 300 (title-bar) + 20 (gap) + 16 (right pad) */
+@media (min-width: 1196px) {
+  .embed-overlay {
+    padding-left: 320px;
+  }
+}
+
+/* Modal shell — holds background + border-radius, never scrolls */
+.embed-modal {
+  background: var(--bg-color);
+  border-radius: 40px;
+  max-width: 860px;
+  width: 100%;
+  max-height: calc(100vh - 80px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  font-family: var(--font-family);
+  color: var(--text-color);
+}
+
+.embed-modal::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, var(--bg-color) 45%);
+  pointer-events: none;
+  border-radius: 0 0 40px 40px;
+}
+
+/* Inner scroll wrapper — scrolls content without exposing backdrop */
+.embed-modal-scroll {
+  padding: 20px 20px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  /* Scrollbar visually inset from rounded corners */
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted, #aaa) transparent;
+}
+.embed-modal-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.embed-modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 40px 0 36px;
+}
+.embed-modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--text-muted, #aaa);
+  border-radius: 3px;
+}
+
+.embed-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 16px 20px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0);
+  transition: box-shadow 0.65s ease;
+}
+
+.embed-modal-header.scrolled {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.embed-modal-footer {
+  flex-shrink: 0;
+  height: 36px;
+}
+
+.embed-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.embed-modal-header .embed-intro {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.embed-modal-divider {
+  border: none;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.embed-modal-header h2 {
+  margin: 0;
+  font-size: 1.4em;
+  color: var(--text-color);
+}
+
+.embed-intro {
+  margin: 0 0 24px;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+.embed-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1.5em;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: background-color 0.08s ease-in-out, color 0.08s ease-in-out;
+
+}
+
+.embed-close-btn:hover {
+  background: #e53935;
+  color: #fff;
+}
+
+/* Section headings */
+.embed-h3 {
+  font-size: 1.1em;
+  border-bottom: 2px solid #0000ff;
+  padding-bottom: 8px;
+  margin: 28px 0 16px;
+  color: var(--text-color);
+}
+
+.embed-h4 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 18px 0 8px;
+  color: var(--text-color);
+}
+
+/* Previews */
+.embed-preview {
+  border: 2px dashed var(--border-color, #ccc);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--dropdown-alt-bg, #f5f5f5);
+}
+
+.embed-preview-440 { height: 440px; }
+.embed-preview-640 { height: 640px; }
+
+.embed-preview iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Code blocks */
+.embed-code-block {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.embed-snippet {
+  background: #282c34;
+  color: #abb2bf;
+  padding: 14px 60px 14px 14px;
+  border-radius: 8px;
+  font-size: 0.8em;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.embed-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #0000ff;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75em;
+}
+
+.embed-copy-btn:hover {
+  background: #0000cc;
+}
+
+/* Parameter table */
+.embed-param-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 24px;
+  font-size: 0.88em;
+}
+
+.embed-param-table th,
+.embed-param-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color, #ddd);
+}
+
+.embed-param-table th {
+  background: var(--dropdown-alt-bg, #f8f8f8);
+  font-weight: 600;
+}
+
+.embed-param-table code {
+  background: var(--dropdown-alt-bg, #f0f0f0);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* Pills */
+.embed-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  color: white;
+  background: #888;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.embed-pill-required {
+  background: #cc0000;
+}
+
+/* FAQ paragraphs */
+.embed-modal > p {
+  margin: 0 0 12px;
+  font-size: 0.92em;
+  line-height: 1.55;
+}
+
+.embed-modal > p code {
+  background: var(--dropdown-alt-bg, #f0f0f0);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+
+/* ===================================
    BOOKMARK SYNC STYLES
    =================================== */
 

@@ -211,7 +211,7 @@ class DataStore {
     // 4. NAVIGATION SERVICE SECTION
     const navServiceHeader = document.createElement('div');
     navServiceHeader.className = 'settings-header';
-    const currentNavService = consent.get('mapService') || 'google';
+    const currentNavService = consent.get('mapService') || 'osm';
 
     navServiceHeader.innerHTML = `
       <div class="settings-header-content">
@@ -575,7 +575,7 @@ class DataStore {
       headers[5].textContent = this.t('savedSettings');
     }
 
-    const currentService = consent.get('mapService') || 'google';
+    const currentService = consent.get('mapService') || 'osm';
     this.settingsPopover.querySelectorAll('[data-nav]').forEach(b => {
       b.classList.toggle('active', b.dataset.nav === currentService);
     });

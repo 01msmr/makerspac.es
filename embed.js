@@ -2,6 +2,7 @@
 
 import { I18n } from './i18n.js';
 import AppConfig, { createLeafletIcon } from './config.js';
+import { buildPopupHTML } from './popup-builder.js';
 
 class EmbedMapExtended {
   constructor() {
@@ -64,7 +65,7 @@ class EmbedMapExtended {
   }
 
   async loadData() {
-    const response = await fetch('locations.json');
+    const response = await fetch('data/spaces-all.json');
     if (!response.ok) throw new Error('Failed to load locations.json');
 
     const allSpaces = await response.json();
@@ -93,11 +94,13 @@ class EmbedMapExtended {
   }
 
   createMap() {
+    const params = new URLSearchParams(window.location.search);
     this.map = L.map('map', {
       zoomControl: false,
       attributionControl: true,
       maxZoom: 18,
       minZoom: 3,
+      scrollWheelZoom: !params.has('noscroll'),
       closePopupOnClick: false   // WICHTIG: Klick in die Karte schließt das geöffnete Popup NICHT
     });
 
@@ -128,7 +131,7 @@ class EmbedMapExtended {
     const marker = L.marker([space.loc.lat, space.loc.long], {
       icon, riseOnHover: true, interactive: false
     });
-    marker.bindPopup(this.createPopupContent(space, isTarget), { maxWidth: 440, minWidth: 160, closeButton: false });
+    marker.bindPopup(() => buildPopupHTML(space), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
     marker.on('popupopen', () => this.handlePopupOpen(marker, space));
     marker.addTo(this.map);
     this.markers.set(space.ID, marker);
@@ -187,97 +190,25 @@ class EmbedMapExtended {
     // 3. Rückumrechnung in Geokoordinaten
     const offsetLatLng = this.map.unproject(offsetPoint, zoom);
 
-    // 4. EINZIGER Aufruf für die Bewegung
+    // 4. "Last mile" animation: jump near the target, then short-animate the final stretch
+    if (animate) {
+      const cur = this.map.getCenter();
+      const dlat = offsetLatLng.lat - cur.lat;
+      const dlng = offsetLatLng.lng - cur.lng;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+      const lastMile = Math.min(dist * 0.18, 0.06); // 18% of journey, max 0.06°
+      if (dist > lastMile * 2) {
+        const r = lastMile / dist;
+        this.map.setView(
+          [offsetLatLng.lat - dlat * r, offsetLatLng.lng - dlng * r],
+          zoom, { animate: false }
+        );
+      }
+    }
     this.map.setView(offsetLatLng, zoom, {
       animate: animate,
-      duration: animate ? 0.8 : 0
+      duration: animate ? 0.45 : 0
     });
-  }
-
-  createPopupContent(space, isTarget) {
-    // 1. Farben und Status-Logik vorbereiten
-    const iconColor = AppConfig.getDynamicSpaceColor(space);
-    const getTooltip = (key) => window.i18n ? window.i18n.t(key) : '';
-
-    let statusIconHtml = '';
-    let nameClass = 'space-default';
-    let statusColor = 'var(--space-hover)';
-
-    if (space.isOpen === true) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-door-open"></i></span>`;
-      nameClass = 'space-open';
-      statusColor = 'var(--space-open)';
-    } else if (space.isOpen === false) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-lock"></i></span>`;
-      nameClass = 'space-closed';
-      statusColor = 'var(--space-closed)';
-    } else if (space.spaceapi?.endpoint) {
-      statusIconHtml = `<span aria-label="${getTooltip('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="bottom" style="display: inline-block; vertical-align: middle; margin-right: 5px;"><i class="fas fa-question-circle"></i></span>`;
-      nameClass = 'space-unknown';
-      statusColor = 'var(--space-unknown)';
-    }
-
-    // 2. Style Icon Logik
-    const styleIconMap = {
-      'for all': 'fas fa-people-group',
-      'for students': 'fas fa-graduation-cap',
-      'for youth': 'fas fa-child',
-      'commercial': 'fas fa-money-bill-wave'
-    };
-    const locationStyle = space.style?.toLowerCase() || '';
-    const styleIconHtml = styleIconMap[locationStyle] ? `<i class="${styleIconMap[locationStyle]}"></i> ` : '';
-
-    // Workshops: Kleinere Icons, Farbe wie Adresse (inherit)
-    const workshopsHtml = (location.workshops && location.workshops.length > 0) ? `
-  <div class="popup-workshops" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; margin-bottom: 2px;">
-    ${location.workshops.map(w => {
-      const icon = AppConfig.getWorkshopIcon(w);
-      const label = window.i18n?.t('workshops.' + w) || w;
-      return icon ? `
-        <span aria-label="${label}" role="tooltip" data-microtip-position="top" style="display: inline-block;">
-          <i class="${icon}" style="font-size: 0.75rem; color: inherit; opacity: 0.7;"></i>
-        </span>` : '';
-    }).join('')}
-  </div>` : '';
-
-    // Weekly im Popup
-    const weeklyHtml = (location.weekly && location.weekly.time) ? (() => {
-      const _t = (k) => window.i18n ? window.i18n.t(k) : '';
-      const isToday = location.weekly.weekday === new Date().getDay();
-      const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
-      return `<div class="popup-weekly" style="color: inherit; font-size: 0.85rem; margin-top: 4px; opacity: 0.7; display: flex; align-items: center; gap: 4px;" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom">
-            <i class="fas fa-calendar-day"></i> <span>${isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday)} — ${timeStr}${_t('weekly.timeSuffix')}</span>
-          </div>`;
-    })() : '';
-
-
-    const countryCode = this.getCountryCode(space.loc?.country || '');
-
-    // 5. HTML Zusammenbau
-    return `
-      <div style="--status-color: ${statusColor};">
-        <h3 id="style">${styleIconHtml}${space.style || ''}</h3>
-        <div class="popup-title-row">
-          <a id="titleurl" href="${space.link?.url || '#'}" target="_blank" 
-             aria-label="${getTooltip('tooltips.makerspaceId')} ${space.ID}" role="tooltip" data-microtip-position="top">
-            <h3 class="${nameClass}" data-id="${space.ID}">${statusIconHtml}${space.name || 'Unnamed Space'}</h3>
-          </a>
-        </div>
-        
-        ${workshopsHtml}
-        ${weeklyHtml}
-        
-        <br>
-        <div class="popup-street-line">
-          <span class="street">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}<span class="streetext">${space.loc?.street?.ext || ''}</span></span>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${space.loc?.lat},${space.loc?.long}" target="_blank" 
-             class="navigation-icon" aria-label="${getTooltip('tooltips.routeToMakerspace')}" role="tooltip" data-microtip-position="bottom"><i></i></a>
-        </div>
-        
-        ${this.zfill(space.loc?.plz || '', space.loc?.country || '')} <b>${space.loc?.city || ''}</b><br>
-        <span class="country"><span class="fi fi-${countryCode}"></span>${space.loc?.country || ''}</span><br>
-        <a id="url" href="${space.link?.url || '#'}" target="_blank"><b>${space.link?.text || space.link?.url || ''}</b></a>
-      </div>`;
   }
 
   createDropdownItem(space, isTarget) {
@@ -288,8 +219,8 @@ class EmbedMapExtended {
       else if (space.isOpen === false) { statusIconHtml = '<i class="fas fa-lock door-icon-closed"></i>'; statusClass = 'space-closed'; }
       else { statusIconHtml = '<i class="fas fa-question-circle door-icon-unknown"></i>'; statusClass = 'space-unknown'; }
     }
-    const styleIconMap = { 'for all': 'fas fa-people-group', 'for students': 'fas fa-graduation-cap', 'for youth': 'fas fa-child', 'commercial': 'fas fa-money-bill-wave' };
-    const styleIconHtml = styleIconMap[space.style?.toLowerCase()] ? `<i class="${styleIconMap[space.style?.toLowerCase()]} style-icon"></i> ` : '';
+    const styleClass2 = AppConfig.getStyleIcon(space.style?.toLowerCase() || '');
+    const styleIconHtml = styleClass2 ? `<i class="${styleClass2} style-icon"></i> ` : '';
     const statusColorMap = { 'space-open': 'var(--space-open)', 'space-closed': 'var(--space-closed)', 'space-unknown': 'var(--space-unknown)' };
     const item = document.createElement('div');
     item.className = `space-item listing-item ${statusClass} ${isTarget ? 'target' : ''}`;
@@ -297,8 +228,8 @@ class EmbedMapExtended {
     item.dataset.spaceId = space.ID;
     const addressLines = isTarget ? `
       <div class="listing-item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
-      <div class="listing-item-details">${this.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
-      <div class="listing-item-details"><span class="fi fi-${this.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
+      <div class="listing-item-details">${AppConfig.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
+      <div class="listing-item-details"><span class="fi fi-${AppConfig.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
       <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
     // Weekly Meeting Badge
     let meetingHtml = '';
@@ -455,7 +386,7 @@ class EmbedMapExtended {
       const space = spaceId === this.targetId ? this.targetSpace : this.friendSpaces.find(s => s.ID === spaceId);
       if (space) {
         const isTarget = spaceId === this.targetId;
-        marker.setPopupContent(this.createPopupContent(space, isTarget));
+        marker.setPopupContent(buildPopupHTML(space));
       }
     });
 
@@ -565,19 +496,16 @@ class EmbedMapExtended {
     document.querySelectorAll('.space-item.active').forEach(item => item.classList.remove('active'));
     document.querySelector(`.space-item[data-space-id="${space.ID}"]`)?.classList.add('active');
     this.highlightMinimapMarker(space.ID);
-  }
 
-  zfill(value, country) {
-    if (!value) return '';
-    const str = value.toString();
-    if (country === 'Germany' && str.length < 5) return str.padStart(5, '0');
-    if (country === 'Austria' && str.length < 4) return str.padStart(4, '0');
-    return str;
-  }
-
-  getCountryCode(country) {
-    const countryMap = { 'Germany': 'de', 'Austria': 'at', 'Switzerland': 'ch', 'Ukraine': 'ua', 'Netherlands': 'nl', 'Belgium': 'be' };
-    return countryMap[country] || 'un';
+    // Wire up the navigation link (popup uses href="#"; we open OSM on click)
+    const navLink = marker.getPopup()?.getElement()?.querySelector('.navigation-icon');
+    if (navLink && space.loc?.lat != null && space.loc?.long != null) {
+      navLink.setAttribute('data-service', 'osm');
+      navLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.open(`https://www.openstreetmap.org/directions?to=${space.loc.lat},${space.loc.long}`, '_blank');
+      }, { once: true });
+    }
   }
 
   showError(message) {

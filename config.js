@@ -138,6 +138,19 @@ function getCountryCode(country) {
 }
 
 /**
+ * Formatiert eine PLZ auf die landesspezifische Länge (mit führenden Nullen).
+ * @param {string|number} plz
+ * @param {string} country - Vollständiger Ländername (z.B. 'Germany')
+ * @returns {string}
+ */
+function zfill(plz, country) {
+  const expectedLengths = { Germany: 5, Austria: 4, Belgium: 4, Switzerland: 4, Poland: 5, USA: 5, Italy: 5, Spain: 5, France: 5, Luxemburg: 4, Netherlands: 4, Ukraine: 5 };
+  const plzStr = String(plz || '');
+  const expectedLength = expectedLengths[country] || plzStr.length;
+  return plzStr.padStart(expectedLength, '0');
+}
+
+/**
  * Berechnet die Entfernung zwischen zwei Koordinaten (Haversine)
  * @param {number} lat1
  * @param {number} lon1
@@ -263,6 +276,7 @@ const AppConfig = {
   getSortedWorkshops,
   getStatusIcon,
   getCountryCode,
+  zfill,
   isDarkMode,
   getDefaultIconColor,
   getHoverColor,

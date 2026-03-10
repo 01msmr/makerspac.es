@@ -94,7 +94,7 @@ index.html
 | `map.js` | Einstiegspunkt, Bootstrap, AppContext-Lifecycle | `window.app`, `window.locationById`, `window.markerById`, `window.i18n` |
 | `app-context.js` | Lifecycle-Phasen, Shared State | `appContext` (import) |
 | `main.js` | Orchestrierung, Leaflet-Icons, Module verknüpfen | `initApp()`, `window.mobileFilterUI`, `window.nearbySpacesManager` |
-| `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
+| `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper (inkl. `zfill`) | `AppConfig`, `window.AppConfig` |
 | `search-filter.js` | Filter-Logik (kein DOM) | `SearchFilter` class |
 | `search-header.js` | Such-UI, Autocomplete, Pills, Dropdown, Item-Clicks | `SearchHeader`, `SearchPillsManager`, `AutocompleteManager` |
 | `listing-core.js` | Item-Rendering, Hover-Effekte, Connection Line, SVG-Schweif | `ListingCore` class |
@@ -106,6 +106,9 @@ index.html
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar | `MobileFilterUI`, `window.mobileFilterUI` |
 | `i18n.js` | Übersetzungen, `t()`, `setLanguage()` | `I18n`, `window.i18n` |
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom | `ZoomManager`, `window.zoomManager` |
+| `embed.js` | Embed-Karte (iframe-Standalone, lädt nur in embed.html) | `EmbedMapExtended`, `window.embedMap` |
+| `embed-overlay.js` | In-page Overlay für Embed-Anleitung (initiiert in map.js) | `initEmbedOverlay()` |
+| `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed) | `buildPopupHTML()` |
 | `map-utils.js` | Sticky-Popup, clearStickyPopup, Marker-Lookup | `window.mapUtils` |
 | `i18n-init.js` | I18n-Singleton erstellen | inline init |
 | `sw.js` | Service Worker (Cache-First / SWR / Network-First) | — |
