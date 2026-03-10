@@ -137,6 +137,12 @@ a {
 .friends-dropdown .listing-item {
   min-height: auto;
   padding: 7px 10px;
+  box-shadow: none;
+  border-bottom: 1px solid var(--dropdown-border);
+}
+
+.friends-dropdown .listing-item:last-child {
+  border-bottom: none;
 }
 
 
