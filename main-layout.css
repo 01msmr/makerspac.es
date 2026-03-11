@@ -126,24 +126,21 @@ body {
 .title-tools {
   position: relative;
   display: flex;
-  flex-direction: column;
   z-index: 404;
 }
 
 .title-tools a {
   border-radius: 0.3em;
   align-items: center;
-  flex: 1;
   display: flex;
   justify-content: center;
-  vertical-align: middle;
+  aspect-ratio: 1;
   color: rgba(0, 0, 255, .3);
   background-color: var(--title-background);
   font-size: 1.7em;
   text-decoration: none;
   opacity: 0.6;
   transition: color 0.15s ease-in, box-shadow 0.15s ease-in;
-  padding: 0.1em 0em;
 }
 
 .title-tools a:hover {
