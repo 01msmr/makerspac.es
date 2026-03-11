@@ -19,6 +19,7 @@ export function initEmbedOverlay() {
 
   btn.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     showOverlay();
   });
 

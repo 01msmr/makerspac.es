@@ -109,16 +109,9 @@ export class I18n {
   }
 
   translateTitleTools() {
-    const embedLink = document.querySelector('.tool-embed');
-    if (embedLink) {
-      embedLink.setAttribute('aria-label', this.t('addMakerspace.embed'));
-      embedLink.setAttribute('role', 'tooltip');
-      embedLink.setAttribute('data-microtip-position', 'right');
-    }
-
     const addLink = document.querySelector('.tool-add');
     if (addLink) {
-      addLink.setAttribute('aria-label', this.t('addMakerspace.title'));
+      addLink.setAttribute('aria-label', this.t('addMakerspace.addEmbed'));
       addLink.setAttribute('role', 'tooltip');
       addLink.setAttribute('data-microtip-position', 'right');
     }

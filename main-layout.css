@@ -90,7 +90,7 @@ body {
   font-family: var(--font-family);
   color: blue;
   background-color: var(--title-background);
-  padding: .25em .75em .25em .50em;
+  padding: .25em .2em .25em .50em;
   border-radius: .6em;
   border: .30em dashed rgba(255, 255, 255, .77);
   box-shadow: .2em -.1em .6em .35em var(--shadow-color);
@@ -123,30 +123,21 @@ body {
   text-decoration: none;
 }
 
-.title-tools {
-  position: relative;
-  display: flex;
-  z-index: 404;
+.tool-add {
+  cursor: pointer;
+  color: blue;
+  background-color: transparent;
+  border-radius: .25em;
+  padding: 0 .4em;
+  margin: 0 0 0 .1em;
+  border: .1em solid transparent;
+  transition: background-color 0.08s ease-in, color 0.08s ease-in;
 }
 
-.title-tools a {
-  border-radius: 0.3em;
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  aspect-ratio: 1;
-  color: rgba(0, 0, 255, .3);
-  background-color: var(--title-background);
-  font-size: 1.7em;
-  text-decoration: none;
-  opacity: 0.6;
-  transition: color 0.15s ease-in, box-shadow 0.15s ease-in;
-}
-
-.title-tools a:hover {
-  color: rgba(0, 0, 255, .8);
-  box-shadow: 2px 1px 14px rgba(0, 0, 0, 0.9);
-  opacity: 1;
+.tool-add:hover {
+  background-color: blue;
+  color: white;
+  border: .1em solid transparent;
 }
 
 
