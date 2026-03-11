@@ -1213,6 +1213,10 @@ a#titleurl:hover h3.space-unknown .fas {
   background: #cc0000;
 }
 
+.embed-tab-panel[data-tab="addspace"] .embed-pill:not(.embed-pill-required) {
+  border: 1px solid white;
+}
+
 /* FAQ paragraphs */
 .embed-modal > p {
   margin: 0 0 12px;
