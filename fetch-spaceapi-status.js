@@ -116,7 +116,7 @@ async function fetchSpaceStatus(space) {
   }
 }
 
-// Lade SpaceAPI Endpoints aus locations.json + enrichment.json
+// Lade SpaceAPI Endpoints aus locations.json + loc-enrichment.json
 function loadSpaceAPIsFromLocations() {
   try {
     const locationsPath = path.join(__dirname, 'locations.json');
@@ -128,8 +128,8 @@ function loadSpaceAPIsFromLocations() {
 
     const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
 
-    // enrichment.json laden (optional)
-    const enrichmentPath = path.join(__dirname, 'enrichment.json');
+    // loc-enrichment.json laden (optional)
+    const enrichmentPath = path.join(__dirname, 'loc-enrichment.json');
     const enrichment = fs.existsSync(enrichmentPath)
       ? JSON.parse(fs.readFileSync(enrichmentPath, 'utf8'))
       : {};

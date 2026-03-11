@@ -18,7 +18,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 // Enrichment-Datei
-const ENRICHMENT_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'enrichment.json');
+const ENRICHMENT_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'loc-enrichment.json');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -614,7 +614,7 @@ async function main() {
   }
 
   if (dryJson) {
-    // enrichment.json aktualisieren (nur workshops, nur Lücken füllen)
+    // loc-enrichment.json aktualisieren (nur workshops, nur Lücken füllen)
     const enrichment = fs.existsSync(ENRICHMENT_FILE)
       ? JSON.parse(fs.readFileSync(ENRICHMENT_FILE, 'utf8'))
       : {};
@@ -635,7 +635,7 @@ async function main() {
       Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
     );
     fs.writeFileSync(ENRICHMENT_FILE, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
-    console.log(`\n✅ enrichment.json: ${written} neue Workshop-Einträge geschrieben (Vorschau, keine Issues)`);
+    console.log(`\n✅ loc-enrichment.json: ${written} neue Workshop-Einträge geschrieben (Vorschau, keine Issues)`);
   } else if (!researchMode && !createIssues && stats.detected > 0) {
     console.log(`\nMit --dry-json (nur Datei) oder --create-issues (Issues erstellen) fortfahren.`);
   }

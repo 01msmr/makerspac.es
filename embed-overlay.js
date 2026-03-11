@@ -2,9 +2,11 @@
 
 const GITHUB_REPO = '01msmr/makerspac.es';
 
-const COUNTRIES = ['Germany', 'Austria', 'Switzerland', 'Netherlands', 'Belgium', 'Denmark', 'Ukraine', 'other'];
-const STYLES    = ['for all', 'for youth', 'for students', 'commercial'];
-const WEEKDAYS  = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const COUNTRIES    = ['Germany', 'Austria', 'Switzerland', 'Netherlands', 'Belgium', 'Denmark', 'Ukraine', 'other'];
+const STYLES       = ['for all', 'for youth', 'for students', 'commercial'];
+const WEEKDAYS     = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+// Indexed by weekday number (Sunday=0 … Saturday=6), matches loc-enrichment.json convention
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORKSHOPS = [
   ['3D printing', '3d'],  ['Laser cutting', 'laser'], ['CNC', 'cnc'],
   ['Electronics', 'electronics'], ['Coding', 'coding'], ['VR', 'vr'],
@@ -12,6 +14,12 @@ const WORKSHOPS = [
   ['Woodworking', 'wood'], ['Metalworking', 'metal'], ['Bike repair', 'bike'],
   ['Textile', 'textile'], ['Screen printing', 'screenprint'], ['Ceramics', 'ceramics'],
 ];
+
+// i18n shorthand — addMakerspace namespace
+const t = (key, fb) => window.i18n?.t(`addMakerspace.${key}`) ?? fb;
+
+// null = not yet fetched; false = fetch failed; object = data
+let _enrichmentCache = null;
 
 export function initEmbedOverlay() {
   const btn = document.querySelector('.tool-add');
@@ -39,6 +47,36 @@ function esc(s) {
 
 function opt(values, selected = '') {
   return values.map(v => `<option${v === selected ? ' selected' : ''}>${v}</option>`).join('');
+}
+
+// ─── Enrichment fetch + space search ──────────────────────────────────────────
+
+async function fetchEnrichment() {
+  if (_enrichmentCache !== null) return _enrichmentCache;
+  try {
+    const res = await fetch('/loc-enrichment.json');
+    _enrichmentCache = res.ok ? await res.json() : false;
+  } catch { _enrichmentCache = false; }
+  return _enrichmentCache;
+}
+
+function searchSpaces(query) {
+  const locs = window.locationById ? [...window.locationById.values()] : [];
+  const q = query.trim().toLowerCase();
+  // Empty → full list sorted alphabetically by name
+  if (!q) return [...locs].sort((a, b) =>
+    (a.name || '').localeCompare(b.name || '')
+  );
+  // Numeric → all IDs containing the digits, sorted by ID
+  if (/^\d+$/.test(q)) {
+    return locs.filter(l => String(l.ID).includes(q)).sort((a, b) => a.ID - b.ID);
+  }
+  // Name, city, or postal code substring
+  return locs.filter(l =>
+    l.name?.toLowerCase().includes(q) ||
+    l.loc?.city?.toLowerCase().includes(q) ||
+    String(l.loc?.plz || '').includes(q)
+  );
 }
 
 // ─── Embed snippets ────────────────────────────────────────────────────────────
@@ -86,10 +124,10 @@ function showOverlay() {
         <div class="embed-modal-header-text">
           <h2>📍 makerspac.es</h2>
           <div class="embed-tabs">
-            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> ${window.i18n ? window.i18n.t('addMakerspace.title') : 'add your makerspace'}</button>
-            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> ${window.i18n ? window.i18n.t('addMakerspace.embed') : 'embed into your site'}</button>
+            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> ${t('title', 'add your makerspace')}</button>
+            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> ${t('embed', 'embed into your site')}</button>
           </div>
-          <p class="embed-tab-intro" data-tab="addspace">Submit your makerspace to the map. A maintainer will review and publish it.</p>
+          <p class="embed-tab-intro" data-tab="addspace">${t('tabIntro', 'Submit your makerspace to the map. A maintainer will review and publish it.')}</p>
           <p class="embed-tab-intro" data-tab="embed" hidden>Show your <b>position</b>, your makerspace-<b>status</b> (open/closed) and connect with <b>friendly spaces of yours</b>.</p>
         </div>
         <button class="embed-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
@@ -99,68 +137,99 @@ function showOverlay() {
 
         <!-- ── Tab: Add Space ── -->
         <div class="embed-tab-panel" data-tab="addspace">
+
+          <!-- Top area: silver background -->
+          <div class="addspace-top-area">
+
+            <!-- Mode toggle -->
+            <div class="addspace-mode-toggle">
+              <label class="addspace-mode-option">
+                <input type="radio" name="addspace_mode" value="add" checked>
+                ${t('addToggle', 'add makerspace')}
+              </label>
+              <label class="addspace-mode-option">
+                <input type="radio" name="addspace_mode" value="edit">
+                ${t('editToggle', 'edit existing makerspace')}
+              </label>
+            </div>
+
+            <!-- Search (edit mode only) -->
+            <div class="addspace-lookup" hidden>
+              <div class="addspace-lookup-field">
+                <input type="text" class="addspace-input addspace-lookup-input"
+                       placeholder="${t('lookupPlaceholder', 'Name or ID — e.g. Toolbox Bodensee or 45')}"
+                       autocomplete="off" spellcheck="false">
+                <div class="addspace-lookup-results" hidden></div>
+              </div>
+              <button class="addspace-edit-btn" type="button" hidden>${t('editBtn', 'edit')}</button>
+            </div>
+
+          </div><!-- /addspace-top-area -->
+          <hr class="addspace-lookup-divider">
+
           <form class="addspace-form" novalidate>
             <!-- Honeypot: bots fill this, humans don't -->
             <input name="hp_url" autocomplete="off" tabindex="-1" aria-hidden="true"
                    style="position:absolute;left:-9999px;opacity:0;height:0;pointer-events:none">
 
-            <h3 class="embed-h3">Space info</h3>
+            <h3 class="embed-h3">${t('sectionSpaceInfo', 'Space info')}</h3>
 
-            <label class="addspace-label">Name <span class="embed-pill embed-pill-required">required</span></label>
-            <input type="text" name="name" class="addspace-input" required placeholder="Your Makerspace Name">
+            <label class="addspace-label">${t('labelName', 'Name')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
+            <input type="text" name="name" class="addspace-input" required placeholder="${t('namePlaceholder', 'Your Makerspace Name')}">
 
-            <label class="addspace-label">Style <span class="embed-pill embed-pill-required">required</span></label>
+            <label class="addspace-label">${t('labelStyle', 'Style')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
             <select name="style" class="addspace-input">${opt(STYLES)}</select>
 
-            <label class="addspace-label">Website <span class="embed-pill embed-pill-required">required</span></label>
+            <label class="addspace-label">${t('labelWebsite', 'Website')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
             <input type="url" name="url" class="addspace-input" required placeholder="https://yourspace.org">
 
-            <label class="addspace-label">Link display text <span class="embed-pill embed-pill-required">required</span></label>
+            <label class="addspace-label">${t('labelLinkText', 'Link display text')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
             <input type="text" name="url_text" class="addspace-input" required placeholder="yourspace.org">
 
-            <h3 class="embed-h3">Location</h3>
+            <h3 class="embed-h3">${t('sectionLocation', 'Location')}</h3>
 
             <div class="addspace-row">
               <div>
-                <label class="addspace-label">Country <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelCountry', 'Country')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <select name="country" class="addspace-input">${opt(COUNTRIES)}</select>
               </div>
               <div>
-                <label class="addspace-label">City <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelCity', 'City')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="city" class="addspace-input" required>
               </div>
             </div>
 
             <div class="addspace-row">
               <div>
-                <label class="addspace-label">Street <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelStreet', 'Street')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="street_name" class="addspace-input" required>
               </div>
               <div class="addspace-col-narrow">
-                <label class="addspace-label">Nr. <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelStreetNr', 'Nr.')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="street_number" class="addspace-input" required>
               </div>
               <div class="addspace-col-narrow">
-                <label class="addspace-label">Postal code <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelPostalCode', 'Postal code')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="plz" class="addspace-input" required>
               </div>
             </div>
 
-            <label class="addspace-label">Address addition</label>
-            <input type="text" name="street_ext" class="addspace-input" placeholder="e.g. Apt. 2, Building B">
+            <label class="addspace-label">${t('labelAddressAddition', 'Address addition')}</label>
+            <input type="text" name="street_ext" class="addspace-input" placeholder="${t('addressAdditionPlaceholder', 'e.g. Apt. 2, Building B')}">
 
             <div class="addspace-row">
               <div>
-                <label class="addspace-label">Latitude <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelLatitude', 'Latitude')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="lat" class="addspace-input" required placeholder="47.7126816">
               </div>
               <div>
-                <label class="addspace-label">Longitude <span class="embed-pill embed-pill-required">required</span></label>
+                <label class="addspace-label">${t('labelLongitude', 'Longitude')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="long" class="addspace-input" required placeholder="9.3995537">
               </div>
             </div>
 
-            <h3 class="embed-h3">Workshops <span class="embed-pill">optional</span></h3>
+            <h3 class="embed-h3">${t('sectionWorkshops', 'Workshops')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
+            <p class="addspace-enrich-warning" hidden>${t('workshopLoadError', '⚠ Workshop data could not be loaded — please check all workshops that apply manually.')}</p>
             <div class="addspace-checkboxes">
               ${WORKSHOPS.map(([label]) => `
                 <label class="addspace-checkbox-label">
@@ -168,31 +237,31 @@ function showOverlay() {
                 </label>`).join('')}
             </div>
 
-            <h3 class="embed-h3">Regular meeting <span class="embed-pill">optional</span></h3>
+            <h3 class="embed-h3">${t('sectionMeeting', 'Regular meeting')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
             <div class="addspace-row">
               <div>
-                <label class="addspace-label">Weekday</label>
+                <label class="addspace-label">${t('labelWeekday', 'Weekday')}</label>
                 <select name="weekly_weekday" class="addspace-input">
-                  <option value="">— none —</option>
+                  <option value="">${t('weekdayNone', '— none —')}</option>
                   ${opt(WEEKDAYS)}
                 </select>
               </div>
               <div>
-                <label class="addspace-label">Time</label>
+                <label class="addspace-label">${t('labelTime', 'Time')}</label>
                 <input type="text" name="weekly_time" class="addspace-input" placeholder="1900">
               </div>
             </div>
 
-            <h3 class="embed-h3">Online presence <span class="embed-pill">optional</span></h3>
+            <h3 class="embed-h3">${t('sectionOnline', 'Online presence')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
 
-            <label class="addspace-label">SpaceAPI Endpoint</label>
+            <label class="addspace-label">${t('labelSpaceAPI', 'SpaceAPI Endpoint')}</label>
             <input type="url" name="spaceapi" class="addspace-input" placeholder="https://yourspace.org/spaceapi.json">
 
-            <label class="addspace-label">Event calendar URL</label>
+            <label class="addspace-label">${t('labelEventsUrl', 'Event calendar URL')}</label>
             <input type="url" name="events_url" class="addspace-input" placeholder="https://yourspace.org/events/">
 
             <div class="addspace-submit-row">
-              <button type="submit" class="addspace-submit-btn">Submit to maintainers</button>
+              <button type="submit" class="addspace-submit-btn">${t('submitBtn', 'Submit to maintainers')}</button>
               <span class="addspace-status"></span>
             </div>
           </form>
@@ -276,6 +345,9 @@ function showOverlay() {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   overlay.querySelector('.embed-close-btn').addEventListener('click', close);
 
+  // Block keydown events from reaching main-site document handlers (bubble phase, fires after our own handlers)
+  overlay.addEventListener('keydown', (e) => { e.stopPropagation(); });
+
   // ── Scroll shadow ──
   scrollEl.addEventListener('scroll', () => {
     header.classList.toggle('scrolled', scrollEl.scrollTop >= 100);
@@ -315,16 +387,177 @@ function showOverlay() {
     });
   });
 
-  // ── Form submit (addspace tab) ──
-  overlay.querySelector('.addspace-form').addEventListener('submit', async (e) => {
+  // ── Mode toggle + lookup / prefill ───────────────────────────────────────
+
+  let selectedSpace      = null;
+  let workshopsAvailable = true;
+
+  const modeRadios    = overlay.querySelectorAll('input[name="addspace_mode"]');
+  const lookupDiv     = overlay.querySelector('.addspace-lookup');
+  const lookupInput   = overlay.querySelector('.addspace-lookup-input');
+  const lookupResults = overlay.querySelector('.addspace-lookup-results');
+  const editBtn       = overlay.querySelector('.addspace-edit-btn');
+  const submitBtn     = overlay.querySelector('.addspace-submit-btn');
+  const enrichWarn    = overlay.querySelector('.addspace-enrich-warning');
+  const form          = overlay.querySelector('.addspace-form');
+
+  function setEditMode(on) {
+    lookupDiv.hidden = !on;
+    form.hidden      =  on;
+    if (!on) resetLookup();
+    if (on) requestAnimationFrame(() => lookupInput.focus());
+  }
+
+  modeRadios.forEach(r => r.addEventListener('change', () => setEditMode(r.value === 'edit')));
+
+  let highlightedIndex = -1;
+
+  function setHighlight(index) {
+    const items = [...lookupResults.querySelectorAll('.addspace-lookup-item')];
+    highlightedIndex = Math.max(-1, Math.min(items.length - 1, index));
+    items.forEach((el, i) => el.classList.toggle('is-active', i === highlightedIndex));
+    if (highlightedIndex >= 0) items[highlightedIndex].scrollIntoView({ block: 'nearest' });
+  }
+
+  function renderResults(results) {
+    lookupResults.innerHTML = '';
+    highlightedIndex = -1;
+    if (!results.length) { lookupResults.hidden = true; return; }
+    results.forEach(loc => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'addspace-lookup-item';
+      item.textContent = `ID ${loc.ID} - ${loc.name} - ${loc.loc?.plz ? loc.loc.plz + ' ' : ''}${loc.loc?.city || ''}`;
+      item._loc = loc;
+      item.addEventListener('mousedown', (e) => { e.preventDefault(); selectSpace(loc); });
+      lookupResults.appendChild(item);
+    });
+    lookupResults.hidden = false;
+  }
+
+  function selectSpace(loc) {
+    selectedSpace = loc;
+    lookupInput.value    = `ID ${loc.ID} - ${loc.name} - ${loc.loc?.plz ? loc.loc.plz + ' ' : ''}${loc.loc?.city || ''}`;
+    lookupResults.hidden = true;
+    editBtn.textContent  = `${t('editBtn', 'edit')} ID ${loc.ID} — ${loc.name}`;
+    editBtn.hidden       = false;
+  }
+
+  async function prefillAndEdit() {
+    if (!selectedSpace) return;
+    const loc = selectedSpace;
+
+    // Show form
+    form.hidden = false;
+    form.reset();
+
+    // Smooth-scroll first section header into view (offset controlled by scroll-margin-top in CSS)
+    requestAnimationFrame(() => {
+      form.querySelector('.embed-h3')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Pre-fill from locations.json
+    const set = (name, val) => {
+      const el = form.elements[name];
+      if (el && val != null && val !== '') el.value = val;
+    };
+    set('name',          loc.name);
+    set('city',          loc.loc?.city);
+    set('plz',           loc.loc?.plz);
+    set('street_name',   loc.loc?.street?.name);
+    set('street_number', loc.loc?.street?.number);
+    set('street_ext',    loc.loc?.street?.ext);
+    set('lat',           loc.loc?.lat);
+    set('long',          loc.loc?.long);
+    set('url',           loc.link?.url);
+    set('url_text',      loc.link?.text);
+    if (loc.style)        form.elements['style'].value   = loc.style;
+    if (loc.loc?.country) form.elements['country'].value = loc.loc.country;
+
+    submitBtn.textContent = t('submitCorrectionBtn', 'Submit correction');
+
+    // Pre-fill from loc-enrichment.json
+    const enrichment = await fetchEnrichment();
+    if (enrichment === false) {
+      workshopsAvailable = false;
+      enrichWarn.hidden  = false;
+      return;
+    }
+    workshopsAvailable = true;
+    enrichWarn.hidden  = true;
+    const enr = enrichment[String(loc.ID)] || {};
+
+    const active = new Set(enr.workshops || []);
+    form.querySelectorAll('input[name="workshop"]').forEach(cb => {
+      const key = WORKSHOPS.find(([label]) => label === cb.value)?.[1];
+      cb.checked = key ? active.has(key) : false;
+    });
+
+    const weekdayName = WEEKDAY_NAMES[enr.weekly?.weekday];
+    if (weekdayName) form.elements['weekly_weekday'].value = weekdayName;
+    if (enr.weekly?.time) set('weekly_time', enr.weekly.time);
+    if (enr.spaceapi?.endpoint) set('spaceapi', enr.spaceapi.endpoint);
+    if (enr.events)             set('events_url', enr.events);
+  }
+
+  function resetLookup() {
+    selectedSpace        = null;
+    workshopsAvailable   = true;
+    lookupInput.value    = '';
+    lookupResults.hidden = true;
+    editBtn.textContent  = t('editBtn', 'edit');
+    editBtn.hidden       = true;
+    enrichWarn.hidden    = true;
+    submitBtn.textContent = t('submitBtn', 'Submit to maintainers');
+    form.hidden = false;
+    form.reset();
+  }
+
+  editBtn.addEventListener('click', prefillAndEdit);
+
+  lookupInput.addEventListener('input', () => {
+    if (selectedSpace) { selectedSpace = null; editBtn.hidden = true; }
+    renderResults(searchSpaces(lookupInput.value));
+  });
+
+  lookupInput.addEventListener('focus', () => {
+    lookupInput.select();
+    renderResults(searchSpaces(''));
+  });
+
+  lookupInput.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (lookupResults.hidden) renderResults(searchSpaces(''));
+      setHighlight(highlightedIndex + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!lookupResults.hidden) setHighlight(highlightedIndex - 1);
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      const items = [...lookupResults.querySelectorAll('.addspace-lookup-item')];
+      if (items[highlightedIndex]?._loc) selectSpace(items[highlightedIndex]._loc);
+    } else if (e.key === 'Escape') {
+      lookupResults.hidden = true;
+      highlightedIndex = -1;
+    }
+  });
+
+  lookupInput.addEventListener('blur', () => {
+    setTimeout(() => { lookupResults.hidden = true; }, 150);
+  });
+
+  // ── Form submit ──
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await handleSubmit(e.target, loadTime, overlay);
+    await handleSubmit(e.target, loadTime, overlay, selectedSpace, workshopsAvailable);
   });
 }
 
 // ─── Form: build GitHub issue body ────────────────────────────────────────────
 
-function buildIssueBody(form) {
+function buildIssueBody(form, selectedSpace, workshopsAvailable) {
   const g = name => (form.elements[name]?.value || '').trim();
   const checked = [...form.querySelectorAll('input[name="workshop"]:checked')].map(el => el.value);
 
@@ -333,6 +566,7 @@ function buildIssueBody(form) {
     .join('\n');
 
   return [
+    selectedSpace ? `### Existing ID\n\n${selectedSpace.ID}` : null,
     `### Name\n\n${g('name')}`,
     `### Country\n\n${g('country')}`,
     `### City\n\n${g('city')}`,
@@ -343,28 +577,29 @@ function buildIssueBody(form) {
     `### Latitude\n\n${g('lat')}`,
     `### Longitude\n\n${g('long')}`,
     `### Style\n\n${g('style')}`,
-    `### Workshop types (optional)\n\n${workshopBlock}`,
+    `### Workshop types (optional)\n\n${workshopsAvailable ? workshopBlock : '_No response_'}`,
+    `### Workshops submitted\n\n${workshopsAvailable ? 'yes' : 'no'}`,
     `### Website (URL)\n\n${g('url')}`,
     `### Link display text\n\n${g('url_text')}`,
     `### Weekly open day (optional)\n\n${g('weekly_weekday') || '_No response_'}`,
     `### Weekly open time (optional)\n\n${g('weekly_time') || '_No response_'}`,
     `### SpaceAPI Endpoint (optional)\n\n${g('spaceapi') || '_No response_'}`,
     `### Event calendar URL (optional)\n\n${g('events_url') || '_No response_'}`,
-  ].join('\n\n');
+  ].filter(Boolean).join('\n\n');
 }
 
 // ─── Form: submit ─────────────────────────────────────────────────────────────
 
-async function handleSubmit(form, loadTime, overlay) {
+async function handleSubmit(form, loadTime, overlay, selectedSpace = null, workshopsAvailable = true) {
   const statusEl  = overlay.querySelector('.addspace-status');
   const submitBtn = overlay.querySelector('.addspace-submit-btn');
 
   // Honeypot
   if (form.elements['hp_url'].value !== '') return;
 
-  // Timing
-  if (Date.now() - loadTime < 3000) {
-    statusEl.textContent = 'Please take a moment to fill in the form completely.';
+  // Timing guard (skip for updates — fields were pre-filled, not typed)
+  if (!selectedSpace && Date.now() - loadTime < 3000) {
+    statusEl.textContent = t('statusTooFast', 'Please take a moment to fill in the form completely.');
     return;
   }
 
@@ -374,52 +609,50 @@ async function handleSubmit(form, loadTime, overlay) {
   const long = form.elements['long'].value.trim();
   const url  = form.elements['url'].value.trim();
   if (!name || !lat || !long || !url) {
-    statusEl.textContent = 'Please fill in all required fields.';
+    statusEl.textContent = t('statusRequired', 'Please fill in all required fields.');
     return;
   }
 
-  submitBtn.disabled  = true;
-  statusEl.textContent = 'Submitting…';
+  submitBtn.disabled   = true;
+  statusEl.textContent = t('statusSubmitting', 'Submitting…');
 
-  try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
+  const isUpdate = !!selectedSpace;
+  const title    = isUpdate
+    ? `update makerspace: ${name} (ID ${selectedSpace.ID})`
+    : `neuer Makerspace: ${name}`;
+  const labels   = isUpdate ? ['update-space'] : ['space-pending'];
+  const body     = buildIssueBody(form, selectedSpace, workshopsAvailable);
+
+  async function postIssue(withLabels) {
+    return fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-      body:    JSON.stringify({
-        title:  `neuer Makerspace: ${name}`,
-        body:   buildIssueBody(form),
-        labels: ['space-pending'],
-      }),
+      body:    JSON.stringify({ title, body, ...(withLabels ? { labels } : {}) }),
     });
+  }
+
+  try {
+    let res = await postIssue(true);
+
+    // 422 = label doesn't exist yet in the repo — retry without labels
+    if (res.status === 422) res = await postIssue(false);
 
     if (res.status === 201) {
       const issue = await res.json();
-      statusEl.innerHTML = `✅ Submitted! <a href="${issue.html_url}" target="_blank">View issue #${issue.number}</a>`;
+      const action = isUpdate
+        ? t('statusCorrectionSuccess', 'Correction submitted')
+        : t('statusSuccess', 'Submitted');
+      statusEl.innerHTML = `✅ ${action}! <a href="${issue.html_url}" target="_blank">${t('statusViewIssue', 'View issue')} #${issue.number}</a>`;
       submitBtn.disabled = false;
     } else if (res.status === 403 || res.status === 429) {
-      statusEl.textContent = 'Rate limit reached — please try again in an hour.';
+      statusEl.textContent = t('statusRateLimit', 'Rate limit reached — please try again in an hour.');
       submitBtn.disabled   = false;
-    } else if (res.status === 422) {
-      // Label "space-pending" doesn't exist yet — submit without label
-      const res2 = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-        body:    JSON.stringify({ title: `neuer Makerspace: ${name}`, body: buildIssueBody(form) }),
-      });
-      if (res2.status === 201) {
-        const issue = await res2.json();
-        statusEl.innerHTML = `✅ Submitted! <a href="${issue.html_url}" target="_blank">View issue #${issue.number}</a>`;
-        submitBtn.disabled = false;
-      } else {
-        statusEl.textContent = `Error ${res2.status}. Please try again.`;
-        submitBtn.disabled   = false;
-      }
     } else {
       statusEl.textContent = `Error ${res.status} — please try again.`;
       submitBtn.disabled   = false;
     }
   } catch {
-    statusEl.textContent = 'Network error — please check your connection.';
+    statusEl.textContent = t('statusNetworkError', 'Network error — please check your connection.');
     submitBtn.disabled   = false;
   }
 }

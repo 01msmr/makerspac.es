@@ -10,7 +10,7 @@ on:
         type: choice
         options:
           - research        # Analyse + neue Typen erkennen, keine Issues
-          - create-issues   # Issues erstellen + enrichment.json aktualisieren
+          - create-issues   # Issues erstellen + loc-enrichment.json aktualisieren
       limit:
         description: "Nur N Spaces (leer = alle)"
         required: false

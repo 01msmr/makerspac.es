@@ -1,6 +1,6 @@
 // tools/apply-workshop-issues.js
 // Liest offene GitHub Issues mit Label "workshop-data",
-// parst die vorgeschlagenen Workshop-Typen und trägt sie in enrichment.json ein.
+// parst die vorgeschlagenen Workshop-Typen und trägt sie in loc-enrichment.json ein.
 //
 // Usage:
 //   node tools/apply-workshop-issues.js             # Dry-Run
@@ -63,7 +63,7 @@ function parseIssue(issue) {
 
 function closeIssue(number) {
   execSync(
-    `gh issue close ${number} --comment "Angewendet auf enrichment.json"`,
+    `gh issue close ${number} --comment "Angewendet auf loc-enrichment.json"`,
     { cwd: root, stdio: 'pipe' }
   );
 }
@@ -72,7 +72,7 @@ function closeIssue(number) {
 
 async function main() {
   console.log('=== Apply Workshop Issues ===');
-  console.log(`Modus: ${applyMode ? 'APPLY (schreibt enrichment.json + schließt Issues)' : 'Dry-Run (--apply zum Anwenden)'}`);
+  console.log(`Modus: ${applyMode ? 'APPLY (schreibt loc-enrichment.json + schließt Issues)' : 'Dry-Run (--apply zum Anwenden)'}`);
   if (targetId) console.log(`Filter: Space-ID ${targetId}`);
   console.log('');
 
@@ -93,8 +93,8 @@ async function main() {
     return;
   }
 
-  // enrichment.json laden
-  const enrichmentPath = path.join(root, 'enrichment.json');
+  // loc-enrichment.json laden
+  const enrichmentPath = path.join(root, 'loc-enrichment.json');
   const enrichment = fs.existsSync(enrichmentPath)
     ? JSON.parse(fs.readFileSync(enrichmentPath, 'utf8'))
     : {};
@@ -149,7 +149,7 @@ async function main() {
     Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
   );
   fs.writeFileSync(enrichmentPath, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
-  console.log(`\nenrichment.json aktualisiert (${stats.applied} Einträge)`);
+  console.log(`\nloc-enrichment.json aktualisiert (${stats.applied} Einträge)`);
 
   console.log('');
   console.log('='.repeat(50));

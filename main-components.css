@@ -1096,7 +1096,7 @@ a#titleurl:hover h3.space-unknown .fas {
 /* Section headings */
 .embed-h3 {
   font-size: 1.1em;
-  margin: 28px 0 16px;
+  margin: 3em 0 0;
   background: blue;
   color: white;
   padding: 6px 10px;
@@ -1235,7 +1235,11 @@ a#titleurl:hover h3.space-unknown .fas {
 .addspace-form {
   display: flex;
   flex-direction: column;
+  background: white;
+  margin: 0 -20px;
+  padding: 0 20px 20px;
 }
+.addspace-form .embed-h3:first-of-type { margin-top: 1em; scroll-margin-top: 1em; }
 
 .addspace-label {
   display: block;
@@ -1323,6 +1327,128 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .addspace-status a { color: #0000ff; }
+
+/* ── Mode toggle ── */
+.addspace-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.addspace-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  user-select: none;
+}
+
+.addspace-mode-option input[type="radio"] {
+  width: 1.1em;
+  height: 1.1em;
+  cursor: pointer;
+  accent-color: #0000ff;
+  flex-shrink: 0;
+}
+
+/* ── Lookup widget (edit mode) ── */
+.addspace-lookup {
+  margin-bottom: 12px;
+}
+
+.addspace-lookup-field {
+  position: relative;
+}
+
+.addspace-lookup-input::placeholder {
+  color: var(--text-muted, #aaa);
+  font-style: italic;
+}
+
+.addspace-lookup-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.addspace-lookup-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--dropdown-border);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  font-size: 0.88em;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.addspace-lookup-item:last-child { border-bottom: none; }
+.addspace-lookup-item:hover,
+.addspace-lookup-item.is-active { background: var(--dropdown-hover-bg); }
+
+.addspace-edit-btn {
+  display: block;
+  margin-top: 10px;
+  background: #0000ff;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-family: var(--font-family);
+  font-size: 0.88em;
+  font-weight: 600;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.addspace-edit-btn:hover { background: #0000cc; }
+
+.addspace-top-area {
+  margin: -20px -20px 0;
+  padding: 20px 20px 2em;
+  background: #e0e0e0;
+}
+
+.addspace-lookup-divider {
+  border: none;
+  border-top: 4px solid var(--space-hover);
+  border-radius: 5px;
+  margin: 0 -20px 2em;
+}
+
+/* ── Enrichment warning ── */
+.addspace-enrich-warning {
+  font-size: 0.83em;
+  color: #a05000;
+  margin: 4px 0 8px;
+  padding: 6px 10px;
+  background: #fff8e6;
+  border-radius: 6px;
+  border: 1px solid #f0c060;
+}
+
+@media (prefers-color-scheme: dark) {
+  .addspace-enrich-warning {
+    background: #2a1a00;
+    border-color: #6a4000;
+    color: #f0b060;
+  }
+}
 
 /* ===================================
    BOOKMARK SYNC STYLES

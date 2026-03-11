@@ -164,7 +164,7 @@ jobs:
             console.log(JSON.stringify(newEntry, null, 2));
             console.log("=== END NEW ENTRY ===");
 
-            // === enrichment.json: workshops, events, spaceapi, weekly ===
+            // === loc-enrichment.json: workshops, events, spaceapi, weekly ===
 
             const enrichmentEntry = {};
 
@@ -225,19 +225,19 @@ jobs:
               enrichmentEntry.weekly = { "weekday": weekday, "time": weeklyTime };
             }
 
-            // enrichment.json schreiben (nur wenn es Daten gibt)
+            // loc-enrichment.json schreiben (nur wenn es Daten gibt)
             if (Object.keys(enrichmentEntry).length > 0) {
               let enrichment = {};
-              if (fs.existsSync('enrichment.json')) {
-                enrichment = JSON.parse(fs.readFileSync('enrichment.json', 'utf8'));
+              if (fs.existsSync('loc-enrichment.json')) {
+                enrichment = JSON.parse(fs.readFileSync('loc-enrichment.json', 'utf8'));
               }
               enrichment[String(nextId)] = enrichmentEntry;
               // Sortiert nach ID schreiben
               const sorted = Object.fromEntries(
                 Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
               );
-              fs.writeFileSync('enrichment.json', JSON.stringify(sorted, null, 2) + '\n');
-              console.log(`✅ enrichment.json: ID ${nextId} eingetragen (${Object.keys(enrichmentEntry).join(', ')})`);
+              fs.writeFileSync('loc-enrichment.json', JSON.stringify(sorted, null, 2) + '\n');
+              console.log(`✅ loc-enrichment.json: ID ${nextId} eingetragen (${Object.keys(enrichmentEntry).join(', ')})`);
             }
 
             // Einfügeposition finden (sortiert nach Land > PLZ > Name)

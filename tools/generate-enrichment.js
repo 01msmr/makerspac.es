@@ -1,6 +1,6 @@
 // tools/generate-enrichment.js
 // Einmalige Migration: extrahiert bestehende enrichable Felder aus locations.json
-// und erzeugt enrichment.json als neue Single-Source-of-Truth für crawler-pflegbare Daten.
+// und erzeugt loc-enrichment.json als neue Single-Source-of-Truth für crawler-pflegbare Daten.
 //
 // Führt keine Daten-Löschungen in locations.json durch — nur additiv.
 //
@@ -15,14 +15,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 
 const locationsPath = path.join(root, 'locations.json');
-const enrichmentPath = path.join(root, 'enrichment.json');
+const enrichmentPath = path.join(root, 'loc-enrichment.json');
 
 const PLACEHOLDER_WEEKDAY = 9;
 const PLACEHOLDER_INIT    = 20010000;
 
 const locations = JSON.parse(readFileSync(locationsPath, 'utf8'));
 
-// Bestehende enrichment.json einlesen falls vorhanden (merge, nicht überschreiben)
+// Bestehende loc-enrichment.json einlesen falls vorhanden (merge, nicht überschreiben)
 const existing = existsSync(enrichmentPath)
   ? JSON.parse(readFileSync(enrichmentPath, 'utf8'))
   : {};
@@ -82,12 +82,12 @@ const sorted = Object.fromEntries(
 
 writeFileSync(enrichmentPath, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
 
-console.log(`✅ enrichment.json geschrieben`);
+console.log(`✅ loc-enrichment.json geschrieben`);
 console.log(`   Einträge gesamt: ${Object.keys(sorted).length}`);
 console.log(`   Neu extrahiert:  ${added}`);
 console.log(`   Ohne Daten:      ${skipped}`);
 console.log('');
-console.log('Felder in enrichment.json:');
+console.log('Felder in loc-enrichment.json:');
 const fieldCounts = {};
 for (const entry of Object.values(sorted)) {
   for (const k of Object.keys(entry)) {

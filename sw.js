@@ -53,6 +53,7 @@ const STATIC_ASSETS = [
   '/search-header.js',
   '/nearby-header.js',
   '/embed.js',
+  '/embed-overlay.js',
   '/main.js',
   '/mobile-filter.js',
   '/map.js',

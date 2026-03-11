@@ -517,6 +517,384 @@
       "nl": "inbedden in jouw site",
       "da": "indlejr på dit websted",
       "uk": "вбудувати у свій сайт"
+    },
+    "tabIntro": {
+      "de": "Trage deinen Makerspace in die Karte ein. Ein Maintainer prüft und veröffentlicht ihn.",
+      "en": "Submit your makerspace to the map. A maintainer will review and publish it.",
+      "fr": "Soumettez votre makerspace à la carte. Un mainteneur le vérifiera et le publiera.",
+      "it": "Invia il tuo makerspace alla mappa. Un maintainer lo esaminerà e lo pubblicherà.",
+      "nl": "Dien jouw makerspace in voor de kaart. Een beheerder beoordeelt en publiceert het.",
+      "da": "Indsend din makerspace til kortet. En vedligeholder vil gennemgå og udgive det.",
+      "uk": "Додайте свій мейкерспейс на карту. Адміністратор перевірить і опублікує його."
+    },
+    "addToggle": {
+      "de": "Makerspace hinzufügen",
+      "en": "add makerspace",
+      "fr": "ajouter un makerspace",
+      "it": "aggiungi makerspace",
+      "nl": "makerspace toevoegen",
+      "da": "tilføj makerspace",
+      "uk": "додати мейкерспейс"
+    },
+    "editToggle": {
+      "de": "bestehenden Makerspace bearbeiten",
+      "en": "edit existing makerspace",
+      "fr": "modifier un makerspace existant",
+      "it": "modifica makerspace esistente",
+      "nl": "bestaande makerspace bewerken",
+      "da": "rediger eksisterende makerspace",
+      "uk": "редагувати існуючий мейкерспейс"
+    },
+    "lookupPlaceholder": {
+      "de": "Name oder ID — z.B. Toolbox Bodensee oder 45",
+      "en": "Name or ID — e.g. Toolbox Bodensee or 45",
+      "fr": "Nom ou ID — ex. Toolbox Bodensee ou 45",
+      "it": "Nome o ID — es. Toolbox Bodensee o 45",
+      "nl": "Naam of ID — bijv. Toolbox Bodensee of 45",
+      "da": "Navn eller ID — f.eks. Toolbox Bodensee eller 45",
+      "uk": "Назва або ID — напр. Toolbox Bodensee або 45"
+    },
+    "editBtn": {
+      "de": "bearbeite",
+      "en": "edit",
+      "fr": "modifier",
+      "it": "modifica",
+      "nl": "bewerken",
+      "da": "rediger",
+      "uk": "редагувати"
+    },
+    "sectionSpaceInfo": {
+      "de": "Space-Infos",
+      "en": "Space info",
+      "fr": "Infos sur l'espace",
+      "it": "Info sullo spazio",
+      "nl": "Space-info",
+      "da": "Space-info",
+      "uk": "Інфо про простір"
+    },
+    "required": {
+      "de": "Pflichtfeld",
+      "en": "required",
+      "fr": "obligatoire",
+      "it": "obbligatorio",
+      "nl": "verplicht",
+      "da": "påkrævet",
+      "uk": "обов'язково"
+    },
+    "optional": {
+      "de": "optional",
+      "en": "optional",
+      "fr": "facultatif",
+      "it": "facoltativo",
+      "nl": "optioneel",
+      "da": "valgfrit",
+      "uk": "необов'язково"
+    },
+    "labelName": {
+      "de": "Name",
+      "en": "Name",
+      "fr": "Nom",
+      "it": "Nome",
+      "nl": "Naam",
+      "da": "Navn",
+      "uk": "Назва"
+    },
+    "namePlaceholder": {
+      "de": "Name deines Makerspaces",
+      "en": "Your Makerspace Name",
+      "fr": "Nom de votre makerspace",
+      "it": "Nome del tuo makerspace",
+      "nl": "Naam van jouw makerspace",
+      "da": "Navn på din makerspace",
+      "uk": "Назва вашого мейкерспейсу"
+    },
+    "labelStyle": {
+      "de": "Stil",
+      "en": "Style",
+      "fr": "Style",
+      "it": "Stile",
+      "nl": "Stijl",
+      "da": "Stil",
+      "uk": "Стиль"
+    },
+    "labelWebsite": {
+      "de": "Website",
+      "en": "Website",
+      "fr": "Site web",
+      "it": "Sito web",
+      "nl": "Website",
+      "da": "Hjemmeside",
+      "uk": "Сайт"
+    },
+    "labelLinkText": {
+      "de": "Anzeigetext des Links",
+      "en": "Link display text",
+      "fr": "Texte du lien",
+      "it": "Testo del link",
+      "nl": "Linktekst",
+      "da": "Linktekst",
+      "uk": "Текст посилання"
+    },
+    "sectionLocation": {
+      "de": "Standort",
+      "en": "Location",
+      "fr": "Localisation",
+      "it": "Posizione",
+      "nl": "Locatie",
+      "da": "Placering",
+      "uk": "Розташування"
+    },
+    "labelCountry": {
+      "de": "Land",
+      "en": "Country",
+      "fr": "Pays",
+      "it": "Paese",
+      "nl": "Land",
+      "da": "Land",
+      "uk": "Країна"
+    },
+    "labelCity": {
+      "de": "Stadt",
+      "en": "City",
+      "fr": "Ville",
+      "it": "Città",
+      "nl": "Stad",
+      "da": "By",
+      "uk": "Місто"
+    },
+    "labelStreet": {
+      "de": "Straße",
+      "en": "Street",
+      "fr": "Rue",
+      "it": "Via",
+      "nl": "Straat",
+      "da": "Gade",
+      "uk": "Вулиця"
+    },
+    "labelStreetNr": {
+      "de": "Nr.",
+      "en": "Nr.",
+      "fr": "N°",
+      "it": "N.",
+      "nl": "Nr.",
+      "da": "Nr.",
+      "uk": "№"
+    },
+    "labelPostalCode": {
+      "de": "Postleitzahl",
+      "en": "Postal code",
+      "fr": "Code postal",
+      "it": "Codice postale",
+      "nl": "Postcode",
+      "da": "Postnummer",
+      "uk": "Поштовий індекс"
+    },
+    "labelAddressAddition": {
+      "de": "Adresszusatz",
+      "en": "Address addition",
+      "fr": "Complément d'adresse",
+      "it": "Informazioni aggiuntive",
+      "nl": "Adrestoevoeging",
+      "da": "Adressetillæg",
+      "uk": "Додаток до адреси"
+    },
+    "addressAdditionPlaceholder": {
+      "de": "z.B. Hinterhaus, EG",
+      "en": "e.g. Apt. 2, Building B",
+      "fr": "ex. Bât. B, RDC",
+      "it": "es. Interno 2, Piano T",
+      "nl": "bijv. Achtergebouw, BG",
+      "da": "f.eks. Baghus, stuen",
+      "uk": "напр. кв. 2, корп. Б"
+    },
+    "labelLatitude": {
+      "de": "Breitengrad",
+      "en": "Latitude",
+      "fr": "Latitude",
+      "it": "Latitudine",
+      "nl": "Breedtegraad",
+      "da": "Breddegrad",
+      "uk": "Широта"
+    },
+    "labelLongitude": {
+      "de": "Längengrad",
+      "en": "Longitude",
+      "fr": "Longitude",
+      "it": "Longitudine",
+      "nl": "Lengtegraad",
+      "da": "Længdegrad",
+      "uk": "Довгота"
+    },
+    "sectionWorkshops": {
+      "de": "Werkstätten",
+      "en": "Workshops",
+      "fr": "Ateliers",
+      "it": "Laboratori",
+      "nl": "Werkplaatsen",
+      "da": "Værksteder",
+      "uk": "Майстерні"
+    },
+    "workshopLoadError": {
+      "de": "⚠ Werkstatt-Daten konnten nicht geladen werden — bitte alle zutreffenden Werkstätten manuell auswählen.",
+      "en": "⚠ Workshop data could not be loaded — please check all workshops that apply manually.",
+      "fr": "⚠ Les données des ateliers n'ont pas pu être chargées — veuillez cocher manuellement les ateliers applicables.",
+      "it": "⚠ I dati dei laboratori non sono stati caricati — seleziona manualmente i laboratori pertinenti.",
+      "nl": "⚠ Werkplaatsgegevens konden niet worden geladen — selecteer handmatig de van toepassing zijnde werkplaatsen.",
+      "da": "⚠ Værkstedsdata kunne ikke indlæses — vælg venligst de relevante værksteder manuelt.",
+      "uk": "⚠ Не вдалося завантажити дані про майстерні — будь ласка, відмітьте їх вручну."
+    },
+    "sectionMeeting": {
+      "de": "Regelmäßiges Treffen",
+      "en": "Regular meeting",
+      "fr": "Réunion régulière",
+      "it": "Incontro regolare",
+      "nl": "Regelmatige bijeenkomst",
+      "da": "Regelmæssigt møde",
+      "uk": "Регулярна зустріч"
+    },
+    "labelWeekday": {
+      "de": "Wochentag",
+      "en": "Weekday",
+      "fr": "Jour de la semaine",
+      "it": "Giorno della settimana",
+      "nl": "Weekdag",
+      "da": "Ugedag",
+      "uk": "День тижня"
+    },
+    "weekdayNone": {
+      "de": "— keiner —",
+      "en": "— none —",
+      "fr": "— aucun —",
+      "it": "— nessuno —",
+      "nl": "— geen —",
+      "da": "— ingen —",
+      "uk": "— немає —"
+    },
+    "labelTime": {
+      "de": "Uhrzeit",
+      "en": "Time",
+      "fr": "Heure",
+      "it": "Orario",
+      "nl": "Tijdstip",
+      "da": "Tidspunkt",
+      "uk": "Час"
+    },
+    "sectionOnline": {
+      "de": "Online-Präsenz",
+      "en": "Online presence",
+      "fr": "Présence en ligne",
+      "it": "Presenza online",
+      "nl": "Online aanwezigheid",
+      "da": "Online tilstedeværelse",
+      "uk": "Онлайн-присутність"
+    },
+    "labelSpaceAPI": {
+      "de": "SpaceAPI-Endpunkt",
+      "en": "SpaceAPI Endpoint",
+      "fr": "Point de terminaison SpaceAPI",
+      "it": "Endpoint SpaceAPI",
+      "nl": "SpaceAPI-eindpunt",
+      "da": "SpaceAPI-endepunkt",
+      "uk": "SpaceAPI-ендпоінт"
+    },
+    "labelEventsUrl": {
+      "de": "Veranstaltungskalender-URL",
+      "en": "Event calendar URL",
+      "fr": "URL du calendrier d'événements",
+      "it": "URL calendario eventi",
+      "nl": "URL evenementenkalender",
+      "da": "URL til begivenhedskalender",
+      "uk": "URL календаря подій"
+    },
+    "submitBtn": {
+      "de": "An Maintainer senden",
+      "en": "Submit to maintainers",
+      "fr": "Envoyer aux mainteneurs",
+      "it": "Invia ai maintainer",
+      "nl": "Verstuur naar beheerders",
+      "da": "Send til vedligeholdere",
+      "uk": "Надіслати адміністраторам"
+    },
+    "submitCorrectionBtn": {
+      "de": "Korrektur senden",
+      "en": "Submit correction",
+      "fr": "Envoyer la correction",
+      "it": "Invia correzione",
+      "nl": "Correctie versturen",
+      "da": "Send rettelse",
+      "uk": "Надіслати виправлення"
+    },
+    "statusTooFast": {
+      "de": "Bitte nimm dir einen Moment, um das Formular vollständig auszufüllen.",
+      "en": "Please take a moment to fill in the form completely.",
+      "fr": "Veuillez prendre le temps de remplir le formulaire complètement.",
+      "it": "Ti preghiamo di compilare il modulo completamente.",
+      "nl": "Neem even de tijd om het formulier volledig in te vullen.",
+      "da": "Tag venligst et øjeblik til at udfylde formularen.",
+      "uk": "Будь ласка, витратьте хвилину на повне заповнення форми."
+    },
+    "statusRequired": {
+      "de": "Bitte fülle alle Pflichtfelder aus.",
+      "en": "Please fill in all required fields.",
+      "fr": "Veuillez remplir tous les champs obligatoires.",
+      "it": "Compila tutti i campi obbligatori.",
+      "nl": "Vul alle verplichte velden in.",
+      "da": "Udfyld venligst alle påkrævede felter.",
+      "uk": "Будь ласка, заповніть усі обов'язкові поля."
+    },
+    "statusSubmitting": {
+      "de": "Wird gesendet…",
+      "en": "Submitting…",
+      "fr": "Envoi en cours…",
+      "it": "Invio in corso…",
+      "nl": "Verzenden…",
+      "da": "Sender…",
+      "uk": "Надсилання…"
+    },
+    "statusRateLimit": {
+      "de": "Limit erreicht — bitte in einer Stunde erneut versuchen.",
+      "en": "Rate limit reached — please try again in an hour.",
+      "fr": "Limite atteinte — réessayez dans une heure.",
+      "it": "Limite raggiunto — riprova tra un'ora.",
+      "nl": "Limiet bereikt — probeer het over een uur opnieuw.",
+      "da": "Grænse nået — prøv igen om en time.",
+      "uk": "Ліміт вичерпано — спробуйте знову через годину."
+    },
+    "statusNetworkError": {
+      "de": "Netzwerkfehler — bitte Verbindung prüfen.",
+      "en": "Network error — please check your connection.",
+      "fr": "Erreur réseau — vérifiez votre connexion.",
+      "it": "Errore di rete — controlla la connessione.",
+      "nl": "Netwerkfout — controleer je verbinding.",
+      "da": "Netværksfejl — kontroller din forbindelse.",
+      "uk": "Помилка мережі — перевірте з'єднання."
+    },
+    "statusSuccess": {
+      "de": "Eingereicht",
+      "en": "Submitted",
+      "fr": "Soumis",
+      "it": "Inviato",
+      "nl": "Ingediend",
+      "da": "Indsendt",
+      "uk": "Надіслано"
+    },
+    "statusCorrectionSuccess": {
+      "de": "Korrektur eingereicht",
+      "en": "Correction submitted",
+      "fr": "Correction soumise",
+      "it": "Correzione inviata",
+      "nl": "Correctie ingediend",
+      "da": "Rettelse indsendt",
+      "uk": "Виправлення надіслано"
+    },
+    "statusViewIssue": {
+      "de": "Issue ansehen",
+      "en": "View issue",
+      "fr": "Voir l'issue",
+      "it": "Vedi issue",
+      "nl": "Bekijk issue",
+      "da": "Se issue",
+      "uk": "Переглянути issue"
     }
   },
   "searchPlaceholder": {

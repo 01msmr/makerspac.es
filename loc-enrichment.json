@@ -18,9 +18,6 @@
     "weekly": {
       "weekday": 4,
       "time": 1900
-    },
-    "dates": {
-      "space.init": 20140301
     }
   },
   "2": {
@@ -111,9 +108,6 @@
   "19": {
     "spaceapi": {
       "endpoint": "https://spaceapi.afra-berlin.de/v1/status.json"
-    },
-    "dates": {
-      "space.init": 20130629
     }
   },
   "20": {
@@ -220,9 +214,6 @@
     "weekly": {
       "weekday": 6,
       "time": 1900
-    },
-    "dates": {
-      "space.init": 20160226
     }
   },
   "41": {
@@ -299,9 +290,6 @@
     "weekly": {
       "weekday": 1,
       "time": 2000
-    },
-    "dates": {
-      "space.init": 19900719
     }
   },
   "53": {
@@ -318,9 +306,6 @@
     "weekly": {
       "weekday": 5,
       "time": 1800
-    },
-    "dates": {
-      "space.init": 20140828
     }
   },
   "55": {
@@ -331,9 +316,6 @@
     "weekly": {
       "weekday": 2,
       "time": 1900
-    },
-    "dates": {
-      "space.init": 20150213
     }
   },
   "56": {
@@ -341,48 +323,30 @@
     "weekly": {
       "weekday": 3,
       "time": 1500
-    },
-    "dates": {
-      "space.init": 20010101
     }
   },
   "57": {
     "events": "https://www.mainframe.io/calendar/",
     "spaceapi": {
       "endpoint": "https://status.mainframe.io/api/spaceInfo"
-    },
-    "dates": {
-      "space.init": 20110701
     }
   },
   "58": {
-    "events": "https://kreativkellerei.de/termine/",
-    "dates": {
-      "space.init": 20220525
-    }
+    "events": "https://kreativkellerei.de/termine/"
   },
   "59": {
     "events": "https://makerspace-aurich.de/series/workshops/",
     "spaceapi": {
       "endpoint": "https://api.thingspeak.com/channels/1222682/fields/1/last"
-    },
-    "dates": {
-      "space.init": 20150406
     }
   },
   "60": {
-    "events": "https://www.landkreis-leer.de/Aktuelles/Termine/index.php?ModID=11&object=tx%2C3399.4.1&La=1&NavID=3399.86&text=Maker&kat=3399.502%2C3399.209%2C3399.505%2C3399.210%2C3399.522%2C2667.5%2C3399.507%2C3399.517%2C2667.11%2C3399.503%2C3399.571%2C3399.506%2C2667.6%2C2667.529%2C2667.4%2C2667.528%2C3399.547%2C2667.7%2C3399.570&dat_tv=&dat_tb=&kuo=1&sfvort=1&sfreg=1&sfort=1&max=12",
-    "dates": {
-      "space.init": 20231130
-    }
+    "events": "https://www.landkreis-leer.de/Aktuelles/Termine/index.php?ModID=11&object=tx%2C3399.4.1&La=1&NavID=3399.86&text=Maker&kat=3399.502%2C3399.209%2C3399.505%2C3399.210%2C3399.522%2C2667.5%2C3399.507%2C3399.517%2C2667.11%2C3399.503%2C3399.571%2C3399.506%2C2667.6%2C2667.529%2C2667.4%2C2667.528%2C3399.547%2C2667.7%2C3399.570&dat_tv=&dat_tb=&kuo=1&sfvort=1&sfreg=1&sfort=1&max=12"
   },
   "61": {
     "weekly": {
       "weekday": 3,
       "time": 1830
-    },
-    "dates": {
-      "space.init": 20231130
     }
   },
   "62": {
@@ -453,9 +417,6 @@
     "events": "https://makerspace-gt.de/termine/",
     "spaceapi": {
       "endpoint": "https://makerspace-gt.de/space-api/space-api.json"
-    },
-    "dates": {
-      "space.init": 20181013
     }
   },
   "75": {
@@ -492,10 +453,7 @@
     "events": "https://macherburg.de/workshops/"
   },
   "83": {
-    "events": "https://www.netz39.de/events",
-    "dates": {
-      "space.init": 20120701
-    }
+    "events": "https://www.netz39.de/events"
   },
   "85": {
     "events": "https://www.werkundkultur.de/tag/veranstaltungen/"
@@ -530,24 +488,14 @@
   "94": {
     "events": "https://www.ideenwerk.me/termine/"
   },
-  "95": {
-    "dates": {
-      "space.init": 20200101
-    }
-  },
+  "95": {},
   "96": {
-    "events": "https://www.chaostreff-dortmund.de/veranstaltungen",
-    "dates": {
-      "space.init": 20090101
-    }
+    "events": "https://www.chaostreff-dortmund.de/veranstaltungen"
   },
   "97": {
     "events": "https://wiki.das-labor.org/w/Kalender",
     "spaceapi": {
       "endpoint": "https://das-labor.org/status/api"
-    },
-    "dates": {
-      "space.init": 20050115
     }
   },
   "98": {
@@ -589,16 +537,10 @@
     "events": "https://www.th-koeln.de/forschung/seminare_2946.php"
   },
   "118": {
-    "events": "https://klugev.de/kalender/",
-    "dates": {
-      "space.init": 20200701
-    }
+    "events": "https://klugev.de/kalender/"
   },
   "119": {
-    "events": "https://dingfabrik.de/veranstaltungen",
-    "dates": {
-      "space.init": 20100712
-    }
+    "events": "https://dingfabrik.de/veranstaltungen"
   },
   "120": {
     "events": "https://koeln.ccc.de/c4/veranstaltungen.xml",
@@ -610,36 +552,19 @@
     "events": "https://probierwerk.com/events/"
   },
   "122": {
-    "events": "https://werkraum47.de/veranstaltungen",
-    "dates": {
-      "space.init": 20200601
-    }
+    "events": "https://werkraum47.de/veranstaltungen"
   },
-  "123": {
-    "dates": {
-      "space.init": 19800130
-    }
-  },
+  "123": {},
   "124": {
     "events": "https://aachen.ccc.de",
     "spaceapi": {
       "endpoint": "https://status.aachen.ccc.de/spaceapi"
-    },
-    "dates": {
-      "space.init": 20020101
     }
   },
   "125": {
-    "events": "https://digitac.cc/veranstaltungen/",
-    "dates": {
-      "space.init": 20020101
-    }
+    "events": "https://digitac.cc/veranstaltungen/"
   },
-  "126": {
-    "dates": {
-      "space.init": 201606025
-    }
-  },
+  "126": {},
   "127": {
     "events": "https://hci.rwth-aachen.de/#news"
   },
@@ -658,19 +583,13 @@
     }
   },
   "133": {
-    "events": "http://maschinendeck.org/events",
-    "dates": {
-      "space.init": 20140701
-    }
+    "events": "http://maschinendeck.org/events"
   },
   "135": {
     "events": "https://offenewerkstattmainz.de/kalender/"
   },
   "136": {
-    "events": "https://www.umwelt-campus.de/campus/aktuelles/termine-veranstaltungen",
-    "dates": {
-      "space.init": 20200113
-    }
+    "events": "https://www.umwelt-campus.de/campus/aktuelles/termine-veranstaltungen"
   },
   "137": {
     "events": "https://kreativ-werkstatt.yooco.de/events/index.html"
@@ -733,17 +652,11 @@
     "events": "https://www.hacksaar.de/termin/",
     "spaceapi": {
       "endpoint": "http://spaceapi.hacksaar.de/status.json"
-    },
-    "dates": {
-      "space.init": 20110201
     }
   },
   "156": {
     "spaceapi": {
       "endpoint": "https://lugsaar.de/spaceapi/api.json"
-    },
-    "dates": {
-      "space.init": 19991201
     }
   },
   "157": {
@@ -842,10 +755,7 @@
     "events": "https://www.uni-konstanz.de/universitaetsentwicklung-forschung-und-transfer/wissens-und-technologietransfer-wtt/fablab-konstanz/veranstaltungen-termine/"
   },
   "192": {
-    "events": "https://cccfr.de/calendar",
-    "dates": {
-      "space.init": 20100306
-    }
+    "events": "https://cccfr.de/calendar"
   },
   "194": {
     "events": "https://www.fablab-muenchen.de/kalender/"
@@ -938,9 +848,6 @@
     "events": "https://technikkultur-erfurt.de/kalender/",
     "spaceapi": {
       "endpoint": "https://status.bytespeicher.org/status.json"
-    },
-    "dates": {
-      "space.init": 20131101
     }
   },
   "234": {
@@ -1024,51 +931,44 @@
     "events": "https://calendar.google.com/calendar/u/0/embed?src=sruulkb8vh28dim9bcth8emdm4@group.calendar.google.com&ctz=Europe/Zurich",
     "spaceapi": {
       "endpoint": "https://fixme.ch/cgi-bin/spaceapi.py"
-    },
-    "dates": {
-      "space.init": 20101003
     }
   },
   "252": {
     "events": "https://chaosbern.ch/calendar",
     "spaceapi": {
       "endpoint": "https://www.chaosbern.ch/spaceapi.json"
-    },
-    "dates": {
-      "space.init": 20200701
     }
   },
   "253": {
     "events": "https://luxeria.ch/tags#events",
     "spaceapi": {
       "endpoint": "https://luxeria.ch/spaceapi.json"
-    },
-    "dates": {
-      "space.init": 20100224
     }
   },
   "254": {
     "spaceapi": {
       "endpoint": "https://api.ccczh.space/api/v13"
-    },
-    "dates": {
-      "space.init": 20200701
     }
   },
   "255": {
     "events": "https://amiv.ethz.ch/en/events",
     "spaceapi": {
       "endpoint": "https://bastli.ch/hackspace_api.php"
-    },
-    "dates": {
-      "space.init": 20200701
     }
   },
   "256": {
     "events": "https://odenwilusenz.ch/odw/veranstaltungen/",
-    "dates": {
-      "space.init": 20030101
-    }
+    "weekly": {
+      "weekday": 3,
+      "time": 1900
+    },
+    "workshops": [
+      "3d",
+      "coding",
+      "electronics",
+      "laser",
+      "textile"
+    ]
   },
   "257": {
     "events": "https://fablabwinti.ch/kalender/",
@@ -1085,9 +985,6 @@
     "spaceapi": {
       "endpoint": "https://status.crdmp.ch"
     },
-    "dates": {
-      "space.init": 20130826
-    },
     "workshops": [
       "3d",
       "cnc",
@@ -1102,9 +999,6 @@
     "events": "https://zigerschlitzmakers.ch/veranstaltungskalender/",
     "spaceapi": {
       "endpoint": "https://api.zigerschlitzmakers.ch/space-api.json"
-    },
-    "dates": {
-      "space.init": 20130826
     },
     "workshops": [
       "3d",
@@ -1172,17 +1066,11 @@
     "events": "https://juze-cr.de/calendar/kalender/",
     "spaceapi": {
       "endpoint": "https://spaceapi.juze-cr.de"
-    },
-    "dates": {
-      "space.init": 20260201
     }
   },
   "275": {
     "spaceapi": {
       "endpoint": "https://makerspaceleiden.nl/crm/spaceapi/0.13"
-    },
-    "dates": {
-      "space.init": 20260201
     }
   },
   "276": {
@@ -1193,9 +1081,6 @@
     "weekly": {
       "weekday": 1,
       "time": 1800
-    },
-    "dates": {
-      "space.init": 20160101
     }
   },
   "277": {
@@ -1210,9 +1095,6 @@
     "weekly": {
       "weekday": 9,
       "time": 1800
-    },
-    "dates": {
-      "space.init": 20260221
     }
   }
 }

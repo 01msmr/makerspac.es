@@ -1,0 +1,209 @@
+name: "✏️ Makerspace Update PR Generator"
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  update-pr:
+    if: github.event.label.name == 'update-space'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Process Update and Patch JSON
+        id: update_script
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const body = context.payload.issue.body || "";
+
+            function parseFormFields(body) {
+              const fields = {};
+              const lines = body.split('\n');
+              let currentLabel = null;
+              let currentValue = [];
+              for (const line of lines) {
+                if (line.startsWith('### ')) {
+                  if (currentLabel) fields[currentLabel] = currentValue.join('\n').trim();
+                  currentLabel = line.substring(4).trim();
+                  currentValue = [];
+                } else if (currentLabel) {
+                  currentValue.push(line);
+                }
+              }
+              if (currentLabel) fields[currentLabel] = currentValue.join('\n').trim();
+              return fields;
+            }
+
+            const fields = parseFormFields(body);
+
+            function getField(label, fallback = "") {
+              const value = fields[label];
+              if (!value || value === "_No response_" || value === "None") return fallback;
+              return value;
+            }
+
+            function getNumber(label) {
+              const v = getField(label, "").replace(',', '.');
+              const n = parseFloat(v);
+              return isNaN(n) ? null : n;
+            }
+
+            function getInt(label) {
+              const v = getField(label, "");
+              const n = parseInt(v, 10);
+              return isNaN(n) ? null : n;
+            }
+
+            // ── Validate Existing ID ──
+            const existingId = getInt("Existing ID");
+            if (!existingId) {
+              core.setFailed("Missing or invalid Existing ID in issue body.");
+              return;
+            }
+
+            // ── Load and find location ──
+            let locations = JSON.parse(fs.readFileSync('locations.json', 'utf8'));
+            const idx = locations.findIndex(l => l.ID === existingId);
+            if (idx === -1) {
+              core.setFailed(`Space with ID ${existingId} not found in locations.json.`);
+              return;
+            }
+
+            // Deep clone so we can compare later if needed
+            const space = JSON.parse(JSON.stringify(locations[idx]));
+
+            // ── Patch helper: only overwrite if submitted value is non-empty ──
+            const patch = (current, label) => getField(label) || current;
+
+            // locations.json fields
+            space.name            = patch(space.name,            'Name');
+            space.style           = patch(space.style,           'Style');
+            space.link.url        = patch(space.link.url,        'Website (URL)');
+            space.link.text       = patch(space.link.text,       'Link display text');
+            space.loc.city        = patch(space.loc.city,        'City');
+            space.loc.country     = patch(space.loc.country,     'Country');
+            space.loc.street.name = patch(space.loc.street.name, 'Street');
+            space.loc.street.number = patch(space.loc.street.number, 'Street number');
+
+            const streetExt = getField('Address addition');
+            if (streetExt) space.loc.street.ext = streetExt;
+
+            const newPlz  = getInt('Postal code');
+            if (newPlz)  space.loc.plz  = newPlz;
+
+            const newLat  = getNumber('Latitude');
+            if (newLat)  space.loc.lat  = newLat;
+
+            const newLong = getNumber('Longitude');
+            if (newLong) space.loc.long = newLong;
+
+            // Always update datacheck.latest
+            const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+            space.dates = { ...space.dates, 'datacheck.latest': today };
+
+            locations[idx] = space;
+            fs.writeFileSync('locations.json', JSON.stringify(locations, null, 2));
+            console.log(`✅ locations.json: ID ${existingId} patched`);
+
+            // ── loc-enrichment.json ──
+            let enrichment = {};
+            if (fs.existsSync('loc-enrichment.json')) {
+              enrichment = JSON.parse(fs.readFileSync('loc-enrichment.json', 'utf8'));
+            }
+            const enr = enrichment[String(existingId)] || {};
+
+            // Workshops — only update if the form confirmed workshops were available
+            const workshopsSubmitted = getField('Workshops submitted') === 'yes';
+            if (workshopsSubmitted) {
+              const workshopsRaw = getField('Workshop types (optional)', '');
+              const workshopLabelMap = {
+                "3D printing": "3d", "Laser cutting": "laser", "CNC": "cnc",
+                "Electronics": "electronics", "Coding": "coding", "VR": "vr",
+                "Music": "music", "Photography": "photo", "Woodworking": "wood",
+                "Metalworking": "metal", "Bike repair": "bike", "Textile": "textile",
+                "Screen printing": "screenprint", "Ceramics": "ceramics"
+              };
+              const workshops = [];
+              for (const [label, key] of Object.entries(workshopLabelMap)) {
+                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
+                  workshops.push(key);
+                }
+              }
+              if (workshops.length) {
+                enr.workshops = workshops;
+              } else {
+                delete enr.workshops;
+              }
+            }
+
+            // SpaceAPI
+            const spaceapi = getField('SpaceAPI Endpoint (optional)');
+            if (spaceapi && spaceapi.startsWith('http')) enr.spaceapi = { endpoint: spaceapi };
+
+            // Events
+            const eventsUrl = getField('Event calendar URL (optional)');
+            if (eventsUrl && eventsUrl.startsWith('http')) enr.events = eventsUrl;
+
+            // Weekly meeting
+            const weekdayMap = {
+              "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3,
+              "Thursday": 4, "Friday": 5, "Saturday": 6
+            };
+            const weekdayRaw = getField('Weekly open day (optional)');
+            if (weekdayRaw === '— none —') {
+              delete enr.weekly;
+            } else {
+              const weekday = weekdayMap[weekdayRaw];
+              if (weekday !== undefined) {
+                const weeklyTime = getInt('Weekly open time (optional)') ?? (enr.weekly?.time ?? 0);
+                enr.weekly = { weekday, time: weeklyTime };
+              }
+            }
+
+            // Write enrichment (remove entry entirely if now empty)
+            if (Object.keys(enr).length > 0) {
+              enrichment[String(existingId)] = enr;
+            } else {
+              delete enrichment[String(existingId)];
+            }
+            const sorted = Object.fromEntries(
+              Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0]))
+            );
+            fs.writeFileSync('loc-enrichment.json', JSON.stringify(sorted, null, 2) + '\n');
+            console.log(`✅ loc-enrichment.json: ID ${existingId} patched`);
+
+            core.setOutput('space_name', space.name);
+            core.setOutput('space_id',   String(existingId));
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update makerspace: ${{ steps.update_script.outputs.space_name }} (ID ${{ steps.update_script.outputs.space_id }})"
+          title: "✏️ Update: ${{ steps.update_script.outputs.space_name }} (ID ${{ steps.update_script.outputs.space_id }})"
+          branch: "update-space-id-${{ steps.update_script.outputs.space_id }}"
+          base: main
+          delete-branch: true
+          body: |
+            Automatischer Update-PR für: **${{ steps.update_script.outputs.space_name }}**
+            ID: `${{ steps.update_script.outputs.space_id }}`
+
+            Basierend auf Issue #${{ github.event.issue.number }}
+          labels: automated-pr
+
+      - name: Feedback Comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ✅ Update-PR erstellt für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`)

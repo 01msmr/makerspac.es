@@ -37,14 +37,14 @@ const COUNTRY_CODES = {
 const PLACEHOLDER_WEEKDAY = 9;
 const PLACEHOLDER_INIT    = 20010000;
 
-// enrichment.json einlesen (optional — Defaults für crawler-pflegbare Felder)
-const enrichmentPath = path.join(__dirname, 'enrichment.json');
+// loc-enrichment.json einlesen (optional — Defaults für crawler-pflegbare Felder)
+const enrichmentPath = path.join(__dirname, 'loc-enrichment.json');
 const enrichment = existsSync(enrichmentPath)
   ? JSON.parse(readFileSync(enrichmentPath, 'utf8'))
   : {};
 
 /**
- * Reichert einen Location-Eintrag mit Daten aus enrichment.json an.
+ * Reichert einen Location-Eintrag mit Daten aus loc-enrichment.json an.
  * Regel: Echte Werte in locations.json gewinnen immer — enrichment füllt nur Lücken/Platzhalter.
  * @param {object} loc
  * @returns {object}
@@ -81,7 +81,7 @@ const locations     = rawLocations.map(applyEnrichment);
 
 const enrichedCount = locations.filter((loc, i) => loc !== rawLocations[i]).length;
 if (enrichedCount > 0) {
-  console.log(`ℹ️  enrichment.json: ${enrichedCount} Spaces angereichert`);
+  console.log(`ℹ️  loc-enrichment.json: ${enrichedCount} Spaces angereichert`);
 }
 
 // Output-Verzeichnis anlegen
