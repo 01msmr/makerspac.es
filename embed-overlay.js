@@ -261,7 +261,15 @@ function showOverlay() {
                 <label class="addspace-label">${t('labelWeekday', 'Weekday')}</label>
                 <select name="weekly_weekday" class="addspace-input">
                   <option value="">${t('weekdayNone', '— none —')}</option>
-                  ${opt(WEEKDAYS)}
+                  ${opt([
+                    ['Monday',    t('weekdayMonday',    'Monday')],
+                    ['Tuesday',   t('weekdayTuesday',   'Tuesday')],
+                    ['Wednesday', t('weekdayWednesday', 'Wednesday')],
+                    ['Thursday',  t('weekdayThursday',  'Thursday')],
+                    ['Friday',    t('weekdayFriday',    'Friday')],
+                    ['Saturday',  t('weekdaySaturday',  'Saturday')],
+                    ['Sunday',    t('weekdaySunday',    'Sunday')],
+                  ])}
                 </select>
               </div>
               <div>
