@@ -15,8 +15,9 @@ const WORKSHOPS = [
   ['Textile', 'textile'], ['Screen printing', 'screenprint'], ['Ceramics', 'ceramics'],
 ];
 
-// i18n shorthand — addMakerspace namespace
-const t = (key, fb) => window.i18n?.t(`addMakerspace.${key}`) ?? fb;
+// i18n shorthands
+const t  = (key, fb) => window.i18n?.t(`addMakerspace.${key}`) ?? fb;  // addMakerspace namespace
+const ti = (key, fb) => window.i18n?.t(key) ?? fb;                      // full key path
 
 // null = not yet fetched; false = fetch failed; object = data
 let _enrichmentCache = null;
@@ -46,7 +47,10 @@ function esc(s) {
 }
 
 function opt(values, selected = '') {
-  return values.map(v => `<option${v === selected ? ' selected' : ''}>${v}</option>`).join('');
+  return values.map(v => {
+    const [val, label] = Array.isArray(v) ? v : [v, v];
+    return `<option value="${val}"${val === selected ? ' selected' : ''}>${label}</option>`;
+  }).join('');
 }
 
 // ─── Enrichment fetch + space search ──────────────────────────────────────────
@@ -177,8 +181,13 @@ function showOverlay() {
             <label class="addspace-label">${t('labelName', 'Name')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
             <input type="text" name="name" class="addspace-input" required placeholder="${t('namePlaceholder', 'Your Makerspace Name')}">
 
-            <label class="addspace-label">${t('labelStyle', 'Style')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-            <select name="style" class="addspace-input">${opt(STYLES)}</select>
+            <label class="addspace-label">${ti('filter.style', 'Style')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
+            <select name="style" class="addspace-input">${opt([
+              ['for all',      ti('style.forAll',      'for all')],
+              ['for youth',    ti('style.forYouth',    'for youth')],
+              ['for students', ti('style.forStudents', 'for students')],
+              ['commercial',   ti('style.commercial',  'commercial')],
+            ])}</select>
 
             <label class="addspace-label">${t('labelWebsite', 'Website')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
             <input type="url" name="url" class="addspace-input" required placeholder="https://yourspace.org">
@@ -190,8 +199,17 @@ function showOverlay() {
 
             <div class="addspace-row">
               <div>
-                <label class="addspace-label">${t('labelCountry', 'Country')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-                <select name="country" class="addspace-input">${opt(COUNTRIES)}</select>
+                <label class="addspace-label">${ti('filter.country', 'Country')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
+                <select name="country" class="addspace-input">${opt([
+                  ['Germany',     ti('countries.Germany',     'Germany')],
+                  ['Austria',     ti('countries.Austria',     'Austria')],
+                  ['Switzerland', ti('countries.Switzerland', 'Switzerland')],
+                  ['Netherlands', ti('countries.Netherlands', 'Netherlands')],
+                  ['Belgium',     ti('countries.Belgium',     'Belgium')],
+                  ['Denmark',     ti('countries.Denmark',     'Denmark')],
+                  ['Ukraine',     ti('countries.Ukraine',     'Ukraine')],
+                  ['other',       t('countryOther',           'other')],
+                ])}</select>
               </div>
               <div>
                 <label class="addspace-label">${t('labelCity', 'City')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
@@ -228,12 +246,12 @@ function showOverlay() {
               </div>
             </div>
 
-            <h3 class="embed-h3">${t('sectionWorkshops', 'Workshops')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
+            <h3 class="embed-h3">${ti('filter.workshops', 'Workshops')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
             <p class="addspace-enrich-warning" hidden>${t('workshopLoadError', '⚠ Workshop data could not be loaded — please check all workshops that apply manually.')}</p>
             <div class="addspace-checkboxes">
-              ${WORKSHOPS.map(([label]) => `
+              ${WORKSHOPS.map(([label, key]) => `
                 <label class="addspace-checkbox-label">
-                  <input type="checkbox" name="workshop" value="${label}"> ${label}
+                  <input type="checkbox" name="workshop" value="${label}"> ${ti(`workshops.${key}`, label)}
                 </label>`).join('')}
             </div>
 
