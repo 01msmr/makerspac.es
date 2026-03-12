@@ -1,6 +1,9 @@
 name: Generate Sitemap
 
 # Automatische Sitemap-Generierung bei jedem Push
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches:

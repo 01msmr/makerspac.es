@@ -1,5 +1,8 @@
 name: "🔄 push status.json 2 srv"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:          # von cron-job.org und manuell auslösbar
 

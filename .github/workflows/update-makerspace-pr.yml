@@ -1,5 +1,8 @@
 name: "✏️ Makerspace Update PR Generator"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   issues:
     types: [labeled]
@@ -236,4 +239,4 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            ✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`) wurde direkt in main gemergt und wird beim nächsten Deploy live gehen.
+            ✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`) wurde in main gemergt und der Deploy läuft bereits.

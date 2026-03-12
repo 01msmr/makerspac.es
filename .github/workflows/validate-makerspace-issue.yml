@@ -1,5 +1,8 @@
 name: "🔍 Validate Makerspace Issue"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   issues:
     types: [opened, edited]
@@ -129,7 +132,9 @@ jobs:
                   commentBody += `- ${warn}\n`;
                 });
               }
-              commentBody += `\n---\n*Ein Maintainer kann jetzt das Label \`add-space\` setzen, um den PR zu erstellen.*`;
+              const isCorrection = !!fields['Existing ID'];
+              const label = isCorrection ? 'update-space' : 'add-space';
+              commentBody += `\n---\n*Ein Maintainer kann jetzt das Label \`${label}\` setzen, um den PR zu erstellen.*`;
             }
 
             // Vorherige Bot-Kommentare suchen und aktualisieren oder neuen erstellen
