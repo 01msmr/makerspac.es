@@ -6,6 +6,10 @@ import { appContext } from './app-context.js';
 // search-filter.js - Zentrale Such- und Filter-Logik
 // Reine Geschäftslogik ohne UI-Komponenten
 
+// Static option sets — built once at module load (arrays never change at runtime)
+const WEEKLY_OPTIONS  = new Set(AppConfig.filterCategories.weekly?.options   || []);
+const WORKSHOP_OPTIONS = new Set(AppConfig.filterCategories.workshops?.options || []);
+
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
 /** @typedef {import('./types.js').Pill} Pill */
 
@@ -24,6 +28,9 @@ class SearchFilter {
     this.selectedStyles = new Set();
     this.styleStats = new Map();
     this.preFilteredLocations = null;
+
+    // Marker-Visibility-Tracking für diff-basiertes updateMarkers()
+    this._visibleMarkerIds = new Set();
 
     // ID-Match für exakte ID-Suche
     this._currentIdMatch = null;
@@ -60,7 +67,7 @@ class SearchFilter {
     // Single pass: styles + open/closed counts + countries
     this.json.forEach(location => {
       const style = location.style || 'unknown';
-      if (!AppConfig.ignoredStyles.includes(style)) {
+      if (!AppConfig.ignoredStylesSet.has(style)) {
         tempStats.set(style, (tempStats.get(style) || 0) + 1);
       }
       if (location.isOpen === true) openCount++;
@@ -89,7 +96,7 @@ class SearchFilter {
 
     // Restliche Styles nach Anzahl sortiert
     const remainingStyles = [...tempStats.entries()]
-      .filter(([style]) => !AppConfig.filterOrder.includes(style))
+      .filter(([style]) => !AppConfig.filterOrderSet.has(style))
       .sort((a, b) => b[1] - a[1]);
 
     remainingStyles.forEach(([style, count]) => {
@@ -212,9 +219,9 @@ class SearchFilter {
     let bookmarkFilterActive = false;
     let weeklyAnyActive = false;
 
-    // Weekly-Optionen
-    const weeklyOptions = new Set(AppConfig.filterCategories.weekly?.options || []);
-    const workshopOptions = new Set(AppConfig.filterCategories.workshops?.options || []);
+    // Weekly-Optionen (module-level constants, nicht per Call neu erstellen)
+    const weeklyOptions = WEEKLY_OPTIONS;
+    const workshopOptions = WORKSHOP_OPTIONS;
 
     // Filter kategorisieren — use cached _allCountries (built once in initializeStyleStats)
     this.selectedStyles.forEach(style => {
@@ -466,42 +473,58 @@ class SearchFilter {
     if (!clusterGroup || !map) return;
 
     const isClusteringActive = appContext.mapUtils?.isClusteringEnabled();
-    const filteredIds = new Set(filteredLocations.map(loc => loc.ID));
+    const newVisibleIds = new Set(filteredLocations.map(loc => loc.ID));
+
+    const toAdd    = [];
+    const toRemove = [];
 
     this.allMarkers.forEach(marker => {
-      const location = appContext.locationById.get(marker.locationId);
+      const id = marker.locationId;
+      const wasVisible = this._visibleMarkerIds.has(id);
+      const isVisible  = newVisibleIds.has(id);
 
-      // 1. ENTFERNEN von allen Layern
-      if (clusterGroup.hasLayer(marker)) {
-        clusterGroup.removeLayer(marker);
-      }
-      if (map.hasLayer(marker)) {
-        map.removeLayer(marker);
-      }
-
-      // 2. HINZUFÜGEN wenn gefiltert
-      if (filteredIds.has(marker.locationId)) {
-        if (isClusteringActive) {
-          clusterGroup.addLayer(marker);
-        } else {
-          map.addLayer(marker);
+      if (wasVisible && !isVisible) {
+        toRemove.push(marker);
+      } else if (!wasVisible && isVisible) {
+        marker.setIcon(this._iconForLocation(appContext.locationById.get(id)));
+        toAdd.push(marker);
+      } else if (isVisible) {
+        // Sichtbar geblieben — nur Icon aktualisieren wenn Status sich geändert hat
+        const newIcon = this._iconForLocation(appContext.locationById.get(id));
+        if (marker.options.icon !== newIcon) {
+          marker.setIcon(newIcon);
         }
-
-        // 3. Icon setzen
-        let iconToSet;
-        if (location?.isOpen === true) {
-          iconToSet = this.icons.greenIcon;
-        } else if (location?.isOpen === false) {
-          iconToSet = this.icons.redIcon;
-        } else if (location?.spaceapi?.endpoint) {
-          iconToSet = this.icons.unknownStatusIcon;
-        } else {
-          iconToSet = this.icons.highlightIcon;
-        }
-
-        marker.setIcon(iconToSet);
       }
     });
+
+    // Batch-Operationen: MarkerCluster baut den Baum nur einmal neu
+    if (toRemove.length) {
+      if (isClusteringActive) {
+        clusterGroup.removeLayers(toRemove);
+      } else {
+        toRemove.forEach(m => map.removeLayer(m));
+      }
+    }
+    if (toAdd.length) {
+      if (isClusteringActive) {
+        clusterGroup.addLayers(toAdd);
+      } else {
+        toAdd.forEach(m => map.addLayer(m));
+      }
+    }
+
+    this._visibleMarkerIds = newVisibleIds;
+  }
+
+  /**
+   * Gibt das passende Icon-Objekt für eine Location zurück.
+   * @param {import('./types.js').MakerSpace|undefined} location
+   */
+  _iconForLocation(location) {
+    if (location?.isOpen === true)            return this.icons.greenIcon;
+    if (location?.isOpen === false)           return this.icons.redIcon;
+    if (location?.spaceapi?.endpoint)         return this.icons.unknownStatusIcon;
+    return this.icons.highlightIcon;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

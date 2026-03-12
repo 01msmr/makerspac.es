@@ -56,6 +56,30 @@ class ListingCore {
     this.lastInputMethod = null;
     this._mouseHasMoved = false;
     this._lastMousePos = { x: 0, y: 0 };
+
+    // i18n-Cache: Tooltip-Strings einmal pro Sprache halten, nicht per Item
+    this._i18nCache = null;
+    document.addEventListener('languageChanged', () => { this._i18nCache = null; });
+  }
+
+  /**
+   * Gibt gecachte i18n-Strings zurück. Cache wird bei Sprachwechsel invalidiert.
+   * @returns {{ spaceOpen: string, spaceClosed: string, spaceStatusLoading: string, weeklyToday: string, weeklyTooltip: string, weeklyTimeSuffix: string, weeklyEventsCalendar: string }}
+   */
+  _t() {
+    if (!this._i18nCache || !window.i18n) {
+      const t = (k, fb) => window.i18n ? window.i18n.t(k) : fb;
+      this._i18nCache = {
+        spaceOpen:           t('tooltips.spaceOpen', ''),
+        spaceClosed:         t('tooltips.spaceClosed', ''),
+        spaceStatusLoading:  t('tooltips.spaceStatusLoading', ''),
+        weeklyToday:         t('weekly.today', 'heute'),
+        weeklyTooltip:       t('weekly.tooltip', 'wöchentliches Treffen'),
+        weeklyTimeSuffix:    t('weekly.timeSuffix', ' Uhr'),
+        weeklyEventsCalendar:t('weekly.eventsCalendar', 'events calendar'),
+      };
+    }
+    return this._i18nCache;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -192,13 +216,13 @@ class ListingCore {
       return `<i class="${AppConfig.icons.status.unknown} door-icon-unknown" style="opacity:0"></i> `;
     }
 
-    const _t = (k) => window.i18n ? window.i18n.t(k) : '';
+    const s = this._t();
     if (location.isOpen === true) {
-      return `<span aria-label="${_t('tooltips.spaceOpen')}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.open} door-icon-open"></i></span> `;
+      return `<span aria-label="${s.spaceOpen}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.open} door-icon-open"></i></span> `;
     } else if (location.isOpen === false) {
-      return `<span aria-label="${_t('tooltips.spaceClosed')}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.closed} door-icon-closed"></i></span> `;
+      return `<span aria-label="${s.spaceClosed}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.closed} door-icon-closed"></i></span> `;
     } else {
-      return `<span aria-label="${_t('tooltips.spaceStatusLoading')}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.unknown} door-icon-unknown"></i></span> `;
+      return `<span aria-label="${s.spaceStatusLoading}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.unknown} door-icon-unknown"></i></span> `;
     }
   }
 
@@ -253,11 +277,12 @@ class ListingCore {
     if (!location.weekly || !location.weekly.time || location.weekly.weekday > 6) return '';
     if (location.weekly.weekday !== new Date().getDay()) return '';
 
-    const todayLabel = window.i18n ? window.i18n.t('weekly.today') : 'heute';
-    const weeklyTooltip = window.i18n ? window.i18n.t('weekly.tooltip') : 'wöchentliches Treffen';
+    const s = this._t();
+    const todayLabel = s.weeklyToday;
+    const weeklyTooltip = s.weeklyTooltip;
     const timeStr = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
-    const timeSuffix = window.i18n ? window.i18n.t('weekly.timeSuffix') : ' Uhr';
-    const eventsLabel = window.i18n ? window.i18n.t('weekly.eventsCalendar') : 'events calendar';
+    const timeSuffix = s.weeklyTimeSuffix;
+    const eventsLabel = s.weeklyEventsCalendar;
     const calIcon = location.events
       ? `<a href="${location.events}" target="_blank" class="popup-events-link" aria-label="${eventsLabel}" role="tooltip" data-microtip-position="bottom-left"><i class="${AppConfig.icons.ui.calendarDay}"></i></a>`
       : `<i class="${AppConfig.icons.ui.calendarDay}"></i>`;

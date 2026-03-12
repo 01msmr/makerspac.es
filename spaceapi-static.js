@@ -58,13 +58,6 @@ export class StaticSpaceAPI {
         }
       });
 
-      // Statistiken
-      const openCount = locations.filter(loc => loc.isOpen === true).length;
-      const closedCount = locations.filter(loc => loc.isOpen === false).length;
-      const nullCount = locations.filter(loc => loc.isOpen === null).length;
-      const undefinedCount = locations.filter(loc => loc.isOpen === undefined).length;
-
-
       return locations;
 
     } catch (error) {

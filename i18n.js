@@ -68,26 +68,8 @@ export class I18n {
 
   // ✅ NEUE Methode: Übersetze UI-Elemente
   translateUI() {
-    this.translateUserGuide();
     this.translateAddMakerspace();
     this.translateTitleTools();
-  }
-
-  translateUserGuide() {
-    const userGuide = document.querySelector('.user-guide');
-    if (!userGuide) return;
-
-    userGuide.innerHTML = `
-      <h2>⁉ ${this.t('userGuide.title')}</h2>
-      <ol>
-        <li><strong>${this.t('userGuide.shortcut')}:</strong> <br /> ${this.t('userGuide.shortcutText')}</li>
-        <li><strong>${this.t('userGuide.filter')}</strong> <br /> ${this.t('userGuide.filterText')}</li>
-        <li><strong>${this.t('userGuide.count')}</strong> <br /> ${this.t('userGuide.countText')}</li>
-        <li><strong>${this.t('userGuide.autoZoom')}</strong> <br /> ${this.t('userGuide.autoZoomText')}</li>
-        <li><strong>${this.t('userGuide.highlight')}</strong> <br /> ${this.t('userGuide.highlightText')}</li>
-        <li><strong>${this.t('userGuide.scroll')}</strong> <br /> ${this.t('userGuide.scrollText')}</li>
-      </ol>
-    `;
   }
 
   translateAddMakerspace() {

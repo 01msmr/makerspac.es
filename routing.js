@@ -13,6 +13,8 @@ export class RoutingManager {
     this._routes = null;
     this._citiesWithMultipleSpaces = null;
     this._cityRoutes = null;
+    this._cityCountMap = null;
+    this._styleCountMap = null;
 
     this._isNavigating = false;
     this._isOnLocationRoute = false;
@@ -36,6 +38,19 @@ export class RoutingManager {
     this._citiesWithMultipleSpaces = this._findCitiesWithMultipleSpaces();
     this._routes = this._createRoutes();
     this._cityRoutes = this._createCityRoutes();
+
+    // Cache city counts (static — never changes)
+    this._cityCountMap = new Map();
+    for (const loc of this.json) {
+      const city = loc.loc?.city;
+      if (city) this._cityCountMap.set(city, (this._cityCountMap.get(city) || 0) + 1);
+    }
+
+    // Cache style counts for non-status styles (static)
+    this._styleCountMap = new Map();
+    for (const loc of this.json) {
+      if (loc.style) this._styleCountMap.set(loc.style, (this._styleCountMap.get(loc.style) || 0) + 1);
+    }
   }
 
   // ========================================
@@ -350,11 +365,14 @@ export class RoutingManager {
     return null;
   }
 
-  _countLocationsByCity(c) { return this.json.filter(l => l.loc?.city === c).length; }
+  _countLocationsByCity(c) {
+    return this._cityCountMap?.get(c) ?? this.json.filter(l => l.loc?.city === c).length;
+  }
   _countLocationsByStyle(style) {
-    if (style === 'open') return this.json.filter(l => l.isOpen === true).length;
+    // open/closed depend on runtime status — cannot be pre-cached
+    if (style === 'open')   return this.json.filter(l => l.isOpen === true).length;
     if (style === 'closed') return this.json.filter(l => l.isOpen === false).length;
-    return this.json.filter(l => l.style === style).length;
+    return this._styleCountMap?.get(style) ?? this.json.filter(l => l.style === style).length;
   }
 
   updatePageMeta(title, desc) {

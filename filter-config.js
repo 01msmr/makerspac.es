@@ -42,11 +42,15 @@ export const IGNORED_STYLES = [
   'for students & youth',
   'for students // commercial',
 ];
+/** Set-Version für O(1)-Lookup in hot paths */
+export const IGNORED_STYLES_SET = new Set(IGNORED_STYLES);
 
 /** Feste Anzeigereihenfolge für Style-Filter-Pills. */
 export const FILTER_ORDER = [
   'for all', 'for youth', 'for students', 'commercial', 'open', 'closed',
 ];
+/** Set-Version für O(1)-Lookup in hot paths */
+export const FILTER_ORDER_SET = new Set(FILTER_ORDER);
 
 /** Style-Icons (FontAwesome) – für Makerspace-Typen */
 const STYLE_ICONS = {

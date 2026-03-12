@@ -1156,7 +1156,7 @@ class SearchHeader {
       optionItem.innerHTML = `
           <span class="fi fi-${countryCode}" style="margin-right: 8px;"></span>
           <span>${window.i18n?.t(`countries.${option}`) || option}</span>
-          <span class="country-total-count"> (${this.json.filter(loc => loc.loc?.country === option).length})</span>
+          <span class="country-total-count"> (${this.searchFilter?.styleStats?.get(option) ?? this.json.filter(loc => loc.loc?.country === option).length})</span>
         `;
     } else if (categoryKey === 'style') {
       const styleIconClass = CONFIG.getStyleIcon(option);
@@ -1302,11 +1302,18 @@ class SearchHeader {
     const sortedCountries = Array.from(groupedByCountry.entries())
       .sort((a, b) => b[1].length - a[1].length);
 
+    let remaining = CONFIG.settings.maxListItems;
+
     sortedCountries.forEach(([country, countryLocations]) => {
+      if (remaining <= 0) return;
       const header = this.createCountryHeader(country, countryLocations.length);
       fragment.appendChild(header);
 
-      const sorted = countryLocations.sort((a, b) => b.loc.lat - a.loc.lat);
+      const sorted = countryLocations
+        .sort((a, b) => b.loc.lat - a.loc.lat)
+        .slice(0, remaining);
+      remaining -= sorted.length;
+
       sorted.forEach(location => {
         const item = this.createSearchItem(location);
         fragment.appendChild(item);
@@ -1343,7 +1350,7 @@ class SearchHeader {
 
     const countryCode = CONFIG.getCountryCode(country);
     const translatedCountry = window.i18n?.t(`countries.${country}`) || country;
-    const totalInCountry = this.json.filter(loc => loc.loc?.country === country).length;
+    const totalInCountry = this.searchFilter?.styleStats?.get(country) ?? this.json.filter(loc => loc.loc?.country === country).length;
 
     header.innerHTML = `
         <div class="country-title-content">

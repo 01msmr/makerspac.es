@@ -30,8 +30,9 @@ export function getWorkshopIcon(key) {
   return WORKSHOP_TYPES[key]?.icon || '';
 }
 
-/** Canonical key order, computed once */
+/** Canonical key order + O(1) index lookup */
 const WORKSHOP_ORDER = Object.keys(WORKSHOP_TYPES);
+const WORKSHOP_ORDER_MAP = new Map(WORKSHOP_ORDER.map((w, i) => [w, i]));
 
 /**
  * Filter to known workshops with icons, sorted by canonical WORKSHOP_TYPES order.
@@ -42,7 +43,7 @@ const WORKSHOP_ORDER = Object.keys(WORKSHOP_TYPES);
 export function getSortedWorkshops(workshops) {
   return (workshops || [])
     .filter(w => WORKSHOP_TYPES[w])
-    .sort((a, b) => WORKSHOP_ORDER.indexOf(a) - WORKSHOP_ORDER.indexOf(b));
+    .sort((a, b) => WORKSHOP_ORDER_MAP.get(a) - WORKSHOP_ORDER_MAP.get(b));
 }
 
 /**

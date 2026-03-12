@@ -26,7 +26,9 @@ import {
 import {
   FILTER_CATEGORIES,
   IGNORED_STYLES,
+  IGNORED_STYLES_SET,
   FILTER_ORDER,
+  FILTER_ORDER_SET,
   getStyleIcon,
 } from './filter-config.js';
 
@@ -174,9 +176,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
  * @returns {string}
  */
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text || '';
-  return div.innerHTML;
+  return (text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -267,7 +271,9 @@ const AppConfig = {
   settings:         SETTINGS,
   filterCategories: FILTER_CATEGORIES,
   ignoredStyles:    IGNORED_STYLES,
+  ignoredStylesSet: IGNORED_STYLES_SET,
   filterOrder:      FILTER_ORDER,
+  filterOrderSet:   FILTER_ORDER_SET,
 
   // Helper-Funktionen
   getStyleIcon,

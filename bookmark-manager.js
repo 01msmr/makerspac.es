@@ -7,7 +7,16 @@ export class BookmarkManager {
   constructor() {
     this.storageKey = 'makerspace_bookmarks';
     this.bookmarks = new Set();
+    this._saveTimer = null;
     this.loadBookmarks();
+    // Flush any pending debounced save before page unload
+    window.addEventListener('beforeunload', () => {
+      if (this._saveTimer !== null) {
+        clearTimeout(this._saveTimer);
+        this._saveTimer = null;
+        this._flushSave();
+      }
+    });
   }
 
   // Lade Bookmarks aus LocalStorage
@@ -24,14 +33,28 @@ export class BookmarkManager {
     }
   }
 
-  // Speichere Bookmarks in LocalStorage
-  saveBookmarks() {
+  // Sofortiges Schreiben in localStorage
+  _flushSave() {
     try {
-      const bookmarksArray = Array.from(this.bookmarks);
-      consent.set(this.storageKey, JSON.stringify(bookmarksArray));
+      consent.set(this.storageKey, JSON.stringify(Array.from(this.bookmarks)));
     } catch (error) {
       console.error('❌ Error saving bookmarks:', error);
     }
+  }
+
+  // Speichere Bookmarks in LocalStorage (debounced, max 300ms Verzögerung)
+  saveBookmarks(immediate = false) {
+    if (immediate) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+      this._flushSave();
+      return;
+    }
+    if (this._saveTimer !== null) return; // bereits geplant
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      this._flushSave();
+    }, 300);
   }
 
   // Prüfe ob ein Makerspace gebookmarkt ist
@@ -133,7 +156,7 @@ export class BookmarkManager {
   // Löscht alle Bookmarks
   clearAllBookmarks() {
     this.bookmarks.clear();
-    this.saveBookmarks();
+    this.saveBookmarks(true); // sofort schreiben
 
     // Aktualisiere alle Bookmark-Icons im DOM
     // ✅ OPTIMIERT: Verwendet data-location-id statt data-unique-id

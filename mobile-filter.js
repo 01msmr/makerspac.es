@@ -10,6 +10,7 @@ class MobileFilterUI {
     this._hasInteracted = false;
     this._navClickCounts = { up: 0, down: 0 };
     this._navClickTimers = { up: null, down: null };
+    this._scrollSessionTimer = null;
   }
 
   // Spiegelt die CSS-Bedingungen: aktiv wenn <= 1024px ODER Touch-Tablet (pointer: coarse)
@@ -495,7 +496,7 @@ class MobileFilterUI {
 
       // Door state icon
       if (key === 'doorState') {
-        const iconClass = isDoorOpen ? 'fas fa-door-open' : 'fas fa-door-closed';
+        const iconClass = isDoorOpen ? AppConfig.icons.status.open : AppConfig.icons.status.closed;
         const doorIcon = document.createElement('i');
         doorIcon.className = `${iconClass} mf-opt-door-icon`;
         item.appendChild(doorIcon);
