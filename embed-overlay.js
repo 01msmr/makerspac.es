@@ -640,46 +640,24 @@ async function handleSubmit(form, loadTime, overlay, selectedSpace = null, works
     return;
   }
 
-  submitBtn.disabled   = true;
-  statusEl.textContent = t('statusSubmitting', 'Submitting…');
-
   const isUpdate = !!selectedSpace;
   const title    = isUpdate
     ? `update makerspace: ${name} (ID ${selectedSpace.ID})`
     : `neuer Makerspace: ${name}`;
-  const labels   = isUpdate ? ['update-space'] : ['space-pending'];
   const body     = buildIssueBody(form, selectedSpace, workshopsAvailable);
 
-  async function postIssue(withLabels) {
-    return fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-      body:    JSON.stringify({ title, body, ...(withLabels ? { labels } : {}) }),
-    });
-  }
+  const url_gh = `https://github.com/${GITHUB_REPO}/issues/new`
+    + `?title=${encodeURIComponent(title)}`
+    + `&body=${encodeURIComponent(body)}`;
 
-  try {
-    let res = await postIssue(true);
-
-    // 422 = label doesn't exist yet in the repo — retry without labels
-    if (res.status === 422) res = await postIssue(false);
-
-    if (res.status === 201) {
-      const issue = await res.json();
-      const action = isUpdate
-        ? t('statusCorrectionSuccess', 'Correction submitted')
-        : t('statusSuccess', 'Submitted');
-      statusEl.innerHTML = `✅ ${action}! <a href="${issue.html_url}" target="_blank">${t('statusViewIssue', 'View issue')} #${issue.number}</a>`;
-      submitBtn.disabled = false;
-    } else if (res.status === 403 || res.status === 429) {
-      statusEl.textContent = t('statusRateLimit', 'Rate limit reached — please try again in an hour.');
-      submitBtn.disabled   = false;
-    } else {
-      statusEl.textContent = `Error ${res.status} — please try again.`;
-      submitBtn.disabled   = false;
-    }
-  } catch {
-    statusEl.textContent = t('statusNetworkError', 'Network error — please check your connection.');
-    submitBtn.disabled   = false;
+  const win = window.open(url_gh, '_blank', 'noopener');
+  if (win) {
+    const action = isUpdate
+      ? t('statusCorrectionSuccess', 'Correction submitted')
+      : t('statusSuccess', 'Submitted');
+    statusEl.innerHTML = `✅ ${action} — ${t('statusGitHubOpened', 'GitHub opened in new tab')}.`;
+  } else {
+    // Popup blocked — show link instead
+    statusEl.innerHTML = `<a href="${url_gh}" target="_blank" rel="noopener">${t('statusViewIssue', 'Open on GitHub')} ↗</a>`;
   }
 }
