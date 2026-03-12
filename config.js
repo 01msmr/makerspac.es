@@ -176,7 +176,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
  * @returns {string}
  */
 function escapeHtml(text) {
-  return (text || '')
+  return String(text ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
