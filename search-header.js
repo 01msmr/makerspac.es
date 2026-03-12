@@ -733,6 +733,13 @@ class SearchHeader {
   triggerFilterUpdate() {
     const pills = this.pillsManager?.getPillsArray() || [];
     const query = this.searchBar.value.trim();
+    // On a location route with no user search/filters, re-apply filters with the
+    // existing pre-filter rather than resetting it to all locations.
+    // Prevents SpaceAPI updates and pill-clear events from overriding the route filter.
+    if (window.routingManager?._isOnLocationRoute && !query && !pills.length) {
+      this.searchFilter.applyFilters();
+      return;
+    }
     const filtered = this.searchFilter.filterByText(query, pills, this.zfill);
     this.searchFilter.applyPreFilters(filtered);
   }

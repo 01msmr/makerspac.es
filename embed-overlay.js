@@ -215,6 +215,10 @@ function showOverlay() {
                 <label class="addspace-label">${t('labelCity', 'City')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="city" class="addspace-input" required>
               </div>
+              <div class="addspace-col-narrow">
+                <label class="addspace-label">${t('labelPostalCode', 'Postal code')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
+                <input type="text" name="plz" class="addspace-input" required>
+              </div>
             </div>
 
             <div class="addspace-row">
@@ -223,17 +227,14 @@ function showOverlay() {
                 <input type="text" name="street_name" class="addspace-input" required>
               </div>
               <div class="addspace-col-narrow">
-                <label class="addspace-label">${t('labelStreetNr', 'Nr.')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
+                <label class="addspace-label">${t('labelStreetNo', 'Street no.')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
                 <input type="text" name="street_number" class="addspace-input" required>
               </div>
-              <div class="addspace-col-narrow">
-                <label class="addspace-label">${t('labelPostalCode', 'Postal code')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-                <input type="text" name="plz" class="addspace-input" required>
+              <div>
+                <label class="addspace-label">${t('labelAddressAddition', 'Address addition')}</label>
+                <input type="text" name="street_ext" class="addspace-input" placeholder="${t('addressAdditionPlaceholder', 'e.g. Apt. 2, Building B')}">
               </div>
             </div>
-
-            <label class="addspace-label">${t('labelAddressAddition', 'Address addition')}</label>
-            <input type="text" name="street_ext" class="addspace-input" placeholder="${t('addressAdditionPlaceholder', 'e.g. Apt. 2, Building B')}">
 
             <div class="addspace-row">
               <div>
@@ -465,7 +466,7 @@ function showOverlay() {
     selectedSpace = loc;
     lookupInput.value    = `ID ${loc.ID} - ${loc.name} - ${loc.loc?.plz ? loc.loc.plz + ' ' : ''}${loc.loc?.city || ''}`;
     lookupResults.hidden = true;
-    editBtn.textContent  = `${t('editBtn', 'edit')} ID ${loc.ID} — ${loc.name}`;
+    editBtn.textContent  = `${t('editBtn', 'edit')}\u00a0\u00a0ID ${loc.ID} — ${loc.name}`;
     editBtn.hidden       = false;
   }
 

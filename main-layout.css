@@ -125,6 +125,7 @@ body {
 
 .tool-add {
   display: inline-block;
+  align-self: center;
   cursor: pointer;
   color: blue;
   background-color: transparent;
@@ -133,7 +134,6 @@ body {
   margin: 0 0 0 .1em;
   border: .1em solid transparent;
   transition: background-color 0.08s ease-in, color 0.08s ease-in;
-  transform: translateY(0.1em);
 }
 
 .tool-add:hover {
