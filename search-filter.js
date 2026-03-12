@@ -31,6 +31,16 @@ class SearchFilter {
     // Callbacks
     this._onResultsChange = null;
 
+    // Cached country set (static data, built once in initializeStyleStats)
+    this._allCountries = new Set();
+
+    // Reusable Sets for applyFilters — avoids GC pressure on every filter change
+    this._selectedNormalStyles = new Set();
+    this._selectedStateFilters = new Set();
+    this._selectedCountries = new Set();
+    this._selectedWeekdays = new Set();
+    this._selectedWorkshops = new Set();
+
     this.initializeStyleStats();
 
   }
@@ -44,33 +54,28 @@ class SearchFilter {
    */
   initializeStyleStats() {
     const tempStats = new Map();
+    const countryStats = new Map();
+    let openCount = 0, closedCount = 0;
 
-    // Styles zählen
+    // Single pass: styles + open/closed counts + countries
     this.json.forEach(location => {
       const style = location.style || 'unknown';
-      if (AppConfig.ignoredStyles.includes(style)) {
-        return;
+      if (!AppConfig.ignoredStyles.includes(style)) {
+        tempStats.set(style, (tempStats.get(style) || 0) + 1);
       }
-      if (!tempStats.has(style)) {
-        tempStats.set(style, 0);
-      }
-      tempStats.set(style, tempStats.get(style) + 1);
-    });
-
-    // SpaceAPI Status zählen
-    const openCount = this.json.filter(loc => loc.isOpen === true).length;
-    const closedCount = this.json.filter(loc => loc.isOpen === false).length;
-    tempStats.set('open', openCount);
-    tempStats.set('closed', closedCount);
-
-    // Länder zählen
-    const countryStats = new Map();
-    this.json.forEach(location => {
+      if (location.isOpen === true) openCount++;
+      else if (location.isOpen === false) closedCount++;
       if (location.loc?.country) {
         const country = location.loc.country;
         countryStats.set(country, (countryStats.get(country) || 0) + 1);
       }
     });
+
+    tempStats.set('open', openCount);
+    tempStats.set('closed', closedCount);
+
+    // Rebuild cached country set
+    this._allCountries = new Set(countryStats.keys());
 
     // Finale Map in gewünschter Reihenfolge erstellen
     this.styleStats = new Map();
@@ -192,12 +197,18 @@ class SearchFilter {
       return;
     }
 
-    // Filter-Kategorien aufteilen
-    const selectedNormalStyles = new Set();
-    const selectedStateFilters = new Set();
-    const selectedCountries = new Set();
-    const selectedWeekdays = new Set();
-    const selectedWorkshops = new Set();
+    // Filter-Kategorien aufteilen — reuse instance Sets to avoid GC pressure
+    const selectedNormalStyles = this._selectedNormalStyles;
+    const selectedStateFilters = this._selectedStateFilters;
+    const selectedCountries = this._selectedCountries;
+    const selectedWeekdays = this._selectedWeekdays;
+    const selectedWorkshops = this._selectedWorkshops;
+    selectedNormalStyles.clear();
+    selectedStateFilters.clear();
+    selectedCountries.clear();
+    selectedWeekdays.clear();
+    selectedWorkshops.clear();
+
     let bookmarkFilterActive = false;
     let weeklyAnyActive = false;
 
@@ -205,15 +216,7 @@ class SearchFilter {
     const weeklyOptions = new Set(AppConfig.filterCategories.weekly?.options || []);
     const workshopOptions = new Set(AppConfig.filterCategories.workshops?.options || []);
 
-    // Alle Länder sammeln
-    const allCountries = new Set();
-    this.json.forEach(location => {
-      if (location.loc?.country) {
-        allCountries.add(location.loc.country);
-      }
-    });
-
-    // Filter kategorisieren
+    // Filter kategorisieren — use cached _allCountries (built once in initializeStyleStats)
     this.selectedStyles.forEach(style => {
       if (style === 'bookmarked') {
         bookmarkFilterActive = true;
@@ -223,7 +226,7 @@ class SearchFilter {
         selectedStateFilters.add(style);
       } else if (weeklyOptions.has(style)) {
         selectedWeekdays.add(parseInt(style));
-      } else if (allCountries.has(style)) {
+      } else if (this._allCountries.has(style)) {
         selectedCountries.add(style);
       } else if (workshopOptions.has(style)) {
         selectedWorkshops.add(style);
@@ -510,15 +513,9 @@ class SearchFilter {
    * @returns {string[]}
    */
   getUniqueCountries() {
-    const countryCount = new Map();
-    this.json.forEach(location => {
-      if (location.loc?.country) {
-        const country = location.loc.country;
-        countryCount.set(country, (countryCount.get(country) || 0) + 1);
-      }
-    });
-
-    return Array.from(countryCount.entries())
+    // Reuse the country data already in styleStats (built in initializeStyleStats)
+    return Array.from(this._allCountries)
+      .map(country => [country, this.styleStats.get(country) || 0])
       .sort((a, b) => b[1] - a[1])
       .map(([country]) => country);
   }

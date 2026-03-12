@@ -43,7 +43,7 @@ class DataStore {
       clustering: 'Orte clustern',
       clusteringOn: 'aktivieren',
       clusteringOff: 'deaktivieren',
-      mapService: 'Kartendienst',
+      mapService: 'Navigation mit',
       light: 'Hell',
       auto: 'Automatisch',
       dark: 'Dunkel',

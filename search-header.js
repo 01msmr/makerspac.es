@@ -116,16 +116,23 @@ class SearchPillsManager {
   }
 
   render() {
-    this.container.innerHTML = '';
-
     if (this.pills.size === 0) {
+      this.container.innerHTML = '';
       this.searchBar.classList.remove('has-pills');
       return;
     }
 
     this.searchBar.classList.add('has-pills');
 
+    // Remove DOM nodes for pills that no longer exist
+    this.container.querySelectorAll('[data-id]').forEach(el => {
+      if (!this.pills.has(/** @type {HTMLElement} */ (el).dataset.id)) el.remove();
+    });
+
+    // Append only newly added pills (existing ones stay untouched)
     this.pills.forEach((pill, id) => {
+      if (this.container.querySelector(`[data-id="${id}"]`)) return;
+
       const pillElement = document.createElement('div');
       pillElement.className = 'search-pill';
       pillElement.dataset.id = id;
@@ -133,10 +140,15 @@ class SearchPillsManager {
       pillElement.setAttribute('role', 'button');
       pillElement.setAttribute('aria-label', `Remove ${pill.text}`);
 
-      pillElement.innerHTML = `
-          <span class="search-pill-text">${pill.text}</span>
-          <span class="search-pill-remove" aria-hidden="true">×</span>
-        `;
+      const textSpan = document.createElement('span');
+      textSpan.className = 'search-pill-text';
+      textSpan.textContent = pill.text;
+      const removeSpan = document.createElement('span');
+      removeSpan.className = 'search-pill-remove';
+      removeSpan.setAttribute('aria-hidden', 'true');
+      removeSpan.textContent = '×';
+      pillElement.appendChild(textSpan);
+      pillElement.appendChild(removeSpan);
 
       pillElement.addEventListener('click', (e) => {
         e.stopPropagation();

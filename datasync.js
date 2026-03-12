@@ -75,7 +75,7 @@ class ConsentManager {
               <li>${t('detailLanguage')}</li>
               <li>${t('detailTheme')}</li>
               <li>${t('detailBookmarks')}</li>
-              <li>${t('detailMap')}</li>
+              <li>${t('mapService')}</li>
             </ul>
             <small class="consent-earth-note">${t('noCookieNote')}</small>
           </div>
@@ -164,7 +164,7 @@ class ConsentManager {
       items[0].textContent = t('detailLanguage');
       items[1].textContent = t('detailTheme');
       items[2].textContent = t('detailBookmarks');
-      items[3].textContent = t('detailMap');
+      items[3].textContent = t('mapService');
     }
     if (noteEl) noteEl.textContent = t('noCookieNote');
   }
@@ -178,7 +178,6 @@ class ConsentManager {
       detailLanguage: 'Spracheinstellung',
       detailTheme: 'Farbschema',
       detailBookmarks: 'Favoriten',
-      detailMap: 'Kartendienst',
       noCookieNote: 'Der Rest funktioniert auch ohne Cookies'
     };
     return fallbacks[key] || key;

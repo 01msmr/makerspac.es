@@ -229,7 +229,9 @@ export class RoutingManager {
 
     this._afterNavigation(() => {
       bar.value = SearchTerm;
-      if (this.searchManager) this.searchManager.applyPillFilters([]);
+      // Use triggerFilterUpdate directly — applyPillFilters would call loadPills([])
+      // which fires onChangeCallback → updateURLFromPills([]) → clears hash → undoes filter.
+      if (this.searchManager) this.searchManager.triggerFilterUpdate();
     });
   }
 
