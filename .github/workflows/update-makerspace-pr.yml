@@ -46,10 +46,27 @@ jobs:
 
             const fields = parseFormFields(body);
 
+            // Extract new value from diff format: ~~old~~ → **new** or plain value.
+            // Returns undefined if the field was not submitted (not changed).
+            function extractNewValue(raw) {
+              if (raw === undefined) return undefined;
+              if (!raw || raw === "_No response_" || raw === "None") return "";
+              const diffMatch = raw.match(/~~[\s\S]*?~~\s*→\s*\*\*([\s\S]*?)\*\*\s*$/);
+              if (diffMatch) {
+                const val = diffMatch[1].trim();
+                return val === '_empty_' ? '' : val;
+              }
+              return raw.trim();
+            }
+
             function getField(label, fallback = "") {
-              const value = fields[label];
-              if (!value || value === "_No response_" || value === "None") return fallback;
-              return value;
+              const val = extractNewValue(fields[label]);
+              return (val === undefined || val === "") ? fallback : val;
+            }
+
+            // Returns undefined if field absent (not changed), otherwise new value or null
+            function getChanged(label) {
+              return extractNewValue(fields[label]);
             }
 
             function getNumber(label) {
@@ -122,10 +139,10 @@ jobs:
             }
             const enr = enrichment[String(existingId)] || {};
 
-            // Workshops — only update if the form confirmed workshops were available
-            const workshopsSubmitted = getField('Workshops submitted') === 'yes';
-            if (workshopsSubmitted) {
-              const workshopsRaw = getField('Workshop types (optional)', '');
+            // Workshops — only update if the field was actually submitted (present in issue body)
+            const workshopsChanged = getChanged('Workshop types (optional)');
+            if (workshopsChanged !== undefined) {
+              const workshopsRaw = workshopsChanged || '';
               const workshopLabelMap = {
                 "3D printing": "3d", "Laser cutting": "laser", "CNC": "cnc",
                 "Electronics": "electronics", "Coding": "coding", "VR": "vr",
@@ -147,12 +164,18 @@ jobs:
             }
 
             // SpaceAPI
-            const spaceapi = getField('SpaceAPI Endpoint (optional)');
-            if (spaceapi && spaceapi.startsWith('http')) enr.spaceapi = { endpoint: spaceapi };
+            const spaceapi = getChanged('SpaceAPI Endpoint (optional)');
+            if (spaceapi !== undefined) {
+              if (spaceapi && spaceapi.startsWith('http')) enr.spaceapi = { endpoint: spaceapi };
+              else delete enr.spaceapi;
+            }
 
             // Events
-            const eventsUrl = getField('Event calendar URL (optional)');
-            if (eventsUrl && eventsUrl.startsWith('http')) enr.events = eventsUrl;
+            const eventsUrl = getChanged('Event calendar URL (optional)');
+            if (eventsUrl !== undefined) {
+              if (eventsUrl && eventsUrl.startsWith('http')) enr.events = eventsUrl;
+              else delete enr.events;
+            }
 
             // Weekly meeting
             const weekdayMap = {
@@ -186,6 +209,7 @@ jobs:
             core.setOutput('space_id',   String(existingId));
 
       - name: Create Pull Request
+        id: create_pr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -201,9 +225,15 @@ jobs:
             Basierend auf Issue #${{ github.event.issue.number }}
           labels: automated-pr
 
+      - name: Auto-merge Pull Request
+        if: steps.create_pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --delete-branch --repo ${{ github.repository }}
+
       - name: Feedback Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            ✅ Update-PR erstellt für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`)
+            ✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`) wurde direkt in main gemergt und wird beim nächsten Deploy live gehen.
