@@ -128,23 +128,19 @@ function showOverlay() {
         <div class="embed-modal-header-text">
           <h2>📍 makerspac.es</h2>
           <div class="embed-tabs">
-            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> ${t('title', 'add your makerspace')}</button>
-            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> ${t('embed', 'embed into your site')}</button>
+            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add space</span></button>
+            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed map</span></button>
           </div>
-          <p class="embed-tab-intro" data-tab="addspace">${t('tabIntro', 'Submit your makerspace to the map. A maintainer will review and publish it.')}</p>
-          <p class="embed-tab-intro" data-tab="embed" hidden>Show your <b>position</b>, your makerspace-<b>status</b> (open/closed) and connect with <b>friendly spaces of yours</b>.</p>
         </div>
         <button class="embed-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
       </div>
       <hr class="embed-modal-divider">
       <div class="embed-modal-scroll">
-
         <!-- ── Tab: Add Space ── -->
         <div class="embed-tab-panel" data-tab="addspace">
-
+          <p class="embed-tab-intro">${t('tabIntro', 'Submit your makerspace to the map. A maintainer will review and publish it.')}</p>
           <!-- Top area: silver background -->
           <div class="addspace-top-area">
-
             <!-- Mode toggle -->
             <div class="addspace-mode-toggle">
               <label class="addspace-mode-option">
@@ -153,7 +149,7 @@ function showOverlay() {
               </label>
               <label class="addspace-mode-option">
                 <input type="radio" name="addspace_mode" value="edit">
-                ${t('editToggle', 'edit existing makerspace')}
+                ${t('editToggle', 'edit makerspace')}
               </label>
             </div>
 
@@ -296,6 +292,7 @@ function showOverlay() {
 
         <!-- ── Tab: Embed guide ── -->
         <div class="embed-tab-panel" data-tab="embed" hidden>
+          <p class="embed-tab-intro">Show your <b>position</b>, your makerspace-<b>status</b> (open/closed) and connect with <b>friendly spaces of yours</b>.</p>
           <h3 class="embed-h3">1. Live Preview</h3>
 
           <h4 class="embed-h4">a) 440 px — without minimap</h4>
@@ -391,9 +388,6 @@ function showOverlay() {
       t => t.classList.toggle('active', t.dataset.tab === tab)
     );
     overlay.querySelectorAll('.embed-tab-panel').forEach(
-      p => { p.hidden = p.dataset.tab !== tab; }
-    );
-    overlay.querySelectorAll('.embed-tab-intro').forEach(
       p => { p.hidden = p.dataset.tab !== tab; }
     );
     scrollEl.scrollTop = 0;
