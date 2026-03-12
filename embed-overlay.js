@@ -418,6 +418,7 @@ function showOverlay() {
 
   let selectedSpace      = null;
   let workshopsAvailable = true;
+  let originalSnapshot   = null;
 
   const modeRadios    = overlay.querySelectorAll('input[name="addspace_mode"]');
   const lookupDiv     = overlay.querySelector('.addspace-lookup');
@@ -525,11 +526,20 @@ function showOverlay() {
     if (enr.weekly?.time) set('weekly_time', enr.weekly.time);
     if (enr.spaceapi?.endpoint) set('spaceapi', enr.spaceapi.endpoint);
     if (enr.events)             set('events_url', enr.events);
+
+    // Capture snapshot of all pre-filled values for diff on submit
+    const snap = {};
+    ['name','city','plz','street_name','street_number','street_ext','lat','long',
+     'url','url_text','style','country','weekly_weekday','weekly_time','spaceapi','events_url'
+    ].forEach(n => { snap[n] = (form.elements[n]?.value || '').trim(); });
+    snap._workshops = [...form.querySelectorAll('input[name="workshop"]:checked')].map(el => el.value).sort().join(',');
+    originalSnapshot = snap;
   }
 
   function resetLookup() {
     selectedSpace        = null;
     workshopsAvailable   = true;
+    originalSnapshot     = null;
     lookupInput.value    = '';
     lookupResults.hidden = true;
     editBtn.textContent  = t('editBtn', 'edit');
@@ -578,46 +588,79 @@ function showOverlay() {
   // ── Form submit ──
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await handleSubmit(e.target, loadTime, overlay, selectedSpace, workshopsAvailable);
+    await handleSubmit(e.target, loadTime, overlay, selectedSpace, workshopsAvailable, originalSnapshot);
   });
 }
 
 // ─── Form: build GitHub issue body ────────────────────────────────────────────
 
-function buildIssueBody(form, selectedSpace, workshopsAvailable) {
+function buildIssueBody(form, selectedSpace, workshopsAvailable, originalSnapshot = null) {
   const g = name => (form.elements[name]?.value || '').trim();
   const checked = [...form.querySelectorAll('input[name="workshop"]:checked')].map(el => el.value);
+  const isCorrection = !!selectedSpace && !!originalSnapshot;
 
-  const workshopBlock = WORKSHOPS
-    .map(([label]) => `- [${checked.includes(label) ? 'x' : ' '}] ${label}`)
-    .join('\n');
+  // For corrections: show only changed fields. For new spaces: show all.
+  const field = (label, name, fallback = '_No response_') => {
+    const val = g(name) || '';
+    if (isCorrection) {
+      const orig = originalSnapshot[name] ?? '';
+      if (val === orig) return null; // unchanged — skip
+      return `### ${label}\n\n~~${orig || '_empty_'}~~ → **${val || '_empty_'}**`;
+    }
+    return `### ${label}\n\n${val || fallback}`;
+  };
 
-  return [
+  // Workshops diff
+  let workshopSection = null;
+  if (workshopsAvailable) {
+    const workshopBlock = WORKSHOPS
+      .map(([label]) => `- [${checked.includes(label) ? 'x' : ' '}] ${label}`)
+      .join('\n');
+    if (isCorrection) {
+      const nowStr = checked.sort().join(',');
+      if (nowStr !== originalSnapshot._workshops) {
+        workshopSection = `### Workshop types (optional)\n\n${workshopBlock}`;
+      }
+    } else {
+      workshopSection = `### Workshop types (optional)\n\n${workshopBlock}`;
+    }
+  } else if (!isCorrection) {
+    workshopSection = `### Workshop types (optional)\n\n_No response_`;
+  }
+
+  const lines = [
     selectedSpace ? `### Existing ID\n\n${selectedSpace.ID}` : null,
-    `### Name\n\n${g('name')}`,
-    `### Country\n\n${g('country')}`,
-    `### City\n\n${g('city')}`,
-    `### Postal code\n\n${g('plz')}`,
-    `### Street\n\n${g('street_name')}`,
-    `### Street number\n\n${g('street_number')}`,
-    `### Address addition\n\n${g('street_ext') || '_No response_'}`,
-    `### Latitude\n\n${g('lat')}`,
-    `### Longitude\n\n${g('long')}`,
-    `### Style\n\n${g('style')}`,
-    `### Workshop types (optional)\n\n${workshopsAvailable ? workshopBlock : '_No response_'}`,
-    `### Workshops submitted\n\n${workshopsAvailable ? 'yes' : 'no'}`,
-    `### Website (URL)\n\n${g('url')}`,
-    `### Link display text\n\n${g('url_text')}`,
-    `### Weekly open day (optional)\n\n${g('weekly_weekday') || '_No response_'}`,
-    `### Weekly open time (optional)\n\n${g('weekly_time') || '_No response_'}`,
-    `### SpaceAPI Endpoint (optional)\n\n${g('spaceapi') || '_No response_'}`,
-    `### Event calendar URL (optional)\n\n${g('events_url') || '_No response_'}`,
-  ].filter(Boolean).join('\n\n');
+    field('Name', 'name'),
+    field('Country', 'country'),
+    field('City', 'city'),
+    field('Postal code', 'plz'),
+    field('Street', 'street_name'),
+    field('Street number', 'street_number'),
+    field('Address addition', 'street_ext'),
+    field('Latitude', 'lat'),
+    field('Longitude', 'long'),
+    field('Style', 'style'),
+    workshopSection,
+    isCorrection ? null : `### Workshops submitted\n\n${workshopsAvailable ? 'yes' : 'no'}`,
+    field('Website (URL)', 'url'),
+    field('Link display text', 'url_text'),
+    field('Weekly open day (optional)', 'weekly_weekday'),
+    field('Weekly open time (optional)', 'weekly_time'),
+    field('SpaceAPI Endpoint (optional)', 'spaceapi'),
+    field('Event calendar URL (optional)', 'events_url'),
+  ].filter(Boolean);
+
+  if (isCorrection && lines.length === 1) {
+    // Only the ID line — nothing changed
+    lines.push('_No changes detected._');
+  }
+
+  return lines.join('\n\n');
 }
 
 // ─── Form: submit ─────────────────────────────────────────────────────────────
 
-async function handleSubmit(form, loadTime, overlay, selectedSpace = null, workshopsAvailable = true) {
+async function handleSubmit(form, loadTime, overlay, selectedSpace = null, workshopsAvailable = true, originalSnapshot = null) {
   const statusEl  = overlay.querySelector('.addspace-status');
   const submitBtn = overlay.querySelector('.addspace-submit-btn');
 
@@ -644,7 +687,7 @@ async function handleSubmit(form, loadTime, overlay, selectedSpace = null, works
   const title    = isUpdate
     ? `update makerspace: ${name} (ID ${selectedSpace.ID})`
     : `neuer Makerspace: ${name}`;
-  const body     = buildIssueBody(form, selectedSpace, workshopsAvailable);
+  const body     = buildIssueBody(form, selectedSpace, workshopsAvailable, originalSnapshot);
 
   const url_gh = `https://github.com/${GITHUB_REPO}/issues/new`
     + `?title=${encodeURIComponent(title)}`
