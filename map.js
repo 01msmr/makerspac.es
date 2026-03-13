@@ -1471,13 +1471,8 @@ function setupDesktopRezoomButton() {
   const btn = document.getElementById('desktop-rezoom-btn');
   if (!btn) return;
 
-  function allInView() {
-    if (!zoomManager.previousZoomBounds) return true;
-    return map.getBounds().contains(zoomManager.previousZoomBounds);
-  }
-
   function updateVisibility() {
-    const shouldShow = zoomManager._userMoved && !allInView();
+    const shouldShow = zoomManager._userMoved && !!zoomManager.previousZoomBounds;
     btn.classList.toggle('visible', shouldShow);
   }
 
