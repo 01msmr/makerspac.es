@@ -218,6 +218,7 @@ class ZoomManager {
 
     const mapContainer = document.getElementById('map');
     mapContainer?.classList.add('map-is-zooming');
+    this._isAutoZooming = true;
     this.stopDropdownOverlapDetection();
 
     const firstFrameInfo = this.createZoomPreviewFrame(firstBounds);
@@ -251,6 +252,7 @@ class ZoomManager {
       }
     });
 
+    this._isAutoZooming = false;
     this.suggestionsDropdown?.classList.remove('is-zooming');
     mapContainer?.classList.remove('map-is-zooming');
 
@@ -268,6 +270,7 @@ class ZoomManager {
   executeZoom(markersToZoom, keepFrame = false, frameToRemove = null) {
     this.stopDropdownOverlapDetection();
 
+    this._isAutoZooming = true;
     const zoomOptions = { duration: 1.0 };
     const zoomPromise = new Promise(resolve => {
       this.map.once('zoomend moveend', resolve);
@@ -279,6 +282,7 @@ class ZoomManager {
     });
 
     zoomPromise.then(() => {
+      this._isAutoZooming = false;
       this.suggestionsDropdown?.classList.remove('is-zooming');
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);

@@ -1480,7 +1480,10 @@ function setupDesktopRezoomButton() {
   map.on('moveend', updateVisibility);
   map.on('zoomend', updateVisibility);
 
-  document.addEventListener('filterResultsChanged', updateVisibility);
+  document.addEventListener('filterResultsChanged', () => {
+    zoomManager._userMoved = false;
+    btn.classList.remove('visible');
+  });
 
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
