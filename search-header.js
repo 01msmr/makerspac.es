@@ -1617,6 +1617,14 @@ class SearchHeader {
     }
   }
 
+  /** Sofort-Zoom auf aktuelle Filter-Ergebnisse (kein Debounce, keine Guards). */
+  reZoom() {
+    const locations = appContext.searchFilter?.lastLocationsForZoom || [];
+    if (!this.zoomManager || locations.length === 0) return;
+    const findMarker = (loc) => this.listingCore?.findMarkerByLocation(loc);
+    this.zoomManager.setupAutoZoom(locations, findMarker);
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // EVENTS
   // ═══════════════════════════════════════════════════════════════════════════

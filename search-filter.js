@@ -38,9 +38,11 @@ class SearchFilter {
     // Callbacks
     this._onResultsChange = null;
 
-    // Last filter result — used by desktop rezoom button
+    // Last filter results — used by desktop rezoom button
     /** @type {MakerSpace[]} */
     this.lastFilteredLocations = [];
+    /** @type {MakerSpace[]} */
+    this.lastLocationsForZoom = [];
 
     // Cached country set (static data, built once in initializeStyleStats)
     this._allCountries = new Set();
@@ -352,6 +354,7 @@ class SearchFilter {
    */
   _notifyResultsChange(filteredLocations, locationsForZoom) {
     this.lastFilteredLocations = filteredLocations;
+    this.lastLocationsForZoom = locationsForZoom;
     document.dispatchEvent(new Event('filterResultsChanged'));
     if (this._onResultsChange) {
       this._onResultsChange(filteredLocations, locationsForZoom,

@@ -1484,11 +1484,8 @@ function setupDesktopRezoomButton() {
 
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (!zoomManager.previousZoomBounds) return;
-    zoomManager._isAutoZooming = true;
     zoomManager._userMoved = false;
-    map.once('moveend', () => { zoomManager._isAutoZooming = false; });
-    map.fitBounds(zoomManager.previousZoomBounds, { animate: true, duration: 0.6 });
+    appContext.searchHeader?.reZoom();
     updateVisibility();
   });
 }
