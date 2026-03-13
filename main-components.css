@@ -48,6 +48,30 @@
   top: 1em;
   right: calc(1em + 300px + 12px);
   z-index: 1000;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Desktop Rezoom Button */
+.desktop-rezoom-btn {
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 0.5s ease !important;
+}
+
+.desktop-rezoom-btn.visible {
+  opacity: 0.5 !important;
+  pointer-events: auto;
+  transition: opacity 0.5s ease !important;
+}
+
+.desktop-rezoom-btn:hover {
+  opacity: 0.9 !important;
+}
+
+.settings-gear-button-solo.desktop-rezoom-btn:hover i {
+  transform: none;
 }
 
 /* Solo Gear Button */

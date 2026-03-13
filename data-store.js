@@ -77,6 +77,16 @@ class DataStore {
       window.zoomManager?.toggleZoomIndicator();
     });
 
+    // Rezoom button — links vom Gear, nur Desktop, Sichtbarkeit via map.js
+    if (!('ontouchstart' in window)) {
+      const rezoomButton = document.createElement('button');
+      rezoomButton.id = 'desktop-rezoom-btn';
+      rezoomButton.className = 'settings-gear-button-solo desktop-rezoom-btn';
+      rezoomButton.innerHTML = '<i class="fas fa-compress"></i>';
+      rezoomButton.setAttribute('aria-label', 'Auf gefilterte Ergebnisse zoomen');
+      this.container.appendChild(rezoomButton);
+    }
+
     this.container.appendChild(settingsButton);
     document.body.appendChild(this.container);
   }

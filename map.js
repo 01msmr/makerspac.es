@@ -1466,6 +1466,38 @@ function setupZoomOutButton() {
   });
 }
 
+function setupDesktopRezoomButton() {
+  if ('ontouchstart' in window) return;
+  const btn = document.getElementById('desktop-rezoom-btn');
+  if (!btn) return;
+
+  function allInView() {
+    if (!zoomManager.previousZoomBounds) return true;
+    return map.getBounds().contains(zoomManager.previousZoomBounds);
+  }
+
+  function updateVisibility() {
+    const shouldShow = zoomManager._userMoved && !allInView();
+    btn.classList.toggle('visible', shouldShow);
+  }
+
+  map.on('dragstart', () => setTimeout(updateVisibility, 0));
+  map.on('moveend', updateVisibility);
+  map.on('zoomend', updateVisibility);
+
+  document.addEventListener('filterResultsChanged', updateVisibility);
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!zoomManager.previousZoomBounds) return;
+    zoomManager._isAutoZooming = true;
+    zoomManager._userMoved = false;
+    map.once('moveend', () => { zoomManager._isAutoZooming = false; });
+    map.fitBounds(zoomManager.previousZoomBounds, { animate: true, duration: 0.6 });
+    updateVisibility();
+  });
+}
+
 function setupMapClickHandler() {
   map.on('click', (e) => {
     // Touch: Leaflet's Tap-Helper feuert den map-click auf dem Map-Container (nicht auf dem Marker-Icon).
@@ -1640,6 +1672,7 @@ const init = async () => {
     setupRouting();
     setupMapClickHandler();
     setupZoomOutButton();
+    setupDesktopRezoomButton();
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {
