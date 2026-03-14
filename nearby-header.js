@@ -263,21 +263,15 @@ const CONFIG = AppConfig;
       // Sofortige Anzeige der Koordinaten (während die API lädt)
       this.updateAddressHTML();
 
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`, {
-        headers: { 'Accept-Language': navigator.language || 'en' }
-      })
-        .then(r => r.json())
+      fetch(`https://photon.komoot.io/reverse?lon=${lon}&lat=${lat}`)
+        .then(r => r.ok ? r.json() : null)
         .then(data => {
-          const a = data.address || {};
-          // Daten speichern statt fertigem String
-          this._currentAddressData.street = [a.road, a.house_number].filter(Boolean).join(' ');
-          this._currentAddressData.cityPart = [a.postcode, a.city || a.town || a.village].filter(Boolean).join(' ');
-
-          // Anzeige aktualisieren
+          const p = data?.features?.[0]?.properties || {};
+          this._currentAddressData.street = [p.street, p.housenumber].filter(Boolean).join(' ');
+          this._currentAddressData.cityPart = [p.postcode, p.city || p.town || p.village].filter(Boolean).join(' ');
           this.updateAddressHTML();
         })
         .catch(() => {
-          // Im Fehlerfall bleiben die Koordinaten stehen
           this.updateAddressHTML();
         });
     }
@@ -351,7 +345,7 @@ const CONFIG = AppConfig;
         this.map.dragging.enable();
       }
 
-      document.removeEventListener('keydown', this._keyboardHandler);
+      document.removeEventListener('keydown', this._keyboardHandler, true);
       this.listingCore.keyboardIndex = -1;
 
       if (this.hintElement) {
@@ -495,7 +489,7 @@ const CONFIG = AppConfig;
         this.popoverElement.className = 'nearby-popover settings-popover';
         L.DomEvent.disableClickPropagation(this.popoverElement);
         L.DomEvent.disableScrollPropagation(this.popoverElement);
-        document.addEventListener('keydown', this._keyboardHandler);
+        document.addEventListener('keydown', this._keyboardHandler, true);
       }
 
       if (this.map) {
@@ -1025,18 +1019,19 @@ const CONFIG = AppConfig;
     handleKeyDown(e) {
       if (!this.popoverElement) return;
 
-      const navKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'];
+      e.stopImmediatePropagation(); // capture phase: block ALL keys from reaching search-header etc.
+
+      const navKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape', 'Tab'];
       if (!navKeys.includes(e.key)) return;
 
       e.preventDefault();
-      e.stopImmediatePropagation();
 
       const listContainer = this.popoverElement.querySelector('.nearby-popover-list');
       const items = listContainer?.querySelectorAll('.listing-item');
 
-      // ArrowUp/Down: Zentrale Navigation nutzen (wie Search-Dropdown)
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+      // Tab / ArrowUp/Down: Zentrale Navigation nutzen (wie Search-Dropdown)
+      if (e.key === 'Tab' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const direction = (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) ? 'down' : 'up';
         this.listingCore?.navigateDropdown(direction, listContainer);
         return;
       }
