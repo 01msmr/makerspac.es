@@ -634,7 +634,7 @@ class ListingCore {
    * @param {LeafletMarker} targetMarker
    * @param {string} color - Hex-Farbcode
    */
-  createConnectionLine(item, targetMarker, color = '#0000ff') {
+  createConnectionLine(item, targetMarker, color = AppConfig.colours.hoverLight) {
     if (!isDesktopNonTouch()) return;
     if (appContext.mapUtils?.createConnectionLine) {
       this.connectionLine = appContext.mapUtils.createConnectionLine(item, targetMarker, color, this.connectionWeight);

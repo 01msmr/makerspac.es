@@ -715,6 +715,18 @@ function detectCountryCodeFromURL() {
   return SLUG_TO_CODE[firstSegment] ?? null;
 }
 
+// Preload data split at module-evaluation time — fires before loadData() runs through appContext phases.
+// Single source of truth: reuses detectCountryCodeFromURL() and SLUG_TO_CODE defined above.
+(function preloadDataSplit() {
+  const code = detectCountryCodeFromURL();
+  const href = code ? `data/spaces-${code}.json` : 'data/markers.json';
+  if (!document.querySelector(`link[rel="preload"][href="${href}"]`)) {
+    const l = document.createElement('link');
+    l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.href = href;
+    document.head.appendChild(l);
+  }
+})();
+
 /**
  * Indexiert + erstellt Marker für eine Batch neuer Locations (Non-blocking).
  * Überspringt bekannte IDs (Duplikat-Schutz beim Merge).
@@ -864,18 +876,14 @@ async function loadData() {
         }
       }
 
-      // 1b-ii: Fetch network version
+      // 1b-ii: Fetch network version (always update — SW SWR ensures freshness)
       try {
         const r = await fetch('./data/markers.json', { mode: 'cors' });
         if (r.ok) {
-          const freshData = await r.json();
-          // If network data is different or cache was empty, update
-          if (!rawData || JSON.stringify(freshData) !== JSON.stringify(rawData)) {
-            rawData = freshData;
-            localStorage.setItem('ms-markers-cache', JSON.stringify(freshData));
-            needsEnrichment = true;
-            console.log(`⚡ Stage 1b (Network): markers.json (${rawData.length} Pins)`);
-          }
+          rawData = await r.json();
+          try { localStorage.setItem('ms-markers-cache', JSON.stringify(rawData)); } catch { /* quota */ }
+          needsEnrichment = true;
+          console.log(`⚡ Stage 1b (Network): markers.json (${rawData.length} Pins)`);
         } else if (r.status === 404) {
           console.error("❌ Critical: data/markers.json missing! Run 'node generate-map-splits.js' if in development.");
         }
@@ -1493,6 +1501,18 @@ function setupDesktopRezoomButton() {
   });
 }
 
+function setupTitleResetButton() {
+  const btn = document.querySelector('.title-bar a');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    appContext.mobileFilterUI?.close?.();
+    window.mapUtils?.clearStickyPopup();
+    appContext.searchHeader?.clearAllFilters();
+    zoomManager.handleEmptySearch();
+  });
+}
+
 function setupMapClickHandler() {
   map.on('click', (e) => {
     // Touch: Leaflet's Tap-Helper feuert den map-click auf dem Map-Container (nicht auf dem Marker-Icon).
@@ -1668,6 +1688,7 @@ const init = async () => {
     setupMapClickHandler();
     setupZoomOutButton();
     setupDesktopRezoomButton();
+    setupTitleResetButton();
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {

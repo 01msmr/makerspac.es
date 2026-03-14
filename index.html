@@ -18,7 +18,7 @@
 
   <!-- Preload kritische Ressourcen (parallel zum HTML-Parsen) -->
   <link rel="preload" href="fonts/Roboto-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="data/markers.json" as="fetch" crossorigin />
+  <!-- Data split preload: map.js erkennt Country aus URL-Hash und fügt <link rel=preload> ein -->
 
   <!-- Bibliotheks-CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />

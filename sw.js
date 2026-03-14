@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v33'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v34'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -56,6 +56,7 @@ const STATIC_ASSETS = [
   '/embed-overlay.js',
   '/main.js',
   '/mobile-filter.js',
+  '/popup-builder.js',
   '/map.js',
   '/routing.js',
   // Fonts

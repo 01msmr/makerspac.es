@@ -335,11 +335,11 @@ class ZoomManager {
 
     const isDarkMode = AppConfig?.isDarkMode?.() || false;
     const borderWeight = isDarkMode ? 2 : 0;
-    const borderColor = isDarkMode ? 'silver' : 'black';
+    const borderColor = isDarkMode ? AppConfig.colours.zoomFrameBorder : AppConfig.colours.default;
 
     const zoomFrame = L.polygon([outerRing, innerRing], {
       color: borderColor,
-      fillColor: 'black',
+      fillColor: AppConfig.colours.default,
       fillOpacity: 0,
       weight: borderWeight,
       opacity: 0.8,

@@ -664,7 +664,7 @@ class MobileFilterUI {
         ghost.className = 'mf-ghost-cell';
         ghost.style.gridColumn = String(colIdx + 1);
         ghost.style.gridRow    = String(rowBase + r + 1);
-        ghost.style.background = 'white';
+        ghost.style.background = 'var(--dropdown-bg)';
         ghost.style.height     = '32px';
         ghost.style.boxSizing  = 'border-box';
         track.appendChild(ghost);
@@ -822,7 +822,7 @@ class MobileFilterUI {
       const ghost = document.createElement('div');
       ghost.className = 'mf-ghost-item';
       ghost.style.height = rowH + 'px';
-      ghost.style.background = '#555555';
+      ghost.style.background = '#555';
       ghost.style.boxSizing = 'border-box';
       dropdown.appendChild(ghost);
     }

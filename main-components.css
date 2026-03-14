@@ -1335,6 +1335,123 @@ a#titleurl:hover h3.space-unknown .fas {
   grid-template-columns: 2fr 1fr 1fr;
 }
 
+.addspace-map-preview {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px;
+  background: var(--dropdown-alt-bg);
+}
+
+.addspace-map-preview .leaflet-container {
+  cursor: crosshair;
+}
+
+.addspace-map-addr {
+  position: absolute;
+  bottom: 10px;
+  transition: opacity 0.5s;
+  left: 10px;
+  z-index: 1001;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+}
+
+.addspace-map-addr.is-visible {
+  display: flex;
+}
+
+.addspace-map-addr-text,
+.addspace-map-addr-btn {
+  font-weight: bold;
+  font-size: 1.1em;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.addspace-map-addr-text {
+  background: white;
+  color: blue;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addspace-map-addr-btn {
+  background: blue;
+  color: white;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-family);
+  display: inline-flex;
+  align-items: center;
+}
+
+.addspace-map-addr-btn:hover {
+  background: #0000cc;
+}
+
+.addspace-map-addr.is-used {
+  opacity: 0.33;
+}
+
+.addspace-map-addr.is-used .addspace-map-addr-btn {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Inset shadow sits above map tiles via ::after overlay */
+.addspace-map-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.addspace-street-wrap {
+  position: relative;
+}
+
+.addspace-street-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.addspace-street-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: var(--text-color);
+}
+
+.addspace-street-item:hover {
+  background: var(--dropdown-alt-bg);
+}
+.addspace-street-item.is-active {
+  background: var(--space-hover);
+  color: white;
+}
+
 .addspace-checkboxes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));

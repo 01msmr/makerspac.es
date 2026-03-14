@@ -297,7 +297,7 @@
 }
 
 .filter-pill:hover {
-  background-color: black;
+  background-color: var(--text-color);
   color: white;
 }
 
@@ -312,7 +312,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #cc2222;
+  background: var(--space-closed);
   color: white;
   font-size: 0.72em;
   opacity: 0;
@@ -346,11 +346,11 @@
 }
 
 .filter-pill-open {
-  background-color: #00AA00;
+  background-color: var(--space-open);
 }
 
 .filter-pill-closed {
-  background-color: #DD0000;
+  background-color: var(--space-closed);
 }
 
 .filter-pill-clear-all {

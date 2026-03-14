@@ -26,6 +26,7 @@ export const COLOURS = {
 
   // Feature-spezifisch
   nearbyTitle:  'rgba(111, 233, 166, 0.66)',
+  zoomFrameBorder: '#c0c0c0', // Zoom-Preview-Frame Rahmen im Dark Mode
 };
 
 /** @returns {boolean} */
