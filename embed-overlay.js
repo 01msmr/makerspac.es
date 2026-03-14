@@ -259,7 +259,7 @@ function initLocationMap(overlay) {
     set('street_name',   a.road);
     const hnoMatch = (a.house_number || '').match(/^(\d+)\s*([^\d\s].*)?\s*$/);
     set('street_number', hnoMatch ? hnoMatch[1] : a.house_number);
-    if (hnoMatch?.[2]) set('street_ext', hnoMatch[2].trim());
+    set('street_ext', hnoMatch?.[2]?.trim() ?? '');
     const country = GEOCODE_COUNTRY[a.country_code?.toLowerCase()] || 'other';
     if (form?.elements['country']) form.elements['country'].value = country;
     addrWrap.classList.add('is-used');

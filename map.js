@@ -1538,11 +1538,20 @@ function setupMapClickHandler() {
     let oneFingerMoved = false;
     let twoFingerMoved = false;
     let twoFingerActive = false; // wurde ein 2-Finger-Tap gestartet?
+    let lastTwoFingerPoint = null; // Mittelpunkt zwischen zwei Fingern (Container-Koordinaten)
     const mapContainer = map.getContainer();
 
     mapContainer.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) { oneFingerMoved = false; twoFingerActive = false; }
-      if (e.touches.length === 2) { twoFingerMoved = false; twoFingerActive = true; }
+      if (e.touches.length === 2) {
+        twoFingerMoved = false; twoFingerActive = true;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const rect = mapContainer.getBoundingClientRect();
+        lastTwoFingerPoint = L.point(
+          (t0.clientX + t1.clientX) / 2 - rect.left,
+          (t0.clientY + t1.clientY) / 2 - rect.top
+        );
+      }
     }, { passive: true });
 
     mapContainer.addEventListener('touchmove', (e) => {
@@ -1560,7 +1569,11 @@ function setupMapClickHandler() {
         twoFingerActive = false;
         if (twoFingerMoved) { twoFingerMoved = false; prevTwoFingerEnd = 0; return; }
         if (now - prevTwoFingerEnd < 350) {
-          map.zoomOut(1);
+          if (lastTwoFingerPoint) {
+            map.setZoomAround(lastTwoFingerPoint, map.getZoom() - 1);
+          } else {
+            map.zoomOut(1);
+          }
           prevTwoFingerEnd = 0;
         } else {
           prevTwoFingerEnd = now;
@@ -1576,7 +1589,10 @@ function setupMapClickHandler() {
             e.target.closest('.leaflet-popup') ||
             e.target.closest('.search-container')) { prevOneFingerEnd = 0; return; }
         if (now - prevOneFingerEnd < 350) {
-          map.zoomIn(1);
+          const t = e.changedTouches[0];
+          const rect = mapContainer.getBoundingClientRect();
+          const tapPoint = L.point(t.clientX - rect.left, t.clientY - rect.top);
+          map.setZoomAround(tapPoint, map.getZoom() + 1);
           prevOneFingerEnd = 0;
         } else {
           prevOneFingerEnd = now;
