@@ -269,9 +269,14 @@ class SearchFilter {
         if (selectedStateFilters.has('closed') && location.isOpen === false) stateMatch = true;
       }
 
-      // Country-Match (OR innerhalb der Kategorie)
-      const countryMatch = selectedCountries.size === 0 ||
-        (locationCountry && selectedCountries.has(locationCountry));
+      // Country-Match: _activeCountryFilter (routing) direkt lesen — nicht via preFilteredLocations.
+      // applyFilters() kann direkt aufgerufen werden (z.B. bei Workshop-Auswahl), ohne dass
+      // filterByText() vorher den Country-Filter in preFilteredLocations eingearbeitet hat.
+      // Beide Country-Quellen werden kombiniert (AND): routing-Filter UND style-basierter Filter.
+      const activeCountry = appContext.routingManager?._activeCountryFilter || null;
+      const countryMatch =
+        (!activeCountry || locationCountry === activeCountry) &&
+        (selectedCountries.size === 0 || (locationCountry && selectedCountries.has(locationCountry)));
 
       // Weekly-Match
       let weeklyMatch = true;

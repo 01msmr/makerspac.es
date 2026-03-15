@@ -521,12 +521,20 @@ MakerSpaceAddress --> Street : street
 
 ### 5a. Text Search — filterByText()
 
+Produces `preFilteredLocations` (performance pre-filter). Country filter here is a performance
+optimisation only — `applyFilters()` always re-checks `_activeCountryFilter` directly.
+
 ```mermaid
 flowchart TB
 
+START["this.json (all locations)"]
 QUERY["query string"]
 
-D1{"pure digits?"}
+COUNTRY{"_activeCountryFilter set?\n(routing state, independent of query)"}
+CFILT["pre-filter: loc.loc.country === activeCountryFilter\n(performance only — applyFilters re-checks directly)"]
+
+D1{"query non-empty?"}
+D1b{"pure digits?"}
 IDMATCH["_currentIdMatch =\nlocationById.get(parseInt(query))"]
 
 D2{"PLZ prefix match?\nzfill(loc.plz, country)\n.startsWith(query)"}
@@ -539,9 +547,13 @@ PZIP["zip pill:\nloc.plz.toString() === pill.filterKey"]
 
 OUT["preFilteredLocations: MakerSpace[]"]
 
-QUERY --> D1
-D1 -->|yes| IDMATCH
-D1 -->|no| D2
+START --> COUNTRY
+COUNTRY -->|yes| CFILT --> D1
+COUNTRY -->|no| D1
+D1 -->|yes| D1b
+D1 -->|no| PILL
+D1b -->|yes| IDMATCH
+D1b -->|no| D2
 D2 -->|match| OUT
 D2 -->|no match| D3
 D3 -->|match| OUT
@@ -549,6 +561,7 @@ D3 -->|no match| PILL
 PILL -->|city pill| PCITY
 PILL -->|zip pill| PZIP
 PCITY & PZIP --> OUT
+IDMATCH --> D2
 ```
 
 ### 5b. Filter Application — applyFilters()
@@ -568,7 +581,7 @@ end
 subgraph MATCH["Per-location AND logic (all must pass)"]
     M1["styleMatch\nsize=0 OR loc.style in set"]
     M2["stateMatch\nsize=0 OR\n(open AND isOpen===true) OR\n(closed AND isOpen===false)"]
-    M3["countryMatch\nsize=0 OR loc.country in set"]
+    M3["countryMatch — TWO sources AND-combined\n① !_activeCountryFilter OR loc.country === activeCountryFilter\n② selectedCountries.size=0 OR loc.country in set\nRead directly from routingManager — not via preFilteredLocations"]
     M4["weeklyMatch\nsize=0 OR\nloc.weekly.weekday in set OR\n'any' AND weekday<=6"]
     M5["workshopMatch\nsize=0 OR\nloc.workshops.some(w => set.has(w))"]
     M6["bookmarkMatch\n!active OR\nbookmarkedIds.has(loc.ID)"]
@@ -623,7 +636,7 @@ P7["no hash or empty"]
 A1["navigateToLocations([ID])\nflyTo + openPopup"]
 A2["handleBookmarkRoute()\nload bookmark IDs"]
 A3["handleLocationRoute()\nzoom to location(s)"]
-A4["applyCountryFilter(name)\ntogglePill(country)"]
+A4["applyCountryFilter(name)\nsets _activeCountryFilter\n→ triggerFilterUpdate()\n(applyFilters reads it directly)"]
 A5["applyCityFilter(name)\ntogglePill(city)"]
 A6["pillsManager.loadPills(pills)\nparse + apply each pill"]
 A7["autoDetectAndApplyCountry()\nnavigator.languages → code → country"]
