@@ -49,7 +49,10 @@ initEmbedOverlay();
 // Loading overlay — backdrop + two stacked toasts, verschwindet beim ersten filterResultsChanged
 {
   const backdrop = document.createElement('div');
-  backdrop.className = 'loading-overlay-backdrop';
+  backdrop.className = 'map-backdrop';
+  backdrop.style.setProperty('--backdrop-opacity', '0.3');
+  backdrop.style.setProperty('--backdrop-duration', '1s');
+  backdrop.style.zIndex = '9998';
   document.body.appendChild(backdrop);
 
   const stack = document.createElement('div');
@@ -65,7 +68,7 @@ initEmbedOverlay();
 
   stack.append(main, sub);
   document.body.appendChild(stack);
-  requestAnimationFrame(() => { main.classList.add('show'); sub.classList.add('show'); });
+  requestAnimationFrame(() => { backdrop.classList.add('show'); main.classList.add('show'); sub.classList.add('show'); });
 
   document.addEventListener('filterResultsChanged', () => {
     backdrop.classList.add('fade-out');

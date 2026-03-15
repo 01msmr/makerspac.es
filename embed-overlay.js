@@ -36,11 +36,19 @@ export function initEmbedOverlay() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelector('.embed-overlay')?.remove();
-      document.body.style.overflow = '';
-    }
+    if (e.key === 'Escape') _closeEmbed();
   });
+}
+
+function _closeEmbed() {
+  const backdrop = document.querySelector('.embed-backdrop');
+  if (backdrop) {
+    backdrop.classList.remove('show');
+    backdrop.classList.add('fade-out');
+    setTimeout(() => backdrop.remove(), 300);
+  }
+  document.querySelector('.embed-overlay')?.remove();
+  document.body.style.overflow = '';
 }
 
 // ─── HTML helpers ─────────────────────────────────────────────────────────────
@@ -677,6 +685,12 @@ function initStreetAutocomplete(overlay) {
 function showOverlay() {
   if (document.querySelector('.embed-overlay')) return;
 
+  const backdrop = document.createElement('div');
+  backdrop.className = 'map-backdrop embed-backdrop';
+  backdrop.style.zIndex = '99999';
+  document.body.appendChild(backdrop);
+  requestAnimationFrame(() => backdrop.classList.add('show'));
+
   const overlay = document.createElement('div');
   overlay.className = 'embed-overlay';
   overlay.innerHTML = `
@@ -943,7 +957,7 @@ function showOverlay() {
   document.addEventListener('keydown', _overlayKeyHandler, true);
 
   // ── Close ──
-  const close = () => { overlay.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', _overlayKeyHandler, true); };
+  const close = () => { _closeEmbed(); document.removeEventListener('keydown', _overlayKeyHandler, true); };
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   overlay.querySelector('.embed-close-btn').addEventListener('click', close);
 

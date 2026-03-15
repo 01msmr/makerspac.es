@@ -915,13 +915,11 @@ a#titleurl:hover h3.space-unknown .fas {
 .embed-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.44);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   z-index: 100000;
-  animation: fadeIn 0.2s ease;
   padding: 40px 16px;
   box-sizing: border-box;
 }
@@ -1868,18 +1866,18 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: translate(-50%, -50%) scale(2);
 }
 
-/* Loading Overlay — Backdrop + gestapelte Toasts beim App-Start */
-.loading-overlay-backdrop {
+/* Shared map backdrop — animated show/hide (loading overlay + embed overlay) */
+.map-backdrop {
   position: fixed;
   inset: 0;
   background: #000;
-  opacity: .3;
+  opacity: 0;
   pointer-events: none;
-  z-index: 9998;
-  transition: opacity 1s;
+  transition: opacity var(--backdrop-duration, 0.7s);
 }
 
-.loading-overlay-backdrop.fade-out { opacity: 0; }
+.map-backdrop.show     { opacity: var(--backdrop-opacity, 0.45); }
+.map-backdrop.fade-out { opacity: 0; }
 
 .loading-overlay-stack {
   position: fixed;
