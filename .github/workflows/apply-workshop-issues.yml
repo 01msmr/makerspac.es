@@ -4,8 +4,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  issues:
-    types: [labeled]
   workflow_dispatch:
     inputs:
       mode:
@@ -25,7 +23,6 @@ on:
 jobs:
   apply:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'workshop-data'
     permissions:
       issues: write
       contents: write
@@ -44,27 +41,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ARGS=""
-          if [ "${{ github.event_name }}" = "issues" ]; then
-            # Triggered by workshop-data label — always apply, extract ID from title
-            TITLE="${{ github.event.issue.title }}"
-            SPACE_ID=$(echo "$TITLE" | grep -oP '(?<=#)\d+(?=\))')
-            ARGS="--apply"
-            if [ -n "$SPACE_ID" ]; then
-              ARGS="$ARGS --id $SPACE_ID"
-            fi
-          else
-            if [ "${{ inputs.mode }}" = "apply" ]; then
-              ARGS="$ARGS --apply"
-            fi
-            if [ "${{ inputs.id }}" != "0" ]; then
-              ARGS="$ARGS --id ${{ inputs.id }}"
-            fi
+          if [ "${{ inputs.mode }}" = "apply" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ "${{ inputs.id }}" != "0" ]; then
+            ARGS="$ARGS --id ${{ inputs.id }}"
           fi
           echo "Running: node tools/apply-workshop-issues.js $ARGS"
           node tools/apply-workshop-issues.js $ARGS
 
       - name: Commit loc-enrichment.json
-        if: inputs.mode == 'apply' || github.event_name == 'issues'
+        if: ${{ inputs.mode == 'apply' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
