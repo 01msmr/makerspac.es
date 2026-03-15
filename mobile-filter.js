@@ -50,6 +50,16 @@ class MobileFilterUI {
       };
       updateMapBottom();
       new ResizeObserver(updateMapBottom).observe(searchContainer);
+
+      // Android: Keyboard open/close changes visualViewport — Leaflet canvas muss neu berechnet werden
+      // sonst bleibt ein schwarzer Streifen rechts (Canvas-Breite stimmt nicht mit Container überein)
+      if ('ontouchstart' in window && window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          updateMapBottom();
+          const m = appContext.map;
+          if (m) requestAnimationFrame(() => m.invalidateSize());
+        });
+      }
     }
 
     // Grid-Snapping auf Dropdown-Items setzen wenn Inhalt sich ändert

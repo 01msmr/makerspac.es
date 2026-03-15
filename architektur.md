@@ -1,6 +1,9 @@
 # Architektur — makerspac.es
 *Living Documentation · bei Änderungen aktualisieren · Stand: 2026-02*
 
+> **Visuelle Diagramme** (Modul-Abhängigkeiten, Datenfluss, Event Bus, Boot-Sequenz, Runtime-Flows):
+> → **[architecture-diagram.md](architecture-diagram.md)**
+
 ---
 
 ## C4 Level 1 — System Context
@@ -39,49 +42,14 @@
 │  └──────────────┘           │  Datenschicht (JSON)   │                      │
 │                             │  data/spaces-{cc}.json │ ← Build aus          │
 │  ┌──────────────┐           │  data/spaces-all.json  │   locations.json +   │
-│  │  sw.js       │           │  status.json (live)    │   loc-enrichment.json    │
+│  │  sw.js       │           │  status.json (live)    │   loc-enrichment.json│
 │  │  (Service    │           │  lang.json (i18n)      │                      │
 │  │   Worker)    │           └────────────────────────┘                      │
-│  │   Worker)    │                                                           │
 │  └──────────────┘                                                           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Kein Backend, kein Build-Step, kein Framework.**
-
----
-
-## C4 Level 3 — Komponenten (JS-Module)
-
-### Initialisierungsreihenfolge (Lifecycle-Phasen)
-
-```
-index.html
-  └── <script type="module" src="map.js">
-        │
-        ├─ Phase "services"
-        │     ├── i18n.js          (Übersetzungen laden)
-        │     ├── datasync.js      (ConsentManager / localStorage)
-        │     ├── bookmark-manager.js
-        │     ├── data-store.js    (Einstellungen)
-        │     └── routing.js       (URL-Hash parsen)
-        │
-        ├─ Phase "map"
-        │     ├── main.js          (Leaflet-Karte initialisieren)
-        │     ├── config.js        (Icons, Farben, Settings)
-        │     └── zoom-manager.js
-        │
-        ├─ Phase "data"
-        │     ├── locations.json   (fetch)
-        │     └── status.json      (fetch, anreichern)
-        │
-        └─ Phase "app"  ← main.js: initApp()
-              ├── listing-core.js  (Item-Rendering, Hover, Connection Line)
-              ├── search-filter.js (Filter-Logik, kein UI)
-              ├── search-header.js (Such-UI, Pills, Dropdown)
-              ├── nearby.js        (Nearby-Popover)
-              └── mobile-filter.js (Mobile Filter-Sheet)
-```
 
 ---
 
@@ -102,7 +70,7 @@ index.html
 | `data-store.js` | Einstellungen (Sprache, Theme, Clustering) persistieren | `DataStore`, `window.languageSwitcher` |
 | `bookmark-manager.js` | Favoriten (Add/Remove/Export) | `BookmarkManager`, `window.bookmarkManager` |
 | `datasync.js` | ConsentManager, localStorage-Wrapper | `ConsentManager`, `window.consent` |
-| `nearby.js` | Nearby-Popover (Rechtsklick), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
+| `nearby-header.js` | Nearby-Popover (Rechtsklick), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar | `MobileFilterUI`, `window.mobileFilterUI` |
 | `i18n.js` | Übersetzungen, `t()`, `setLanguage()` | `I18n`, `window.i18n` |
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom | `ZoomManager`, `window.zoomManager` |
@@ -127,46 +95,6 @@ index.html
 
 ---
 
-## Abhängigkeitsgraph (Wer braucht wen)
-
-```
-search-header.js
-  ├── listing-core.js   (Item-Rendering, Hover-Callbacks)
-  ├── search-filter.js  (Filter-Ergebnisse, applyPreFilters)
-  ├── zoom-manager.js   (flyTo, autoZoom)
-  └── app-context.js    (locationById, map)
-
-search-filter.js
-  ├── config.js         (AppConfig, WORKSHOP_TYPES)
-  ├── bookmark-manager.js (isBookmarked)
-  └── app-context.js    (locations)
-
-listing-core.js
-  ├── config.js         (AppConfig.getDynamicSpaceColor)
-  └── app-context.js    (locationById, map)
-
-mobile-filter.js
-  ├── search-filter.js  (Filter-State)
-  └── search-header.js  (triggerFilterUpdate)
-
-nearby.js
-  ├── config.js         (AppConfig)
-  └── app-context.js    (map, locations)
-
-routing.js
-  ├── search-filter.js  (applyFilters)
-  └── app-context.js    (waitFor)
-
-data-store.js
-  ├── datasync.js       (ConsentManager.set/get)
-  ├── i18n.js           (t(), setLanguage)
-  └── app-context.js    (waitFor)
-```
-
-**Zyklische Abhängigkeiten:** keine — `app-context.js` ist das einzige Shared-Leaf ohne Up-Dependencies.
-
----
-
 ## Datenschicht — Drei-Tier-Architektur
 
 | Datei | Inhalt | Gepflegt durch | Im Git |
@@ -188,38 +116,6 @@ node tools/workshop-crawler.js --dry-json   → schreibt loc-enrichment.json
 node generate-map-splits.js                 → baut data/ neu (Merge findet hier statt)
 git add loc-enrichment.json && git commit       → Commit
 git push                                    → Deploy (CI baut data/ automatisch neu)
-```
-
----
-
-## Datenfluss — Kernpfad
-
-```
-1. locations.json  ──fetch──▶  map.js (Bootstrap)
-                                 │
-2. status.json    ──fetch──▶   anreichern (location.status = {open, message})
-                                 │
-3. appContext.ready('data')      │
-                                 ▼
-4. main.js:initApp()  ──────▶  SearchFilter.initializeStyleStats()
-                                 │
-5. Benutzer tippt               │
-   in #search-bar ──────────▶  SearchHeader.handleInput()
-                                 │
-6.                              SearchFilter.applyFilters(query, styles)
-                                 │
-7.                              SearchHeader.createSuggestionItems(results)
-                                 │
-8.                              ListingCore.setupItemListeners()
-                                 │
-9. Benutzer klickt Item ──────▶ SearchHeader.handleItemClick(location)
-                                 │
-                    ┌───────────┴──────────────┐
-                    ▼                          ▼
-              map.flyTo()             marker.openPopup()
-                    │
-              zoomend ────────────▶  ListingCore.updateHoverSVGPosition()
-                                       (Connection Line neu zeichnen)
 ```
 
 ---
@@ -250,7 +146,7 @@ git push                                    → Deploy (CI baut data/ automatisc
 | `@media (max-width: 768px)` | nearby.css (Popover wird Sheet) |
 | `@media (prefers-color-scheme: dark)` | main-layout.css, nearby.css, search.css |
 
-**Regel:** Alle Mobile-only CSS-Änderungen in `@media (max-width: 767px)`. JS-Guards: `window.innerWidth <= 767`.
+**Regel:** Alle Mobile-only CSS-Änderungen in `@media (max-width: 767px)`. JS-Touch-Guards: `'ontouchstart' in window`.
 
 ---
 
@@ -258,8 +154,8 @@ git push                                    → Deploy (CI baut data/ automatisc
 
 ### Mobile/Desktop-Branching (JS)
 ```javascript
-const isMobile = window.innerWidth <= 767 || ('ontouchstart' in window);
-if (isMobile) { /* … */ } else { /* … */ }
+// Touch-Erkennung (Phone + Tablet) — IMMER so, nie window.innerWidth:
+if ('ontouchstart' in window) { ... }
 ```
 
 ### Leaflet-Events für Karten-Sync

@@ -46,6 +46,36 @@ window.zoomManager = zoomManager;   // backward compat
 appContext.ready('services');
 initEmbedOverlay();
 
+// Loading overlay — backdrop + two stacked toasts, verschwindet beim ersten filterResultsChanged
+{
+  const backdrop = document.createElement('div');
+  backdrop.className = 'loading-overlay-backdrop';
+  document.body.appendChild(backdrop);
+
+  const stack = document.createElement('div');
+  stack.className = 'loading-overlay-stack';
+
+  const main = document.createElement('div');
+  main.className = 'loading-overlay-toast loading-overlay-toast--large';
+  main.innerHTML = '<i class="fas fa-cog fa-spin"></i> Karte wird geladen\u2026';
+
+  const sub = document.createElement('div');
+  sub.className = 'loading-overlay-toast';
+  sub.textContent = 'Makerspaces werden vorbereitet\u2026';
+
+  stack.append(main, sub);
+  document.body.appendChild(stack);
+  requestAnimationFrame(() => { main.classList.add('show'); sub.classList.add('show'); });
+
+  document.addEventListener('filterResultsChanged', () => {
+    backdrop.classList.add('fade-out');
+    setTimeout(() => backdrop.remove(), 1000);
+    main.classList.remove('show'); main.classList.add('zoom-out');
+    sub.classList.remove('show');  sub.classList.add('zoom-out');
+    setTimeout(() => stack.remove(), 300);
+  }, { once: true });
+}
+
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {
     e.preventDefault();
