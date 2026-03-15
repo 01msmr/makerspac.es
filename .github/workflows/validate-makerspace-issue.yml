@@ -132,9 +132,14 @@ jobs:
                   commentBody += `- ${warn}\n`;
                 });
               }
-              const isCorrection = !!fields['Existing ID'];
-              const label = isCorrection ? 'update-space' : 'add-space';
-              commentBody += `\n---\n*Ein Maintainer kann jetzt das Label \`${label}\` setzen, um den PR zu erstellen.*`;
+              const isWorkshopIssue = context.payload.issue.labels?.some(l => l.name === 'workshop-data');
+              if (isWorkshopIssue) {
+                commentBody += `\n---\n*Workshop-Daten-Issue — wird automatisch verarbeitet sobald das Label \`workshop-data\` gesetzt ist (bereits gesetzt).*`;
+              } else {
+                const isCorrection = !!fields['Existing ID'];
+                const label = isCorrection ? 'update-space' : 'add-space';
+                commentBody += `\n---\n*Ein Maintainer kann jetzt das Label \`${label}\` setzen, um den PR zu erstellen.*`;
+              }
             }
 
             // Vorherige Bot-Kommentare suchen und aktualisieren oder neuen erstellen
