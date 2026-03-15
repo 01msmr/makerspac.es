@@ -14,6 +14,7 @@ export {};
  * @property {number}           lat
  * @property {number}           long
  * @property {number|string}    [plz]
+ * @property {number|string}    [zip]
  * @property {string}           city
  * @property {string}           country   - Vollständiger Ländername (z.B. 'Germany')
  * @property {{ name: string, number: string|number, ext: string }} [street]
@@ -96,7 +97,7 @@ export {};
  * Eine Suchpille im Dropdown (Ort, Stil, Land).
  * @typedef {Object} Pill
  * @property {string}                   text        - Anzeigetext (z.B. 'Berlin')
- * @property {'city'|'style'|'country'} type
+ * @property {'city'|'style'|'country'|'zip'} type
  * @property {number}                   count       - Anzahl passender Locations
  * @property {string}                   [filterKey]
  */

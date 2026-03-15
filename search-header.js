@@ -283,6 +283,15 @@ class AutocompleteManager {
     this.onSelectCallback = null;
     this.minChars = 2;
 
+    // Pre-build city index once — never changes at runtime
+    /** @type {Map<string, number>} */
+    this._cityIndex = new Map();
+    json.forEach(loc => {
+      const city = loc.loc?.city;
+      if (city && city !== 'CITY_CITY')
+        this._cityIndex.set(city, (this._cityIndex.get(city) || 0) + 1);
+    });
+
     this.initializeEventListeners();
   }
 
@@ -307,44 +316,19 @@ class AutocompleteManager {
 
     query = query.toLowerCase().trim();
     const suggestions = [];
-    const seenTexts = new Set();
 
-    // Cities
-    const cityCount = new Map();
-    this.json.forEach(loc => {
-      const city = loc.loc?.city;
-      if (city && city !== 'CITY_CITY' && city.toLowerCase().startsWith(query)) {
-        cityCount.set(city, (cityCount.get(city) || 0) + 1);
+    this._cityIndex.forEach((count, city) => {
+      if (city.toLowerCase().startsWith(query)) {
+        const specificity = query.length / city.length;
+        suggestions.push({ text: city, type: 'city', count, sortKey: specificity * 10 + count });
       }
     });
 
-    Array.from(cityCount.entries())
-      .sort((a, b) => b[1] - a[1])
-      .forEach(([city, count]) => {
-        if (!seenTexts.has(city.toLowerCase())) {
-          suggestions.push({ text: city, type: 'city', count: count, sortKey: count * 1000 });
-          seenTexts.add(city.toLowerCase());
-        }
-      });
-
-    // ZIP
-    const zipSet = new Set();
-    this.json.forEach(loc => {
-      const zip = loc.loc?.zip;
-      if (zip && zip.toString().startsWith(query)) {
-        zipSet.add(zip.toString());
-      }
+    suggestions.sort((a, b) => {
+      if (b.sortKey !== a.sortKey) return b.sortKey - a.sortKey;
+      return a.text.localeCompare(b.text, undefined, { sensitivity: 'base' });
     });
-
-    Array.from(zipSet).forEach(zip => {
-      if (!seenTexts.has(zip)) {
-        suggestions.push({ text: zip, type: 'zip', count: null, sortKey: 100 });
-        seenTexts.add(zip);
-      }
-    });
-
-    suggestions.sort((a, b) => b.sortKey - a.sortKey);
-    this.suggestions = suggestions.slice(0, 5);
+    this.suggestions = suggestions.slice(0, 8);
 
     if (this.suggestions.length > 0) {
       this.render();
@@ -359,7 +343,7 @@ class AutocompleteManager {
     this.suggestions.forEach((suggestion, index) => {
       const pill = document.createElement('div');
       pill.className = 'autocomplete-pill';
-      pill.dataset.index = index;
+      pill.dataset.index = String(index);
       pill.setAttribute('role', 'option');
       pill.setAttribute('aria-selected', 'false');
 
@@ -438,7 +422,7 @@ class AutocompleteManager {
     }
 
     this.styleFilterManager.applyFilters();
-    this.styleFilterManager.updateCounter?.();
+    (/** @type {any} */ (this.styleFilterManager)).updateCounter?.();
 
     window.app?.searchHeader?.createActiveFiltersSection?.();
   }
@@ -471,7 +455,7 @@ class AutocompleteManager {
       lastInputTime = Date.now();
       setTimeout(() => {
         if (Date.now() - lastInputTime >= 150) {
-          this.generateSuggestions(e.target.value);
+          this.generateSuggestions(/** @type {HTMLInputElement} */ (e.target).value);
         }
       }, 150);
     });
@@ -515,7 +499,7 @@ class AutocompleteManager {
     });
 
     document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target) && e.target !== this.searchBar) {
+      if (!this.container.contains(/** @type {Node} */ (e.target)) && e.target !== this.searchBar) {
         this.hide();
       }
     });
@@ -540,17 +524,17 @@ class AutocompleteManager {
  */
 class SearchHeader {
   /**
-   * @param {object} options
-   * @param {any} options.map - Leaflet Map-Instanz
-   * @param {MakerSpace[]} options.json
+   * @param {object} [options]
+   * @param {any} [options.map] - Leaflet Map-Instanz
+   * @param {MakerSpace[]} [options.json]
    * @param {function(string|number, string): string} [options.zfill]
    */
   constructor(options = {}) {
     this.map = options.map;
     this.json = options.json;
-    this.zfill = options.zfill || ((plz) => plz);
+    this.zfill = options.zfill || ((plz) => String(plz));
 
-    this.searchBar = document.getElementById('search-bar');
+    this.searchBar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
 
@@ -621,7 +605,7 @@ class SearchHeader {
       // Auf Mobile/Tablet-Touch: kein closeDropdown bei Außenklick
       const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
       if (!isMobileUI &&
-        !e.target.closest('.search-container') && !e.target.closest('.mf-overlay')) {
+        !/** @type {HTMLElement} */ (e.target).closest('.search-container') && !/** @type {HTMLElement} */ (e.target).closest('.mf-overlay')) {
         this.closeDropdown();
       }
     });
@@ -773,7 +757,7 @@ class SearchHeader {
     }
 
     if (itemToProcess) {
-      const location = this.listingCore?.getLocationFromItem(itemToProcess);
+      const location = this.listingCore?.getLocationFromItem(/** @type {HTMLElement} */ (itemToProcess));
       if (location) {
         this.handleItemClick(location);
       }
@@ -1383,7 +1367,7 @@ class SearchHeader {
     header.querySelectorAll('.country-nav-caret').forEach(caret => {
       caret.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.handleCountryScroll(country, caret.dataset.direction);
+        this.handleCountryScroll(country, /** @type {HTMLElement} */ (caret).dataset.direction);
       });
     });
 
@@ -1393,7 +1377,7 @@ class SearchHeader {
 
   handleCountryScroll(currentCountry, direction) {
     const headers = Array.from(this.suggestionsDropdown.querySelectorAll('.country-group-header:not(.id-match-header)'));
-    const currentIndex = headers.findIndex(h => h.dataset.countryName === currentCountry);
+    const currentIndex = headers.findIndex(h => /** @type {HTMLElement} */ (h).dataset.countryName === currentCountry);
 
     let targetIndex;
     if (direction === 'next') {
@@ -1406,7 +1390,7 @@ class SearchHeader {
       const dropdown = this.suggestionsDropdown;
       const stickyTop = 83;
       dropdown.scrollTo({
-        top: headers[targetIndex].offsetTop - stickyTop,
+        top: /** @type {HTMLElement} */ (headers[targetIndex]).offsetTop - stickyTop,
         behavior: 'smooth'
       });
     }
@@ -1494,7 +1478,7 @@ class SearchHeader {
       const activeItem = this.suggestionsDropdown.querySelector('.listing-item');
       if (activeItem) {
         activeItem.classList.add('active');
-        if (this.listingCore) this.listingCore.currentHoverItem = activeItem;
+        if (this.listingCore) this.listingCore.currentHoverItem = /** @type {HTMLElement} */ (activeItem);
       }
     }
 

@@ -6,6 +6,6 @@
     "moduleResolution": "bundler",
     "lib": ["ES2020", "DOM"]
   },
-  "include": ["*.js"],
+  "include": ["*.js", "*.d.ts"],
   "exclude": ["libs/**", "_OLD/**", "tools/**", "tests/**", "node_modules/**"]
 }

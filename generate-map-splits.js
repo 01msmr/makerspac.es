@@ -34,10 +34,9 @@ const COUNTRY_CODES = {
   'Luxembourg':  'lu',
 };
 
-const PLACEHOLDER_WEEKDAY = 9;
-const PLACEHOLDER_INIT    = 20010000;
-
 // loc-enrichment.json einlesen (optional — Defaults für crawler-pflegbare Felder)
+// Hinweis: Schlüssel in loc-enrichment.json sind Strings (JSON-Pflicht), IDs in locations.json
+// sind Zahlen — String(loc.ID) ist die kanonische Konvertierung.
 const enrichmentPath = path.join(__dirname, 'loc-enrichment.json');
 const enrichment = existsSync(enrichmentPath)
   ? JSON.parse(readFileSync(enrichmentPath, 'utf8'))
@@ -45,7 +44,7 @@ const enrichment = existsSync(enrichmentPath)
 
 /**
  * Reichert einen Location-Eintrag mit Daten aus loc-enrichment.json an.
- * Regel: Echte Werte in locations.json gewinnen immer — enrichment füllt nur Lücken/Platzhalter.
+ * Regel: Echte Werte in locations.json gewinnen immer — enrichment füllt nur fehlende Felder.
  * @param {object} loc
  * @returns {object}
  */
@@ -64,10 +63,10 @@ function applyEnrichment(loc) {
   if (e.spaceapi?.endpoint && !loc.spaceapi?.endpoint) {
     out.spaceapi = e.spaceapi;
   }
-  if (e.weekly && (!loc.weekly || (loc.weekly.weekday === PLACEHOLDER_WEEKDAY && loc.weekly.time === 0))) {
+  if (e.weekly && !loc.weekly) {
     out.weekly = e.weekly;
   }
-  if (e.dates?.['space.init'] && loc.dates?.['space.init'] === PLACEHOLDER_INIT) {
+  if (e.dates?.['space.init'] && !loc.dates?.['space.init']) {
     out.dates = { ...loc.dates, 'space.init': e.dates['space.init'] };
   }
 
@@ -153,4 +152,11 @@ console.log(`✅ data/splits-manifest.json (${byCode.size} Länder)`);
 
 if (skipped > 0) {
   console.warn(`⚠️  ${skipped} Einträge ohne bekannten Länder-Code übersprungen`);
+}
+
+// Orphan-Erkennung: IDs in loc-enrichment.json die keine locations.json-Entsprechung haben
+const locationIds = new Set(rawLocations.map(l => String(l.ID)));
+const orphans = Object.keys(enrichment).filter(id => !locationIds.has(id));
+if (orphans.length > 0) {
+  console.warn(`⚠️  loc-enrichment.json: ${orphans.length} IDs ohne locations.json-Eintrag: ${orphans.join(', ')}`);
 }
