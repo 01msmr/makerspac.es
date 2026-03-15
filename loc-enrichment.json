@@ -842,13 +842,26 @@
     }
   },
   "232": {
-    "events": "https://www.tu-ilmenau.de/universitaet/quicklinks/zentralinstitut-fuer-bildung/angebote/unikat/workshops"
+    "events": "https://www.tu-ilmenau.de/universitaet/quicklinks/zentralinstitut-fuer-bildung/angebote/unikat/workshops",
+    "workshops": [
+      "3d",
+      "laser",
+      "wood",
+      "electronics"
+    ]
   },
   "233": {
     "events": "https://technikkultur-erfurt.de/kalender/",
     "spaceapi": {
       "endpoint": "https://status.bytespeicher.org/status.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "metal",
+      "wood",
+      "laser"
+    ]
   },
   "234": {
     "spaceapi": {
@@ -948,13 +961,22 @@
   "254": {
     "spaceapi": {
       "endpoint": "https://api.ccczh.space/api/v13"
-    }
+    },
+    "workshops": [
+      "electronics",
+      "music"
+    ]
   },
   "255": {
     "events": "https://amiv.ethz.ch/en/events",
     "spaceapi": {
       "endpoint": "https://bastli.ch/hackspace_api.php"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      " coding"
+    ]
   },
   "256": {
     "events": "https://odenwilusenz.ch/odw/veranstaltungen/",
@@ -1027,7 +1049,13 @@
   "267": {
     "spaceapi": {
       "endpoint": "https://hackalot.nl/statejson"
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "wood"
+    ]
   },
   "268": {
     "events": "https://hackerspacenijmegen.nl/events",
@@ -1037,7 +1065,13 @@
     "weekly": {
       "weekday": 2,
       "time": 2000
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "music"
+    ]
   },
   "269": {
     "events": "https://hack42.nl/agenda",
@@ -1053,10 +1087,28 @@
     "weekly": {
       "weekday": 3,
       "time": 1900
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "metal",
+      "photo",
+      "coding",
+      "vr"
+    ]
   },
   "271": {
-    "events": "https://www.fablabcoevorden.nl/agenda/"
+    "events": "https://www.fablabcoevorden.nl/agenda/",
+    "workshops": [
+      "3d",
+      "electronics",
+      "laser",
+      "coding",
+      "electronics",
+      "vr"
+    ]
   },
   "272": {
     "events": "https://calendar.google.com/calendar/u/0/embed?src=sruulkb8vh28dim9bcth8emdm4@group.calendar.google.com&ctz=Europe/Zurich",
@@ -1072,7 +1124,15 @@
     "weekly": {
       "weekday": 3,
       "time": 1800
-    }
+    },
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics",
+      "metal",
+      "leaser",
+      "wood"
+    ]
   },
   "274": {
     "events": "https://juze-cr.de/calendar/kalender/",
@@ -1081,7 +1141,13 @@
     }
   },
   "275": {
-    "workshops": ["3d", "laser", "cnc", "electronics", "wood"],
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "wood"
+    ],
     "spaceapi": {
       "endpoint": "https://makerspaceleiden.nl/crm/spaceapi/0.13"
     }
