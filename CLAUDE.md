@@ -93,7 +93,7 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 - `searchFilter.lastFilteredLocations` — letztes Filter-Ergebnis (alle gefilterten Locations)
 - `searchFilter.lastLocationsForZoom` — letztes Zoom-Ziel (kann Subset sein, z.B. einzelner ID-Match)
 - `document.dispatchEvent(new Event('filterResultsChanged'))` — feuert nach jedem `_notifyResultsChange()`
-- Dropdown-Cap: `CONFIG.settings.maxListItems` (20) — nur 20 Items werden gerendert
+- Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` ist veraltet
 
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
