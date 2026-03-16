@@ -1286,22 +1286,15 @@ class SearchHeader {
     const sortedCountries = Array.from(groupedByCountry.entries())
       .sort((a, b) => b[1].length - a[1].length);
 
-    let remaining = CONFIG.settings.maxListItems;
-
     sortedCountries.forEach(([country, countryLocations]) => {
-      if (remaining <= 0) return;
       const header = this.createCountryHeader(country, countryLocations.length);
       fragment.appendChild(header);
 
-      const sorted = countryLocations
+      countryLocations
         .sort((a, b) => b.loc.lat - a.loc.lat)
-        .slice(0, remaining);
-      remaining -= sorted.length;
-
-      sorted.forEach(location => {
-        const item = this.createSearchItem(location);
-        fragment.appendChild(item);
-      });
+        .forEach(location => {
+          fragment.appendChild(this.createSearchItem(location));
+        });
     });
 
     this.suggestionsDropdown.appendChild(fragment);
