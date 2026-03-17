@@ -395,13 +395,12 @@ class MobileFilterUI {
   }
 
   _setupDragToClose(panel) {
-    let startY = 0, startX = 0, currentY = 0;
-    let isDragging = false, gestureStarted = false;
+    let startY = 0, startX = 0, currentY = 0, isDragging = false;
 
     const onStart = (e) => {
       const t = e.touches[0];
       startY = t.clientY; startX = t.clientX;
-      currentY = 0; isDragging = false; gestureStarted = false;
+      currentY = 0; isDragging = false;
     };
 
     const onMove = (e) => {
@@ -409,14 +408,18 @@ class MobileFilterUI {
       const dy = t.clientY - startY;
       const dx = t.clientX - startX;
 
-      if (!gestureStarted) {
-        if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return;
-        gestureStarted = true;
-        if (Math.abs(dx) > Math.abs(dy)) return; // horizontal → ignore
-        isDragging = true;
+      if (isDragging) {
+        currentY = dy;
+        panel.style.transform = `translateY(${currentY}px)`;
+        e.preventDefault();
+        return;
       }
-      if (!isDragging || dy <= 0) return; // only drag down
 
+      // Decide direction as early as possible — call preventDefault before iOS claims the touch
+      if (Math.abs(dy) < 4 && Math.abs(dx) < 4) return;
+      if (Math.abs(dx) >= Math.abs(dy) || dy <= 0) return; // horizontal or upward → ignore
+
+      isDragging = true;
       currentY = dy;
       panel.style.transition = 'none';
       panel.style.transform = `translateY(${currentY}px)`;
@@ -424,7 +427,7 @@ class MobileFilterUI {
     };
 
     const onEnd = () => {
-      if (!isDragging) { isDragging = false; return; }
+      if (!isDragging) return;
       isDragging = false;
 
       if (currentY > Math.min(80, panel.offsetHeight * 0.3)) {
