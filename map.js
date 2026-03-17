@@ -552,6 +552,30 @@ window.mapUtils.updateMarkerIcon = updateMarkerIcon;
 
 // GLOBAL: Map und MapLibre Layer
 let currentMapLibreLayer = null;
+let currentRasterLayer = null;
+
+/**
+ * Detects whether this device should use raster tiles (OSM PNG) instead of
+ * vector tiles (MapLibre GL / WebGL). First match wins.
+ * @returns {'vector'|'raster'}
+ */
+function detectTileMode() {
+  // 1. WebGL unavailable (e.g. Raspberry Pi Chromium, old Android)
+  try {
+    const canvas = document.createElement('canvas');
+    if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
+  } catch { return 'raster'; }
+
+  // 2. iOS PWA — memory limits cause crashes with MapLibre WebGL context
+  if (navigator.standalone && /iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
+
+  // 3. Low RAM device (Android/Chrome only — not available on iOS, covered by #2)
+  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
+
+  return 'vector';
+}
+
+const tileMode = detectTileMode();
 
 function setupMap() {
 
@@ -568,9 +592,20 @@ function setupMap() {
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
   function updateMapTiles() {
+    if (tileMode === 'raster') {
+      // Raster tiles (OSM PNG) — added once, no dark mode variant
+      if (currentRasterLayer) return;
+      currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+      currentRasterLayer.addTo(map);
+      return;
+    }
+
+    // Vector tiles via MapLibre GL
     let isDarkMode = false;
     const colorScheme = consent.get('color-scheme') || 'auto';
-
     if (colorScheme === 'dark') {
       isDarkMode = true;
     } else if (colorScheme === 'light') {
@@ -578,7 +613,6 @@ function setupMap() {
     } else {
       isDarkMode = darkModeQuery.matches;
     }
-
 
     const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -613,8 +647,12 @@ function setupMap() {
       }
 
     } catch (error) {
-      console.error('⛔ Error creating MapLibre layer:', error);
-      alert('MapLibre konnte nicht geladen werden.');
+      console.error('⛔ MapLibre layer failed, falling back to raster tiles:', error);
+      currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+      currentRasterLayer.addTo(map);
     }
   }
 

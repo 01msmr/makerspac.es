@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v38'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v39'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -109,14 +109,20 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // 1. MapLibre Style-JSON → SWR (bleibt aktuell, Karte startet offline sofort)
-  //    Map Tiles → Cache-First (ändert sich selten, Bandbreite schonen)
+  // 1a. MapLibre Style-JSON → SWR (bleibt aktuell, Karte startet offline sofort)
+  //     MapLibre Vector Tiles → Cache-First (ändert sich selten, Bandbreite schonen)
   if (url.hostname.includes('tiles.openfreemap.org')) {
     if (url.pathname.startsWith('/styles/')) {
       event.respondWith(staleWhileRevalidate(request, CACHE_TILES));
     } else {
       event.respondWith(cacheFirst(request, CACHE_TILES));
     }
+    return;
+  }
+
+  // 1b. OSM Raster Tiles (Fallback für Low-Memory / kein WebGL) → Cache-First
+  if (url.hostname === 'tile.openstreetmap.org') {
+    event.respondWith(cacheFirst(request, CACHE_TILES));
     return;
   }
 
