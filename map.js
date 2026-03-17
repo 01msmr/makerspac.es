@@ -577,6 +577,20 @@ function detectTileMode() {
 
 const tileMode = detectTileMode();
 
+/** Dynamically loads maplibre-gl.js + leaflet-maplibre-gl.js — only when vector mode is active. */
+function loadMaplibreIfNeeded() {
+  if (tileMode !== 'vector') return Promise.resolve();
+  const load = src => new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return load('/libs/maplibre-gl/maplibre-gl.js')
+    .then(() => load('/libs/maplibre-leaflet/leaflet-maplibre-gl.js'));
+}
+
 function setupMap() {
 
   map = new L.Map('map', {
@@ -1763,7 +1777,9 @@ window.reportLocationIdStatus = function () {
 const init = async () => {
   try {
     // i18n und Map/Data parallel laden — map nicht auf lang.json warten lassen
+    // MapLibre wird nur im vector-Modus geladen (spart ~750KB auf Low-Memory-Geräten)
     const i18nPromise = window.i18n.load('./lang.json');
+    await loadMaplibreIfNeeded();
     setupMap();
     initializeClustering();
     await Promise.all([i18nPromise, loadData()]);

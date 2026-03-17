@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v39'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v40'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -32,8 +32,8 @@ const STATIC_ASSETS = [
   // Libs JS
   '/libs/leaflet/leaflet.js',
   '/libs/leaflet-markercluster/leaflet.markercluster.js',
-  '/libs/maplibre-gl/maplibre-gl.js',
-  '/libs/maplibre-leaflet/leaflet-maplibre-gl.js',
+  // maplibre-gl.js + leaflet-maplibre-gl.js: lazy-loaded in map.js (vector mode only)
+  // → not precached here; SW caches them on first fetch via cacheFirst fallback
   '/libs/qrcode.min.js',
   // App JS
   '/app-context.js',

@@ -41,8 +41,7 @@
   <!-- Bibliotheks-JS: defer → paralleler Download, Ausführung nach DOM-Parsing -->
   <script defer src="libs/leaflet/leaflet.js"></script>
   <script defer src="libs/leaflet-markercluster/leaflet.markercluster.js"></script>
-  <script defer src="libs/maplibre-gl/maplibre-gl.js"></script>
-  <script defer src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
+  <!-- maplibre-gl.js + leaflet-maplibre-gl.js: lazy-loaded in map.js only when WebGL/vector mode is active -->
   <script defer src="libs/qrcode.min.js"></script>
 
   <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->
