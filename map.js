@@ -560,20 +560,36 @@ let currentRasterLayer = null;
  * @returns {'vector'|'raster'}
  */
 function detectTileMode() {
-  // 1. iOS — always raster, checked FIRST to avoid creating any WebGL context.
-  //    An abandoned WebGL context on iOS keeps the GPU spinning → device heats up + crashes.
-  if (/iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
+  const ua = navigator.userAgent;
 
-  // 2. WebGL unavailable (e.g. Raspberry Pi Chromium, old Android)
+  // ── Non-iOS path ──────────────────────────────────────────────────────────
+  if (!/iPhone|iPad/i.test(ua)) {
+    // Low RAM (Android/Chrome — not available on iOS)
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
+    // WebGL unavailable (e.g. Raspberry Pi Chromium)
+    try {
+      const canvas = document.createElement('canvas');
+      if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
+    } catch { return 'raster'; }
+    return 'vector';
+  }
+
+  // ── iOS path ──────────────────────────────────────────────────────────────
+  // iOS version < 15: no WebGL2 in Safari, older Metal backend → raster
+  const iosVersion = parseInt(ua.match(/OS (\d+)_/)?.[1] ?? '0');
+  if (iosVersion < 15) return 'raster';
+
+  // iOS 15+: test WebGL2 as proxy for A12+ GPU (iPhone XR and newer).
+  // A9/A10 devices (iPhone 6s–8) upgraded to iOS 15 return null for webgl2.
+  // CRITICAL: loseContext() immediately — an abandoned WebGL context on iOS
+  // keeps the GPU spinning → device heats up and crashes.
   try {
     const canvas = document.createElement('canvas');
-    if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
+    const gl2 = canvas.getContext('webgl2');
+    if (!gl2) return 'raster';
+    gl2.getExtension('WEBGL_lose_context')?.loseContext();
+    return 'vector';
   } catch { return 'raster'; }
-
-  // 3. Low RAM device (Android/Chrome only — not available on iOS, covered by #1)
-  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
-
-  return 'vector';
 }
 
 const tileMode = detectTileMode();
