@@ -560,16 +560,17 @@ let currentRasterLayer = null;
  * @returns {'vector'|'raster'}
  */
 function detectTileMode() {
-  // 1. WebGL unavailable (e.g. Raspberry Pi Chromium, old Android)
+  // 1. iOS — always raster, checked FIRST to avoid creating any WebGL context.
+  //    An abandoned WebGL context on iOS keeps the GPU spinning → device heats up + crashes.
+  if (/iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
+
+  // 2. WebGL unavailable (e.g. Raspberry Pi Chromium, old Android)
   try {
     const canvas = document.createElement('canvas');
     if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
   } catch { return 'raster'; }
 
-  // 2. Any iOS device — WebGL memory limits cause crashes (PWA and Safari both affected)
-  if (/iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
-
-  // 3. Low RAM device (Android/Chrome only — not available on iOS, covered by #2)
+  // 3. Low RAM device (Android/Chrome only — not available on iOS, covered by #1)
   if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
 
   return 'vector';
