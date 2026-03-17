@@ -394,12 +394,65 @@ class MobileFilterUI {
     this.updateChipBar();
   }
 
+  _setupDragToClose(panel) {
+    let startY = 0, startX = 0, currentY = 0;
+    let isDragging = false, gestureStarted = false;
+
+    const onStart = (e) => {
+      const t = e.touches[0];
+      startY = t.clientY; startX = t.clientX;
+      currentY = 0; isDragging = false; gestureStarted = false;
+    };
+
+    const onMove = (e) => {
+      const t = e.touches[0];
+      const dy = t.clientY - startY;
+      const dx = t.clientX - startX;
+
+      if (!gestureStarted) {
+        if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return;
+        gestureStarted = true;
+        if (Math.abs(dx) > Math.abs(dy)) return; // horizontal → ignore
+        isDragging = true;
+      }
+      if (!isDragging || dy <= 0) return; // only drag down
+
+      currentY = dy;
+      panel.style.transition = 'none';
+      panel.style.transform = `translateY(${currentY}px)`;
+      e.preventDefault();
+    };
+
+    const onEnd = () => {
+      if (!isDragging) { isDragging = false; return; }
+      isDragging = false;
+
+      if (currentY > Math.min(80, panel.offsetHeight * 0.3)) {
+        panel.style.transition = '';
+        panel.style.transform = '';
+        this.close();
+      } else {
+        panel.style.transition = 'transform 0.25s ease-out';
+        panel.style.transform = '';
+        panel.addEventListener('transitionend', () => { panel.style.transition = ''; }, { once: true });
+      }
+      currentY = 0;
+    };
+
+    panel.addEventListener('touchstart', onStart, { passive: true });
+    panel.addEventListener('touchmove', onMove, { passive: false });
+    panel.addEventListener('touchend', onEnd, { passive: true });
+    panel.addEventListener('touchcancel', onEnd, { passive: true });
+  }
+
   buildSheet() {
     const overlay = document.createElement('div');
     overlay.className = 'mf-overlay';
 
     const panel = document.createElement('div');
     panel.className = 'mf-sheet';
+
+    this._setupDragToClose(panel);
 
     const prevBtn = document.createElement('button');
     prevBtn.className = 'mf-nav-btn mf-nav-prev';
