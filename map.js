@@ -566,8 +566,8 @@ function detectTileMode() {
     if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
   } catch { return 'raster'; }
 
-  // 2. iOS PWA — memory limits cause crashes with MapLibre WebGL context
-  if (navigator.standalone && /iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
+  // 2. Any iOS device — WebGL memory limits cause crashes (PWA and Safari both affected)
+  if (/iPhone|iPad/i.test(navigator.userAgent)) return 'raster';
 
   // 3. Low RAM device (Android/Chrome only — not available on iOS, covered by #2)
   if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
