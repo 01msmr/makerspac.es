@@ -234,9 +234,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --delete-branch --repo ${{ github.repository }}
 
-      - name: Feedback Comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            ✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID `${{ steps.update_script.outputs.space_id }}`) wurde in main gemergt und der Deploy läuft bereits.
+      - name: Feedback Comment + Close Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID \`${{ steps.update_script.outputs.space_id }}\`) wurde in main gemergt und der Deploy läuft bereits." \
+            --repo ${{ github.repository }}
+          gh issue close ${{ github.event.issue.number }} --reason completed --repo ${{ github.repository }}
