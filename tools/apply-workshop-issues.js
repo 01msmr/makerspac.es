@@ -107,7 +107,17 @@ async function main() {
     const existing = enrichment[id]?.workshops;
 
     if (existing?.length) {
-      console.log(`[#${issueNumber}] ID ${spaceId}: workshops bereits gesetzt (${existing.join(', ')}) — übersprungen`);
+      if (applyMode) {
+        try {
+          closeIssue(issueNumber);
+          console.log(`[#${issueNumber}] ID ${spaceId}: bereits gesetzt (${existing.join(', ')}) — Issue geschlossen`);
+        } catch (err) {
+          console.error(`[#${issueNumber}] Fehler beim Schließen: ${err.message}`);
+          stats.errors++;
+        }
+      } else {
+        console.log(`[#${issueNumber}] ID ${spaceId}: workshops bereits gesetzt (${existing.join(', ')}) — würde Issue schließen`);
+      }
       stats.skipped++;
       continue;
     }

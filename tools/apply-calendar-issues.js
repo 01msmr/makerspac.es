@@ -190,7 +190,17 @@ async function main() {
     }
 
     if (loc.events) {
-      console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId}): events bereits gesetzt ("${loc.events}") — uebersprungen`);
+      if (applyMode) {
+        try {
+          closeIssue(issueNumber);
+          console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId}): bereits gesetzt ("${loc.events}") — Issue geschlossen`);
+        } catch (err) {
+          console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`);
+          stats.errors++;
+        }
+      } else {
+        console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId}): events bereits gesetzt ("${loc.events}") — wuerde Issue schliessen`);
+      }
       stats.skipped_already_set++;
       continue;
     }
