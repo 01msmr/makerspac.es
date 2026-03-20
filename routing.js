@@ -239,6 +239,7 @@ export class RoutingManager {
     }
 
     this._activeCountryFilter = countryName;
+    this._isOnLocationRoute = false; // country filter overrides any prior location route
     if (this.searchManager?.pillsManager) this.searchManager.pillsManager.clear();
     window.location.hash = `#/${this.countryToSlug(countryName)}`;
 
@@ -495,6 +496,14 @@ export class RoutingManager {
       this._isNavigating = true;
       this._isOnLocationRoute = true;
       window.location.hash = url;
+      if (locationIds.length === 1) {
+        const loc = appContext.locationById.get(locationIds[0]);
+        if (loc) {
+          const cc = appContext.mapIcons?.getCountryCode(loc.loc?.country)?.toUpperCase() || '';
+          const plz = loc.loc?.plz ? window.zfill?.(loc.loc.plz, loc.loc.country) ?? '' : '';
+          this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`);
+        }
+      }
     }
   }
 

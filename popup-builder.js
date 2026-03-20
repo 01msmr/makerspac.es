@@ -65,10 +65,12 @@ export function buildPopupHTML(location, opts = {}) {
     const _suf      = _t('weekly.timeSuffix');
     const _label    = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday);
     const _evLabel  = _t('weekly.eventsCalendar');
-    const _calIcon  = location.events
-      ? `<a href="${location.events}" target="_blank" class="popup-events-link" aria-label="${_evLabel}" role="tooltip" data-microtip-position="bottom-right"><i class="fas fa-calendar-day"></i></a>`
-      : `<i class="fas fa-calendar-day"></i>`;
-    weeklyHtml = `<div></div><div class="popup-weekly">${_calIcon} <span aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom">${_label} — ${_timeStr}${_suf}</span></div>`;
+    const _weeklyText = `${_label} — ${_timeStr}${_suf}`;
+    if (location.events) {
+      weeklyHtml = `<div></div><div class="popup-weekly"><a href="${location.events}" target="_blank" class="popup-events-link" aria-label="${_evLabel}" role="tooltip" data-microtip-position="bottom-right"><i class="fas fa-calendar-day"></i> ${_weeklyText}</a></div>`;
+    } else {
+      weeklyHtml = `<div></div><div class="popup-weekly" aria-label="${_t('weekly.tooltip')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-calendar-day"></i> ${_weeklyText}</div>`;
+    }
   } else if (location.events) {
     const _evLabel = _t('weekly.eventsCalendar');
     weeklyHtml = `<div></div><div class="popup-weekly"><a href="${location.events}" target="_blank" class="popup-events-line"><i class="fas fa-calendar-day"></i> ${_evLabel}</a></div>`;

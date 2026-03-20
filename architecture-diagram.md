@@ -399,12 +399,13 @@ sequenceDiagram
     map->>AC: ready('map') ← phase 2
 
     par fetch in parallel
-        map->>map: fetch('spaces-all.json')
+        map->>map: fetch('spaces-{cc}.json') (Stage 1)
     and
         map->>map: fetch('status.json')
     end
 
     map->>map: merge isOpen into locations
+    map->>map: createMarkerForLocation() × each loc<br/>→ allMarkers[] only (NOT clusterGroup yet)
     map->>AC: appContext.locationById populated
     map->>AC: appContext.markerById populated
     map->>AC: ready('data') ← phase 3
@@ -419,7 +420,9 @@ sequenceDiagram
 
     AC-->>RT: waitFor('app') resolves
     RT->>RT: autoDetectCountry()\nor handleRouteWithPills()
-    RT->>main: applyFilters() → initial view
+    RT->>main: triggerFilterUpdate() → filterByText()\n→ applyFilters() → updateMarkers()\n(first clusterGroup population)
+
+    Note over map: Stage 2 (~800ms later):<br/>fetch('spaces-all.json') → processNewLocations()<br/>→ triggerFilterUpdate() re-applies active filters<br/>(country filter respected — markers not added directly)
 ```
 
 ---
@@ -521,8 +524,12 @@ MakerSpaceAddress --> Street : street
 
 ### 5a. Text Search — filterByText()
 
-Produces `preFilteredLocations` (performance pre-filter). Country filter here is a performance
-optimisation only — `applyFilters()` always re-checks `_activeCountryFilter` directly.
+Produces `preFilteredLocations` used as base by `applyFilters()`.
+Country filter here is **required** (not just performance) — when `_isOnLocationRoute` is set,
+`triggerFilterUpdate` may bypass `filterByText` and call `applyFilters()` directly with a stale
+`preFilteredLocations`. The guard in `triggerFilterUpdate` is skipped when `_activeCountryFilter`
+is set, ensuring `filterByText` always runs (and refreshes `preFilteredLocations`) when a country
+filter is active. `applyCountryFilter()` also resets `_isOnLocationRoute = false`.
 
 ```mermaid
 flowchart TB
@@ -636,7 +643,7 @@ P7["no hash or empty"]
 A1["navigateToLocations([ID])\nflyTo + openPopup"]
 A2["handleBookmarkRoute()\nload bookmark IDs"]
 A3["handleLocationRoute()\nzoom to location(s)"]
-A4["applyCountryFilter(name)\nsets _activeCountryFilter\n→ triggerFilterUpdate()\n(applyFilters reads it directly)"]
+A4["applyCountryFilter(name)\nsets _activeCountryFilter\nresets _isOnLocationRoute = false\nclears pills\n→ triggerFilterUpdate() via filterByText()\n(applyFilters reads it directly)"]
 A5["applyCityFilter(name)\ntogglePill(city)"]
 A6["pillsManager.loadPills(pills)\nparse + apply each pill"]
 A7["autoDetectAndApplyCountry()\nnavigator.languages → code → country"]

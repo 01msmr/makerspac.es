@@ -871,39 +871,35 @@ a#titleurl:hover h3.space-unknown .fas {
 }
 
 .leaflet-container .popup-events-link {
-  color: var(--space-hover);
-  display: inline-block;
-  background: white;
-  padding: 3px;
+  color: var(--status-color, var(--space-hover));
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+
+.leaflet-container .popup-events-link:hover {
+  background: var(--status-color, var(--space-hover));
+  color: white;
   border-radius: 4px;
-  isolation: isolate;
-  position: relative;
-  z-index: 1000;
-}
-
-.popup-events-link i {
-  display: inline-block;
-  transition: transform 0.15s ease;
-}
-
-.leaflet-container .popup-events-link:hover i {
-  transform: scale(1.2);
+  padding: 2px 4px;
+  margin: -2px -4px;
 }
 
 .leaflet-container .popup-events-line {
-  color: var(--space-hover);
+  color: var(--status-color, var(--space-hover));
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: white;
-  padding: 3px 6px 3px 3px;
-  border-radius: 4px;
   text-decoration: none;
 }
 
 .leaflet-container .popup-events-line:hover {
-  background: var(--space-hover);
+  background: var(--status-color, var(--space-hover));
   color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
 }
 
 

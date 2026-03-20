@@ -209,6 +209,11 @@
   white-space: nowrap;
 }
 
+.listing-meeting-today a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .listing-item.active .listing-meeting-today {
   background: white;
   color: var(--status-color, var(--text-color)) !important;

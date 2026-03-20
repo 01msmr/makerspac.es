@@ -732,7 +732,10 @@ class SearchHeader {
     // On a location route with no user search/filters, re-apply filters with the
     // existing pre-filter rather than resetting it to all locations.
     // Prevents SpaceAPI updates and pill-clear events from overriding the route filter.
-    if (window.routingManager?._isOnLocationRoute && !query && !pills.length) {
+    // Exception: when a country filter is active it must always go through filterByText
+    // so preFilteredLocations gets the country-filtered set (not stale location-route data).
+    const hasCountryFilter = !!window.routingManager?._activeCountryFilter;
+    if (!hasCountryFilter && window.routingManager?._isOnLocationRoute && !query && !pills.length) {
       this.searchFilter.applyFilters();
       return;
     }
@@ -1219,7 +1222,9 @@ class SearchHeader {
       this.searchFilter?.setStyleFilter('any', false);
     }
 
-    this.triggerFilterUpdate();
+    this.searchFilter?.applyFilters();
+    this.scrollToTop();
+    this.focusSearchBarIfDesktop();
   }
 
   clearAllFilters(silent = false) {
@@ -1381,10 +1386,9 @@ class SearchHeader {
 
     if (targetIndex !== currentIndex && headers[targetIndex]) {
       const dropdown = this.suggestionsDropdown;
-      const stickyTop = 83;
       dropdown.scrollTo({
-        top: /** @type {HTMLElement} */ (headers[targetIndex]).offsetTop - stickyTop,
-        behavior: 'smooth'
+        top: /** @type {HTMLElement} */ (headers[targetIndex]).offsetTop,
+        behavior: 'instant'
       });
     }
   }

@@ -912,7 +912,9 @@ async function loadAndMergeFullData() {
 
     if (newLocs.length) {
       appContext.locations.push(...newLocs);
-      processNewLocations(newLocs, { idle: true });
+      await processNewLocations(newLocs, { idle: true });
+      // Re-apply the current filter so new markers respect country/style filters already active.
+      appContext.searchHeader?.triggerFilterUpdate();
     }
 
     appContext.spaceAPI?.enrichLocationData(appContext.locations);
@@ -1015,7 +1017,7 @@ async function loadData() {
       updateMarkerIconForLocation(location);
     });
 
-    // Await all marker chunks so ready('data') fires only when all pins are in the cluster
+    // Await all marker chunks so ready('data') fires only when all markers are in allMarkers[]
     await processNewLocations(rawData);
 
     appContext.ready('data');
@@ -1156,7 +1158,8 @@ function createMarkerForLocation(location) {
   }
 
   const marker = L.marker([lat, lng], { icon: icons.defaultIcon, opacity: 0.66 });
-  clusterGroup.addLayer(marker);
+  // Do NOT add to clusterGroup here — updateMarkers() controls visibility based on active filters.
+  // Adding directly would bypass country/style filters that may already be active (e.g. Stage 2 enrichment).
   marker.locationId = location.ID;
   window.markerById.set(location.ID, marker);
 

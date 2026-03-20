@@ -1,5 +1,5 @@
 # Architektur — makerspac.es
-*Living Documentation · bei Änderungen aktualisieren · Stand: 2026-02*
+*Living Documentation · bei Änderungen aktualisieren · Stand: 2026-03*
 
 > **Visuelle Diagramme** (Modul-Abhängigkeiten, Datenfluss, Event Bus, Boot-Sequenz, Runtime-Flows):
 > → **[architecture-diagram.md](architecture-diagram.md)**
@@ -177,6 +177,16 @@ Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindung
 - Wird gelöscht: bei `zoomstart`, `mouseleave`, `closeDropdown`
 - Wird neu gezeichnet: bei `zoomend` via `updateHoverSVGPosition()` — **nur wenn `currentHoverItem` gesetzt**
 - Nach Item-Click: `listingCore.currentHoverItem = activeItem` setzen, damit Redraw nach flyTo funktioniert
+
+### Zwei-Phasen Marker-Loading — `createMarkerForLocation` + `loadAndMergeFullData`
+- **Stage 1**: `createMarkerForLocation()` fügt Marker ausschließlich in `allMarkers[]` ein — **nie direkt** in `clusterGroup`. Die clusterGroup wird allein durch `updateMarkers()` befüllt (nach `triggerFilterUpdate`).
+- **Stage 2** (~800ms, Desktop): `loadAndMergeFullData()` awaitet `processNewLocations()` und ruft danach `triggerFilterUpdate()` — damit respektieren neue Marker aktive Filter (Country, Style etc.), bevor sie sichtbar werden.
+- **Regel:** Kein Code darf `clusterGroup.addLayer(marker)` direkt aufrufen.
+
+### `triggerFilterUpdate` — Country-Filter-Guard (search-header.js)
+Wenn `_isOnLocationRoute = true` und kein Query/Pill aktiv → Fast-Path: nur `applyFilters()` (kein `filterByText`).
+**Ausnahme:** `hasCountryFilter` überspringt den Fast-Path — `filterByText` muss laufen, damit `preFilteredLocations` aktuell bleibt.
+`applyCountryFilter()` setzt zusätzlich `_isOnLocationRoute = false`.
 
 ### Brace-Depth-Check nach CSS-Änderungen
 ```bash

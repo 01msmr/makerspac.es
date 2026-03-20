@@ -469,9 +469,6 @@
   background-color: var(--dropdown-alt-bg);
   border-bottom: 2px solid var(--dropdown-border);
   color: var(--text-color);
-  position: sticky;
-  top: 0;
-  z-index: 9;
   display: flex;
   justify-content: space-between;
   align-items: center;
