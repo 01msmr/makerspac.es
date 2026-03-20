@@ -55,7 +55,14 @@ jobs:
               if (!value || value === "_No response_" || value === "None") {
                 return "";
               }
-              return value.trim();
+              const raw = value.trim();
+              // Handle diff format from update issues: ~~old~~ → **new**
+              const diffMatch = raw.match(/~~[\s\S]*?~~\s*→\s*\*\*([\s\S]*?)\*\*\s*$/);
+              if (diffMatch) {
+                const val = diffMatch[1].trim();
+                return val === '_empty_' ? '' : val;
+              }
+              return raw;
             }
 
             // === VALIDIERUNGEN ===
