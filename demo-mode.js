@@ -15,7 +15,6 @@ const CITY_PAUSE_MS    = 2000;             // pause after results appear
 const POPUP_DWELL_MS   = 7000;             // dwell on last selected space
 const CLEAR_PAUSE_MS   = 1500;             // gap before next city
 const OVERVIEW_MS      = 3000;             // Germany overview hold
-const FILTER_SETTLE_MS = 600;              // wait for city filter to activate + dropdown to re-render
 const CHAR_DELAY_MS    = () => 85 + Math.random() * 55;  // 85–140 ms / char
 const NAV_STEP_MS      = () => 2000 + Math.random() * 1000;  // 2–3 s between ArrowDown steps
 const NAV_STEP_PINNED  = 5000;             // ms between steps for pinned (featured) cities
@@ -87,8 +86,29 @@ export class DemoMode {
     if (this._running) return;
     this._running = true;
     this._showIndicator();
+    this._showStartToast();
     this._attachStop();
     this._runSequence();
+  }
+
+  _showStartToast() {
+    const stack = document.createElement('div');
+    stack.className = 'loading-overlay-stack';
+
+    const toast = document.createElement('div');
+    toast.className = 'loading-overlay-toast loading-overlay-toast--large';
+    toast.innerHTML = '<i class="fas fa-circle-nodes"></i> Demo mode activated';
+
+    stack.appendChild(toast);
+    document.body.appendChild(stack);
+
+    requestAnimationFrame(() => toast.classList.add('show'));
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('zoom-out');
+      setTimeout(() => stack.remove(), 300);
+    }, 2200);
   }
 
   stop() {
@@ -327,7 +347,8 @@ export class DemoMode {
       // ── PLZ mode: type digits, results appear immediately, navigate directly ──
       t = this._type(plz, t);
       t += CITY_PAUSE_MS;
-      this._timers.push(setTimeout(() => this._navigateSpaces(cities, index, stepMs), t));
+      this._timers.push(setTimeout(() =>
+        this._waitForZoom(() => this._navigateSpaces(cities, index, stepMs)), t));
 
     } else {
       // ── City mode: type minimum prefix, activate city filter via Tab/Enter ──
@@ -340,8 +361,8 @@ export class DemoMode {
         const numSuggestions = document.querySelectorAll('#autocomplete-container .autocomplete-pill').length;
 
         if (numSuggestions === 0) {
-          // No city suggestion appeared — navigate whatever is in the dropdown
-          this._navigateSpaces(cities, index, stepMs);
+          // No city suggestion appeared — wait for zoom then navigate
+          this._waitForZoom(() => this._navigateSpaces(cities, index, stepMs));
           return;
         }
 
@@ -353,14 +374,43 @@ export class DemoMode {
           this._timers.push(setTimeout(() => {
             if (!this._running) return;
             this._dispatchDemoKey('Enter');
-            this._timers.push(setTimeout(() => this._navigateSpaces(cities, index, stepMs), FILTER_SETTLE_MS));
+            this._waitForZoom(() => this._navigateSpaces(cities, index, stepMs));
           }, 350));
         } else {
           // Single suggestion — Tab already selected it
-          this._timers.push(setTimeout(() => this._navigateSpaces(cities, index, stepMs), FILTER_SETTLE_MS));
+          this._waitForZoom(() => this._navigateSpaces(cities, index, stepMs));
         }
       }, t));
     }
+  }
+
+  /**
+   * Wait until the map zoom animation finishes, then call callback.
+   * Polls zoomManager._isAutoZooming every 100ms.
+   * - If zoom starts: waits for it to end (hard cap 4s)
+   * - If zoom never starts within 1.5s: proceeds anyway (map already in position)
+   * @param {() => void} callback
+   */
+  _waitForZoom(callback) {
+    let zoomSeen = false;
+    const start  = Date.now();
+
+    const check = () => {
+      if (!this._running) return;
+      const zooming = !!window.zoomManager?._isAutoZooming;
+      const elapsed = Date.now() - start;
+
+      if (zooming) zoomSeen = true;
+
+      if (zoomSeen && !zooming)  { this._timers.push(setTimeout(callback, 400)); return; }   // zoom finished
+      if (!zoomSeen && elapsed > 1500) { callback(); return; }   // no zoom started — proceed
+      if (elapsed > 4000)        { callback(); return; }   // hard cap
+
+      this._timers.push(setTimeout(check, 100));
+    };
+
+    // Short initial delay to let filter pipeline trigger the zoom
+    this._timers.push(setTimeout(check, 200));
   }
 
   /**
