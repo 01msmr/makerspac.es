@@ -106,6 +106,41 @@
   transform: rotate(90deg);
 }
 
+/* Demo mode indicator — pill beside the title */
+.settings-gear-button-solo.demo-indicator {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 .75em;
+  gap: 6px;
+  cursor: default;
+  opacity: 0.85;
+  align-self: center;
+}
+
+.settings-gear-button-solo.demo-indicator:hover {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.settings-gear-button-solo.demo-indicator:hover i {
+  transform: none;
+}
+
+.demo-play-triangle {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px 0 7px 12px;
+  border-color: transparent transparent transparent var(--text-color);
+  animation: demo-play-pulse 1.1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes demo-play-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
 /* ===================================
    SETTINGS POPOVER
    =================================== */

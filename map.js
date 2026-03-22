@@ -19,6 +19,7 @@ import { initEmbedOverlay } from './embed-overlay.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
+import { DemoMode } from './demo-mode.js';
 errorMonitor.init();
 
 // i18n Singleton (ersetzt i18n-init.js)
@@ -1812,6 +1813,9 @@ const init = async () => {
     setupZoomOutButton();
     setupDesktopRezoomButton();
     setupTitleResetButton();
+
+    // Demo/attract mode (trade-show kiosk)
+    appContext.waitFor('app').then(() => { new DemoMode(appContext); });
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {
