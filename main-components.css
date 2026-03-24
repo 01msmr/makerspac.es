@@ -141,6 +141,14 @@
   50%       { opacity: 0.15; }
 }
 
+/* Open-demo variant: green icon + green play triangle */
+.demo-indicator--open i {
+  color: var(--space-open);
+}
+.demo-play-triangle--open {
+  border-color: transparent transparent transparent var(--space-open);
+}
+
 /* ===================================
    SETTINGS POPOVER
    =================================== */
