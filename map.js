@@ -1816,9 +1816,10 @@ const init = async () => {
 
     // Demo/attract mode (trade-show kiosk)
     appContext.waitFor('app').then(() => {
-      new DemoMode(appContext);
+      const demoMode = new DemoMode(appContext);
       new OpenDemoMode(appContext);
-      new TodayDemoMode(appContext);
+      const todayDemo = new TodayDemoMode(appContext);
+      todayDemo._handoffTo = demoMode;   // after today's cycle: hand off to city tour
     });
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert

@@ -241,6 +241,9 @@ class _DemoBase {
   _showIndicator() {}
   _showStartToast() {}
   _runSequence() {}
+
+  /** Start a single run, then stop. Base falls back to normal start(). */
+  startOnce() { this.start(); }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -249,6 +252,13 @@ class _DemoBase {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _LiveFilterDemo extends _DemoBase {
+  /** @param {import('./app-context.js').AppContext} appContext */
+  constructor(appContext) {
+    super(appContext);
+    /** @type {_DemoBase|null}  if set, start this demo after one full cycle instead of looping */
+    this._handoffTo = null;
+  }
+
   // ── Subclass interface ────────────────────────────────────────────────────────
 
   /** @returns {string}  style filter key, e.g. 'open' or '2' (Tuesday) */
@@ -320,9 +330,14 @@ class _LiveFilterDemo extends _DemoBase {
       if (step < count) {
         this._timers.push(setTimeout(tick, NAV_STEP_MS()));
       } else {
-        // All spaces visited — dwell on last then restart
+        // All spaces visited — dwell on last, then loop or hand off
         this._timers.push(setTimeout(() => {
-          if (this._running) this._runSequence();
+          if (!this._running) return;
+          if (this._handoffTo) {
+            this._handoffTo.startOnce();   // stops us (via _runningDemo), starts next demo once
+          } else {
+            this._runSequence();
+          }
         }, POPUP_DWELL_MS));
       }
     };
@@ -338,15 +353,23 @@ export class DemoMode extends _DemoBase {
   /** @param {import('./app-context.js').AppContext} appContext */
   constructor(appContext) {
     super(appContext);
-    this._loopT  = 0;
-    this._inactT = 0;
+    this._loopT   = 0;
+    this._inactT  = 0;
+    this._runOnce = false;
     this._initInactivity();
     this._initCommandTrigger();
   }
 
   stop() {
+    this._runOnce = false;
     super.stop();
     clearTimeout(this._loopT);
+  }
+
+  /** Run one city cycle then stop (used as handoff target from /todaydemo). */
+  startOnce() {
+    this._runOnce = true;
+    this.start();
   }
 
   _showIndicator() {
@@ -481,7 +504,12 @@ export class DemoMode extends _DemoBase {
 
     if (index >= cities.length) {
       this._resetToGermany();
-      this._loopT = setTimeout(() => { if (this._running) this._runSequence(); }, OVERVIEW_MS);
+      if (this._runOnce) {
+        this._runOnce = false;
+        this.stop();   // one cycle done — stop cleanly
+      } else {
+        this._loopT = setTimeout(() => { if (this._running) this._runSequence(); }, OVERVIEW_MS);
+      }
       return;
     }
 
@@ -617,8 +645,18 @@ export class TodayDemoMode extends _LiveFilterDemo {
 
   // Evaluated at sequence-start so a demo running past midnight picks up the new day
   _filterKey()      { return String(new Date().getDay()); }
-  _indicatorHtml()  { return '<i class="fas fa-calendar-day"></i><span class="demo-play-triangle demo-play-triangle--today"></span>'; }
-  _indicatorClass() { return 'demo-indicator--today'; }
+
+  // Show all countries — do not restrict to Germany
+  _resetToGermany() {
+    this._ac.searchFilter?.clearAllStyleFilters();
+    this._clearConnectionLine();
+    const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
+    if (bar) { bar.value = ''; bar.dispatchEvent(new Event('input', { bubbles: true })); }
+    window.app?.searchHeader?.pillsManager?.clear();
+    window.routingManager?.clearAllPillsAndFilters();
+  }
+  _indicatorHtml()  { return '<i class="fas fa-calendar-day"></i><span class="demo-play-triangle"></span>'; }
+  _indicatorClass() { return ''; }
   _toastHtml()      { return '<i class="fas fa-calendar-day"></i> Today\'s makerspaces · LIVE'; }
   _emptyToastHtml() { return '<i class="fas fa-calendar-day"></i> No weekly events today'; }
 

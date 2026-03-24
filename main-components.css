@@ -149,13 +149,7 @@
   border-color: transparent transparent transparent var(--space-open);
 }
 
-/* Today-demo variant: calendar-blue icon + blue play triangle */
-.demo-indicator--today i {
-  color: var(--nearby-title);
-}
-.demo-play-triangle--today {
-  border-color: transparent transparent transparent var(--nearby-title);
-}
+/* Today-demo variant: default text color (no special color) */
 
 /* ===================================
    SETTINGS POPOVER
