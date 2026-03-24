@@ -15,6 +15,7 @@ const CITY_PAUSE_MS    = 2000;             // pause after results appear
 const POPUP_DWELL_MS   = 7000;             // dwell on last selected space
 const CLEAR_PAUSE_MS   = 1500;             // gap before next city
 const OVERVIEW_MS      = 3000;             // Germany overview hold
+const AUTOCOMPLETE_MS  = 150;              // pause after last typed char before Tab/Enter
 const CHAR_DELAY_MS    = () => 85 + Math.random() * 55;  // 85–140 ms / char
 const NAV_STEP_MS      = () => 2000 + Math.random() * 1000;  // 2–3 s between ArrowDown steps
 const NAV_STEP_PINNED  = 5000;             // ms between steps for pinned (featured) cities
@@ -36,7 +37,7 @@ export class DemoMode {
   constructor(appContext) {
     this._ac           = appContext;
     this._running      = false;
-    this._timers       = /** @type {number[]} */ ([]);
+    this._timers       = /** @type {ReturnType<typeof setTimeout>[]} */ ([]);
     this._loopT        = 0;
     this._inactT       = 0;
     this._inDemoInput  = false;   // true while dispatching demo key events
@@ -155,6 +156,8 @@ export class DemoMode {
   }
 
   _resetToGermany() {
+    // Unconditionally remove connection line + SVG before filter changes invalidate DOM refs
+    this._clearConnectionLine();
     const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
     if (bar) {
       bar.value = '';
@@ -163,6 +166,15 @@ export class DemoMode {
     // Clear any active city/zip pills
     window.app?.searchHeader?.pillsManager?.clear();
     window.routingManager?.applyCountryFilter('Germany');
+  }
+
+  _clearConnectionLine() {
+    const lc = window.app?.searchHeader?.listingCore;
+    if (!lc) return;
+    lc.removeConnectionLine();
+    lc.cleanupHoverSVG();
+    lc.currentHoverItem = null;
+    lc.keyboardIndex    = -1;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -260,11 +272,17 @@ export class DemoMode {
     const allCities = [...new Set(
       (this._ac.locations || []).map(l => l.loc?.city).filter(Boolean)
     )];
+    let unique = city.length;
     for (let n = 2; n <= city.length; n++) {
       const prefix = city.slice(0, n).toLowerCase();
-      if (allCities.filter(c => c.toLowerCase().startsWith(prefix)).length <= 1) return n;
+      if (allCities.filter(c => c.toLowerCase().startsWith(prefix)).length <= 1) {
+        unique = n;
+        break;
+      }
     }
-    return city.length;
+    // Always type at least half the name so short prefixes look natural for longer cities
+    const natural = Math.min(Math.ceil(city.length / 2), city.length - 1);
+    return Math.max(unique, natural);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -354,7 +372,7 @@ export class DemoMode {
       // ── City mode: type minimum prefix, activate city filter via Tab/Enter ──
       const prefix = city.slice(0, this._minPrefix(city));
       t = this._type(prefix, t);
-      t += CITY_PAUSE_MS;
+      t += AUTOCOMPLETE_MS;   // short settle — autocomplete suggestions appear nearly instantly
 
       this._timers.push(setTimeout(() => {
         if (!this._running) return;
@@ -365,6 +383,9 @@ export class DemoMode {
           this._waitForZoom(() => this._navigateSpaces(cities, index, stepMs));
           return;
         }
+
+        // Clear stale connection line before filter re-renders the dropdown
+        this._clearConnectionLine();
 
         // Tab: selects if 1 suggestion, or focuses first of multiple
         this._dispatchDemoKey('Tab');
@@ -402,7 +423,7 @@ export class DemoMode {
 
       if (zooming) zoomSeen = true;
 
-      if (zoomSeen && !zooming)  { this._timers.push(setTimeout(callback, 400)); return; }   // zoom finished
+      if (zoomSeen && !zooming)  { this._timers.push(setTimeout(callback, 600)); return; }   // zoom finished + settle
       if (!zoomSeen && elapsed > 1500) { callback(); return; }   // no zoom started — proceed
       if (elapsed > 4000)        { callback(); return; }   // hard cap
 
@@ -459,7 +480,7 @@ export class DemoMode {
    * @param {number}   index
    */
   _clearCity(cities, index) {
-    this._resetToGermany();
+    this._resetToGermany();   // clears connection line, SVG, pills, bar
     const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
     this._timers.push(setTimeout(() => {
       if (!this._running) return;

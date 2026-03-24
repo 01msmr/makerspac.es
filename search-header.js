@@ -1258,6 +1258,14 @@ class SearchHeader {
   // ═══════════════════════════════════════════════════════════════════════════
 
   createSuggestionItems(locations, idMatch) {
+    // Clear connection line + SVG before removing DOM items — prevents stale
+    // currentHoverItem refs from drawing the line to (0,0) after re-render
+    if (this.listingCore?.currentHoverItem) {
+      this.listingCore.removeConnectionLine();
+      this.listingCore.cleanupHoverSVG();
+      this.listingCore.currentHoverItem = null;
+    }
+
     this.suggestionsDropdown.querySelectorAll('.listing-item, .country-group-header, .id-match-separator').forEach(item => item.remove());
 
     this.listingCore?.resetKeyboardNavigation();
