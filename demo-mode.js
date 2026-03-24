@@ -1,20 +1,23 @@
 // @ts-check
 // demo-mode.js — Attract / kiosk demos for trade shows
 //
-// DemoMode     — triggered by /demo or 3 min of inactivity
-//                cycles through German cities, navigates spaces with cursor keys
+// DemoMode      — triggered by /demo or 3 min of inactivity
+//                 cycles through German cities, navigates spaces with cursor keys
 //
-// OpenDemoMode — triggered by /opendemo only
-//                filters to currently-open spaces, navigates the list with cursor keys
+// OpenDemoMode  — triggered by /opendemo
+//                 filters to currently-open spaces, navigates list with cursor keys
 //
-// Both stop immediately on any key / mouse / touch input.
+// TodayDemoMode — triggered by /todaydemo
+//                 filters to spaces with a weekly event today, navigates list
+//
+// All modes stop immediately on any key / mouse / touch input.
 // On stop: clears search bar + applies Germany filter.
 
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 
-const POPUP_DWELL_MS   = 7000;             // dwell on last selected space (city demo)
+const POPUP_DWELL_MS   = 7000;             // dwell on last selected space
 const OVERVIEW_MS      = 3000;             // Germany overview hold
 const AUTOCOMPLETE_MS  = 150;              // pause after last typed char before Tab/Enter
 const CHAR_DELAY_MS    = () => 85 + Math.random() * 55;  // 85–140 ms / char
@@ -24,7 +27,7 @@ const NAV_STEP_MS      = () => 2000 + Math.random() * 1000;  // 2–3 s between 
 
 const INACTIVITY_MS    = 3 * 60 * 1000;   // 3 min until auto-start
 const CITY_PAUSE_MS    = 2000;             // pause after results appear
-const NAV_STEP_PINNED  = 5000;             // ms between steps for pinned (featured) cities
+const NAV_STEP_PINNED  = 5000;             // ms between steps for pinned cities
 const CLEAR_PAUSE_MS   = 1500;             // gap before next city
 
 /** Always show the city of these space IDs */
@@ -45,7 +48,7 @@ const PLZ_BY_ID = new Map([
 let _runningDemo = /** @type {_DemoBase|null} */ (null);
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Shared base class (not exported)
+// _DemoBase — shared infrastructure (not exported)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _DemoBase {
@@ -54,7 +57,7 @@ class _DemoBase {
     this._ac          = appContext;
     this._running     = false;
     this._timers      = /** @type {ReturnType<typeof setTimeout>[]} */ ([]);
-    this._inDemoInput = false;   // true while dispatching demo key events
+    this._inDemoInput = false;
     /** @type {EventListener|null} */
     this._stopFn      = null;
   }
@@ -82,7 +85,7 @@ class _DemoBase {
     this._resetToGermany();
   }
 
-  // ── Indicator (subclasses supply content/class) ───────────────────────────────
+  // ── Indicator ────────────────────────────────────────────────────────────────
 
   /** @param {string} innerHtml @param {string} [extraClass] */
   _showIndicatorWith(innerHtml, extraClass = '') {
@@ -147,7 +150,6 @@ class _DemoBase {
   // ── Scheduling helpers ────────────────────────────────────────────────────────
 
   /**
-   * Schedule fn at offset ms from now.
    * @param {number} ms
    * @param {() => void} fn
    */
@@ -156,7 +158,6 @@ class _DemoBase {
   }
 
   /**
-   * Schedule character-by-character typing starting at ms.
    * @param {string} text
    * @param {number} ms  start offset
    * @returns {number}   offset after last character
@@ -177,11 +178,7 @@ class _DemoBase {
     return t;
   }
 
-  /**
-   * Dispatch a demo key event on the search bar.
-   * _inDemoInput prevents the stop listener from treating it as user input.
-   * @param {string} code  KeyboardEvent.code (e.g. 'ArrowDown', 'Tab', 'Enter')
-   */
+  /** @param {string} code  e.g. 'ArrowDown', 'Tab', 'Enter' */
   _dispatchDemoKey(code) {
     const bar = document.getElementById('search-bar');
     if (!bar) return;
@@ -216,9 +213,6 @@ class _DemoBase {
 
   /**
    * Wait until the map zoom animation finishes, then call callback.
-   * Polls zoomManager._isAutoZooming every 100ms.
-   * - If zoom starts: waits for it to end (hard cap 4s)
-   * - If zoom never starts within 1.5s: proceeds anyway
    * @param {() => void} callback
    */
   _waitForZoom(callback) {
@@ -247,6 +241,93 @@ class _DemoBase {
   _showIndicator() {}
   _showStartToast() {}
   _runSequence() {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// _LiveFilterDemo — base for filter-based demos (OpenDemoMode, TodayDemoMode)
+// Applies one style filter key, waits for zoom, navigates list, loops. (not exported)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _LiveFilterDemo extends _DemoBase {
+  // ── Subclass interface ────────────────────────────────────────────────────────
+
+  /** @returns {string}  style filter key, e.g. 'open' or '2' (Tuesday) */
+  _filterKey() { return ''; }
+  /** @returns {string}  indicator innerHTML */
+  _indicatorHtml() { return ''; }
+  /** @returns {string}  extra CSS class for indicator element */
+  _indicatorClass() { return ''; }
+  /** @returns {string}  toast innerHTML on start */
+  _toastHtml() { return ''; }
+  /** @returns {string}  toast innerHTML when no results found */
+  _emptyToastHtml() { return '<i class="fas fa-circle-nodes"></i> No spaces found'; }
+
+  // ── Shared implementation ─────────────────────────────────────────────────────
+
+  _showIndicator() {
+    this._showIndicatorWith(this._indicatorHtml(), this._indicatorClass());
+  }
+
+  _showStartToast() {
+    this._showToast(this._toastHtml());
+  }
+
+  _resetToGermany() {
+    // Clear all style filters (open/weekday) before base reset triggers applyFilters
+    this._ac.searchFilter?.clearAllStyleFilters();
+    super._resetToGermany();
+  }
+
+  _runSequence() {
+    if (!this._running) return;
+
+    // Germany overview
+    this._at(0, () => {
+      this._resetToGermany();
+      document.getElementById('search-bar')?.focus();
+    });
+
+    // After overview: apply filter, wait for zoom, navigate
+    this._timers.push(setTimeout(() => {
+      if (!this._running) return;
+      const sf = this._ac.searchFilter;
+      if (!sf) { this.stop(); return; }
+
+      sf.setStyleFilter(this._filterKey(), true);
+      sf.applyFilters();
+
+      this._waitForZoom(() => this._navigateFilteredSpaces());
+    }, OVERVIEW_MS));
+  }
+
+  /** Navigate all dropdown items with ArrowDown, then loop. */
+  _navigateFilteredSpaces() {
+    if (!this._running) return;
+
+    const count = document.querySelectorAll('#suggestions-dropdown .listing-item').length;
+
+    if (count === 0) {
+      this._showToast(this._emptyToastHtml());
+      setTimeout(() => this.stop(), 2500);
+      return;
+    }
+
+    let step = 0;
+    const tick = () => {
+      if (!this._running) return;
+      this._dispatchDemoKey('ArrowDown');
+      step++;
+      if (step < count) {
+        this._timers.push(setTimeout(tick, NAV_STEP_MS()));
+      } else {
+        // All spaces visited — dwell on last then restart
+        this._timers.push(setTimeout(() => {
+          if (this._running) this._runSequence();
+        }, POPUP_DWELL_MS));
+      }
+    };
+    tick();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -282,7 +363,7 @@ export class DemoMode extends _DemoBase {
 
   _initInactivity() {
     const reset = () => {
-      if (_runningDemo) return;   // any demo active — don't restart timer
+      if (_runningDemo) return;
       clearTimeout(this._inactT);
       this._inactT = setTimeout(() => this.start(), INACTIVITY_MS);
     };
@@ -347,7 +428,6 @@ export class DemoMode extends _DemoBase {
   }
 
   /**
-   * Returns the PLZ prefix for a city if it's a pinned space with PLZ_BY_ID, else null.
    * @param {string} city
    * @returns {string|null}
    */
@@ -360,7 +440,6 @@ export class DemoMode extends _DemoBase {
   }
 
   /**
-   * Minimum prefix length so the city is the only autocomplete suggestion.
    * @param {string} city
    * @returns {number}
    */
@@ -496,29 +575,21 @@ export class DemoMode extends _DemoBase {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OpenDemoMode — shows all currently-open makerspaces via the 'open' filter,
-//                then navigates the list with cursor keys
+// OpenDemoMode — /opendemo: filters to currently-open spaces
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export class OpenDemoMode extends _DemoBase {
+export class OpenDemoMode extends _LiveFilterDemo {
   /** @param {import('./app-context.js').AppContext} appContext */
   constructor(appContext) {
     super(appContext);
     this._initCommandTrigger();
   }
 
-  _showIndicator() {
-    this._showIndicatorWith(
-      '<i class="fas fa-door-open"></i><span class="demo-play-triangle demo-play-triangle--open"></span>',
-      'demo-indicator--open'
-    );
-  }
-
-  _showStartToast() {
-    this._showToast('<i class="fas fa-door-open"></i> Open spaces · LIVE');
-  }
-
-  // ── /opendemo command ─────────────────────────────────────────────────────────
+  _filterKey()      { return 'open'; }
+  _indicatorHtml()  { return '<i class="fas fa-door-open"></i><span class="demo-play-triangle demo-play-triangle--open"></span>'; }
+  _indicatorClass() { return 'demo-indicator--open'; }
+  _toastHtml()      { return '<i class="fas fa-door-open"></i> Open spaces · LIVE'; }
+  _emptyToastHtml() { return '<i class="fas fa-door-open"></i> No open spaces right now'; }
 
   _initCommandTrigger() {
     const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
@@ -531,65 +602,35 @@ export class OpenDemoMode extends _DemoBase {
       }
     });
   }
+}
 
-  // ── Reset: clear 'open' filter before base reset triggers applyFilters ────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// TodayDemoMode — /todaydemo: filters to spaces with a weekly event today
+// ═══════════════════════════════════════════════════════════════════════════════
 
-  _resetToGermany() {
-    const sf = this._ac.searchFilter;
-    if (sf) sf.setStyleFilter('open', false);
-    super._resetToGermany();
+export class TodayDemoMode extends _LiveFilterDemo {
+  /** @param {import('./app-context.js').AppContext} appContext */
+  constructor(appContext) {
+    super(appContext);
+    this._initCommandTrigger();
   }
 
-  // ── Sequence ──────────────────────────────────────────────────────────────────
+  // Evaluated at sequence-start so a demo running past midnight picks up the new day
+  _filterKey()      { return String(new Date().getDay()); }
+  _indicatorHtml()  { return '<i class="fas fa-calendar-day"></i><span class="demo-play-triangle demo-play-triangle--today"></span>'; }
+  _indicatorClass() { return 'demo-indicator--today'; }
+  _toastHtml()      { return '<i class="fas fa-calendar-day"></i> Today\'s makerspaces · LIVE'; }
+  _emptyToastHtml() { return '<i class="fas fa-calendar-day"></i> No weekly events today'; }
 
-  _runSequence() {
-    if (!this._running) return;
-
-    // Germany overview
-    this._at(0, () => {
-      this._resetToGermany();
-      document.getElementById('search-bar')?.focus();
-    });
-
-    // After overview: apply 'open' filter, wait for zoom, then navigate
-    this._timers.push(setTimeout(() => {
-      if (!this._running) return;
-      const sf = this._ac.searchFilter;
-      if (!sf) { this.stop(); return; }
-
-      sf.setStyleFilter('open', true);
-      sf.applyFilters();
-
-      this._waitForZoom(() => this._navigateOpenSpaces());
-    }, OVERVIEW_MS));
-  }
-
-  /** Navigate through all open spaces in the dropdown with ArrowDown. */
-  _navigateOpenSpaces() {
-    if (!this._running) return;
-
-    const count = document.querySelectorAll('#suggestions-dropdown .listing-item').length;
-
-    if (count === 0) {
-      this._showToast('<i class="fas fa-door-open"></i> No open spaces right now');
-      setTimeout(() => this.stop(), 2500);
-      return;
-    }
-
-    let step = 0;
-    const tick = () => {
-      if (!this._running) return;
-      this._dispatchDemoKey('ArrowDown');
-      step++;
-      if (step < count) {
-        this._timers.push(setTimeout(tick, NAV_STEP_MS()));
-      } else {
-        // All open spaces visited — dwell on last then restart
-        this._timers.push(setTimeout(() => {
-          if (this._running) this._runSequence();
-        }, POPUP_DWELL_MS));
+  _initCommandTrigger() {
+    const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
+    if (!bar) return;
+    bar.addEventListener('input', () => {
+      if (bar.value.trim() === '/todaydemo') {
+        bar.value = '';
+        bar.dispatchEvent(new Event('input', { bubbles: true }));
+        this.start();
       }
-    };
-    tick();
+    });
   }
 }

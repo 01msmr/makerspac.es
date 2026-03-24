@@ -19,7 +19,7 @@ import { initEmbedOverlay } from './embed-overlay.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
-import { DemoMode, OpenDemoMode } from './demo-mode.js';
+import { DemoMode, OpenDemoMode, TodayDemoMode } from './demo-mode.js';
 errorMonitor.init();
 
 // i18n Singleton (ersetzt i18n-init.js)
@@ -1818,6 +1818,7 @@ const init = async () => {
     appContext.waitFor('app').then(() => {
       new DemoMode(appContext);
       new OpenDemoMode(appContext);
+      new TodayDemoMode(appContext);
     });
 
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
