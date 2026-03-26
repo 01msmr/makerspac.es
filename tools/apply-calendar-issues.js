@@ -1,6 +1,6 @@
 // tools/apply-calendar-issues.js
 // Liest offene GitHub Issues mit Label "data-update" und Titel "Kalenderlink:*",
-// parst die vorgeschlagene events-URL und traegt sie optional in locations.json ein.
+// parst die vorgeschlagene events-URL und traegt sie optional in loc-enrichment.json ein.
 //
 // Usage:
 //   node tools/apply-calendar-issues.js           # Dry-Run
@@ -88,7 +88,7 @@ function parseIssueFullInfo(issue) {
 
 function closeIssue(number) {
   execSync(
-    `gh issue close ${number} --comment "Angewendet auf locations.json"`,
+    `gh issue close ${number} --comment "Angewendet auf loc-enrichment.json"`,
     { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
   );
 }
@@ -97,7 +97,7 @@ function closeIssue(number) {
 
 async function main() {
   console.log('=== Apply Calendar Issues ===');
-  console.log(`Modus: ${applyMode ? 'APPLY (schreibt locations.json + schliesst Issues)' : 'Dry-Run (--apply zum Anwenden)'}${closeNulls ? ' + --close-nulls' : ''}`);
+  console.log(`Modus: ${applyMode ? 'APPLY (schreibt loc-enrichment.json + schliesst Issues)' : 'Dry-Run (--apply zum Anwenden)'}${closeNulls ? ' + --close-nulls' : ''}`);
   if (targetId) console.log(`Filter: Space-ID ${targetId}`);
   console.log('');
 
@@ -171,44 +171,47 @@ async function main() {
     return;
   }
 
-  // 3. locations.json laden
-  const locationsPath = path.join(__dirname, '..', 'locations.json');
-  const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
-  const byId = new Map(locations.map(loc => [loc.ID, loc]));
+  // 3. Dateien laden
+  const locationsPath   = path.join(__dirname, '..', 'locations.json');
+  const enrichmentPath  = path.join(__dirname, '..', 'loc-enrichment.json');
+  const locations  = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
+  const enrichment = JSON.parse(fs.readFileSync(enrichmentPath, 'utf8'));
+  const nameById   = new Map(locations.map(loc => [loc.ID, loc.name]));
 
   // 4. Jedes Issue auswerten
   const stats = { total: parsed.length, applied: 0, skipped_already_set: 0, skipped_not_found: 0, errors: 0 };
   const toApply = [];
 
   for (const { issueNumber, spaceId, eventsUrl } of parsed) {
-    const loc = byId.get(spaceId);
-
-    if (!loc) {
+    if (!nameById.has(spaceId)) {
       console.log(`[#${issueNumber}] ID ${spaceId}: NICHT in locations.json gefunden — uebersprungen`);
       stats.skipped_not_found++;
       continue;
     }
 
-    if (loc.events) {
+    const name  = nameById.get(spaceId);
+    const entry = enrichment[String(spaceId)];
+
+    if (entry?.events) {
       if (applyMode) {
         try {
           closeIssue(issueNumber);
-          console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId}): bereits gesetzt ("${loc.events}") — Issue geschlossen`);
+          console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): bereits gesetzt ("${entry.events}") — Issue geschlossen`);
         } catch (err) {
           console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`);
           stats.errors++;
         }
       } else {
-        console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId}): events bereits gesetzt ("${loc.events}") — wuerde Issue schliessen`);
+        console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): events bereits gesetzt ("${entry.events}") — wuerde Issue schliessen`);
       }
       stats.skipped_already_set++;
       continue;
     }
 
-    console.log(`[#${issueNumber}] ${loc.name} (ID ${spaceId})`);
+    console.log(`[#${issueNumber}] ${name} (ID ${spaceId})`);
     console.log(`   events: "${eventsUrl}"`);
 
-    toApply.push({ loc, eventsUrl, issueNumber, name: loc.name, spaceId });
+    toApply.push({ spaceId, eventsUrl, issueNumber, name });
   }
 
   // 5. Zusammenfassung
@@ -233,8 +236,9 @@ async function main() {
   // 6. Aenderungen anwenden
   console.log('Wende Aenderungen an...\n');
 
-  for (const { loc, eventsUrl, issueNumber, name, spaceId } of toApply) {
-    loc.events = eventsUrl;
+  for (const { spaceId, eventsUrl, issueNumber, name } of toApply) {
+    if (!enrichment[String(spaceId)]) enrichment[String(spaceId)] = {};
+    enrichment[String(spaceId)].events = eventsUrl;
 
     try {
       closeIssue(issueNumber);
@@ -246,10 +250,10 @@ async function main() {
     }
   }
 
-  // 7. locations.json einmal schreiben
+  // 7. loc-enrichment.json einmal schreiben
   if (stats.applied > 0) {
-    fs.writeFileSync(locationsPath, JSON.stringify(locations, null, 2) + '\n', 'utf8');
-    console.log(`\nlocations.json aktualisiert (${stats.applied} Eintraege geaendert)`);
+    fs.writeFileSync(enrichmentPath, JSON.stringify(enrichment, null, 2) + '\n', 'utf8');
+    console.log(`\nloc-enrichment.json aktualisiert (${stats.applied} Eintraege geaendert)`);
   }
 
   // 8. Abschlussbericht

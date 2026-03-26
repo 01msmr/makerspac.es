@@ -57,12 +57,12 @@ jobs:
           echo "Running: node tools/apply-calendar-issues.js $ARGS"
           node tools/apply-calendar-issues.js $ARGS
 
-      - name: Commit locations.json
+      - name: Commit loc-enrichment.json
         if: ${{ inputs.mode == 'apply' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add locations.json
+          git add loc-enrichment.json
           git diff --staged --quiet || git commit -m "data: apply calendar links from issues"
           git push
 
