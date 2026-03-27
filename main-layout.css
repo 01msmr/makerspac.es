@@ -85,6 +85,7 @@ body {
   align-items: stretch;
   gap: 12px;
 }
+.in-iframe .title-bar { display: none; }
 
 .title {
   font-family: var(--font-family);

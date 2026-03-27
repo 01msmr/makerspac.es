@@ -376,11 +376,43 @@ export class RoutingManager {
     return this._styleCountMap?.get(style) ?? this.json.filter(l => l.style === style).length;
   }
 
-  updatePageMeta(title, desc) {
+  updatePageMeta(title, desc, loc = null) {
     document.title = title.startsWith('makerspac.es') ? title : `${title} | makerspac.es`;
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
     meta.content = desc;
+
+    let ldScript = document.getElementById('ld-space');
+    if (loc) {
+      if (!ldScript) {
+        ldScript = document.createElement('script');
+        ldScript.id = 'ld-space';
+        ldScript.type = 'application/ld+json';
+        document.head.appendChild(ldScript);
+      }
+      const cc = appContext.mapIcons?.getCountryCode(loc.loc?.country)?.toUpperCase() || '';
+      const street = loc.loc?.street ? `${loc.loc.street.name || ''} ${loc.loc.street.number || ''}${loc.loc.street.ext || ''}`.trim() : '';
+      ldScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'LocalBusiness',
+        'name': loc.name,
+        'url': loc.link || undefined,
+        'address': {
+          '@type': 'PostalAddress',
+          'streetAddress': street || undefined,
+          'addressLocality': loc.loc?.city || undefined,
+          'postalCode': loc.loc?.plz ? String(loc.loc.plz) : undefined,
+          'addressCountry': cc || undefined,
+        },
+        'geo': loc.loc?.lat != null ? {
+          '@type': 'GeoCoordinates',
+          'latitude': loc.loc.lat,
+          'longitude': loc.loc.long,
+        } : undefined,
+      });
+    } else if (ldScript) {
+      ldScript.remove();
+    }
   }
 
   // Führt callback aus nachdem der durch uns ausgelöste hashchange verarbeitet wurde.
@@ -460,7 +492,7 @@ export class RoutingManager {
       const loc = locations[0];
       const cc = appContext.mapIcons?.getCountryCode(loc.loc?.country).toUpperCase();
       const plz = loc.loc?.plz ? window.zfill(loc.loc.plz, loc.loc.country) : ''; // zfill: step 5
-      this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`);
+      this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`, loc);
     }
   }
 
@@ -501,7 +533,7 @@ export class RoutingManager {
         if (loc) {
           const cc = appContext.mapIcons?.getCountryCode(loc.loc?.country)?.toUpperCase() || '';
           const plz = loc.loc?.plz ? window.zfill?.(loc.loc.plz, loc.loc.country) ?? '' : '';
-          this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`);
+          this.updatePageMeta(`makerspac.es > ${cc}-${plz} ${loc.loc?.city} > ${loc.name}`, `View ${loc.name} on the map`, loc);
         }
       }
     }

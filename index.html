@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 
 <head>
   <meta charset="UTF-8" />
-  <title>map of makerspac.es</title>
+  <title>makerspac.es – Makerspaces, FabLabs &amp; Hackerspaces</title>
+  <meta name="description" content="Karte aller Makerspaces, FabLabs und Hackerspaces in Deutschland, Österreich und der Schweiz – mit Live-Status." />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -47,6 +48,22 @@
   <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->
   <script type="module" src="map.js"></script>
 
+  <!-- JSON-LD: WebApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "makerspac.es",
+    "url": "https://makerspac.es",
+    "description": "Karte aller Makerspaces, FabLabs und Hackerspaces in Deutschland, Österreich und der Schweiz – mit Live-Status.",
+    "applicationCategory": "Map",
+    "inLanguage": ["de", "en", "fr", "nl", "it", "da", "uk"]
+  }
+  </script>
+
+  <!-- Hide title-bar when app is embedded as iframe backdrop (e.g. about.html) -->
+  <script>if (window !== window.top) document.documentElement.classList.add('in-iframe');</script>
+
   <!-- Service Worker registrieren -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -63,12 +80,6 @@
 </head>
 
 <body>
-  <!-- div für SEO -->
-  <div style="position: absolute; left: -9999px;">
-    <h1>Makerspaces in Deutschland, Österreich und Schweiz</h1>
-    <p>Finde FabLabs, Hackerspaces und Makerspaces in deiner Nähe...</p>
-  </div>
-
   <div id="map"></div>
 
   <div class="title-bar">

@@ -51,7 +51,8 @@ class DataStore {
       share: 'Teilen',
       import: 'Importieren',
       deleteAll: 'Alle löschen',
-      confirmDelete: 'Alle Favoriten löschen?'
+      confirmDelete: 'Alle Favoriten löschen?',
+      aboutLink: 'Über Makerspaces ›'
     };
     return fallbacks[key] || key;
   }
@@ -308,6 +309,13 @@ class DataStore {
     // ===================================================================
     // === STORAGE/CONSENT SECTION — ENDE ===============================
     // ===================================================================
+    // Footer: Link zur About-Seite
+    const aboutLink = document.createElement('a');
+    aboutLink.href = '/about.html';
+    aboutLink.className = 'settings-about-link';
+    aboutLink.textContent = this.t('aboutLink');
+    this.settingsPopover.appendChild(aboutLink);
+
     this.container.appendChild(this.settingsPopover);
 
     // Führe die Übersetzung und Zustands-Aktualisierung beim Erstellen aus
@@ -328,7 +336,7 @@ class DataStore {
       // Öffnen
       this.settingsPopover.classList.remove('is-hidden');
       // Zahnrad verstecken
-      const gearBtn = this.container.querySelector('.settings-gear-button-solo');
+      const gearBtn = this.container.querySelector('.settings-gear-button-solo:not(.desktop-rezoom-btn)');
       if (gearBtn) gearBtn.style.visibility = 'hidden';
       this.updateSettingsLabels();
       this.updateClusteringToggleUI();
@@ -364,7 +372,7 @@ class DataStore {
       this.settingsPopover.classList.add('is-hidden');
     }
     // Zahnrad wieder einblenden
-    const gearBtn = this.container?.querySelector('.settings-gear-button-solo');
+    const gearBtn = this.container?.querySelector('.settings-gear-button-solo:not(.desktop-rezoom-btn)');
     if (gearBtn) gearBtn.style.visibility = '';
     // Listener entfernen
     if (this.documentClickHandler) {
@@ -566,6 +574,9 @@ class DataStore {
     if (searchBar && window.i18n) {
       searchBar.placeholder = window.i18n.t('searchPlaceholder');
     }
+    // Always update gear button tooltip regardless of popover state
+    const gearBtn = this.container?.querySelector('.settings-gear-button-solo:not(.desktop-rezoom-btn)');
+    if (gearBtn) gearBtn.setAttribute('aria-label', this.t('title'));
     if (this.settingsPopover && !this.settingsPopover.classList.contains('is-hidden')) {
       this.updateSettingsLabels();
       this.updateClusteringToggleUI();
@@ -606,6 +617,12 @@ class DataStore {
     if (darkBtn) darkBtn.setAttribute('aria-label', this.t('dark'));
     if (qrBtn) qrBtn.setAttribute('aria-label', this.t('qrSettings'));
     if (deleteBtn) deleteBtn.setAttribute('aria-label', this.t('deleteAll'));
+
+    const gearBtn = this.container?.querySelector('.settings-gear-button-solo:not(.desktop-rezoom-btn)');
+    if (gearBtn) gearBtn.setAttribute('aria-label', this.t('title'));
+
+    const aboutLinkEl = this.settingsPopover.querySelector('.settings-about-link');
+    if (aboutLinkEl) aboutLinkEl.textContent = this.t('aboutLink');
 
     // Clustering aria-label Update
     const clusterBtn = this.settingsPopover.querySelector('#clustering-btn-cluster');

@@ -57,6 +57,7 @@ const CONFIG = AppConfig;
      */
     init(map, listingCore) {
       if (window.embedModeActive) return;
+      if (window !== window.top) return; // in iframe (e.g. about.html backdrop) — no nearby UI
 
       this.map = map;
       this.listingCore = listingCore;

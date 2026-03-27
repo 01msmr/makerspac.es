@@ -385,6 +385,7 @@ export class DemoMode extends _DemoBase {
   // ── Inactivity timer ──────────────────────────────────────────────────────────
 
   _initInactivity() {
+    if (window !== window.top) return; // in iframe (e.g. about.html backdrop) — no auto-demo
     const reset = () => {
       if (_runningDemo) return;
       clearTimeout(this._inactT);
