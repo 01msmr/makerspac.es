@@ -340,7 +340,7 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   const mapRect = mapContainer.getBoundingClientRect();
 
   const connectionEndX = suggestionRect.left + AppConfig.connectorOffsetLeft - mapRect.left;
-  const connectionEndY = suggestionRect.top + 0.4 + (suggestionRect.height / 2) - mapRect.top;
+  const connectionEndY = suggestionRect.top + (suggestionRect.height / 2) - mapRect.top;
   const startLatLng = map.containerPointToLatLng([connectionEndX, connectionEndY]);
 
   const endLatLng = targetMarker.getLatLng();
@@ -620,6 +620,37 @@ function setupMap() {
 
   appContext.map = map;
   window.map = map; // backward compat
+
+  // In iframe context (about.html backdrop): disable all map interaction so the
+  // search bar + dropdown work via mouse without the map panning/zooming underneath.
+  if (window !== window.top) {
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.doubleClickZoom.disable();
+    map.touchZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+    map.tap?.disable();
+
+    const navigateParent = () => {
+      setTimeout(() => { window.top.location.href = window.location.href; }, 0);
+    };
+
+    // Click on any dropdown item → navigate parent to full map
+    const dropdown = document.getElementById('suggestions-dropdown');
+    if (dropdown) {
+      dropdown.addEventListener('click', navigateParent, true);
+    }
+
+    // Enter on a focused dropdown item → same (routing updates hash first via selectSuggestion)
+    // Enter on a bare search term → navigate parent to map root
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) {
+      searchBar.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') navigateParent();
+      }, true);
+    }
+  }
 
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 

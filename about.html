@@ -49,8 +49,8 @@
       height: 100%;
       border: none;
       z-index: 0;
-      pointer-events: none;
     }
+
 
     /* ── Centered content card ── */
     .about-card {
@@ -141,7 +141,7 @@
   </style>
 </head>
 <body>
-  <!-- Full-color, non-interactive map backdrop (logo + searchbar visible from the app) -->
+  <!-- Map backdrop — search bar + dropdown fully mouse-accessible; map interaction disabled via Leaflet in iframe context -->
   <iframe id="map-bg" src="/" title="" aria-hidden="true" tabindex="-1"></iframe>
 
   <!-- Title bar rendered in about.html — sits over the iframe's title, fully clickable -->

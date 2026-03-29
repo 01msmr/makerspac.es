@@ -670,9 +670,7 @@ class SearchHeader {
       e.preventDefault();
       if (this.searchBar.value.length > 0) {
         this.clearSearch();
-        return;
       }
-      this.closeDropdown();
       return;
     }
 
@@ -1521,9 +1519,8 @@ class SearchHeader {
   }
 
   closeDropdown() {
-    // Auf Touch-Geräten (Mobile + Tablet) wird der Dropdown NIEMALS geschlossen — keine Ausnahmen.
-    // Er ist das primäre Listing-UI und muss immer sichtbar bleiben.
-    if ('ontouchstart' in window) return;
+    // Der Dropdown wird NIEMALS geschlossen — er ist das primäre Listing-UI auf allen Geräten.
+    return;
 
     if (!this._manualSpaceClick && window.mapUtils?.clearStickyPopup) {
       window.mapUtils.clearStickyPopup();
