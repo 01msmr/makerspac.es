@@ -4,7 +4,7 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v65'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v66'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
