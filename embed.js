@@ -15,6 +15,7 @@ class EmbedMapExtended {
       .map(Number)
       .filter(Boolean);
     this.friendsRows = parseInt(params.get('friendsrows')) || 0;
+    this.showMinimap = params.has('minimap');
 
     if (!this.targetId || isNaN(this.targetId)) {
       this.showError('Invalid or missing space ID');
@@ -46,7 +47,7 @@ class EmbedMapExtended {
       this.showLogo();
       this.createTargetDropdown();
       this.createLanguageSwitcher();
-      this.createMinimap();
+      if (this.showMinimap) this.createMinimap();
 
       if (this.friendSpaces.length > 0) {
         this.createFriendsDropdown();
