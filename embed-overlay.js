@@ -1,6 +1,7 @@
 // embed-overlay.js — Unified overlay: Add Space + Embed guide
 
 import { WEEKDAY_NAMES } from './date-utils.js';
+import AppConfig from './config.js';
 
 const GITHUB_REPO = '01msmr/makerspac.es';
 
@@ -52,10 +53,6 @@ function _closeEmbed() {
 }
 
 // ─── HTML helpers ─────────────────────────────────────────────────────────────
-
-function esc(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 
 function opt(values, selected = '') {
   return values.map(v => {
@@ -882,13 +879,13 @@ function showOverlay() {
 
           <h4 class="embed-h4">a) 440 px — without minimap</h4>
           <div class="embed-code-block">
-            <pre class="embed-snippet">${esc(snippet440)}</pre>
+            <pre class="embed-snippet">${AppConfig.escapeHtml(snippet440)}</pre>
             <button class="embed-copy-btn">copy</button>
           </div>
 
           <h4 class="embed-h4">b) 640 px — with minimap</h4>
           <div class="embed-code-block">
-            <pre class="embed-snippet">${esc(snippet640)}</pre>
+            <pre class="embed-snippet">${AppConfig.escapeHtml(snippet640)}</pre>
             <button class="embed-copy-btn">copy</button>
           </div>
 
@@ -912,7 +909,7 @@ function showOverlay() {
           <h3 class="embed-h3">3. Embed by div &amp; JavaScript</h3>
           <p>Load the map directly into a div to control the styling yourself.</p>
           <div class="embed-code-block">
-            <pre class="embed-snippet">${esc(snippetDiv)}</pre>
+            <pre class="embed-snippet">${AppConfig.escapeHtml(snippetDiv)}</pre>
             <button class="embed-copy-btn">copy</button>
           </div>
 
