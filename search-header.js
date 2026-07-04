@@ -81,6 +81,7 @@ class SearchHeader {
   }
 
   focusSearchBarIfDesktop() {
+    if (new URLSearchParams(location.search).has('nofocus')) return;
     const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
     if (!isMobile) {
       this.searchBar.focus();

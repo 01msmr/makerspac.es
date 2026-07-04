@@ -2432,15 +2432,25 @@ body.consent-active #map { pointer-events: none; }
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-/* About-Link im Settings-Popover-Footer */
-.settings-about-link {
-  display: block;
-  padding: 8px 14px;
-  color: var(--text-color-muted, #888);
-  font-size: 0.8rem;
-  text-decoration: none;
+/* About- und Embed-Link im Settings-Popover-Footer — nebeneinander */
+.settings-links-row {
+  display: flex;
   border-top: 1px solid var(--dropdown-border, #ddd);
 }
-.settings-about-link:hover {
+.settings-about-link,
+.settings-embed-link {
+  flex: 1;
+  display: block;
+  padding: 8px 10px;
+  color: var(--text-color-muted, #888);
+  font-size: 0.78rem;
+  text-decoration: none;
+  text-align: center;
+}
+.settings-about-link {
+  border-right: 1px solid var(--dropdown-border, #ddd);
+}
+.settings-about-link:hover,
+.settings-embed-link:hover {
   text-decoration: underline;
 }

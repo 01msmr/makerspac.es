@@ -16,9 +16,9 @@ class DataStore {
   }
 
   init() {
-    this.createSettingsButton();
-    // ✨ NEU: Erstelle das Popover nur einmal
-    this.createSettingsPopover();
+    const noUI = new URLSearchParams(location.search).has('noui');
+    if (!noUI) this.createSettingsButton();
+    if (!noUI) this.createSettingsPopover();
     this.loadLanguagePreference();
     this.loadColorScheme();
   }
@@ -52,7 +52,8 @@ class DataStore {
       import: 'Importieren',
       deleteAll: 'Alle löschen',
       confirmDelete: 'Alle Favoriten löschen?',
-      aboutLink: 'Über Makerspaces ›'
+      aboutLink: 'Über Makerspaces ›',
+      embedLink: 'Karte einbetten ›'
     };
     return fallbacks[key] || key;
   }
@@ -310,11 +311,22 @@ class DataStore {
     // === STORAGE/CONSENT SECTION — ENDE ===============================
     // ===================================================================
     // Footer: Link zur About-Seite
+    const linksRow = document.createElement('div');
+    linksRow.className = 'settings-links-row';
+
     const aboutLink = document.createElement('a');
     aboutLink.href = '/about.html';
     aboutLink.className = 'settings-about-link';
     aboutLink.textContent = this.t('aboutLink');
-    this.settingsPopover.appendChild(aboutLink);
+    linksRow.appendChild(aboutLink);
+
+    const embedLink = document.createElement('a');
+    embedLink.href = '/about.html#embed';
+    embedLink.className = 'settings-embed-link';
+    embedLink.textContent = this.t('embedLink');
+    linksRow.appendChild(embedLink);
+
+    this.settingsPopover.appendChild(linksRow);
 
     this.container.appendChild(this.settingsPopover);
 
@@ -623,6 +635,8 @@ class DataStore {
 
     const aboutLinkEl = this.settingsPopover.querySelector('.settings-about-link');
     if (aboutLinkEl) aboutLinkEl.textContent = this.t('aboutLink');
+    const embedLinkEl = this.settingsPopover.querySelector('.settings-embed-link');
+    if (embedLinkEl) embedLinkEl.textContent = this.t('embedLink');
 
     // Clustering aria-label Update
     const clusterBtn = this.settingsPopover.querySelector('#clustering-btn-cluster');

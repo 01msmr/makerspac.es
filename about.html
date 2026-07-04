@@ -49,16 +49,27 @@
       height: 100%;
       border: none;
       z-index: 0;
+      pointer-events: none;
     }
 
+
+    /* ── Background overlay: hides map-bg UI (gear button etc.) outside the card ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: rgba(0,0,0,0.44);
+      pointer-events: none;
+    }
 
     /* ── Centered content card ── */
     .about-card {
       position: relative;
       z-index: 10;
-      max-width: 640px;
+      max-width: 800px;
       margin: 1em auto;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.90);
       border-radius: 20px;
       padding: 44px 32px 40px;
       min-height: calc(100vh - 2em);
@@ -67,7 +78,7 @@
       color: #1a1a1a;
     }
     @media (prefers-color-scheme: dark) {
-      .about-card { background: rgba(26,26,26,0.88); color: #e0e0e0; }
+      .about-card { background: rgba(26,26,26,0.92); color: #e0e0e0; }
     }
     @media (max-width: 700px) {
       .about-card { margin: 0; border-radius: 0; min-height: 100vh; }
@@ -138,6 +149,51 @@
       opacity: 0.5;
     }
     .about-footer a { color: inherit; }
+
+    /* ── Tabs ── */
+    .about-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid rgba(0,0,0,0.12); }
+    .about-tab  { flex: 1; text-align: center; padding: 10px 20px; cursor: pointer; border: none; background: none;
+                  font: inherit; font-size: 0.95rem; color: inherit; opacity: 0.55;
+                  border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .about-tab.active { opacity: 1; border-bottom-color: #0066ff; }
+    @media (prefers-color-scheme: dark) { .about-tab.active { border-bottom-color: #4d9fff; } }
+    .about-panel { display: none; }
+    .about-panel.active { display: block; }
+
+    /* ── Embed-Demo Panel ── */
+    #panel-embed h2 { background: none; color: inherit; padding: 0; margin: 0 0 8px; font-size: 1.3rem; font-weight: 700; }
+    #panel-embed h3 { font-size: 1rem; font-weight: 600; margin: 20px 0 6px; }
+    #panel-embed p  { font-size: 0.9rem; }
+    .embed-preview { border: 2px dashed #ccc; border-radius: 12px; overflow: hidden; margin: 12px 0 20px; background: #eee; }
+    .embed-preview iframe { width: 100%; height: 100%; display: block; border: none; }
+    .embed-preview.h440 { height: 440px; }
+    .embed-preview.h640 { height: 640px; }
+    .embed-pre { position: relative; background: #282c34; color: #abb2bf;
+                 padding: 16px 16px 16px 16px; border-radius: 8px; overflow-x: auto;
+                 font-family: monospace; font-size: 0.8rem; white-space: pre; margin: 8px 0 16px; }
+    .embed-copy { position: absolute; top: 8px; right: 8px; background: #0066ff; color: #fff;
+                  border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .embed-copy:hover { opacity: 0.85; }
+    .embed-variant-tabs { display: flex; gap: 4px; margin: 8px 0 0; }
+    .embed-tab-btn { padding: 4px 14px; border: none; cursor: pointer; font: inherit;
+                     font-size: 0.78rem; border-radius: 4px 4px 0 0;
+                     background: #1a1e24; color: #5c6370; }
+    .embed-tab-btn.active { background: #282c34; color: #abb2bf; }
+    .embed-tab-btn:not(.active):hover { color: #abb2bf; }
+    .embed-variant-pane .embed-pre { margin: 0 0 16px; border-radius: 0 8px 8px 8px; }
+    .embed-param-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
+    .embed-param-table th, .embed-param-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .embed-param-table th { background: rgba(0,0,0,0.04); font-weight: 600; }
+    .embed-pill { display: inline-block; padding: 1px 7px; color: #fff; background: grey;
+                  border-radius: 10px; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
+    .embed-pill.req { background: #d32f2f; }
+    code.ep { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
+    @media (prefers-color-scheme: dark) {
+      .embed-preview { background: #222; border-color: #444; }
+      .embed-param-table th { background: rgba(255,255,255,0.05); }
+      .embed-param-table td { border-bottom-color: rgba(255,255,255,0.1); }
+      code.ep { background: rgba(255,255,255,0.08); }
+    }
   </style>
 </head>
 <body>
@@ -163,10 +219,86 @@
       <span class="fi fi-ua" data-lang="uk"></span>
     </div>
 
-    <div id="content"></div>
+    <div class="about-tabs">
+      <button class="about-tab active" data-panel="about">Über Makerspaces</button>
+      <button class="about-tab"        data-panel="embed">Einbetten</button>
+    </div>
 
-    <div class="about-footer">
-      <a href="/">makerspac.es</a> – <span id="footer-text"></span>
+    <div id="panel-about" class="about-panel active">
+      <div id="content"></div>
+      <div class="about-footer">
+        <a href="/">makerspac.es</a> – <span id="footer-text"></span>
+      </div>
+    </div>
+
+    <div id="panel-embed" class="about-panel">
+      <h2 id="embed-h2">📍 makerspac.es einbetten</h2>
+      <p id="embed-lead" style="opacity:0.65;margin-bottom:16px;">
+        Zeig deine Position, deinen Öffnungsstatus und befreundete Spaces – per iframe, ohne Registrierung.
+      </p>
+
+      <h3 id="embed-h3-1">1. Live-Vorschau — 440 px</h3>
+      <div class="embed-preview h440" id="embed-frame-440-wrap"></div>
+
+      <h3 id="embed-h3-2">2. Live-Vorschau — 640 px (mit Minimap)</h3>
+      <div class="embed-preview h640" id="embed-frame-640-wrap"></div>
+
+      <h3 id="embed-h3-3">3. Code-Snippet</h3>
+      <div class="embed-variant-tabs">
+        <button class="embed-tab-btn active" data-variant="script" onclick="switchEmbedVariant(this)">Script</button>
+        <button class="embed-tab-btn" data-variant="iframe" onclick="switchEmbedVariant(this)">iFrame</button>
+      </div>
+      <div class="embed-variant-pane" id="ep-script">
+        <div class="embed-pre"><button id="embed-copy-script" class="embed-copy" onclick="embedCopy(this)">copy</button>&lt;script
+  src="https://makerspac.es/embed-loader.js"
+  data-id="<b>DEINE_ID</b>"
+  data-height="440"&gt;
+&lt;/script&gt;<br>
+</div>
+      </div>
+      <div class="embed-variant-pane" id="ep-iframe" style="display:none">
+        <div class="embed-pre"><button id="embed-copy-iframe" class="embed-copy" onclick="embedCopy(this)">copy</button>&lt;iframe
+  src="https://makerspac.es/embed.html?id=<b>DEINE_ID</b>"
+  width="100%" height="440"
+  style="border:none;border-radius:10px;"
+  title="Makerspace-Karte"&gt;
+&lt;/iframe&gt;</div>
+      </div>
+
+      <h3 id="embed-h3-4">4. Parameter</h3>
+      <table class="embed-param-table">
+        <thead><tr>
+          <th id="embed-th-param">Parameter</th>
+          <th id="embed-th-desc">Beschreibung</th>
+          <th id="embed-th-ex">Beispiel</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><code class="ep">id</code> <span id="embed-pill-req" class="embed-pill req">Pflicht</span></td>
+            <td id="embed-id-desc">ID deines Makerspace (sichtbar im Popup auf der Karte)</td>
+            <td><code class="ep">id=1</code></td>
+          </tr>
+          <tr>
+            <td><code class="ep">friends</code> <span class="embed-pill">optional</span></td>
+            <td id="embed-friends-desc">IDs befreundeter Spaces, kommagetrennt</td>
+            <td><code class="ep">friends=12,34</code></td>
+          </tr>
+          <tr>
+            <td><code class="ep">country</code> <span class="embed-pill">optional</span></td>
+            <td id="embed-country-desc">Land-Filter</td>
+            <td><code class="ep">country=Germany</code></td>
+          </tr>
+          <tr>
+            <td><code class="ep">lang</code> <span class="embed-pill">optional</span></td>
+            <td id="embed-lang-desc">Sprache: de, en, fr, nl, it, da, uk</td>
+            <td><code class="ep">lang=de</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="embed-h3-5">5. FAQ</h3>
+      <p id="embed-faq1" style="margin-bottom:8px;"></p>
+      <p id="embed-faq2"></p>
     </div>
   </div>
 
@@ -187,6 +319,29 @@
         diffP: `Die Begriffe überschneiden sich erheblich. Viele Spaces nennen sich Makerspace, bieten aber die gleiche Ausstattung wie ein FabLab. Hackerspaces sind oft etwas computerlastiger, während FabLabs mehr auf physische Fertigung fokussieren. In der Praxis sind alle drei Konzepte Varianten desselben Gedankens: offener Raum, gemeinschaftliches Wissen, selbst machen.`,
         ctaText: `Alle Spaces auf der Karte finden →`,
         footerText: `Karte aller Makerspaces, FabLabs und Hackerspaces in Europa.`,
+        tabAbout: `Über Makerspaces`,
+        tabEmbed: `Einbetten`,
+        embed: {
+          h2: `📍 makerspac.es einbetten`,
+          lead: `Zeig deine Position, deinen Öffnungsstatus und befreundete Spaces – per iframe, ohne Registrierung.`,
+          h3_1: `1. Live-Vorschau — 440 px`,
+          h3_2: `2. Live-Vorschau — 640 px (mit Minimap)`,
+          h3_3: `3. Code-Snippet`,
+          h3_4: `4. Parameter`,
+          colParam: `Parameter`, colDesc: `Beschreibung`, colEx: `Beispiel`,
+          pillReq: `Pflicht`,
+          idDesc: `ID deines Makerspace (sichtbar im Popup auf der Karte)`,
+          friendsDesc: `IDs befreundeter Spaces, kommagetrennt`,
+          countryDesc: `Land-Filter`,
+          langDesc: `Sprache: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Wie finde ich meine ID?`,
+          faq1a: `Auf makerspac.es die Suche nutzen, auf den Marker klicken – die ID steht im Popup.`,
+          faq2q: `Was passiert wenn mein Space geschlossen ist?`,
+          faq2a: `Mit SpaceAPI-Anbindung wechselt der Marker automatisch auf Rot und zeigt „geschlossen".`,
+          copyBtn: `kopieren`,
+          copiedBtn: `✓ kopiert`,
+        },
       },
       en: {
         lang: `en`,
@@ -203,6 +358,29 @@
         diffP: `The terms overlap considerably. Many spaces call themselves makerspaces but offer the same equipment as a FabLab. Hackerspaces tend to be more computer-focused, while FabLabs focus more on physical fabrication. In practice all three concepts are variations of the same idea: open space, shared knowledge, do-it-yourself.`,
         ctaText: `Find all spaces on the map →`,
         footerText: `Map of all makerspaces, FabLabs and hackerspaces in Europe.`,
+        tabAbout: `About`,
+        tabEmbed: `Embed`,
+        embed: {
+          h2: `📍 Embed makerspac.es`,
+          lead: `Show your location, open/closed status and friendly spaces – via iframe, no registration needed.`,
+          h3_1: `1. Live Preview — 440 px`,
+          h3_2: `2. Live Preview — 640 px (with minimap)`,
+          h3_3: `3. Code Snippet`,
+          h3_4: `4. Parameters`,
+          colParam: `Parameter`, colDesc: `Description`, colEx: `Example`,
+          pillReq: `Required`,
+          idDesc: `ID of your makerspace (shown in the marker popup)`,
+          friendsDesc: `IDs of friendly spaces, comma-separated`,
+          countryDesc: `Country filter`,
+          langDesc: `Language: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `How do I find my ID?`,
+          faq1a: `Search on makerspac.es, click the marker – the ID is in the popup.`,
+          faq2q: `What happens when my space is closed?`,
+          faq2a: `With SpaceAPI integration the marker turns red and shows "closed" automatically.`,
+          copyBtn: `copy`,
+          copiedBtn: `✓ copied`,
+        },
       },
       fr: {
         lang: `fr`,
@@ -219,6 +397,29 @@
         diffP: `Les termes se recoupent considérablement. Beaucoup d'espaces se nomment makerspaces mais offrent le même équipement qu'un FabLab. En pratique, les trois concepts sont des variations de la même idée : espace ouvert, savoir partagé, faire soi-même.`,
         ctaText: `Trouver tous les espaces sur la carte →`,
         footerText: `Carte de tous les makerspaces, FabLabs et hackerspaces en Europe.`,
+        tabAbout: `À propos`,
+        tabEmbed: `Intégrer`,
+        embed: {
+          h2: `📍 Intégrer makerspac.es`,
+          lead: `Montrez votre position, statut ouvert/fermé et espaces amis – via iframe, sans inscription.`,
+          h3_1: `1. Aperçu en direct — 440 px`,
+          h3_2: `2. Aperçu en direct — 640 px (avec minicarte)`,
+          h3_3: `3. Extrait de code`,
+          h3_4: `4. Paramètres`,
+          colParam: `Paramètre`, colDesc: `Description`, colEx: `Exemple`,
+          pillReq: `Requis`,
+          idDesc: `ID de votre makerspace (visible dans la popup du marqueur)`,
+          friendsDesc: `IDs d'espaces amis, séparés par des virgules`,
+          countryDesc: `Filtre pays`,
+          langDesc: `Langue : de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Comment trouver mon ID ?`,
+          faq1a: `Cherchez sur makerspac.es, cliquez sur le marqueur – l'ID apparaît dans la popup.`,
+          faq2q: `Que se passe-t-il quand mon espace est fermé ?`,
+          faq2a: `Avec l'intégration SpaceAPI, le marqueur devient rouge automatiquement.`,
+          copyBtn: `copier`,
+          copiedBtn: `✓ copié`,
+        },
       },
       nl: {
         lang: `nl`,
@@ -235,6 +436,29 @@
         diffP: `De termen overlappen aanzienlijk. Veel spaces noemen zichzelf makerspace maar bieden dezelfde uitrusting als een FabLab. In de praktijk zijn alle drie concepten variaties van hetzelfde idee: open ruimte, gedeelde kennis, zelf doen.`,
         ctaText: `Alle spaces op de kaart vinden →`,
         footerText: `Kaart van alle makerspaces, FabLabs en hackerspaces in Europa.`,
+        tabAbout: `Over`,
+        tabEmbed: `Insluiten`,
+        embed: {
+          h2: `📍 makerspac.es insluiten`,
+          lead: `Toon je locatie, open/gesloten status en bevriende spaces – via iframe, zonder registratie.`,
+          h3_1: `1. Live-voorbeeld — 440 px`,
+          h3_2: `2. Live-voorbeeld — 640 px (met minikaart)`,
+          h3_3: `3. Codefragment`,
+          h3_4: `4. Parameters`,
+          colParam: `Parameter`, colDesc: `Beschrijving`, colEx: `Voorbeeld`,
+          pillReq: `Verplicht`,
+          idDesc: `ID van je makerspace (zichtbaar in de markerpopup)`,
+          friendsDesc: `IDs van bevriende spaces, kommagescheiden`,
+          countryDesc: `Landfilter`,
+          langDesc: `Taal: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Hoe vind ik mijn ID?`,
+          faq1a: `Zoek op makerspac.es, klik op de marker – de ID staat in de popup.`,
+          faq2q: `Wat gebeurt er als mijn space gesloten is?`,
+          faq2a: `Met SpaceAPI-integratie wordt de marker automatisch rood.`,
+          copyBtn: `kopieer`,
+          copiedBtn: `✓ gekopieerd`,
+        },
       },
       it: {
         lang: `it`,
@@ -251,6 +475,29 @@
         diffP: `I termini si sovrappongono notevolmente. In pratica tutti e tre i concetti sono variazioni della stessa idea: spazio aperto, conoscenza condivisa, fare da sé.`,
         ctaText: `Trova tutti gli spazi sulla mappa →`,
         footerText: `Mappa di tutti i makerspace, FabLab e hackerspace in Europa.`,
+        tabAbout: `Informazioni`,
+        tabEmbed: `Incorpora`,
+        embed: {
+          h2: `📍 Incorpora makerspac.es`,
+          lead: `Mostra la tua posizione, stato aperto/chiuso e spazi amici – tramite iframe, senza registrazione.`,
+          h3_1: `1. Anteprima dal vivo — 440 px`,
+          h3_2: `2. Anteprima dal vivo — 640 px (con mappa ridotta)`,
+          h3_3: `3. Frammento di codice`,
+          h3_4: `4. Parametri`,
+          colParam: `Parametro`, colDesc: `Descrizione`, colEx: `Esempio`,
+          pillReq: `Obbligatorio`,
+          idDesc: `ID del tuo makerspace (visibile nel popup del marker)`,
+          friendsDesc: `IDs di spazi amici, separati da virgole`,
+          countryDesc: `Filtro paese`,
+          langDesc: `Lingua: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Come trovo il mio ID?`,
+          faq1a: `Cerca su makerspac.es, clicca sul marker – l'ID è nel popup.`,
+          faq2q: `Cosa succede quando il mio spazio è chiuso?`,
+          faq2a: `Con l'integrazione SpaceAPI il marker diventa automaticamente rosso.`,
+          copyBtn: `copia`,
+          copiedBtn: `✓ copiato`,
+        },
       },
       da: {
         lang: `da`,
@@ -267,6 +514,29 @@
         diffP: `Begreberne overlapper i høj grad. I praksis er alle tre koncepter variationer af den samme idé: åbent rum, delt viden, gør-det-selv.`,
         ctaText: `Find alle spaces på kortet →`,
         footerText: `Kort over alle makerspaces, FabLabs og hackerspaces i Europa.`,
+        tabAbout: `Om`,
+        tabEmbed: `Indlejr`,
+        embed: {
+          h2: `📍 Indlejr makerspac.es`,
+          lead: `Vis din placering, åben/lukket-status og venlige spaces – via iframe, uden registrering.`,
+          h3_1: `1. Live-forhåndsvisning — 440 px`,
+          h3_2: `2. Live-forhåndsvisning — 640 px (med minikort)`,
+          h3_3: `3. Kodestykke`,
+          h3_4: `4. Parametre`,
+          colParam: `Parameter`, colDesc: `Beskrivelse`, colEx: `Eksempel`,
+          pillReq: `Påkrævet`,
+          idDesc: `ID på dit makerspace (synlig i markerpopuppen)`,
+          friendsDesc: `IDs på venlige spaces, kommasepareret`,
+          countryDesc: `Landefilter`,
+          langDesc: `Sprog: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Hvordan finder jeg mit ID?`,
+          faq1a: `Søg på makerspac.es, klik på markøren – ID'et står i popuppen.`,
+          faq2q: `Hvad sker der, når mit space er lukket?`,
+          faq2a: `Med SpaceAPI-integration skifter markøren automatisk til rød.`,
+          copyBtn: `kopier`,
+          copiedBtn: `✓ kopieret`,
+        },
       },
       uk: {
         lang: `uk`,
@@ -283,6 +553,29 @@
         diffP: `Поняття значно перетинаються. На практиці всі три концепції є варіаціями однієї ідеї: відкритий простір, спільні знання, зроби сам.`,
         ctaText: `Знайти всі простори на карті →`,
         footerText: `Карта всіх makerspace, FabLab та hackerspace в Європі.`,
+        tabAbout: `Про нас`,
+        tabEmbed: `Вставити`,
+        embed: {
+          h2: `📍 Вставити makerspac.es`,
+          lead: `Покажи своє місцезнаходження, статус відкрито/закрито та дружні простори – через iframe, без реєстрації.`,
+          h3_1: `1. Живий попередній перегляд — 440 пкс`,
+          h3_2: `2. Живий попередній перегляд — 640 пкс (з міні-картою)`,
+          h3_3: `3. Фрагмент коду`,
+          h3_4: `4. Параметри`,
+          colParam: `Параметр`, colDesc: `Опис`, colEx: `Приклад`,
+          pillReq: `Обов'язково`,
+          idDesc: `ID твого makerspace (видно у спливаючому вікні маркера)`,
+          friendsDesc: `ID дружніх просторів, через кому`,
+          countryDesc: `Фільтр країни`,
+          langDesc: `Мова: de, en, fr, nl, it, da, uk`,
+          h3_5: `5. FAQ`,
+          faq1q: `Як знайти свій ID?`,
+          faq1a: `Знайди на makerspac.es, натисни на маркер – ID є у спливаючому вікні.`,
+          faq2q: `Що відбувається коли мій простір закритий?`,
+          faq2a: `З інтеграцією SpaceAPI маркер автоматично стає червоним.`,
+          copyBtn: `копіювати`,
+          copiedBtn: `✓ скопійовано`,
+        },
       },
     };
 
@@ -320,7 +613,7 @@
       return langToHash[getLang()] || 'germany';
     }
 
-    document.getElementById('map-bg').src = '/#/' + getCountryHash();
+    document.getElementById('map-bg').src = '/?noui=1#/' + getCountryHash();
 
     function render() {
       const lang = getLang();
@@ -351,6 +644,37 @@
       `;
 
       document.getElementById('footer-text').textContent = t.footerText;
+
+      document.querySelector('[data-panel="about"]').textContent = t.tabAbout;
+      document.querySelector('[data-panel="embed"]').textContent = t.tabEmbed;
+
+      renderEmbedTexts(t.embed);
+    }
+
+    function renderEmbedTexts(e) {
+      document.getElementById('embed-h2').textContent         = e.h2;
+      document.getElementById('embed-lead').textContent       = e.lead;
+      document.getElementById('embed-h3-1').textContent       = e.h3_1;
+      document.getElementById('embed-h3-2').textContent       = e.h3_2;
+      document.getElementById('embed-h3-3').textContent       = e.h3_3;
+      document.getElementById('embed-h3-4').textContent       = e.h3_4;
+      document.getElementById('embed-th-param').textContent   = e.colParam;
+      document.getElementById('embed-th-desc').textContent    = e.colDesc;
+      document.getElementById('embed-th-ex').textContent      = e.colEx;
+      document.getElementById('embed-pill-req').textContent   = e.pillReq;
+      document.getElementById('embed-id-desc').textContent    = e.idDesc;
+      document.getElementById('embed-friends-desc').textContent = e.friendsDesc;
+      document.getElementById('embed-country-desc').textContent = e.countryDesc;
+      document.getElementById('embed-lang-desc').textContent  = e.langDesc;
+      document.getElementById('embed-h3-5').textContent       = e.h3_5;
+      ['embed-copy-script', 'embed-copy-iframe'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.textContent = e.copyBtn;
+        btn.dataset.copied = e.copiedBtn;
+      });
+      document.getElementById('embed-faq1').innerHTML = '<strong>' + e.faq1q + '</strong><br><span style="font-weight:400;font-family:system-ui,sans-serif">' + e.faq1a + '</span>';
+      document.getElementById('embed-faq2').innerHTML = '<strong>' + e.faq2q + '</strong><br><span style="font-weight:400;font-family:system-ui,sans-serif">' + e.faq2a + '</span>';
     }
 
     render();
@@ -359,6 +683,54 @@
       const el = e.target.closest('[data-lang]');
       if (el) setLang(el.dataset.lang);
     });
+
+    // ── Tab-Switching ──
+    function activateTab(name) {
+      document.querySelectorAll('.about-tab,.about-panel').forEach(el => el.classList.remove('active'));
+      document.querySelector('[data-panel="' + name + '"]').classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+      if (name === 'embed') injectEmbedFrames();
+    }
+
+    function injectEmbedFrames() {
+      const w1 = document.getElementById('embed-frame-440-wrap');
+      if (!w1.querySelector('iframe')) {
+        const f1 = document.createElement('iframe');
+        f1.src = 'embed.html?id=1&friends=73,187,45,67&noscroll&nofocus&friendsrows=2';
+        f1.title = 'Makerspaces einbetten – Demo 440px';
+        w1.appendChild(f1);
+      }
+      const w2 = document.getElementById('embed-frame-640-wrap');
+      if (!w2.querySelector('iframe')) {
+        const f2 = document.createElement('iframe');
+        f2.src = 'embed.html?id=1&friends=2,45,67&noscroll&nofocus&friendsrows=3';
+        f2.title = 'Makerspaces einbetten – Demo 640px';
+        w2.appendChild(f2);
+      }
+    }
+
+    function switchEmbedVariant(btn) {
+      document.querySelectorAll('.embed-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.embed-variant-pane').forEach(p => p.style.display = 'none');
+      document.getElementById('ep-' + btn.dataset.variant).style.display = '';
+    }
+
+    function embedCopy(btn) {
+      const pre = btn.parentElement;
+      const text = pre.innerText.replace(btn.innerText, '').trim();
+      navigator.clipboard.writeText(text);
+      const orig = btn.innerText;
+      btn.innerText = btn.dataset.copied || '✓';
+      setTimeout(() => { btn.innerText = orig; }, 2000);
+    }
+
+    document.querySelectorAll('.about-tab').forEach(btn => {
+      btn.addEventListener('click', () => activateTab(btn.dataset.panel));
+    });
+
+    // Hash-Routing: about.html#embed öffnet Tab 2 direkt
+    if (location.hash === '#embed') activateTab('embed');
   </script>
 </body>
 </html>

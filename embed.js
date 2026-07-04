@@ -14,6 +14,7 @@ class EmbedMapExtended {
       .split(',')
       .map(Number)
       .filter(Boolean);
+    this.friendsRows = parseInt(params.get('friendsrows')) || 0;
 
     if (!this.targetId || isNaN(this.targetId)) {
       this.showError('Invalid or missing space ID');
@@ -476,9 +477,9 @@ class EmbedMapExtended {
 
     const headerHeight = header ? header.getBoundingClientRect().height : 0;
     const itemHeight = items[0].getBoundingClientRect().height;
-    const availableHeight = dropdown.getBoundingClientRect().height;
-    const itemsSpace = availableHeight - headerHeight;
-    const visibleItems = Math.floor(itemsSpace / itemHeight);
+    const visibleItems = this.friendsRows > 0
+      ? Math.min(this.friendsRows, items.length)
+      : Math.floor((dropdown.getBoundingClientRect().height - headerHeight) / itemHeight);
 
     if (visibleItems > 0 && visibleItems < items.length) {
       dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';

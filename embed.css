@@ -51,7 +51,8 @@ a {
   flex-shrink: 1;
   min-height: 0;
   overflow-y: auto;
-  scroll-snap-type: y proximity;
+  overscroll-behavior-y: none;
+  scroll-snap-type: y mandatory;
 }
 
 .friends-dropdown .dropdown-header,

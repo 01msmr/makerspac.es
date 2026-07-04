@@ -669,13 +669,69 @@
       "da": "— ingen —",
       "uk": "— немає —"
     },
-    "weekdayMonday":    { "de": "Montag",     "en": "Monday",    "fr": "Lundi",     "it": "Lunedì",    "nl": "Maandag",   "da": "Mandag",   "uk": "Понеділок" },
-    "weekdayTuesday":   { "de": "Dienstag",   "en": "Tuesday",   "fr": "Mardi",     "it": "Martedì",   "nl": "Dinsdag",   "da": "Tirsdag",  "uk": "Вівторок"  },
-    "weekdayWednesday": { "de": "Mittwoch",   "en": "Wednesday", "fr": "Mercredi",  "it": "Mercoledì", "nl": "Woensdag",  "da": "Onsdag",   "uk": "Середа"    },
-    "weekdayThursday":  { "de": "Donnerstag", "en": "Thursday",  "fr": "Jeudi",     "it": "Giovedì",   "nl": "Donderdag", "da": "Torsdag",  "uk": "Четвер"    },
-    "weekdayFriday":    { "de": "Freitag",    "en": "Friday",    "fr": "Vendredi",  "it": "Venerdì",   "nl": "Vrijdag",   "da": "Fredag",   "uk": "П'ятниця"  },
-    "weekdaySaturday":  { "de": "Samstag",    "en": "Saturday",  "fr": "Samedi",    "it": "Sabato",     "nl": "Zaterdag",  "da": "Lørdag",   "uk": "Субота"    },
-    "weekdaySunday":    { "de": "Sonntag",    "en": "Sunday",    "fr": "Dimanche",  "it": "Domenica",  "nl": "Zondag",    "da": "Søndag",   "uk": "Неділя"    },
+    "weekdayMonday": {
+      "de": "Montag",
+      "en": "Monday",
+      "fr": "Lundi",
+      "it": "Lunedì",
+      "nl": "Maandag",
+      "da": "Mandag",
+      "uk": "Понеділок"
+    },
+    "weekdayTuesday": {
+      "de": "Dienstag",
+      "en": "Tuesday",
+      "fr": "Mardi",
+      "it": "Martedì",
+      "nl": "Dinsdag",
+      "da": "Tirsdag",
+      "uk": "Вівторок"
+    },
+    "weekdayWednesday": {
+      "de": "Mittwoch",
+      "en": "Wednesday",
+      "fr": "Mercredi",
+      "it": "Mercoledì",
+      "nl": "Woensdag",
+      "da": "Onsdag",
+      "uk": "Середа"
+    },
+    "weekdayThursday": {
+      "de": "Donnerstag",
+      "en": "Thursday",
+      "fr": "Jeudi",
+      "it": "Giovedì",
+      "nl": "Donderdag",
+      "da": "Torsdag",
+      "uk": "Четвер"
+    },
+    "weekdayFriday": {
+      "de": "Freitag",
+      "en": "Friday",
+      "fr": "Vendredi",
+      "it": "Venerdì",
+      "nl": "Vrijdag",
+      "da": "Fredag",
+      "uk": "П'ятниця"
+    },
+    "weekdaySaturday": {
+      "de": "Samstag",
+      "en": "Saturday",
+      "fr": "Samedi",
+      "it": "Sabato",
+      "nl": "Zaterdag",
+      "da": "Lørdag",
+      "uk": "Субота"
+    },
+    "weekdaySunday": {
+      "de": "Sonntag",
+      "en": "Sunday",
+      "fr": "Dimanche",
+      "it": "Domenica",
+      "nl": "Zondag",
+      "da": "Søndag",
+      "uk": "Неділя"
+    },
     "labelTime": {
       "de": "Uhrzeit",
       "en": "Time",
@@ -1324,13 +1380,13 @@
       "uk": "Перенести налаштування та закладки на інший пристрій"
     },
     "aboutLink": {
-      "de": "Über Makerspaces \u203a",
-      "en": "About Makerspaces \u203a",
-      "fr": "À propos des Makerspaces \u203a",
-      "it": "Informazioni sui Makerspace \u203a",
-      "nl": "Over Makerspaces \u203a",
-      "da": "Om Makerspaces \u203a",
-      "uk": "Про мейкерспейси \u203a"
+      "de": "Über Makerspaces ›",
+      "en": "About Makerspaces ›",
+      "fr": "À propos des Makerspaces ›",
+      "it": "Informazioni sui Makerspace ›",
+      "nl": "Over Makerspaces ›",
+      "da": "Om Makerspaces ›",
+      "uk": "Про мейкерспейси ›"
     },
     "confirmDeleteSettings": {
       "de": "Einstellungen und\nalle Favoriten löschen?",
@@ -1358,6 +1414,15 @@
       "nl": "navigeren met",
       "da": "naviger med",
       "uk": "навігація через"
+    },
+    "embedLink": {
+      "de": "Karte einbetten ›",
+      "en": "Embed map ›",
+      "fr": "Intégrer la carte ›",
+      "it": "Incorpora la mappa ›",
+      "nl": "Kaart insluiten ›",
+      "da": "Integrer kortet ›",
+      "uk": "Вставити карту ›"
     }
   },
   "nearbySpaces": {
