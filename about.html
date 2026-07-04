@@ -52,6 +52,10 @@
       pointer-events: none;
     }
 
+    /* Backdrop ist klickbar (zurück zur Karte) → Pointer-Cursor außerhalb der Card */
+    body { cursor: pointer; }
+    .about-card, .title-bar { cursor: auto; }
+
 
     /* ── Background overlay: hides map-bg UI (gear button etc.) outside the card ── */
     body::after {
@@ -614,6 +618,12 @@
     }
 
     document.getElementById('map-bg').src = '/?noui=1&nofocus#/' + getCountryHash();
+
+    // Backdrop: einziger aktiver Input ist der Mausklick → zurück zur Karte
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.about-card') || e.target.closest('.title-bar')) return;
+      location.href = '/#/' + getCountryHash();
+    });
 
     function render() {
       const lang = getLang();
