@@ -613,7 +613,7 @@
       return langToHash[getLang()] || 'germany';
     }
 
-    document.getElementById('map-bg').src = '/?noui=1#/' + getCountryHash();
+    document.getElementById('map-bg').src = '/?noui=1&nofocus#/' + getCountryHash();
 
     function render() {
       const lang = getLang();
