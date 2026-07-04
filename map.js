@@ -1239,6 +1239,15 @@ function _applyPopupOpenHandler(marker, location) {
     const popupElement = popup._container;
     const logoElement = document.querySelector('.title');
 
+    // Logo ausblenden wenn Popup überlappt — Reads zuerst, dann Write
+    if (popupElement && logoElement) {
+      const popupRect = popupElement.getBoundingClientRect();
+      const logoRect = logoElement.getBoundingClientRect();
+      const isOverlapping = !(popupRect.right < logoRect.left || popupRect.left > logoRect.right ||
+        popupRect.bottom < logoRect.top || popupRect.top > logoRect.bottom);
+      if (isOverlapping) logoElement.classList.add('popup-active');
+    }
+
     // Popup-Klicks nicht an die Map durchleiten
     if (popupElement) {
       popupElement.addEventListener('mousedown', (event) => {
@@ -1248,15 +1257,6 @@ function _applyPopupOpenHandler(marker, location) {
         if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
       });
       popupElement.addEventListener('dblclick', (event) => { event.stopPropagation(); });
-    }
-
-    // Logo ausblenden wenn Popup überlappt
-    if (popupElement && logoElement) {
-      const popupRect = popupElement.getBoundingClientRect();
-      const logoRect = logoElement.getBoundingClientRect();
-      const isOverlapping = !(popupRect.right < logoRect.left || popupRect.left > logoRect.right ||
-        popupRect.bottom < logoRect.top || popupRect.top > logoRect.bottom);
-      if (isOverlapping) logoElement.classList.add('popup-active');
     }
 
     // Map seitlich verschieben wenn Popup das Dropdown überlappt
