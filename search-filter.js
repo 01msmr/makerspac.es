@@ -481,6 +481,16 @@ class SearchFilter {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
+   * Invalidiert das Diff-Tracking von updateMarkers().
+   * Nötig wenn Marker außerhalb der Filter-Kette von der Karte entfernt wurden
+   * (z.B. toggleClustering: clusterGroup.clearLayers()) — sonst hält der Diff
+   * sie für "bereits sichtbar" und fügt sie nie wieder hinzu.
+   */
+  resetMarkerDiff() {
+    this._visibleMarkerIds = new Set();
+  }
+
+  /**
    * Aktualisiert die Marker auf der Karte
    * @param {MakerSpace[]} filteredLocations
    */

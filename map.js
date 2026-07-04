@@ -195,6 +195,12 @@ function toggleClustering(enable) {
   // 1. ClusterGroup komplett leeren
   clusterGroup.clearLayers();
 
+  // 1b. Direkt auf der Map liegende Marker räumen (aus ungeclustertem Modus)
+  //     + Diff-Tracking invalidieren — sonst hält updateMarkers() die Marker
+  //     für "bereits sichtbar" und fügt sie nach dem Toggle nie wieder hinzu.
+  getAllMarkers().forEach(m => { if (map.hasLayer(m)) map.removeLayer(m); });
+  appContext.searchFilter?.resetMarkerDiff();
+
   // 2. Layer-Container togglen
   if (enable) {
     if (!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
