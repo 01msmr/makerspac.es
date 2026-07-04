@@ -97,7 +97,7 @@ const COUNTRY_CODES = {
 const SETTINGS = {
   radiusOptions:          [10, 15, 25, 40, 65],
   defaultRadius:          25,
-  maxListItems:           20,
+  maxListItems:           20, // used only by nearby-header.js (Nearby-Popover cap); dropdown renders all filtered locations without cap
   itemHeight:             70,
   debounceMs:             150,
   zoomDebounceMs:         800,

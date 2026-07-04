@@ -93,7 +93,7 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 - `searchFilter.lastFilteredLocations` — letztes Filter-Ergebnis (alle gefilterten Locations)
 - `searchFilter.lastLocationsForZoom` — letztes Zoom-Ziel (kann Subset sein, z.B. einzelner ID-Match)
 - `document.dispatchEvent(new Event('filterResultsChanged'))` — feuert nach jedem `_notifyResultsChange()`
-- Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` ist veraltet
+- Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` gilt nur noch für das Nearby-Popover (nearby-header.js), nicht für das Dropdown
 
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
