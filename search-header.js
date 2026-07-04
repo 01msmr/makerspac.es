@@ -548,6 +548,9 @@ class SearchHeader {
     this._skipAutoZoom = false;
     this.zoomManager = null;
 
+    // rAF-Throttle für Connection-Line-Redraw
+    this._pendingSVGRedraw = null;
+
   }
 
   /**
@@ -611,7 +614,11 @@ class SearchHeader {
     });
 
     this.suggestionsDropdown.addEventListener('scroll', () => {
-      this.listingCore?.updateHoverSVGPosition();
+      if (this._pendingSVGRedraw) return;
+      this._pendingSVGRedraw = requestAnimationFrame(() => {
+        this._pendingSVGRedraw = null;
+        this.listingCore?.updateHoverSVGPosition();
+      });
     });
 
     if (this.listingCore) {
@@ -635,7 +642,11 @@ class SearchHeader {
         this.listingCore?.removeConnectionLine();
       });
       this.map.on('moveend zoomend', () => {
-        this.listingCore?.updateHoverSVGPosition();
+        if (this._pendingSVGRedraw) return;
+        this._pendingSVGRedraw = requestAnimationFrame(() => {
+          this._pendingSVGRedraw = null;
+          this.listingCore?.updateHoverSVGPosition();
+        });
       });
     }
 
