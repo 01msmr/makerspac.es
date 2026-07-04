@@ -242,7 +242,7 @@ class EmbedMapExtended {
     item.className = `space-item listing-item ${statusClass} ${isTarget ? 'target' : ''}`;
     item.style.setProperty('--status-color', statusColorMap[statusClass] || 'var(--space-hover)');
     item.dataset.spaceId = space.ID;
-    const addressLines = isTarget ? `
+    const addressLines = (isTarget && this.friendIds.length === 0) ? `
       <div class="listing-item-details">${space.loc?.street?.name || ''} ${space.loc?.street?.number || ''}</div>
       <div class="listing-item-details">${AppConfig.zfill(space.loc?.plz, space.loc?.country)} <b>${space.loc?.city || ''}</b></div>
       <div class="listing-item-details"><span class="fi fi-${AppConfig.getCountryCode(space.loc?.country)}"></span> ${space.loc?.country || ''}</div>` : `
