@@ -18,6 +18,7 @@ global.document = {
   querySelectorAll: () => [],
   addEventListener: noop,
   removeEventListener: noop,
+  dispatchEvent: noop,
   body: { appendChild: noop, classList: { contains: () => false } },
 };
 global.localStorage = { getItem: () => null, setItem: noop, removeItem: noop };
@@ -144,4 +145,49 @@ test('getSelectedStyles: gibt aktive Styles zurück', () => {
   assert.ok(styles.includes('fablab'));
   assert.ok(styles.includes('makerspace'));
   assert.equal(styles.length, 2);
+});
+
+test('lastFilteredIds: initial null', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  assert.equal(sf.lastFilteredIds, null);
+});
+
+test('lastFilteredIds: nach Filterlauf Set der gefilterten IDs', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  const berlinOnly = MOCK_LOCATIONS.filter(l => l.loc.city === 'Berlin');
+  sf.applyPreFilters(berlinOnly);
+  assert.ok(sf.lastFilteredIds instanceof Set);
+  const expectedIds = new Set(sf.lastFilteredLocations.map(l => l.ID));
+  assert.deepEqual(sf.lastFilteredIds, expectedIds);
+});
+
+test('lastFilteredIds: leeres Ergebnis → leeres Set', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  sf.applyPreFilters([]);
+  assert.ok(sf.lastFilteredIds instanceof Set);
+  assert.equal(sf.lastFilteredIds.size, 0);
+});
+
+// ─── resetMarkerDiff — Clustering-Toggle-Bug (Pins weg nach „nicht clustern") ─
+
+test('resetMarkerDiff: updateMarkers fügt danach alle Marker erneut hinzu', async () => {
+  const { appContext } = await import('../app-context.js');
+  const fakeMarkers = MOCK_LOCATIONS.map(l => ({ locationId: l.ID, options: {}, setIcon: noop }));
+  const added = [];
+  appContext.clusterGroup = { addLayers: (arr) => added.push(...arr), removeLayers: noop };
+  appContext.map = { addLayer: noop, removeLayer: noop };
+  appContext.mapUtils = { isClusteringEnabled: () => true };
+  MOCK_LOCATIONS.forEach(l => appContext.locationById.set(l.ID, l));
+
+  const sf = new SearchFilter(MOCK_LOCATIONS, fakeMarkers, MOCK_ICONS);
+  sf.updateMarkers(MOCK_LOCATIONS);
+  assert.equal(added.length, MOCK_LOCATIONS.length, 'Baseline: alle Marker hinzugefügt');
+
+  added.length = 0;
+  sf.updateMarkers(MOCK_LOCATIONS);
+  assert.equal(added.length, 0, 'Diff leer: nichts erneut hinzugefügt');
+
+  sf.resetMarkerDiff();
+  sf.updateMarkers(MOCK_LOCATIONS);
+  assert.equal(added.length, MOCK_LOCATIONS.length, 'nach Reset: alle Marker erneut hinzugefügt');
 });

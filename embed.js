@@ -3,6 +3,8 @@
 import { I18n } from './i18n.js';
 import AppConfig, { createLeafletIcon } from './config.js';
 import { buildPopupHTML } from './popup-builder.js';
+import { getTileMode, loadMaplibreIfNeeded } from './tile-loader.js';
+import { isWeeklyToday } from './date-utils.js';
 
 class EmbedMapExtended {
   constructor() {
@@ -38,7 +40,7 @@ class EmbedMapExtended {
       window.i18n = new I18n();
       await window.i18n.load();
       await this.loadData();
-      this.createMap();
+      await this.createMap();
       this.createMarkers();
       this.showLogo();
       this.createTargetDropdown();
@@ -94,7 +96,7 @@ class EmbedMapExtended {
     }
   }
 
-  createMap() {
+  async createMap() {
     const params = new URLSearchParams(window.location.search);
     this.map = L.map('map', {
       zoomControl: false,
@@ -108,14 +110,25 @@ class EmbedMapExtended {
     // ✅ Initialer Viewport, damit Leaflet ein Koordinatensystem hat
     this.map.setView([51.1657, 10.4515], 6);
 
-    try {
-      const mapLibreLayer = L.maplibreGL({
-        style: 'https://tiles.openfreemap.org/styles/liberty',
-        attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
-      });
-      mapLibreLayer.addTo(this.map);
-    } catch (error) {
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+    if (getTileMode() === 'vector') {
+      await loadMaplibreIfNeeded();
+      try {
+        const mapLibreLayer = L.maplibreGL({
+          style: 'https://tiles.openfreemap.org/styles/liberty',
+          attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
+        });
+        mapLibreLayer.addTo(this.map);
+      } catch (error) {
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(this.map);
+      }
+    } else {
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(this.map);
     }
     window.map = this.map;
   }
@@ -234,7 +247,7 @@ class EmbedMapExtended {
       <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
     // Weekly Meeting Badge
     let meetingHtml = '';
-    if (space.weekly && space.weekly.time && space.weekly.weekday <= 6 && space.weekly.weekday === new Date().getDay()) {
+    if (isWeeklyToday(space)) {
       const _t = (k) => window.i18n ? window.i18n.t(k) : '';
       const todayLabel = _t('weekly.today') || 'heute';
       const weeklyTooltip = _t('weekly.tooltip') || 'wöchentliches Treffen';

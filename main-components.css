@@ -267,7 +267,7 @@
 .settings-header-content i {
   width: 16px;
   text-align: center;
-  color: #0066ff;
+  color: var(--focus-color);
 }
 
 /* Icon Buttons im Header */
@@ -328,10 +328,10 @@
 
 /* Active-Styling NUR für NICHT-Flaggen */
 .settings-icon-btn.active:not(.settings-flag-btn) {
-  background: #0066ff;
+  background: var(--focus-color);
   width: 20px;
   color: white;
-  box-shadow: 0 0 0 2px #0066ff;
+  box-shadow: 0 0 0 2px var(--focus-color);
   text-align: center;
   vertical-align: middle !important;
 }

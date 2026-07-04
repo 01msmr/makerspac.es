@@ -26,7 +26,8 @@ const STATIC_ASSETS = [
   '/libs/leaflet/leaflet.css',
   '/libs/leaflet-markercluster/MarkerCluster.css',
   '/libs/leaflet-markercluster/MarkerCluster.Default.css',
-  '/libs/maplibre-gl/maplibre-gl.css',
+  // maplibre-gl.css: lazy-loaded in tile-loader.js (vector mode only)
+  // → not precached here; SW caches it on first fetch via cacheFirst fallback
   '/libs/microtip.css',
   '/libs/flag-icons/css/flag-icons.min.css',
   '/libs/fontawesome/css/subset.min.css',
@@ -37,6 +38,8 @@ const STATIC_ASSETS = [
   // → not precached here; SW caches them on first fetch via cacheFirst fallback
   '/libs/qrcode.min.js',
   // App JS
+  '/tile-loader.js',
+  '/date-utils.js',
   '/app-context.js',
   '/error-monitor.js',
   '/colours.js',
@@ -51,14 +54,18 @@ const STATIC_ASSETS = [
   '/listing-core.js',
   '/zoom-manager.js',
   '/search-filter.js',
+  '/search-pills.js',
+  '/autocomplete-manager.js',
   '/search-header.js',
   '/nearby-header.js',
   '/embed.js',
+  '/add-space-form.js',
   '/embed-overlay.js',
   '/main.js',
   '/mobile-filter.js',
   '/popup-builder.js',
   '/map.js',
+  '/marker-manager.js',
   '/routing.js',
   '/demo-mode.js',
   // Fonts

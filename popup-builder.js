@@ -4,6 +4,7 @@
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
 
 import AppConfig from './config.js';
+import { isWeeklyToday } from './date-utils.js';
 
 const styleTranslationMap = {
   'for all':              'style.forAll',
@@ -60,7 +61,7 @@ export function buildPopupHTML(location, opts = {}) {
   const _hasWeekly  = location.weekly && location.weekly.time && location.weekly.weekday <= 6;
   let weeklyHtml = '';
   if (_hasWeekly) {
-    const _isToday  = location.weekly.weekday === new Date().getDay();
+    const _isToday  = isWeeklyToday(location);
     const _timeStr  = String(location.weekly.time).padStart(4, '0').replace(/(\d{2})(\d{2})/, '$1:$2');
     const _suf      = _t('weekly.timeSuffix');
     const _label    = _isToday ? _t('weekly.today') : _t('weekdaysShort.' + location.weekly.weekday);

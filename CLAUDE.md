@@ -42,7 +42,7 @@ window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)
 `colours.js` definiert alle Status-/Marker-Farben (`COLOURS`).
 `applyCssColours()` setzt daraus CSS-Vars (`--space-open`, `--space-closed`, `--space-hover`, `--space-unknown`, `--nearby-title`) — reagiert auf Dark Mode.
 
-UI-Farben (`--bg-color`, `--dropdown-bg`, `--text-color`, etc.) sind in `main-layout.css` `:root` definiert (CSS-only, Dark Mode via `@media`).
+UI-Farben (`--bg-color`, `--dropdown-bg`, `--text-color`, etc.) sind in `main-layout.css` `:root` definiert (CSS-only, kein `@media (prefers-color-scheme)` in main-layout.css — Dark-Mode-Overrides liegen in main-responsive.css, main-components.css, search.css, nearby.css u.a.).
 
 **Regel:** Niemals Hex-Farben in JS hardcoden — immer `AppConfig.colours.*` verwenden.
 Niemals Hex-Farben in CSS hardcoden wenn eine passende CSS-Var existiert.
@@ -92,8 +92,9 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 ### Search-Filter — State & Events
 - `searchFilter.lastFilteredLocations` — letztes Filter-Ergebnis (alle gefilterten Locations)
 - `searchFilter.lastLocationsForZoom` — letztes Zoom-Ziel (kann Subset sein, z.B. einzelner ID-Match)
+- `searchFilter.lastFilteredIds` — Set der IDs aus lastFilteredLocations (O(1)-Lookup für Marker-Icon-Updates)
 - `document.dispatchEvent(new Event('filterResultsChanged'))` — feuert nach jedem `_notifyResultsChange()`
-- Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` ist veraltet
+- Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` gilt nur noch für das Nearby-Popover (nearby-header.js), nicht für das Dropdown
 
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
@@ -108,15 +109,20 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 map.js              → Einstieg, Bootstrap, AppContext-Lifecycle, Marker-Setup
 main.js             → Orchestrierung, Module verknüpfen
 app-context.js      → Shared State, Phase-Barrieren
+tile-loader.js      → Tile-Mode-Erkennung, lazy MapLibre-Loader (map.js + embed.js)
+marker-manager.js   → Marker/Popup/Sticky/Connection-Line-Logik
 
 config.js           → Zentrale Config (assembliert aus Sub-Modulen)
 colours.js          → Farbdefinitionen, applyCssColours(), Dark-Mode-Helpers
 filter-config.js    → Filter-Kategorien, IGNORED_STYLES_SET, FILTER_ORDER_SET
 workshop-types.js   → Workshop-Definitionen, WORKSHOP_ORDER_MAP, getSortedWorkshops()
 types.js            → JSDoc-Typen (MakerSpace, Pill, AppPhase, …)
+date-utils.js       → Weekday-SSOT: WEEKDAY_NAMES, todayWeekday, isWeeklyToday (pure)
 
 search-filter.js    → Filter-Logik (kein DOM), updateMarkers(), lastFilteredLocations
-search-header.js    → Such-UI, Dropdown, Pills, Item-Clicks, reZoom()
+search-header.js    → Such-UI, Dropdown, Item-Clicks, reZoom(), Orchestrierung
+search-pills.js     → Filter-Pills in der Suchleiste (SearchPillsManager)
+autocomplete-manager.js → Autocomplete-Dropdown, Städte/PLZ-Vorschläge
 listing-core.js     → Item-Rendering, Hover, Connection Line, i18n-Cache
 mobile-filter.js    → Mobile Filter-Sheet
 nearby-header.js    → Nearby-Popover (Rechtsklick / Long-Press)
@@ -131,7 +137,9 @@ popup-builder.js    → Leaflet-Popup HTML
 i18n.js             → Internationalisierung
 embed.js            → Embed-Modus (iframe)
 embed-overlay.js    → Embed-Overlay UI
+demo-mode.js        → Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode)
 error-monitor.js    → Dev-Tool, Fehler-Overlay
+add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
 sw.js               → Service Worker (Cache-First / SWR)
 ```
 

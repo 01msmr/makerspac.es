@@ -43,6 +43,8 @@ class SearchFilter {
     this.lastFilteredLocations = [];
     /** @type {MakerSpace[]} */
     this.lastLocationsForZoom = [];
+    /** @type {Set<number>|null} Set der IDs aus lastFilteredLocations — O(1)-Lookup für Marker-Icon-Updates */
+    this.lastFilteredIds = null;
 
     // Cached country set (static data, built once in initializeStyleStats)
     this._allCountries = new Set();
@@ -360,6 +362,7 @@ class SearchFilter {
   _notifyResultsChange(filteredLocations, locationsForZoom) {
     this.lastFilteredLocations = filteredLocations;
     this.lastLocationsForZoom = locationsForZoom;
+    this.lastFilteredIds = new Set(filteredLocations.map(l => l.ID));
     document.dispatchEvent(new Event('filterResultsChanged'));
     if (this._onResultsChange) {
       this._onResultsChange(filteredLocations, locationsForZoom,
@@ -476,6 +479,16 @@ class SearchFilter {
   // ═══════════════════════════════════════════════════════════════════════════
   // MARKER-UPDATE
   // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Invalidiert das Diff-Tracking von updateMarkers().
+   * Nötig wenn Marker außerhalb der Filter-Kette von der Karte entfernt wurden
+   * (z.B. toggleClustering: clusterGroup.clearLayers()) — sonst hält der Diff
+   * sie für "bereits sichtbar" und fügt sie nie wieder hinzu.
+   */
+  resetMarkerDiff() {
+    this._visibleMarkerIds = new Set();
+  }
 
   /**
    * Aktualisiert die Marker auf der Karte

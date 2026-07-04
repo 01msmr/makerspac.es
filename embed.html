@@ -5,10 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Embedded Makerspace Map</title>
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
 
   <!-- Libs CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="libs/maplibre-gl/maplibre-gl.css" />
   <link rel="stylesheet" href="libs/microtip.css" />
   <link rel="stylesheet" href="libs/fontawesome/css/subset.min.css" />
   <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
@@ -23,8 +23,7 @@
 
   <!-- Libs JS -->
   <script defer src="libs/leaflet/leaflet.js"></script>
-  <script defer src="libs/maplibre-gl/maplibre-gl.js"></script>
-  <script defer src="libs/maplibre-leaflet/leaflet-maplibre-gl.js"></script>
+  <!-- maplibre-gl.js + leaflet-maplibre-gl.js: lazy-loaded in tile-loader.js only when WebGL/vector mode is active -->
 
   <!-- Embed entry point (ES Module) -->
   <script type="module" src="embed.js"></script>

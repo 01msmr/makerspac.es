@@ -45,6 +45,11 @@ const CONFIG = AppConfig;
       this._pendingReactivationId = null;
       this.lastPixels = null;
 
+      // rAF-Throttle für mousemove
+      this._pendingMouseMove = null;
+      this._lastMouseMoveEvent = null;
+      this._mapEl = null;
+
       // Keyboard Handler
       this._keyboardHandler = this.handleKeyDown.bind(this);
 
@@ -160,6 +165,15 @@ const CONFIG = AppConfig;
     }
 
     handleMouseMove(e) {
+      this._lastMouseMoveEvent = e;
+      if (this._pendingMouseMove) return;
+      this._pendingMouseMove = requestAnimationFrame(() => {
+        this._pendingMouseMove = null;
+        this._updateHint(this._lastMouseMoveEvent);
+      });
+    }
+
+    _updateHint(e) {
       if (!this.hintElement) return;
 
       // Hint-Position aktualisieren
@@ -167,7 +181,7 @@ const CONFIG = AppConfig;
       this.hintElement.style.top = (e.clientY + 8) + 'px';
 
       // Nur auf der Map sichtbar (nicht auf UI-Elementen, Controls, Popups)
-      const mapContainer = document.getElementById('map');
+      const mapContainer = this._mapEl ??= document.getElementById('map');
       const isOverMap = mapContainer && mapContainer.contains(e.target) &&
                         !e.target.closest('.leaflet-control-container') &&
                         !e.target.closest('.leaflet-popup');
