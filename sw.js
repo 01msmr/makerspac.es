@@ -54,6 +54,8 @@ const STATIC_ASSETS = [
   '/listing-core.js',
   '/zoom-manager.js',
   '/search-filter.js',
+  '/search-pills.js',
+  '/autocomplete-manager.js',
   '/search-header.js',
   '/nearby-header.js',
   '/embed.js',
