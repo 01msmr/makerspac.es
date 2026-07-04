@@ -475,7 +475,7 @@ class EmbedMapExtended {
     if (!items.length) return;
 
     if (this.friendsRows > 0) {
-      dropdown.style.height = (28 + this.friendsRows * 42) + 'px';
+      dropdown.style.height = (28 + this.friendsRows * 43) + 'px';
       dropdown.style.flexShrink = '0';
       const targetRow = document.querySelector('.embed-target-row');
       if (targetRow) targetRow.style.flexShrink = '1';
