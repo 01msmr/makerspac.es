@@ -57,10 +57,12 @@ export function getTileMode() {
  * Dynamically loads maplibre-gl.js + leaflet-maplibre-gl.js + maplibre-gl.css
  * — only when vector mode is active. JS scripts are loaded sequentially (the
  * Leaflet plugin requires maplibre-gl global), CSS is loaded in parallel.
+ * @param {('vector'|'raster')=} mode - Tile mode; defaults to getTileMode() for lazy detection.
+ *        Pass explicitly to override (primarily for testing).
  * @returns {Promise<void>}
  */
-export function loadMaplibreIfNeeded() {
-  if (getTileMode() !== 'vector') return Promise.resolve();
+export function loadMaplibreIfNeeded(mode = getTileMode()) {
+  if (mode !== 'vector') return Promise.resolve();
 
   const loadScript = (/** @type {string} */ src) => new Promise((resolve, reject) => {
     const s = document.createElement('script');
@@ -86,12 +88,4 @@ export function loadMaplibreIfNeeded() {
     .then(() => loadScript('/libs/maplibre-leaflet/leaflet-maplibre-gl.js'));
 
   return Promise.all([jsPromise, cssPromise]).then(() => undefined);
-}
-
-/**
- * Reset cached tile mode — only for use in tests.
- * @internal
- */
-export function _resetTileModeForTest() {
-  _tileMode = null;
 }

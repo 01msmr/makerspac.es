@@ -30,7 +30,7 @@ Object.defineProperty(global, 'navigator', {
 // ─── Modul-Imports ────────────────────────────────────────────────────────
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { detectTileMode, loadMaplibreIfNeeded, _resetTileModeForTest } from '../tile-loader.js';
+import { detectTileMode, loadMaplibreIfNeeded } from '../tile-loader.js';
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────
 
@@ -41,7 +41,6 @@ function setNavigator(ua, deviceMemory) {
 function resetAll() {
   appendedElements = [];
   webglContextFactory = (_type) => null;
-  _resetTileModeForTest();
 }
 
 // ─── Tests: detectTileMode() ───────────────────────────────────────────────
@@ -108,7 +107,7 @@ test('7: raster mode → keine document.head.appendChild-Aufrufe', async () => {
   setNavigator('Mozilla/5.0 (Linux; Android 10; SM-G960F)', 2); // deviceMemory 2 → raster
   webglContextFactory = (_type) => null;
 
-  await loadMaplibreIfNeeded();
+  await loadMaplibreIfNeeded('raster');
   assert.equal(appendedElements.length, 0, 'im raster-Modus darf kein Element angehängt werden');
 });
 
@@ -120,7 +119,7 @@ test('8: vector mode → lädt JS sequenziell + CSS, Promise wartet auf alle onl
     return null;
   };
 
-  const loadPromise = loadMaplibreIfNeeded();
+  const loadPromise = loadMaplibreIfNeeded('vector');
 
   // CSS-Link und erstes JS-Script müssen sofort angehängt sein (parallel gestartet)
   assert.ok(appendedElements.length >= 2, 'CSS und erstes JS müssen sofort angehängt sein');
