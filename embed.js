@@ -457,20 +457,15 @@ class EmbedMapExtended {
   }
 
   createFriendsDropdown() {
-    const sidebar = document.getElementById('embed-sidebar');
-    const header = document.createElement('div');
-    header.className = 'dropdown-header';
-    header.textContent = 'friends of our makerspace';
-    sidebar.appendChild(header);
-
     const dropdown = document.createElement('div');
     dropdown.className = 'embed-dropdown friends-dropdown is-active';
+    dropdown.innerHTML = '<div class="dropdown-header">friends of our makerspace</div>';
     this.friendSpaces.forEach(space => {
       const item = this.createDropdownItem(space, false);
       item.addEventListener('click', () => this.selectSpace(space.ID));
       dropdown.appendChild(item);
     });
-    sidebar.appendChild(dropdown);
+    document.getElementById('embed-sidebar').appendChild(dropdown);
   }
 
   snapFriendsDropdownHeight() {
@@ -478,19 +473,21 @@ class EmbedMapExtended {
     if (!dropdown) return;
     const items = dropdown.querySelectorAll('.listing-item');
     if (!items.length) return;
-    const itemHeight = items[0].getBoundingClientRect().height;
-    if (!itemHeight) return;
 
     if (this.friendsRows > 0) {
-      dropdown.style.height = (this.friendsRows * itemHeight) + 'px';
+      dropdown.style.height = (28 + this.friendsRows * 42) + 'px';
       dropdown.style.flexShrink = '0';
       const targetRow = document.querySelector('.embed-target-row');
       if (targetRow) targetRow.style.flexShrink = '1';
     } else {
+      const header = dropdown.querySelector('.dropdown-header');
+      const headerHeight = header ? header.getBoundingClientRect().height : 0;
+      const itemHeight = items[0].getBoundingClientRect().height;
+      if (!itemHeight) return;
       const availableHeight = dropdown.getBoundingClientRect().height;
-      const visibleItems = Math.floor(availableHeight / itemHeight);
+      const visibleItems = Math.floor((availableHeight - headerHeight) / itemHeight);
       if (visibleItems > 0 && visibleItems < items.length) {
-        dropdown.style.maxHeight = (visibleItems * itemHeight) + 'px';
+        dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';
       }
     }
   }
