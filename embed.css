@@ -55,7 +55,13 @@ a {
   scroll-snap-type: y mandatory;
 }
 
-.friends-dropdown .dropdown-header,
+.friends-dropdown .dropdown-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--dropdown-bg);
+}
+
 .friends-dropdown .listing-item {
   scroll-snap-align: start;
 }
