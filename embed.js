@@ -60,6 +60,16 @@ class EmbedMapExtended {
         this.snapFriendsDropdownHeight();
       }, 400);
 
+      // Re-apply friends height whenever the sidebar resizes (map reflows during init)
+      if (this.friendsRows > 0) {
+        const sidebar = document.getElementById('embed-sidebar');
+        if (sidebar) {
+          const ro = new ResizeObserver(() => this.snapFriendsDropdownHeight());
+          ro.observe(sidebar);
+          setTimeout(() => ro.disconnect(), 6000);
+        }
+      }
+
       document.getElementById('loading').style.display = 'none';
     } catch (error) {
       console.error('❌ Extended Embed Map error:', error);
