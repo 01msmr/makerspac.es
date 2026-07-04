@@ -100,6 +100,7 @@ window.markerById = appContext.markerById;
 
 let map;
 let allMarkers = [];
+const openPopupMarkers = new Set();
 let connectionLine = null;
 let styleFilterManager;
 let currentStickyMarker = null;
@@ -1198,6 +1199,7 @@ function _applyMarkerClickHandler(marker) {
  */
 function _applyPopupOpenHandler(marker, location) {
   marker.on('popupopen', (e) => {
+    openPopupMarkers.add(marker);
     const wasOpenedByHover = marker._openedByHover;
 
     if (!wasOpenedByHover) {
@@ -1318,6 +1320,7 @@ function _applyPopupOpenHandler(marker, location) {
  */
 function _applyPopupCloseHandler(marker) {
   marker.on('popupclose', () => {
+    openPopupMarkers.delete(marker);
     // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle)
     if (marker._retainPopup) {
       marker._retainPopup = false;
@@ -1372,7 +1375,7 @@ function _applyMarkerHoverHandlers(marker, location) {
       currentStickyMarker = null;
       isPopupSticky = false;
     }
-    allMarkers.forEach(m => { if (m !== marker && m.isPopupOpen()) m.closePopup(); });
+    openPopupMarkers.forEach(m => { if (m !== marker && m.isPopupOpen()) m.closePopup(); });
 
     window.markerStateManager.setState(marker.locationId, { isHovering: true });
     applyMarkerScale(marker, 1.15);
