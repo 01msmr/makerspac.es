@@ -62,13 +62,13 @@
 }
 
 .autocomplete-pill:hover {
-  background: #0066ff;
+  background: var(--focus-color);
   transform: scale(1.02);
 }
 
 .autocomplete-pill.focused {
   background: #fff !important;
-  color: #0066ff !important;
+  color: var(--focus-color) !important;
   outline: none !important;
   outline-offset: 2px;
 }
@@ -82,7 +82,7 @@
   
   .autocomplete-pill:hover,
   .autocomplete-pill.focused {
-    background: #0066ff;
+    background: var(--focus-color);
     color: #fff;
   }
   
@@ -90,7 +90,7 @@
     background: #fff !important;
     color: #000 !important;
     font-weight: 700 !important;
-    outline: 2px solid #0066ff !important;
+    outline: 2px solid var(--focus-color) !important;
     outline-offset: 2px;
   }
 }
@@ -384,12 +384,12 @@
 
 /* Focus-Visible für Keyboard-Navigation */
 .autocomplete-pill:focus-visible {
-  outline: 3px solid #0066ff;
+  outline: 3px solid var(--focus-color);
   outline-offset: 2px;
 }
 
 .search-pill:focus-visible {
-  outline: 2px solid #0066ff;
+  outline: 2px solid var(--focus-color);
   outline-offset: 1px;
 }
 
