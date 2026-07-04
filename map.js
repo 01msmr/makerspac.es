@@ -20,6 +20,7 @@ import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
 import { DemoMode, OpenDemoMode, TodayDemoMode } from './demo-mode.js';
+import { getTileMode, loadMaplibreIfNeeded } from './tile-loader.js';
 errorMonitor.init();
 
 // i18n Singleton (ersetzt i18n-init.js)
@@ -555,59 +556,6 @@ window.mapUtils.updateMarkerIcon = updateMarkerIcon;
 let currentMapLibreLayer = null;
 let currentRasterLayer = null;
 
-/**
- * Detects whether this device should use raster tiles (OSM PNG) instead of
- * vector tiles (MapLibre GL / WebGL). First match wins.
- * @returns {'vector'|'raster'}
- */
-function detectTileMode() {
-  const ua = navigator.userAgent;
-
-  // ── Non-iOS path ──────────────────────────────────────────────────────────
-  if (!/iPhone|iPad/i.test(ua)) {
-    // Low RAM (Android/Chrome — not available on iOS)
-    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return 'raster';
-    // WebGL unavailable (e.g. Raspberry Pi Chromium)
-    try {
-      const canvas = document.createElement('canvas');
-      if (!canvas.getContext('webgl2') && !canvas.getContext('webgl')) return 'raster';
-    } catch { return 'raster'; }
-    return 'vector';
-  }
-
-  // ── iOS path ──────────────────────────────────────────────────────────────
-  // iOS version < 15: no WebGL2 in Safari, older Metal backend → raster
-  const iosVersion = parseInt(ua.match(/OS (\d+)_/)?.[1] ?? '0');
-  if (iosVersion < 15) return 'raster';
-
-  // iOS 15+: test WebGL2 as proxy for A12+ GPU (iPhone XR and newer).
-  // A9/A10 devices (iPhone 6s–8) upgraded to iOS 15 return null for webgl2.
-  // CRITICAL: loseContext() immediately — an abandoned WebGL context on iOS
-  // keeps the GPU spinning → device heats up and crashes.
-  try {
-    const canvas = document.createElement('canvas');
-    const gl2 = canvas.getContext('webgl2');
-    if (!gl2) return 'raster';
-    gl2.getExtension('WEBGL_lose_context')?.loseContext();
-    return 'vector';
-  } catch { return 'raster'; }
-}
-
-const tileMode = detectTileMode();
-
-/** Dynamically loads maplibre-gl.js + leaflet-maplibre-gl.js — only when vector mode is active. */
-function loadMaplibreIfNeeded() {
-  if (tileMode !== 'vector') return Promise.resolve();
-  const load = src => new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  return load('/libs/maplibre-gl/maplibre-gl.js')
-    .then(() => load('/libs/maplibre-leaflet/leaflet-maplibre-gl.js'));
-}
 
 function setupMap() {
 
@@ -655,7 +603,7 @@ function setupMap() {
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
   function updateMapTiles() {
-    if (tileMode === 'raster') {
+    if (getTileMode() === 'raster') {
       // Raster tiles (OSM PNG) — added once, no dark mode variant
       if (currentRasterLayer) return;
       currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
