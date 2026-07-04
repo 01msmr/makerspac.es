@@ -75,17 +75,20 @@
       margin: 1em auto;
       background: rgba(255, 255, 255, 0.90);
       border-radius: 20px;
-      padding: 44px 32px 40px;
-      min-height: calc(100vh - 2em);
+      padding: 44px 32px 0;
+      height: calc(100vh - 2em);
       box-shadow: 0 4px 32px rgba(0,0,0,0.55);
       line-height: 1.7;
       color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     @media (prefers-color-scheme: dark) {
       .about-card { background: rgba(26,26,26,0.92); color: #e0e0e0; }
     }
     @media (max-width: 700px) {
-      .about-card { margin: 0; border-radius: 0; min-height: 100vh; }
+      .about-card { margin: 0; border-radius: 0; height: 100vh; }
     }
 
     /* ── Language flags — anchored to top-right border-radius centre ── */
@@ -154,15 +157,15 @@
     }
     .about-footer a { color: inherit; }
 
-    /* ── Tabs ── */
-    .about-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid rgba(0,0,0,0.12); }
+    /* ── Tabs (sticky header) ── */
+    .about-tabs { display: flex; gap: 0; flex-shrink: 0; border-bottom: 2px solid rgba(0,0,0,0.12); }
     .about-tab  { flex: 1; text-align: center; padding: 10px 20px; cursor: pointer; border: none; background: none;
                   font: inherit; font-size: 1.71rem; color: inherit; opacity: 0.55;
                   border-bottom: 3px solid transparent; margin-bottom: -2px; }
     .about-tab.active { opacity: 1; border-bottom-color: #0066ff; }
     @media (prefers-color-scheme: dark) { .about-tab.active { border-bottom-color: #4d9fff; } }
     .about-panel { display: none; }
-    .about-panel.active { display: block; }
+    .about-panel.active { display: block; flex: 1; overflow-y: auto; padding: 24px 0 40px; min-height: 0; }
 
     /* ── Embed-Demo Panel ── */
     #panel-embed h2 { background: none; color: inherit; padding: 0; margin: 0 0 8px; font-size: 1.3rem; font-weight: 700; }
