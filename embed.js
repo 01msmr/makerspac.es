@@ -415,15 +415,16 @@ class EmbedMapExtended {
       targetDropdown.appendChild(item);
     }
 
-    // Friends-Dropdown neu bauen
+    // Friends-Dropdown neu bauen (inkl. Header — innerHTML='' löscht ihn sonst dauerhaft)
     const friendsDropdown = document.querySelector('.friends-dropdown');
     if (friendsDropdown) {
-      friendsDropdown.innerHTML = '';
+      friendsDropdown.innerHTML = '<div class="dropdown-header">friends of our makerspace</div>';
       this.friendSpaces.forEach(space => {
         const item = this.createDropdownItem(space, false);
         item.addEventListener('click', () => this.selectSpace(space.ID));
         friendsDropdown.appendChild(item);
       });
+      this.snapFriendsDropdownHeight();
     }
 
     // Aktiven Makerspace im Dropdown markiert lassen
@@ -474,17 +475,26 @@ class EmbedMapExtended {
     const items = dropdown.querySelectorAll('.listing-item');
     if (!items.length) return;
 
+    // offsetHeight statt getBoundingClientRect: ignoriert transform: scale(0.8)
+    // (#embed-sidebar wird unter 800px skaliert — Rect-Werte wären verfälscht)
+    const header = dropdown.querySelector('.dropdown-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const itemHeight = items[0].offsetHeight;
+    if (!itemHeight) return;
+
+    dropdown.style.scrollPaddingTop = headerHeight + 'px';
+
     if (this.friendsRows > 0) {
-      dropdown.style.height = (28 + this.friendsRows * 43) + 'px';
+      const rows = Math.min(this.friendsRows, items.length);
+      const h = (headerHeight + rows * itemHeight) + 'px';
+      dropdown.style.height = h;
+      dropdown.style.minHeight = h;
+      dropdown.style.maxHeight = h;
       dropdown.style.flexShrink = '0';
       const targetRow = document.querySelector('.embed-target-row');
       if (targetRow) targetRow.style.flexShrink = '1';
     } else {
-      const header = dropdown.querySelector('.dropdown-header');
-      const headerHeight = header ? header.getBoundingClientRect().height : 0;
-      const itemHeight = items[0].getBoundingClientRect().height;
-      if (!itemHeight) return;
-      const availableHeight = dropdown.getBoundingClientRect().height;
+      const availableHeight = dropdown.offsetHeight;
       const visibleItems = Math.floor((availableHeight - headerHeight) / itemHeight);
       if (visibleItems > 0 && visibleItems < items.length) {
         dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';

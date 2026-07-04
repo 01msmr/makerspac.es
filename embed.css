@@ -53,7 +53,7 @@ a {
   overflow-y: auto;
   overscroll-behavior-y: none;
   scroll-snap-type: y mandatory;
-  scroll-padding-top: 29px;
+  /* scroll-padding-top wird in embed.js aus der gemessenen Header-Höhe gesetzt */
 }
 
 .friends-dropdown .dropdown-header {
