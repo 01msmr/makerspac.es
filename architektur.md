@@ -1,5 +1,5 @@
 # Architektur — makerspac.es
-*Living Documentation · bei Änderungen aktualisieren · Stand: 2026-03*
+*Living Documentation · bei Änderungen aktualisieren · Stand: 2026-07*
 
 > **Visuelle Diagramme** (Modul-Abhängigkeiten, Datenfluss, Event Bus, Boot-Sequenz, Runtime-Flows):
 > → **[architecture-diagram.md](architecture-diagram.md)**
@@ -62,9 +62,18 @@
 | `map.js` | Einstiegspunkt, Bootstrap, AppContext-Lifecycle | `window.app`, `window.locationById`, `window.markerById`, `window.i18n` |
 | `app-context.js` | Lifecycle-Phasen, Shared State | `appContext` (import) |
 | `main.js` | Orchestrierung, Leaflet-Icons, Module verknüpfen | `initApp()`, `window.mobileFilterUI`, `window.nearbySpacesManager` |
-| `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper (inkl. `zfill`) | `AppConfig`, `window.AppConfig` |
+| `tile-loader.js` | Tile-Mode-Erkennung, lazy MapLibre-Loader; genutzt von map.js + embed.js | `detectTileMode`, `getTileMode`, `loadMaplibreIfNeeded` (export) |
+| `marker-manager.js` | Marker/Popup/Sticky/Connection-Line-Logik, aus map.js extrahiert | `initMarkerManager`, `createMarkerForLocation`, `clearStickyPopup`, `updateMarkerIconForLocation` u.a. (export) |
+| `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
+| `colours.js` | Farbdefinitionen, `isDarkMode()`, `applyCssColours()`, Dark-Mode-Helpers | `COLOURS`, `isDarkMode`, `applyCssColours` (export) |
+| `types.js` | JSDoc-Typdefinitionen (MakerSpace, Pill, AppPhase, …) — kein Runtime-Export | `export {}` |
+| `workshop-types.js` | Workshop-Typen, `getSortedWorkshops()`, Icons, Tooltip | `WORKSHOP_TYPES`, `getSortedWorkshops`, `getWorkshopIcon` (export) |
+| `filter-config.js` | Filter-Kategorien, `IGNORED_STYLES_SET`, `FILTER_ORDER_SET`, `getStyleIcon` | exports |
+| `date-utils.js` | Weekday-SSOT: `WEEKDAY_NAMES`, `todayWeekday`, `isWeeklyToday` (pure, keine Browser-Deps) | exports |
 | `search-filter.js` | Filter-Logik (kein DOM) | `SearchFilter` class |
-| `search-header.js` | Such-UI, Autocomplete, Pills, Dropdown, Item-Clicks | `SearchHeader`, `SearchPillsManager`, `AutocompleteManager` |
+| `search-header.js` | Such-UI, Dropdown, Item-Clicks, Orchestrierung | `SearchHeader` (export) |
+| `search-pills.js` | Filter-Pills in der Suchleiste (Stadt, Land, Style) | `SearchPillsManager` (export) |
+| `autocomplete-manager.js` | Autocomplete-Dropdown, Städte/PLZ-Vorschläge | `AutocompleteManager` (export) |
 | `listing-core.js` | Item-Rendering, Hover-Effekte, Connection Line, SVG-Schweif | `ListingCore` class |
 | `routing.js` | URL-Hash → Filter, Auto-Geolocation | `RoutingManager`, `window.routingManager` |
 | `data-store.js` | Einstellungen (Sprache, Theme, Clustering) persistieren | `DataStore`, `window.languageSwitcher` |
@@ -77,9 +86,13 @@
 | `embed.js` | Embed-Karte (iframe-Standalone, lädt nur in embed.html) | `EmbedMapExtended`, `window.embedMap` |
 | `embed-overlay.js` | In-page Overlay für Embed-Anleitung (initiiert in map.js) | `initEmbedOverlay()` |
 | `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed) | `buildPopupHTML()` |
-| `map-utils.js` | Sticky-Popup, clearStickyPopup, Marker-Lookup | `window.mapUtils` |
-| `i18n-init.js` | I18n-Singleton erstellen | inline init |
+| `demo-mode.js` | Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode) | `DemoMode`, `OpenDemoMode`, `TodayDemoMode` (export) |
+| `error-monitor.js` | Dev-Tool, Fehler-Overlay, globales Error-Logging | `errorMonitor` (export), `window.AppErrorMonitor` |
+| `spaceapi-static.js` | SpaceAPI-Status-Verarbeitung | `StaticSpaceAPI` (export) |
+| `add-space-form.js` | Add-Space-Formular (GitHub-Issue-Submit, Geocoding, Autocomplete) | `handleSubmit`, `initStreetAutocomplete` u.a. (export) |
 | `sw.js` | Service Worker (Cache-First / SWR / Network-First) | — |
+| `fetch-spaceapi-status.js` | **Node.js** Cron-Script — SpaceAPI-Endpunkte abfragen → status.json | — |
+| `generate-map-splits.js` | **Node.js** Build-Script — locations.json + loc-enrichment.json → data/*.json | — |
 
 ### CSS
 
@@ -91,7 +104,7 @@
 | `search.css` | Suchleiste, Dropdown, Filter-Pills, Counter | Nein |
 | `listing-core.css` | Listing-Items, Hover-Animationen | Nein |
 | `nearby.css` | Nearby-Popover, Radius-Slider, Cursor-Hint | Nein |
-| `autocomplete.css` | Autocomplete-Vorschlagsliste | Nein |
+| `styles-autocomplete.css` | Autocomplete-Vorschlagsliste | Nein |
 
 ---
 
@@ -137,6 +150,7 @@ git push                                    → Deploy (CI baut data/ automatisc
 | `--nearby-title` | Nearby-Header-Hintergrund |
 | `--font-family` | Roboto SemiBold |
 | `--mobile-ui-height` | Per ResizeObserver in mobile-filter.js gesetzt |
+| `--focus-color` | Fokus-Umrandung, aktive Pills, Autocomplete-Highlights |
 
 ### Media Queries
 
@@ -144,7 +158,7 @@ git push                                    → Deploy (CI baut data/ automatisc
 |-----------|---------|
 | `@media (max-width: 767px)` | mobile-filter.js, search.css, main-responsive.css, nearby.css |
 | `@media (max-width: 768px)` | nearby.css (Popover wird Sheet) |
-| `@media (prefers-color-scheme: dark)` | main-layout.css, nearby.css, search.css |
+| `@media (prefers-color-scheme: dark)` | main-responsive.css, main-components.css, search.css, nearby.css, listing-core.css, embed.css, styles-autocomplete.css — **nicht** main-layout.css (dessen `:root`-Vars sind fix) |
 
 **Regel:** Alle Mobile-only CSS-Änderungen in `@media (max-width: 767px)`. JS-Touch-Guards: `'ontouchstart' in window`.
 
