@@ -283,7 +283,7 @@ class EmbedMapExtended {
   showLogo() {
     const container = document.createElement('div');
     container.id = 'embed-sidebar';
-    container.style.cssText = `position: absolute; left: 1em; top: 1em; z-index: 400; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-height: calc(100vh - 2em);`;
+    container.style.cssText = `position: absolute; left: 1em; top: 1em; z-index: 400; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-height: calc(100vh - 2em); overflow: hidden;`;
     container.innerHTML = `<a href="./" target="_blank"><div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span></div></a>`;
     document.body.appendChild(container);
   }

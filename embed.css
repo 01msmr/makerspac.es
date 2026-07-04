@@ -53,14 +53,13 @@ a {
   overflow-y: auto;
   overscroll-behavior-y: none;
   scroll-snap-type: y mandatory;
-  scroll-padding-top: 28px;
+  scroll-padding-top: 29px;
 }
 
 .friends-dropdown .dropdown-header {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--dropdown-bg);
 }
 
 .friends-dropdown .listing-item {
