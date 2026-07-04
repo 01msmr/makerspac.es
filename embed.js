@@ -488,7 +488,10 @@ class EmbedMapExtended {
       : Math.floor((dropdown.getBoundingClientRect().height - headerHeight) / itemHeight);
 
     if (visibleItems > 0) {
-      dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';
+      const h = (headerHeight + visibleItems * itemHeight) + 'px';
+      dropdown.style.height = h;
+      dropdown.style.maxHeight = h;
+      if (this.friendsRows > 0) dropdown.style.flexShrink = '0';
       dropdown.style.scrollSnapType = 'y mandatory';
     }
   }
