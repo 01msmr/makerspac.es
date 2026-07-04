@@ -92,6 +92,7 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 ### Search-Filter — State & Events
 - `searchFilter.lastFilteredLocations` — letztes Filter-Ergebnis (alle gefilterten Locations)
 - `searchFilter.lastLocationsForZoom` — letztes Zoom-Ziel (kann Subset sein, z.B. einzelner ID-Match)
+- `searchFilter.lastFilteredIds` — Set der IDs aus lastFilteredLocations (O(1)-Lookup für Marker-Icon-Updates)
 - `document.dispatchEvent(new Event('filterResultsChanged'))` — feuert nach jedem `_notifyResultsChange()`
 - Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` gilt nur noch für das Nearby-Popover (nearby-header.js), nicht für das Dropdown
 

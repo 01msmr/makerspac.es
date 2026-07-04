@@ -18,6 +18,7 @@ global.document = {
   querySelectorAll: () => [],
   addEventListener: noop,
   removeEventListener: noop,
+  dispatchEvent: noop,
   body: { appendChild: noop, classList: { contains: () => false } },
 };
 global.localStorage = { getItem: () => null, setItem: noop, removeItem: noop };
@@ -144,4 +145,25 @@ test('getSelectedStyles: gibt aktive Styles zurück', () => {
   assert.ok(styles.includes('fablab'));
   assert.ok(styles.includes('makerspace'));
   assert.equal(styles.length, 2);
+});
+
+test('lastFilteredIds: initial null', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  assert.equal(sf.lastFilteredIds, null);
+});
+
+test('lastFilteredIds: nach Filterlauf Set der gefilterten IDs', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  const berlinOnly = MOCK_LOCATIONS.filter(l => l.loc.city === 'Berlin');
+  sf.applyPreFilters(berlinOnly);
+  assert.ok(sf.lastFilteredIds instanceof Set);
+  const expectedIds = new Set(sf.lastFilteredLocations.map(l => l.ID));
+  assert.deepEqual(sf.lastFilteredIds, expectedIds);
+});
+
+test('lastFilteredIds: leeres Ergebnis → leeres Set', () => {
+  const sf = new SearchFilter(MOCK_LOCATIONS, [], MOCK_ICONS);
+  sf.applyPreFilters([]);
+  assert.ok(sf.lastFilteredIds instanceof Set);
+  assert.equal(sf.lastFilteredIds.size, 0);
 });

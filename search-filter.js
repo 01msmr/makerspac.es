@@ -43,6 +43,8 @@ class SearchFilter {
     this.lastFilteredLocations = [];
     /** @type {MakerSpace[]} */
     this.lastLocationsForZoom = [];
+    /** @type {Set<number>|null} Set der IDs aus lastFilteredLocations — O(1)-Lookup für Marker-Icon-Updates */
+    this.lastFilteredIds = null;
 
     // Cached country set (static data, built once in initializeStyleStats)
     this._allCountries = new Set();
@@ -360,6 +362,7 @@ class SearchFilter {
   _notifyResultsChange(filteredLocations, locationsForZoom) {
     this.lastFilteredLocations = filteredLocations;
     this.lastLocationsForZoom = locationsForZoom;
+    this.lastFilteredIds = new Set(filteredLocations.map(l => l.ID));
     document.dispatchEvent(new Event('filterResultsChanged'));
     if (this._onResultsChange) {
       this._onResultsChange(filteredLocations, locationsForZoom,

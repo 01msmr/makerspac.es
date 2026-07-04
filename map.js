@@ -493,13 +493,10 @@ function updateMarkerIcon(marker, location) {
     window.styleFilterManager.hasActiveFilters();
 
   if (searchQuery.length > 0 || hasActiveFilters) {
-    const filteredLocations = window.json.filter(loc =>
-      loc.name.toLowerCase().includes(searchQuery) ||
-      zfill(loc.loc.plz, loc.loc.country).startsWith(searchQuery) ||
-      loc.loc.city.toLowerCase().includes(searchQuery)
-    );
+    const ids = appContext.searchFilter?.lastFilteredIds;
+    const isMatch = ids ? ids.has(location.ID) : true;
 
-    if (filteredLocations.some(loc => loc.ID === location.ID)) {
+    if (isMatch) {
       let iconToSet;
 
       if (location.isOpen === true) {
