@@ -60,13 +60,13 @@ class EmbedMapExtended {
         this.snapFriendsDropdownHeight();
       }, 400);
 
-      // Re-apply friends height whenever the sidebar resizes (map reflows during init)
+      // Re-apply friends height when target dropdown grows (SpaceAPI async load)
       if (this.friendsRows > 0) {
-        const sidebar = document.getElementById('embed-sidebar');
-        if (sidebar) {
+        const target = document.querySelector('.target-dropdown');
+        if (target) {
           const ro = new ResizeObserver(() => this.snapFriendsDropdownHeight());
-          ro.observe(sidebar);
-          setTimeout(() => ro.disconnect(), 6000);
+          ro.observe(target);
+          setTimeout(() => ro.disconnect(), 8000);
         }
       }
 
@@ -493,9 +493,16 @@ class EmbedMapExtended {
       return;
     }
 
-    const visibleItems = this.friendsRows > 0
-      ? Math.min(this.friendsRows, items.length)
-      : Math.floor((dropdown.getBoundingClientRect().height - headerHeight) / itemHeight);
+    let visibleItems;
+    if (this.friendsRows > 0) {
+      // How much viewport space is actually available from the dropdown's current top?
+      const dropdownTop = dropdown.getBoundingClientRect().top;
+      const available = window.innerHeight - dropdownTop - 8;
+      const maxByViewport = Math.max(1, Math.floor((available - headerHeight) / itemHeight));
+      visibleItems = Math.min(this.friendsRows, items.length, maxByViewport);
+    } else {
+      visibleItems = Math.floor((dropdown.getBoundingClientRect().height - headerHeight) / itemHeight);
+    }
 
     if (visibleItems > 0) {
       const h = (headerHeight + visibleItems * itemHeight) + 'px';
