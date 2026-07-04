@@ -60,16 +60,6 @@ class EmbedMapExtended {
         this.snapFriendsDropdownHeight();
       }, 400);
 
-      // Re-apply friends height when target dropdown grows (SpaceAPI async load)
-      if (this.friendsRows > 0) {
-        const target = document.querySelector('.target-dropdown');
-        if (target) {
-          const ro = new ResizeObserver(() => this.snapFriendsDropdownHeight());
-          ro.observe(target);
-          setTimeout(() => ro.disconnect(), 8000);
-        }
-      }
-
       document.getElementById('loading').style.display = 'none';
     } catch (error) {
       console.error('❌ Extended Embed Map error:', error);
@@ -487,29 +477,12 @@ class EmbedMapExtended {
 
     const headerHeight = header ? header.getBoundingClientRect().height : 0;
     const itemHeight = items[0].getBoundingClientRect().height;
+    const availableHeight = dropdown.getBoundingClientRect().height;
+    const itemsSpace = availableHeight - headerHeight;
+    const visibleItems = Math.floor(itemsSpace / itemHeight);
 
-    if (itemHeight === 0) {
-      setTimeout(() => this.snapFriendsDropdownHeight(), 200);
-      return;
-    }
-
-    let visibleItems;
-    if (this.friendsRows > 0) {
-      // How much viewport space is actually available from the dropdown's current top?
-      const dropdownTop = dropdown.getBoundingClientRect().top;
-      const available = window.innerHeight - dropdownTop - 8;
-      const maxByViewport = Math.max(1, Math.floor((available - headerHeight) / itemHeight));
-      visibleItems = Math.min(this.friendsRows, items.length, maxByViewport);
-    } else {
-      visibleItems = Math.floor((dropdown.getBoundingClientRect().height - headerHeight) / itemHeight);
-    }
-
-    if (visibleItems > 0) {
-      const h = (headerHeight + visibleItems * itemHeight) + 'px';
-      dropdown.style.height = h;
-      dropdown.style.maxHeight = h;
-      if (this.friendsRows > 0) dropdown.style.flexShrink = '0';
-      dropdown.style.scrollSnapType = 'y mandatory';
+    if (visibleItems > 0 && visibleItems < items.length) {
+      dropdown.style.maxHeight = (headerHeight + visibleItems * itemHeight) + 'px';
     }
   }
 
