@@ -64,6 +64,7 @@ const STATIC_ASSETS = [
   '/mobile-filter.js',
   '/popup-builder.js',
   '/map.js',
+  '/marker-manager.js',
   '/routing.js',
   '/demo-mode.js',
   // Fonts
