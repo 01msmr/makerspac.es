@@ -2,6 +2,7 @@
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
+import { isWeeklyToday } from './date-utils.js';
 
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
@@ -274,8 +275,7 @@ class ListingCore {
    * @returns {string} HTML-String oder ''
    */
   getMeetingIconHtml(location) {
-    if (!location.weekly || !location.weekly.time || location.weekly.weekday > 6) return '';
-    if (location.weekly.weekday !== new Date().getDay()) return '';
+    if (!isWeeklyToday(location)) return '';
 
     const s = this._t();
     const todayLabel = s.weeklyToday;

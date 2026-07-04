@@ -1,5 +1,6 @@
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
+import { todayWeekday } from './date-utils.js';
 
 class MobileFilterUI {
   constructor() {
@@ -581,7 +582,7 @@ class MobileFilterUI {
       item.appendChild(label);
 
       // Today marker for weekly filter
-      if (key === 'weekly' && opt !== 'any' && parseInt(opt) === new Date().getDay()) {
+      if (key === 'weekly' && opt !== 'any' && parseInt(opt) === todayWeekday()) {
         const todayDot = document.createElement('i');
         todayDot.className = 'fas fa-circle mf-opt-today-dot';
         item.appendChild(todayDot);

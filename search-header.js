@@ -6,6 +6,7 @@
 /** @typedef {import('./types.js').Pill} Pill */
 
 import AppConfig from './config.js';
+import { todayWeekday } from './date-utils.js';
 
 const CONFIG = AppConfig;
 
@@ -1166,7 +1167,7 @@ class SearchHeader {
       optionItem.appendChild(document.createTextNode(this.translateFilterValue('doorState', option)));
     } else if (categoryKey === 'weekly') {
       const label = this.translateFilterValue('weekly', option);
-      const todayMarker = (option !== 'any' && parseInt(option) === new Date().getDay()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
+      const todayMarker = (option !== 'any' && parseInt(option) === todayWeekday()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
       optionItem.innerHTML = `<i class="${CONFIG.icons.ui.calendarDay}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}${todayMarker}`;
     } else if (categoryKey === 'workshops') {
       const workshopIcon = CONFIG.getWorkshopIcon(option);

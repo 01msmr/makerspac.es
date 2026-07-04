@@ -4,6 +4,7 @@ import { I18n } from './i18n.js';
 import AppConfig, { createLeafletIcon } from './config.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { getTileMode, loadMaplibreIfNeeded } from './tile-loader.js';
+import { isWeeklyToday } from './date-utils.js';
 
 class EmbedMapExtended {
   constructor() {
@@ -246,7 +247,7 @@ class EmbedMapExtended {
       <div class="listing-item-details"><b>${space.loc?.city || ''}</b>, ${space.loc?.country || ''}</div>`;
     // Weekly Meeting Badge
     let meetingHtml = '';
-    if (space.weekly && space.weekly.time && space.weekly.weekday <= 6 && space.weekly.weekday === new Date().getDay()) {
+    if (isWeeklyToday(space)) {
       const _t = (k) => window.i18n ? window.i18n.t(k) : '';
       const todayLabel = _t('weekly.today') || 'heute';
       const weeklyTooltip = _t('weekly.tooltip') || 'wöchentliches Treffen';

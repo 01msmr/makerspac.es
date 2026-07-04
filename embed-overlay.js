@@ -1,12 +1,12 @@
 // embed-overlay.js — Unified overlay: Add Space + Embed guide
 
+import { WEEKDAY_NAMES } from './date-utils.js';
+
 const GITHUB_REPO = '01msmr/makerspac.es';
 
 const COUNTRIES    = ['Germany', 'Austria', 'Switzerland', 'Netherlands', 'Belgium', 'Denmark', 'Ukraine', 'other'];
 const STYLES       = ['for all', 'for youth', 'for students', 'commercial'];
 const WEEKDAYS     = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-// Indexed by weekday number (Sunday=0 … Saturday=6), matches loc-enrichment.json convention
-const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORKSHOPS = [
   ['3D printing', '3d'],  ['Laser cutting', 'laser'], ['CNC', 'cnc'],
   ['Electronics', 'electronics'], ['Coding', 'coding'], ['VR', 'vr'],
