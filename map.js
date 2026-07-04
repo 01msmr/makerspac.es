@@ -1248,15 +1248,40 @@ function _applyPopupOpenHandler(marker, location) {
       if (isOverlapping) logoElement.classList.add('popup-active');
     }
 
-    // Popup-Klicks nicht an die Map durchleiten
+    // Container-Listener einmalig binden — popup._container ist pro Marker persistent,
+    // daher akkumulieren mousedown/click/dblclick/mouseenter ohne diesen Guard bei jedem Open.
     if (popupElement) {
-      popupElement.addEventListener('mousedown', (event) => {
-        if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
+      // handlePopupEnter vor dem Guard definieren — wird im Guard (mouseenter) und im rAF referenziert.
+      const handlePopupEnter = () => {
+        const state = window.markerStateManager.getState(marker.locationId);
+        if (state.closeTimeout) {
+          clearTimeout(state.closeTimeout);
+          window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
+        }
+        if (currentStickyMarker !== marker) {
+          window.markerStateManager.clearTimeouts(marker.locationId);
+          setStickyPopup(marker);
+          if (window.routingManager && window.routingManager.navigateToLocations) {
+            window.routingManager.navigateToLocations([location.ID]);
+            marker._hasSetUrl = true;
+          }
+        }
+      };
+      if (!popupElement.dataset.msHandlersBound) {
+        popupElement.addEventListener('mousedown', (event) => {
+          if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
+        });
+        popupElement.addEventListener('click', (event) => {
+          if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
+        });
+        popupElement.addEventListener('dblclick', (event) => { event.stopPropagation(); });
+        popupElement.addEventListener('mouseenter', handlePopupEnter);
+        popupElement.dataset.msHandlersBound = '1';
+      }
+      // Hover-Recheck muss bei jedem Open laufen — außerhalb des Guards
+      requestAnimationFrame(() => {
+        if (popupElement.matches(':hover')) handlePopupEnter();
       });
-      popupElement.addEventListener('click', (event) => {
-        if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
-      });
-      popupElement.addEventListener('dblclick', (event) => { event.stopPropagation(); });
     }
 
     // Map seitlich verschieben wenn Popup das Dropdown überlappt
@@ -1275,30 +1300,6 @@ function _applyPopupOpenHandler(marker, location) {
           map.panBy([popupRect.right - dropdownRect.left + 12, 0], { animate: true, duration: 0.3 });
         }
       }, 350);
-    }
-
-    // Maus-Enter ins Popup: Sticky setzen + URL
-    if (popupElement) {
-      const handlePopupEnter = () => {
-        const state = window.markerStateManager.getState(marker.locationId);
-        if (state.closeTimeout) {
-          clearTimeout(state.closeTimeout);
-          window.markerStateManager.setState(marker.locationId, { closeTimeout: null });
-        }
-        if (currentStickyMarker !== marker) {
-          window.markerStateManager.clearTimeouts(marker.locationId);
-          setStickyPopup(marker);
-          if (window.routingManager && window.routingManager.navigateToLocations) {
-            window.routingManager.navigateToLocations([location.ID]);
-            marker._hasSetUrl = true;
-          }
-        }
-      };
-      popupElement.removeEventListener('mouseenter', handlePopupEnter);
-      popupElement.addEventListener('mouseenter', handlePopupEnter);
-      requestAnimationFrame(() => {
-        if (popupElement.matches(':hover')) handlePopupEnter();
-      });
     }
 
     requestAnimationFrame(() => adjustPopupPosition(popup, map));
