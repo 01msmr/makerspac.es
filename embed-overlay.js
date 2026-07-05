@@ -499,9 +499,16 @@ function showOverlay(initialTab = 'addspace') {
   const enrichWarn    = overlay.querySelector('.addspace-enrich-warning');
   const form          = overlay.querySelector('.addspace-form');
 
+  const addTabLabel = overlay.querySelector('.embed-tab[data-tab="addspace"] .tab-label-full');
+
   function setEditMode(on) {
     lookupDiv.hidden = !on;
     form.hidden      =  on;
+    if (addTabLabel) {
+      addTabLabel.textContent = on
+        ? t('editTitle', 'edit makerspace')
+        : t('title', 'add your makerspace');
+    }
     if (!on) resetLookup();
     if (on) requestAnimationFrame(() => lookupInput.focus());
   }
