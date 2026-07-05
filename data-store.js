@@ -315,19 +315,26 @@ class DataStore {
     const linksRow = document.createElement('div');
     linksRow.className = 'settings-links-row';
 
-    const aboutLink = document.createElement('button');
-    aboutLink.type = 'button';
-    aboutLink.className = 'settings-about-link';
-    aboutLink.textContent = this.t('aboutLink');
-    aboutLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('about'); });
-    linksRow.appendChild(aboutLink);
+    const addLink = document.createElement('button');
+    addLink.type = 'button';
+    addLink.className = 'settings-add-link';
+    addLink.textContent = 'Add';
+    addLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('addspace'); });
+    linksRow.appendChild(addLink);
 
     const embedLink = document.createElement('button');
     embedLink.type = 'button';
     embedLink.className = 'settings-embed-link';
-    embedLink.textContent = this.t('embedLink');
+    embedLink.textContent = 'Embed';
     embedLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('embed'); });
     linksRow.appendChild(embedLink);
+
+    const aboutLink = document.createElement('button');
+    aboutLink.type = 'button';
+    aboutLink.className = 'settings-about-link';
+    aboutLink.textContent = 'About';
+    aboutLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('about'); });
+    linksRow.appendChild(aboutLink);
 
     this.settingsPopover.appendChild(linksRow);
 
@@ -636,10 +643,7 @@ class DataStore {
     const gearBtn = this.container?.querySelector('.settings-gear-button-solo:not(.desktop-rezoom-btn)');
     if (gearBtn) gearBtn.setAttribute('aria-label', this.t('title'));
 
-    const aboutLinkEl = this.settingsPopover.querySelector('.settings-about-link');
-    if (aboutLinkEl) aboutLinkEl.textContent = this.t('aboutLink');
-    const embedLinkEl = this.settingsPopover.querySelector('.settings-embed-link');
-    if (embedLinkEl) embedLinkEl.textContent = this.t('embedLink');
+    // Add / Embed / About labels are fixed English short strings, no i18n needed
 
     // Clustering aria-label Update
     const clusterBtn = this.settingsPopover.querySelector('#clustering-btn-cluster');

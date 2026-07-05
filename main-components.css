@@ -2449,8 +2449,9 @@ body.consent-active #map { pointer-events: none; }
   display: flex;
   border-top: 1px solid var(--dropdown-border, #ddd);
 }
-.settings-about-link,
-.settings-embed-link {
+.settings-add-link,
+.settings-embed-link,
+.settings-about-link {
   flex: 1;
   display: block;
   padding: 8px 10px;
@@ -2463,10 +2464,12 @@ body.consent-active #map { pointer-events: none; }
   cursor: pointer;
   font-family: inherit;
 }
-.settings-about-link {
+.settings-add-link,
+.settings-embed-link {
   border-right: 1px solid var(--dropdown-border, #ddd);
 }
-.settings-about-link:hover,
-.settings-embed-link:hover {
+.settings-add-link:hover,
+.settings-embed-link:hover,
+.settings-about-link:hover {
   text-decoration: underline;
 }
