@@ -500,6 +500,7 @@ function showOverlay(initialTab = 'addspace') {
   const form          = overlay.querySelector('.addspace-form');
 
   const addTabLabel = overlay.querySelector('.embed-tab[data-tab="addspace"] .tab-label-full');
+  const addTabIcon  = overlay.querySelector('.embed-tab[data-tab="addspace"] i');
 
   function setEditMode(on) {
     lookupDiv.hidden = !on;
@@ -508,6 +509,10 @@ function showOverlay(initialTab = 'addspace') {
       addTabLabel.textContent = on
         ? t('editTitle', 'edit makerspace')
         : t('title', 'add your makerspace');
+    }
+    if (addTabIcon) {
+      addTabIcon.classList.toggle('fa-square-plus', !on);
+      addTabIcon.classList.toggle('fa-pen-to-square', on);
     }
     if (!on) resetLookup();
     if (on) requestAnimationFrame(() => lookupInput.focus());
