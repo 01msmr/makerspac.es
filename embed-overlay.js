@@ -12,6 +12,89 @@ const WEEKDAYS     = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 const t  = (key, fb) => window.i18n?.t(`addMakerspace.${key}`) ?? fb;  // addMakerspace namespace
 const ti = (key, fb) => window.i18n?.t(key) ?? fb;                      // full key path
 
+// ─── About content (7 languages) ──────────────────────────────────────────────
+const ABOUT = {
+  de: {
+    lead: `makerspac.es ist eine interaktive Karte aller Makerspaces, FabLabs und Hackerspaces in Europa – mit Live-Öffnungsstatus.`,
+    makerH: `Was ist ein Makerspace?`, makerP: `Ein Makerspace ist eine offene Werkstatt, in der Menschen gemeinsam an Projekten arbeiten, Ideen verwirklichen und voneinander lernen. Typische Ausstattung: 3D-Drucker, Lasercutter, CNC-Fräsen, Elektronikwerkzeug, Nähmaschinen. Oft als Verein organisiert und der Öffentlichkeit zugänglich.`,
+    fablabH: `Was ist ein FabLab?`, fablabP: `FabLab (Fabrication Laboratory) ist ein Konzept von MIT-Professor Neil Gershenfeld für offene Labore mit standardisierter Ausstattung. Offizielle FabLabs sind Mitglieder im weltweiten FabLab-Netzwerk und verpflichten sich zur Offenheit und zum Wissensaustausch.`,
+    hackH: `Was ist ein Hackerspace?`, hackP: `Hackerspaces sind community-betriebene Räume für Technikbegeisterte, Programmierer und Kreative. „Hacker" meint konstruktiven Umgang mit Technik – nicht Kriminalität. Typische Themen: Elektronik, Open Source, 3D-Druck, digitale Kunst.`,
+    diffH: `Was ist der Unterschied?`, diffP: `Die Begriffe überschneiden sich erheblich. In der Praxis sind alle drei Varianten desselben Gedankens: offener Raum, gemeinschaftliches Wissen, selbst machen.`,
+    cta: `Alle Spaces auf der Karte →`,
+  },
+  en: {
+    lead: `makerspac.es is an interactive map of all makerspaces, FabLabs and hackerspaces in Europe – with live open/closed status.`,
+    makerH: `What is a Makerspace?`, makerP: `A makerspace is an open workshop where people collaborate on projects, bring ideas to life and learn from each other. Typical equipment: 3D printers, laser cutters, CNC routers, electronics tools, sewing machines. Often run as non-profits and open to the public.`,
+    fablabH: `What is a FabLab?`, fablabP: `FabLab (Fabrication Laboratory) is a concept by MIT professor Neil Gershenfeld for open labs with standardised equipment. Official FabLabs are members of the global FabLab network and commit to openness and knowledge sharing.`,
+    hackH: `What is a Hackerspace?`, hackP: `Hackerspaces are community-run spaces for technology enthusiasts, programmers and creatives. "Hacker" means constructive engagement with technology – not crime. Typical topics: electronics, open source, 3D printing, digital art.`,
+    diffH: `What is the difference?`, diffP: `The terms overlap considerably. In practice all three are variations of the same idea: open space, shared knowledge, do-it-yourself.`,
+    cta: `Find all spaces on the map →`,
+  },
+  fr: {
+    lead: `makerspac.es est une carte interactive de tous les makerspaces, FabLabs et hackerspaces en Europe – avec statut ouvert/fermé en direct.`,
+    makerH: `Qu'est-ce qu'un Makerspace ?`, makerP: `Un makerspace est un atelier ouvert où les gens travaillent ensemble sur des projets et apprennent les uns des autres. Équipement typique : imprimantes 3D, découpeuses laser, fraiseuses CNC, outils électroniques, machines à coudre.`,
+    fablabH: `Qu'est-ce qu'un FabLab ?`, fablabP: `FabLab (Fabrication Laboratory) est un concept du professeur Neil Gershenfeld du MIT. Les FabLabs officiels sont membres du réseau mondial et s'engagent à l'ouverture et au partage des connaissances.`,
+    hackH: `Qu'est-ce qu'un Hackerspace ?`, hackP: `Les hackerspaces sont des espaces communautaires pour passionnés de technologie, programmeurs et créatifs. « Hacker » désigne un rapport constructif avec la technologie. Sujets typiques : électronique, logiciel libre, impression 3D.`,
+    diffH: `Quelle est la différence ?`, diffP: `Les termes se recoupent considérablement. En pratique, les trois concepts sont des variations de la même idée : espace ouvert, savoir partagé, faire soi-même.`,
+    cta: `Trouver tous les espaces sur la carte →`,
+  },
+  nl: {
+    lead: `makerspac.es is een interactieve kaart van alle makerspaces, FabLabs en hackerspaces in Europa – met live open/gesloten status.`,
+    makerH: `Wat is een Makerspace?`, makerP: `Een makerspace is een open werkplaats waar mensen samenwerken aan projecten en van elkaar leren. Typisch uitrusting: 3D-printers, lasersnijders, CNC-freesmachines, elektronicatools, naaimachines.`,
+    fablabH: `Wat is een FabLab?`, fablabP: `FabLab (Fabrication Laboratory) is een concept van MIT-professor Neil Gershenfeld. Officiële FabLabs zijn lid van het wereldwijde FabLab-netwerk en zetten zich in voor openheid.`,
+    hackH: `Wat is een Hackerspace?`, hackP: `Hackerspaces zijn gemeenschapsgeleide ruimtes voor techneuten, programmeurs en creatieven. "Hacker" betekent constructief omgaan met technologie. Typisch: elektronica, open source, 3D-printen.`,
+    diffH: `Wat is het verschil?`, diffP: `De termen overlappen aanzienlijk. In de praktijk zijn alle drie concepten variaties van hetzelfde idee: open ruimte, gedeelde kennis, zelf doen.`,
+    cta: `Alle spaces op de kaart vinden →`,
+  },
+  it: {
+    lead: `makerspac.es è una mappa interattiva di tutti i makerspace, FabLab e hackerspace in Europa – con stato aperto/chiuso in tempo reale.`,
+    makerH: `Cos'è un Makerspace?`, makerP: `Un makerspace è un'officina aperta dove le persone lavorano insieme su progetti e imparano le une dalle altre. Attrezzatura tipica: stampanti 3D, tagliatrici laser, fresatrici CNC, strumenti elettronici, macchine da cucire.`,
+    fablabH: `Cos'è un FabLab?`, fablabP: `FabLab (Fabrication Laboratory) è un concetto del professor Neil Gershenfeld del MIT. I FabLab ufficiali sono membri della rete mondiale FabLab e si impegnano all'apertura e alla condivisione della conoscenza.`,
+    hackH: `Cos'è un Hackerspace?`, hackP: `Gli hackerspace sono spazi comunitari per appassionati di tecnologia, programmatori e creativi. "Hacker" indica un approccio costruttivo alla tecnologia. Temi tipici: elettronica, open source, stampa 3D.`,
+    diffH: `Qual è la differenza?`, diffP: `I termini si sovrappongono notevolmente. In pratica tutti e tre sono variazioni della stessa idea: spazio aperto, conoscenza condivisa, fare da sé.`,
+    cta: `Trova tutti gli spazi sulla mappa →`,
+  },
+  da: {
+    lead: `makerspac.es er et interaktivt kort over alle makerspaces, FabLabs og hackerspaces i Europa – med live åben/lukket status.`,
+    makerH: `Hvad er et Makerspace?`, makerP: `Et makerspace er et åbent værksted, hvor mennesker samarbejder om projekter og lærer af hinanden. Typisk udstyr: 3D-printere, lasersnittere, CNC-fræsere, elektronikværktøj, symaskiner.`,
+    fablabH: `Hvad er et FabLab?`, fablabP: `FabLab (Fabrication Laboratory) er et koncept af MIT-professor Neil Gershenfeld. Officielle FabLabs er medlemmer af det globale FabLab-netværk og forpligter sig til åbenhed.`,
+    hackH: `Hvad er et Hackerspace?`, hackP: `Hackerspaces er fællesskabsdrevne rum for teknologiinteresserede, programmører og kreative. "Hacker" betyder konstruktiv omgang med teknologi. Typiske emner: elektronik, open source, 3D-print.`,
+    diffH: `Hvad er forskellen?`, diffP: `Begreberne overlapper i høj grad. I praksis er alle tre variationer af den samme idé: åbent rum, delt viden, gør-det-selv.`,
+    cta: `Find alle spaces på kortet →`,
+  },
+  uk: {
+    lead: `makerspac.es — інтерактивна карта всіх makerspace, FabLab та hackerspace в Європі — з живим статусом відкрито/закрито.`,
+    makerH: `Що таке Makerspace?`, makerP: `Makerspace — відкрита майстерня, де люди спільно працюють над проектами та навчаються одне від одного. Типове обладнання: 3D-принтери, лазерні різаки, фрезери з ЧПУ, інструменти для електроніки, швейні машини.`,
+    fablabH: `Що таке FabLab?`, fablabP: `FabLab (Fabrication Laboratory) — концепція MIT-профессора Ніла Ґершенфелда. Офіційні FabLab є членами глобальної мережі та зобов'язуються до відкритості та обміну знаннями.`,
+    hackH: `Що таке Hackerspace?`, hackP: `Hackerspaceи — простори, якими керує спільнота, для ентузіастів технологій, програмістів та творчих людей. «Хакер» означає конструктивний підхід до технологій. Теми: електроніка, відкрите ПЗ, 3D-друк.`,
+    diffH: `У чому різниця?`, diffP: `Поняття значно перетинаються. На практиці всі три концепції — варіації однієї ідеї: відкритий простір, спільні знання, зроби сам.`,
+    cta: `Знайти всі простори на карті →`,
+  },
+};
+
+function aboutPanel() {
+  const lang = window.i18n?.currentLang || 'en';
+  const a = ABOUT[lang] || ABOUT.en;
+  return `
+    <div class="embed-tab-panel" data-tab="about" hidden>
+      <p class="embed-tab-intro">${a.lead}</p>
+      <h3 class="embed-h3">${a.makerH}</h3><p>${a.makerP}</p>
+      <h3 class="embed-h3">${a.fablabH}</h3><p>${a.fablabP}</p>
+      <h3 class="embed-h3">${a.hackH}</h3><p>${a.hackP}</p>
+      <h3 class="embed-h3">${a.diffH}</h3><p>${a.diffP}</p>
+      <p style="margin-top:24px;"><a href="/" class="embed-cta-link">${a.cta}</a></p>
+    </div>`;
+}
+
+export function openOverlayTab(tab) {
+  const existing = document.querySelector('.embed-overlay');
+  if (existing) {
+    existing.querySelector(`.embed-tab[data-tab="${tab}"]`)?.click();
+    return;
+  }
+  showOverlay(tab);
+}
+
 export function initEmbedOverlay() {
   const btn = document.querySelector('.tool-add');
   if (!btn) return;
@@ -81,7 +164,7 @@ const snippetDiv =
 
 // ─── Overlay ───────────────────────────────────────────────────────────────────
 
-function showOverlay() {
+function showOverlay(initialTab = 'addspace') {
   if (document.querySelector('.embed-overlay')) return;
 
   const backdrop = document.createElement('div');
@@ -100,6 +183,7 @@ function showOverlay() {
           <div class="embed-tabs">
             <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add space</span></button>
             <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed map</span></button>
+            <button class="embed-tab" data-tab="about"><i class="fas fa-circle-info"></i> <span class="tab-label-full">${ti('about.tabTitle', 'about makerspac.es')}</span><span class="tab-label-short">about</span></button>
           </div>
         </div>
         <button class="embed-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
@@ -324,6 +408,8 @@ function showOverlay() {
             When you use the SpaceAPI, the marker turns red and the sidebar displays "closed."</p>
         </div><!-- /embed panel -->
 
+        ${aboutPanel()}
+
       </div><!-- /.embed-modal-scroll -->
       <div class="embed-modal-footer"></div>
     </div>`;
@@ -385,6 +471,8 @@ function showOverlay() {
   overlay.querySelectorAll('.embed-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
+
+  if (initialTab !== 'addspace') switchTab(initialTab);
 
   // ── Copy buttons (embed tab) ──
   const snippets = [snippet440, snippet640, snippetDiv];

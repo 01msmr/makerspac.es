@@ -35,60 +35,26 @@
       font-display: swap;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: auto; background: transparent; }
+    html, body { background: #f4f4f4; }
     body { font-family: 'Roboto', system-ui, sans-serif; }
-
-    /* Keep title-bar fixed (main-layout.css uses absolute, which scrolls) */
-    .title-bar { position: fixed !important; z-index: 20; }
-
-    /* ── Map backdrop ── */
-    #map-bg {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* Backdrop ist klickbar (zurück zur Karte) → Pointer-Cursor außerhalb der Card */
-    body { cursor: pointer; }
-    .about-card, .title-bar { cursor: auto; }
-
-
-    /* ── Background overlay: hides map-bg UI (gear button etc.) outside the card ── */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      background: rgba(0,0,0,0.44);
-      pointer-events: none;
-    }
 
     /* ── Centered content card ── */
     .about-card {
-      position: relative;
-      z-index: 10;
       max-width: 800px;
-      margin: 1em auto;
-      background: rgba(255, 255, 255, 0.90);
+      margin: 2em auto;
+      background: #fff;
       border-radius: 20px;
-      padding: 44px 32px 0;
-      height: calc(100vh - 2em);
-      box-shadow: 0 4px 32px rgba(0,0,0,0.55);
+      padding: 44px 32px 40px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.12);
       line-height: 1.7;
       color: #1a1a1a;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
     }
     @media (prefers-color-scheme: dark) {
-      .about-card { background: rgba(26,26,26,0.92); color: #e0e0e0; }
+      html, body { background: #1a1a1a; }
+      .about-card { background: #242424; color: #e0e0e0; }
     }
     @media (max-width: 700px) {
-      .about-card { margin: 0; border-radius: 0; height: 100vh; }
+      .about-card { margin: 0; border-radius: 0; }
     }
 
     /* ── Language flags — anchored to top-right border-radius centre ── */
@@ -167,7 +133,7 @@
     .about-tab.active { opacity: 1; border-bottom-color: var(--focus-color, blue); }
     @media (prefers-color-scheme: dark) { .about-tab.active { border-bottom-color: var(--focus-color, blue); } }
     .about-panel { display: none; }
-    .about-panel.active { display: block; flex: 1; overflow-y: auto; padding: 24px 0 40px; min-height: 0; }
+    .about-panel.active { display: block; padding-top: 24px; }
 
     /* ── Embed-Demo Panel ── */
     #panel-embed h2 { background: none; color: inherit; padding: 0; margin: 0 0 8px; font-size: 1.3rem; font-weight: 700; }
@@ -206,16 +172,6 @@
   </style>
 </head>
 <body>
-  <!-- Map backdrop — search bar + dropdown fully mouse-accessible; map interaction disabled via Leaflet in iframe context -->
-  <iframe id="map-bg" src="/" title="" aria-hidden="true" tabindex="-1" inert></iframe>
-
-  <!-- Title bar rendered in about.html — sits over the iframe's title, fully clickable -->
-  <div class="title-bar">
-    <a href="/">
-      <div class="title">📍maker<span class="frame"><span class="spac">spac</span><span class="smaller">.es</span></span></div>
-    </a>
-  </div>
-
   <div class="about-card">
     <!-- Language flags top-right -->
     <div class="about-lang" id="lang-flags">
@@ -624,14 +580,6 @@
       }
       return langToHash[getLang()] || 'germany';
     }
-
-    document.getElementById('map-bg').src = '/?noui=1&nofocus#/' + getCountryHash();
-
-    // Backdrop: einziger aktiver Input ist der Mausklick → zurück zur Karte
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.about-card') || e.target.closest('.title-bar')) return;
-      location.href = '/#/' + getCountryHash();
-    });
 
     function render() {
       const lang = getLang();

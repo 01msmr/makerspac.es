@@ -1,6 +1,7 @@
 // data-store.js - Settings: Sprache, Farbschema, Clustering, Bookmarks, Consent
 
 import { consent } from './datasync.js';
+import { openOverlayTab } from './embed-overlay.js';
 
 class DataStore {
   constructor() {
@@ -314,16 +315,18 @@ class DataStore {
     const linksRow = document.createElement('div');
     linksRow.className = 'settings-links-row';
 
-    const aboutLink = document.createElement('a');
-    aboutLink.href = '/about.html';
+    const aboutLink = document.createElement('button');
+    aboutLink.type = 'button';
     aboutLink.className = 'settings-about-link';
     aboutLink.textContent = this.t('aboutLink');
+    aboutLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('about'); });
     linksRow.appendChild(aboutLink);
 
-    const embedLink = document.createElement('a');
-    embedLink.href = '/about.html#embed';
+    const embedLink = document.createElement('button');
+    embedLink.type = 'button';
     embedLink.className = 'settings-embed-link';
     embedLink.textContent = this.t('embedLink');
+    embedLink.addEventListener('click', () => { this.closeSettingsPopover?.(); openOverlayTab('embed'); });
     linksRow.appendChild(embedLink);
 
     this.settingsPopover.appendChild(linksRow);

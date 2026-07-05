@@ -1189,6 +1189,18 @@ a#titleurl:hover h3.space-unknown .fas {
   border-radius: 12px;
 }
 
+.embed-cta-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background: blue;
+  color: white;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95em;
+}
+.embed-cta-link:hover { opacity: 0.85; }
+
 .embed-h4 {
   font-size: 0.95em;
   font-weight: 600;
@@ -2446,6 +2458,10 @@ body.consent-active #map { pointer-events: none; }
   font-size: 0.78rem;
   text-decoration: none;
   text-align: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 .settings-about-link {
   border-right: 1px solid var(--dropdown-border, #ddd);
