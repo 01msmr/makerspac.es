@@ -266,7 +266,7 @@ function setupMap() {
   appContext.map = map;
   window.map = map; // backward compat
 
-  // In iframe context (about.html backdrop): disable all map interaction so the
+  // In iframe context (backdrop embedding): disable all map interaction so the
   // search bar + dropdown work via mouse without the map panning/zooming underneath.
   if (window !== window.top) {
     map.dragging.disable();

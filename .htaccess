@@ -1,8 +1,11 @@
 # ─── Clean URLs ───────────────────────────────────────────────────────────────
+# about.html wurde entfernt (Inhalt lebt im Embed-Overlay, About-Tab).
+# 301 auf die Startseite für alte externe Links / Suchmaschinen-Einträge.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^about/?$ /about.html [L]
-    RewriteRule ^ueber/?$ /about.html [L]
+    RewriteRule ^about/?$ / [R=301,L]
+    RewriteRule ^ueber/?$ / [R=301,L]
+    RewriteRule ^about\.html$ / [R=301,L]
 </IfModule>
 
 # ─── Brotli-Komprimierung (bevorzugt, ~15% besser als gzip) ──────────────────
