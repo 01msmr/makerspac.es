@@ -25,6 +25,7 @@ const CONFIG = AppConfig;
       this.clickLocation = null;
       this.popoverElement = null;
       this.mobilePanel = null; // Phone-Layout: kompaktes Header-Panel im .search-container
+      this._lastTouchLongPress = 0; // Timestamp des eigenen Long-Press (Dedupe für contextmenu/click)
       this.hintElement = null;
       this.searchCircle = null;
       this.nearbySpaces = [];
@@ -121,6 +122,11 @@ const CONFIG = AppConfig;
 
       // Rechtsklick: Nearby anzeigen
       this.map.on('contextmenu', (e) => {
+        // Doppel-Trigger vermeiden: auf Geräten, wo tapHold/natives contextmenu
+        // doch feuert (Android, PWA), hat der eigene Long-Press-Detektor schon
+        // übernommen. Timestamp-Guard statt hartem Touch-Return, damit
+        // Maus-Rechtsklick auf Touch-Laptops funktionsfähig bleibt.
+        if (Date.now() - this._lastTouchLongPress < 1200) return;
         this.showAtCursor(
           e.latlng.lat,
           e.latlng.lng,
@@ -129,11 +135,22 @@ const CONFIG = AppConfig;
         );
       });
 
+      // Touch (Phone + Tablet): eigener Long-Press-Detektor.
+      // Leaflets tapHold ist im iOS-Safari-TAB unzuverlässig: Safaris eigener
+      // Long-Press-Recognizer feuert bei ~500ms ein touchcancel und bricht
+      // tapHold ab (im Standalone-/PWA-Modus passiert das nicht).
+      if ('ontouchstart' in window) {
+        this._setupTouchLongPress();
+      }
+
       // Linksklick auf Karte: Nearby anzeigen
       this.map.on('click', (e) => {
         // Phone-Layout: Nearby nur per Long-Tap (contextmenu) — einfacher Tap
         // öffnet/schließt nichts (Karte bleibt für Popups/Panning frei)
         if (this._isMobileLayout()) return;
+
+        // Release-Click direkt nach eigenem Long-Press (Tablet) ignorieren
+        if (Date.now() - this._lastTouchLongPress < 1200) return;
 
         // Klick auf den Search-Circle ignorieren
         if (e.originalEvent.target.classList?.contains('nearby-circle-draggable')) return;
@@ -685,6 +702,55 @@ const CONFIG = AppConfig;
     }
 
     /**
+     * Eigener Long-Press-Detektor für Touch-Geräte (Phone + Tablet).
+     * Bricht NUR bei touchend (früh losgelassen) oder touchmove > Toleranz ab.
+     * touchcancel wird bewusst ignoriert: iOS Safari (Browser-Tab) cancelt die
+     * Geste bei ~500ms, wenn sein eigener Long-Press-Recognizer übernimmt —
+     * der Finger liegt aber noch auf dem Glas, und die System-UI (Loupe/
+     * Selektion) ist per CSS unterdrückt (#map user-select/touch-callout).
+     */
+    _setupTouchLongPress() {
+      const container = this.map.getContainer();
+      const HOLD_MS = 500;
+      const MOVE_TOLERANCE = 12;
+      let timer = null;
+      let startX = 0, startY = 0;
+
+      const cancel = () => { clearTimeout(timer); timer = null; };
+
+      container.addEventListener('touchstart', (e) => {
+        cancel();
+        if (e.touches.length !== 1) return; // Pinch/Mehrfinger: kein Long-Press
+        const target = /** @type {HTMLElement} */ (e.target);
+        // Nur auf der Karte selbst — nicht auf Markern, Popups oder Controls
+        if (target.closest('.leaflet-marker-icon, .leaflet-popup, .leaflet-control-container')) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        timer = setTimeout(() => {
+          timer = null;
+          this._lastTouchLongPress = Date.now();
+          const rect = container.getBoundingClientRect();
+          const latlng = this.map.containerPointToLatLng(
+            L.point(startX - rect.left, startY - rect.top)
+          );
+          this.showAtCursor(latlng.lat, latlng.lng, startX, startY);
+        }, HOLD_MS);
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!timer) return;
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - startX) > MOVE_TOLERANCE ||
+            Math.abs(t.clientY - startY) > MOVE_TOLERANCE) {
+          cancel(); // Panning begonnen
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', cancel, { passive: true });
+      // KEIN touchcancel-Listener — siehe JSDoc oben
+    }
+
+    /**
      * Zeigt Nearby im Mobile-Layout: kompaktes Header-Panel (Count + Ort + Slider,
      * fix über der Liste) im .search-container; Treffer im normalen Dropdown.
      */
@@ -766,7 +832,9 @@ const CONFIG = AppConfig;
       // Panel wurde gerade eingehängt → --mobile-ui-height erst nach ResizeObserver-Tick aktuell
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (!this.searchCircle) return;
-        const bounds = this.searchCircle.getBounds();
+        // 20% Luft um den Umkreis; symmetrisches Padding relativ zum sichtbaren
+        // Kartenbereich (Bottom-UI via uiH ausgeglichen) → Kreis vertikal mittig
+        const bounds = this.searchCircle.getBounds().pad(0.2);
         const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
         zm.previousZoomBounds = bounds; // → Rezoom-Button zoomt auf die Nearby-Gesamtheit
         zm._isAutoZooming = true;
