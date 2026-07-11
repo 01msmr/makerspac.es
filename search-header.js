@@ -156,6 +156,9 @@ class SearchHeader {
       if (this.searchBar.value.length > 0 || this.pillsManager?.count() > 0) {
         this.searchBar.value = '';
         this.pillsManager?.clear();
+        // User cleared the search → exit location route (sonst bleibt der
+        // stale Route-Pre-Filter über den empty-query Branch aktiv)
+        if (window.routingManager) window.routingManager._isOnLocationRoute = false;
         this.focusSearchBarIfDesktop();
         this.triggerFilterUpdate();
       }
@@ -203,6 +206,10 @@ class SearchHeader {
   }
 
   handleSearchInput() {
+    // User edits the bar → a location route no longer drives the filter.
+    // Otherwise triggerFilterUpdate() keeps re-applying the stale route
+    // pre-filter after the term is deleted (empty-query branch).
+    if (window.routingManager) window.routingManager._isOnLocationRoute = false;
     this.zoomManager?.resetUserMoved();
     this.triggerFilterUpdate();
   }
@@ -742,11 +749,7 @@ class SearchHeader {
     this.searchBar.value = '';
     this.pillsManager?.clear();
 
-    if (window.routingManager) {
-      window.routingManager._activeCountryFilter = null;
-      window.routingManager._isNavigating = true;
-      window.location.hash = '';
-    }
+    window.routingManager?.resetRouteState();
 
     this.searchFilter?.clearAllStyleFilters();
 
@@ -755,12 +758,6 @@ class SearchHeader {
       this.scrollToTop();
       this.focusSearchBarIfDesktop();
     }
-
-    setTimeout(() => {
-      if (window.routingManager) {
-        window.routingManager._isNavigating = false;
-      }
-    }, 100);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1053,23 +1050,13 @@ class SearchHeader {
       this.focusSearchBarIfDesktop();
     }
 
-    if (window.routingManager) {
-      window.routingManager._activeCountryFilter = null;
-      window.routingManager._isNavigating = true;
-      window.location.hash = '';
-    }
+    window.routingManager?.resetRouteState();
 
     this.pillsManager?.clear();
 
     if (!silent) {
       this.triggerFilterUpdate();
     }
-
-    setTimeout(() => {
-      if (window.routingManager) {
-        window.routingManager._isNavigating = false;
-      }
-    }, 100);
   }
 
   adjustDropdownHeight() {

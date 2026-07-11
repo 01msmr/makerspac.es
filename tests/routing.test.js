@@ -183,3 +183,26 @@ test('_createRoutes: enthält Style-Routen', () => {
   assert.ok(routes['for-all']?.type === 'style');
   assert.ok(routes['commercial']?.type === 'style');
 });
+
+// ─── _setHash / resetRouteState ───────────────────────────────────────────
+
+test('_setHash: setzt _isNavigating VOR der Hash-Änderung', () => {
+  rm._isNavigating = false;
+  rm._setHash('#/germany');
+  assert.equal(rm._isNavigating, true);
+  assert.equal(window.location.hash, '#/germany');
+});
+
+test('resetRouteState: verlässt Country- und Location-Route und leert den Hash', () => {
+  rm._activeCountryFilter = 'Germany';
+  rm._isOnLocationRoute = true;
+  window.location.hash = '#/germany';
+
+  rm.resetRouteState();
+
+  assert.equal(rm._activeCountryFilter, null);
+  assert.equal(rm._isOnLocationRoute, false);
+  assert.equal(window.location.hash, '');
+  assert.equal(rm._isNavigating, true,
+    'hashchange-Handler muss für den eigenen Hash-Clear unterdrückt werden');
+});

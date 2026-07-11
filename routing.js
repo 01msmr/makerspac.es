@@ -231,6 +231,8 @@ export class RoutingManager {
   applyCountryFilter(countryName) {
     const bar = this.searchManager.searchBar;
     const SearchTerm = bar.value;
+    // Flag schon VOR pillsManager.clear() setzen (nicht erst in _setHash):
+    // der onChange-Callback der Pills würde sonst die URL überschreiben.
     this._isNavigating = true;
 
     if (this._activeCountryFilter === countryName) {
@@ -241,7 +243,7 @@ export class RoutingManager {
     this._activeCountryFilter = countryName;
     this._isOnLocationRoute = false; // country filter overrides any prior location route
     if (this.searchManager?.pillsManager) this.searchManager.pillsManager.clear();
-    window.location.hash = `#/${this.countryToSlug(countryName)}`;
+    this._setHash(`#/${this.countryToSlug(countryName)}`);
 
     this._afterNavigation(() => {
       bar.value = SearchTerm;
@@ -320,8 +322,7 @@ export class RoutingManager {
     const slugs = pills.map(p => this.findSlugByPill(p)).filter(Boolean);
     const newHash = slugs.length > 0 ? `#/${slugs.join('+')}` : '';
     if (newHash !== window.location.hash) {
-      this._isNavigating = true;
-      window.location.hash = newHash || '';
+      this._setHash(newHash || '');
     }
   }
 
@@ -435,6 +436,8 @@ export class RoutingManager {
     this._activeCountryFilter = null;
     const bar = this.searchManager?.searchBar;
     const rescuedText = bar ? bar.value : '';
+    // Flag schon VOR den folgenden Aufrufen setzen (nicht erst in _setHash):
+    // Pill-/Filter-Callbacks würden sonst die URL überschreiben.
     this._isNavigating = true;
 
     const currentPills = this.searchManager?.pillsManager?.getPillsArray() || [];
@@ -442,11 +445,11 @@ export class RoutingManager {
 
     if (hasBookmarkFilter && appContext.bookmarks) {
       const ids = appContext.bookmarks.getBookmarkedIds();
-      ids.length > 0 ? this.navigateToLocations(ids) : window.location.hash = '';
+      ids.length > 0 ? this.navigateToLocations(ids) : this._setHash('');
     } else if (currentPills.length > 0) {
       this.updateURLFromPills(currentPills);
     } else {
-      window.location.hash = '';
+      this._setHash('');
     }
 
     this._afterNavigation(() => {
@@ -525,9 +528,8 @@ export class RoutingManager {
   navigateToLocations(locationIds) {
     const url = this.createLocationURL(locationIds, true);
     if (url) {
-      this._isNavigating = true;
       this._isOnLocationRoute = true;
-      window.location.hash = url;
+      this._setHash(url);
       if (locationIds.length === 1) {
         const loc = appContext.locationById.get(locationIds[0]);
         if (loc) {
@@ -546,6 +548,30 @@ export class RoutingManager {
       if (ids.length > 0) { this.navigateToLocations(ids); return; }
     }
     const pills = this.searchManager?.pillsManager?.getPillsArray() || [];
-    pills.length > 0 ? this.updateURLFromPills(pills) : (this._isNavigating = true, window.location.hash = '');
+    pills.length > 0 ? this.updateURLFromPills(pills) : this._setHash('');
+  }
+
+  /**
+   * Programmatische Hash-Änderung — _isNavigating unterdrückt den dadurch
+   * ausgelösten eigenen hashchange-Handler (handleRouteWithPills).
+   * Achtung: Wo VOR der Hash-Änderung noch Pill-Callbacks laufen
+   * (applyCountryFilter, clearAllPillsAndFilters), muss das Flag zusätzlich
+   * schon früher gesetzt werden — siehe Kommentare dort.
+   * @param {string} hash
+   */
+  _setHash(hash) {
+    this._isNavigating = true;
+    window.location.hash = hash;
+  }
+
+  /**
+   * Verlässt Country- und Location-Route und leert den URL-Hash.
+   * Für User-Clear-Aktionen (Suchbegriff gelöscht, Escape, Alle-Filter-löschen).
+   */
+  resetRouteState() {
+    this._activeCountryFilter = null;
+    this._isOnLocationRoute = false;
+    this._setHash('');
+    this._afterNavigation(() => {});
   }
 }
