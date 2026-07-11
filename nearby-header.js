@@ -24,6 +24,7 @@ const CONFIG = AppConfig;
       // State
       this.clickLocation = null;
       this.popoverElement = null;
+      this.mobilePanel = null; // Phone-Layout: kompaktes Header-Panel im .search-container
       this.hintElement = null;
       this.searchCircle = null;
       this.nearbySpaces = [];
@@ -130,6 +131,10 @@ const CONFIG = AppConfig;
 
       // Linksklick auf Karte: Nearby anzeigen
       this.map.on('click', (e) => {
+        // Phone-Layout: Nearby nur per Long-Tap (contextmenu) — einfacher Tap
+        // öffnet/schließt nichts (Karte bleibt für Popups/Panning frei)
+        if (this._isMobileLayout()) return;
+
         // Klick auf den Search-Circle ignorieren
         if (e.originalEvent.target.classList?.contains('nearby-circle-draggable')) return;
 
@@ -223,6 +228,12 @@ const CONFIG = AppConfig;
       // Nearby unterdrücken, solange der Consent-Banner offen ist
       if (document.body.classList.contains('consent-active')) return;
 
+      // Phone-Layout: Nearby-Modus VOR den Clears setzen — unterdrückt
+      // handleFilterResults-Rendering (Dropdown gehört jetzt der Nearby-Liste)
+      if (this._isMobileLayout() && appContext.searchHeader) {
+        appContext.searchHeader._nearbyMode = true;
+      }
+
       // ✨ Suche und alle Filter löschen beim Aktivieren von Nearby (silent = kein UI-Update)
       if (appContext.searchHeader) {
         appContext.searchHeader._manualSpaceClick = true;
@@ -257,7 +268,11 @@ const CONFIG = AppConfig;
 
       this.currentRadius = this.radii[bestIndex];
       this.drawSearchCircle(lat, lon);
-      this.showPopover(mouseX, mouseY);
+      if (this._isMobileLayout()) {
+        this.showMobileNearby();
+      } else {
+        this.showPopover(mouseX, mouseY);
+      }
 
       if (this.hintElement) {
         this.hintElement.style.opacity = '0';
@@ -311,6 +326,12 @@ const CONFIG = AppConfig;
       if (addrElement) {
         addrElement.innerHTML = this._lastAddressHTML;
       }
+
+      // Mobile-Panel: nur "PLZ Ort" (kurz), sobald das Geocoding eintrifft
+      const placeEl = this.mobilePanel?.querySelector('.nearby-mobile-place');
+      if (placeEl) {
+        placeEl.textContent = this._mobilePlaceText();
+      }
     }
 
 
@@ -350,6 +371,16 @@ const CONFIG = AppConfig;
       }
       this.popoverElement = null;
 
+      // Mobile-Panel + Nearby-Modus aufräumen, normales Listing wiederherstellen
+      if (this.mobilePanel) {
+        this.mobilePanel.remove();
+        this.mobilePanel = null;
+      }
+      if (appContext.searchHeader?._nearbyMode) {
+        appContext.searchHeader._nearbyMode = false;
+        appContext.searchHeader.triggerFilterUpdate();
+      }
+
       if (this.searchCircle) {
         this.map.removeLayer(this.searchCircle);
       }
@@ -379,17 +410,21 @@ const CONFIG = AppConfig;
       const circleColor = CONFIG.getHoverColor();
 
       if (!this.searchCircle) {
+        // Phone-Layout: Kreis nicht interaktiv — setupCircleDrag nutzt reine
+        // Maus-Events (funktioniert auf Touch nicht) und 1-Finger-Ziehen
+        // kollidierte mit dem Karten-Panning. Neustart per neuem Long-Tap.
+        const isMobile = this._isMobileLayout();
         this.searchCircle = L.circle([lat, lon], {
           radius: targetRadius,
           color: circleColor,
           weight: 3,
           fillOpacity: 0.15,
-          interactive: true,
+          interactive: !isMobile,
           bubblingMouseEvents: false,
           className: 'nearby-circle-draggable',
           pane: 'overlayPane'
         }).addTo(this.map);
-        this.setupCircleDrag();
+        if (!isMobile) this.setupCircleDrag();
       } else {
         this.searchCircle.setLatLng([lat, lon]);
 
@@ -567,13 +602,39 @@ const CONFIG = AppConfig;
       }
     }
 
-    createHeaderHTML(count) {
-      const makerspaceText = window.i18n?.t('nearbySpaces.makerspaces') || 'Makerspaces';
+    /** Radius-Slider-HTML — gemeinsam für Desktop-Popover und Mobile-Panel */
+    createSliderHTML() {
       const radiusText = window.i18n?.t('nearbySpaces.radius') || 'Umkreis';
-
       const currentIndex = this.radii.indexOf(this.currentRadius);
       const fraction = currentIndex / (this.radii.length - 1);
       const pillPosition = `calc(28px + (100% - 56px) * ${fraction})`;
+
+      return `
+        <div class="nearby-radius-slider-container">
+          <div class="nearby-radius-slider-row">
+            <span class="nearby-radius-label-prefix">${radiusText}</span>
+            <div class="nearby-radius-track">
+              <div class="nearby-radius-labels">
+                ${this.radii.map((r, idx) =>
+                  `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}&thinsp;km</span>`
+                ).join('')}
+              </div>
+              <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
+                ${this.currentRadius}&thinsp;km
+              </div>
+              ${this.radii.map((r, idx) => {
+                const f = idx / (this.radii.length - 1);
+                const pos = `calc(28px + (100% - 56px) * ${f})`;
+                return `<button class="nearby-radius-clickarea" data-index="${idx}" style="left: ${pos}"></button>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    createHeaderHTML(count) {
+      const makerspaceText = window.i18n?.t('nearbySpaces.makerspaces') || 'Makerspaces';
 
       return `
         <div class="nearby-header-row-top">
@@ -585,26 +646,7 @@ const CONFIG = AppConfig;
           <span class="nearby-click-address">${this._lastAddressHTML || ''}</span>
         </div>
         <div class="nearby-header-row-bottom">
-          <div class="nearby-radius-slider-container">
-            <div class="nearby-radius-slider-row">
-              <span class="nearby-radius-label-prefix">${radiusText}</span>
-              <div class="nearby-radius-track">
-                <div class="nearby-radius-labels">
-                  ${this.radii.map((r, idx) =>
-                    `<span class="nearby-radius-label ${this.currentRadius === r ? 'active' : ''}" data-index="${idx}">${r}&thinsp;km</span>`
-                  ).join('')}
-                </div>
-                <div class="nearby-radius-pill" data-current-index="${currentIndex}" style="left: ${pillPosition}">
-                  ${this.currentRadius}&thinsp;km
-                </div>
-                ${this.radii.map((r, idx) => {
-                  const f = idx / (this.radii.length - 1);
-                  const pos = `calc(28px + (100% - 56px) * ${f})`;
-                  return `<button class="nearby-radius-clickarea" data-index="${idx}" style="left: ${pos}"></button>`;
-                }).join('')}
-              </div>
-            </div>
-          </div>
+          ${this.createSliderHTML()}
         </div>
       `;
     }
@@ -631,6 +673,112 @@ const CONFIG = AppConfig;
 
         return item.outerHTML;
       }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MOBILE (Phone-Layout ≤767px): Header-Panel + Treffer im Suggestions-Dropdown
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** Phone-Layout? Layout-Frage → Breite (Tablets behalten den Desktop-Popover) */
+    _isMobileLayout() {
+      return window.innerWidth <= 767;
+    }
+
+    /**
+     * Zeigt Nearby im Mobile-Layout: kompaktes Header-Panel (Count + Ort + Slider,
+     * fix über der Liste) im .search-container; Treffer im normalen Dropdown.
+     */
+    showMobileNearby() {
+      if (!this.mobilePanel) {
+        this.mobilePanel = document.createElement('div');
+        this.mobilePanel.className = 'nearby-mobile-panel';
+        // column-reverse im .search-container: letztes DOM-Kind = optisch oben (an der Karte)
+        document.querySelector('.search-container')?.appendChild(this.mobilePanel);
+      }
+      this.updateMobileNearby();
+      this._fitMobileToCircle();
+    }
+
+    /** Panel-Inhalt + Dropdown-Liste aktualisieren (initial und nach Radius-Wechsel) */
+    updateMobileNearby() {
+      if (!this.mobilePanel) return;
+      const spaces = this.resultsCache[this.currentRadius] || [];
+      const makerspaceText = window.i18n?.t('nearbySpaces.makerspaces') || 'Makerspaces';
+      const nearText = window.i18n?.t('nearbySpaces.nearLocation') || 'nahe';
+
+      this.mobilePanel.innerHTML = `
+        <div class="nearby-mobile-row-top">
+          <span class="nearby-mobile-title"><b>${spaces.length} ${makerspaceText}</b>&nbsp;${nearText}&nbsp;<span class="nearby-mobile-place">${this._mobilePlaceText()}</span></span>
+          <button class="nearby-mobile-close" aria-label="Schließen"><i class="fas fa-xmark"></i></button>
+        </div>
+        ${this.createSliderHTML()}
+      `;
+      this.mobilePanel.querySelector('.nearby-mobile-close')?.addEventListener('click', () => this.hide());
+      this.setupRadiusControls(this.mobilePanel);
+      this._renderMobileList(spaces);
+    }
+
+    /** Kurzer Ortstext für den Mobile-Header: nur "PLZ Ort", Fallback Koordinaten */
+    _mobilePlaceText() {
+      const d = this._currentAddressData;
+      if (!d) return '';
+      return d.cityPart || `${d.lat}, ${d.lon}`;
+    }
+
+    /** Treffer (distanz-sortiert) im Mobile-Design ins Suggestions-Dropdown rendern */
+    _renderMobileList(spaces) {
+      const sh = appContext.searchHeader;
+      const dropdown = document.getElementById('suggestions-dropdown');
+      if (!sh || !dropdown) return;
+
+      dropdown.querySelectorAll('.listing-item, .country-group-header, .id-match-separator, .nearby-empty')
+        .forEach(el => el.remove());
+
+      const fragment = document.createDocumentFragment();
+      spaces.forEach(space => {
+        // showStreet: true — Mobile-CSS versteckt die Straßenzeile ohnehin
+        // (search.css: address-lines > div:first-child); ohne sie würde die
+        // PLZ-Zeile zur ersten und fälschlich ausgeblendet.
+        fragment.appendChild(this.listingCore.createItem(space, {
+          distanceLine: true,
+          distance: space.distance,
+          showBookmark: true,
+          showStreet: true,
+          showFlag: true,
+          zfill: sh.zfill
+        }));
+      });
+      dropdown.appendChild(fragment);
+      dropdown.classList.add('is-active');
+      sh.updateSearchCounter(spaces.length);
+
+      // Zentrale Item-Listener (Tap → Popup, wie im Such-Dropdown)
+      this.listingCore.setupItemListeners(dropdown, {
+        onItemClick: (location) => sh.handleItemClick(location),
+        connectionWeight: CONFIG.settings.connectionWeightSearch
+      });
+    }
+
+    /** Karte auf den Suchkreis zoomen; Kreis-Bounds als Rezoom-Ziel (#map-zoom-out-btn) */
+    _fitMobileToCircle() {
+      const zm = window.zoomManager;
+      if (!this.searchCircle || !this.map || !zm) return;
+      // Panel wurde gerade eingehängt → --mobile-ui-height erst nach ResizeObserver-Tick aktuell
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (!this.searchCircle) return;
+        const bounds = this.searchCircle.getBounds();
+        const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
+        zm.previousZoomBounds = bounds; // → Rezoom-Button zoomt auf die Nearby-Gesamtheit
+        zm._isAutoZooming = true;
+        zm._userMoved = false;
+        this.map.once('moveend', () => { zm._isAutoZooming = false; });
+        this.map.fitBounds(bounds, {
+          animate: true,
+          duration: 0.35,
+          paddingTopLeft: L.point(8, 8),
+          paddingBottomRight: L.point(8, 8 + uiH),
+        });
+      }));
     }
 
     // Untere Grenze des sichtbaren Kartenbereichs (exkl. Dropdown-UI am unteren Rand)
@@ -896,9 +1044,10 @@ const CONFIG = AppConfig;
       });
     }
 
-    setupRadiusControls() {
-      const pill = this.popoverElement.querySelector('.nearby-radius-pill');
-      const track = this.popoverElement.querySelector('.nearby-radius-track');
+    /** @param {HTMLElement} [root] - Container mit Slider (Desktop-Popover oder Mobile-Panel) */
+    setupRadiusControls(root = this.popoverElement) {
+      const pill = root.querySelector('.nearby-radius-pill');
+      const track = root.querySelector('.nearby-radius-track');
 
       if (!pill || !track) return;
 
@@ -978,7 +1127,7 @@ const CONFIG = AppConfig;
       });
 
       // Click Areas
-      this.popoverElement.querySelectorAll('.nearby-radius-clickarea').forEach(button => {
+      root.querySelectorAll('.nearby-radius-clickarea').forEach(button => {
         button.addEventListener('pointerdown', (e) => {
           e.stopPropagation();
           const index = parseInt(e.target.dataset.index);
@@ -997,7 +1146,8 @@ const CONFIG = AppConfig;
         this.listingCore.currentHoverItem = null;
       }
 
-      const pill = this.popoverElement?.querySelector('.nearby-radius-pill');
+      const root = this.popoverElement || this.mobilePanel;
+      const pill = root?.querySelector('.nearby-radius-pill');
       const oldIndex = this.radii.indexOf(this.currentRadius);
       const newIndex = this.radii.indexOf(newRadius);
 
@@ -1009,7 +1159,7 @@ const CONFIG = AppConfig;
         pill.style.left = newPosition;
         pill.dataset.currentIndex = newIndex;
 
-        this.popoverElement.querySelectorAll('.nearby-radius-label').forEach((label, idx) => {
+        root.querySelectorAll('.nearby-radius-label').forEach((label, idx) => {
           label.classList.toggle('active', idx === newIndex);
         });
 
@@ -1024,7 +1174,14 @@ const CONFIG = AppConfig;
         this.drawSearchCircle(this.clickLocation.lat, this.clickLocation.lon, true);
       }
 
-      setTimeout(() => this.showPopover(), 320);
+      setTimeout(() => {
+        if (this.popoverElement) {
+          this.showPopover();
+        } else if (this.mobilePanel) {
+          this.updateMobileNearby();
+          this._fitMobileToCircle(); // neuer Radius \u2192 Kreis wieder einpassen
+        }
+      }, 320);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

@@ -1116,6 +1116,69 @@
   /* Straße ausblenden, nur PLZ+Stadt sichtbar */
   #suggestions-dropdown .listing-item-address-lines > div:first-child { display: none; }
 
+  /* === NEARBY (Mobile): kompaktes Panel fix über der Item-Liste === */
+  .nearby-mobile-panel {
+    background: black;
+    color: white;
+    padding: 6px 8px 8px;
+    border-bottom: 1px solid var(--dropdown-border);
+  }
+
+  .nearby-mobile-row-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+
+  /* Einzeilig: "x Makerspaces nahe PLZ Ort" — lange Orte enden mit "…" */
+  .nearby-mobile-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+  }
+
+  .nearby-mobile-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 15px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+
+  /* Panel ist schwarz — --text-color des Popover-Kontexts wäre unsichtbar */
+  .nearby-mobile-panel .nearby-radius-label-prefix {
+    color: white;
+  }
+
+  /* === NEARBY (Mobile): Distanz-Pill als 3. Zeile unter PLZ/Stadt ===
+     Kontrast-Inversion zum Badge: weiß auf Statusfarbe / Statusfarbe auf weiß */
+  #suggestions-dropdown .listing-dist-line {
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  #suggestions-dropdown .listing-item .listing-dist-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1;
+    padding: 2px 7px 3px;
+    border-radius: 8px;
+    background: white;
+    color: var(--status-color, var(--space-hover)) !important;
+  }
+
+  #suggestions-dropdown .listing-item.active .listing-dist-pill {
+    background: var(--status-color, var(--space-hover));
+    color: white !important;
+  }
+
   /* === SCROLL-NAV-BUTTONS (links vom Dropdown, weiß auf schwarz) === */
   .dropdown-nav {
     display: none; /* sichtbar wenn Dropdown Inhalt hat */

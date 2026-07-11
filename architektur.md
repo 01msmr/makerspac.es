@@ -79,7 +79,7 @@
 | `data-store.js` | Einstellungen (Sprache, Theme, Clustering) persistieren | `DataStore`, `window.languageSwitcher` |
 | `bookmark-manager.js` | Favoriten (Add/Remove/Export) | `BookmarkManager`, `window.bookmarkManager` |
 | `datasync.js` | ConsentManager, localStorage-Wrapper | `ConsentManager`, `window.consent` |
-| `nearby-header.js` | Nearby-Popover (Rechtsklick), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
+| `nearby-header.js` | Nearby: Desktop-Popover (Rechtsklick) · Phone-Layout ≤767px: Panel im .search-container + Treffer im Dropdown (`searchHeader._nearbyMode` unterdrückt Filter-Rendering), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar | `MobileFilterUI`, `window.mobileFilterUI` |
 | `i18n.js` | Übersetzungen, `t()`, `setLanguage()` | `I18n`, `window.i18n` |
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom; Desktop-Fit als Polygon-Fit: alle Pins einzeln in der Freifläche (Viewport minus Logo minus Search/Dropdown) | `ZoomManager`, `window.zoomManager`, `computePolygonFit()`, `findFitTranslation()` |

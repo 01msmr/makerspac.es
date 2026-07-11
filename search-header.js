@@ -46,6 +46,9 @@ class SearchHeader {
     this.dropdownItems = [];
     this._manualSpaceClick = false;
     this._skipAutoZoom = false;
+    // Mobile Nearby aktiv: Dropdown gehört der Nearby-Liste — Filter-Events
+    // dürfen sie nicht überschreiben (nearby-header.js setzt/löscht das Flag)
+    this._nearbyMode = false;
     this.zoomManager = null;
 
     // rAF-Throttle für Connection-Line-Redraw
@@ -331,6 +334,10 @@ class SearchHeader {
   // ═══════════════════════════════════════════════════════════════════════════
 
   handleFilterResults(filteredLocations, locationsForZoom, idMatch) {
+    // Mobile Nearby: Dropdown zeigt die Nearby-Liste — nicht überschreiben,
+    // kein Auto-Zoom (SpaceAPI-Updates etc. laufen sonst dazwischen)
+    if (this._nearbyMode) return;
+
     this.createActiveFiltersSection();
     this.createSuggestionItems(filteredLocations, idMatch);
     this.updateSearchCounter(filteredLocations.length);

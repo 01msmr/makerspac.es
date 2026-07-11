@@ -97,6 +97,7 @@ class ListingCore {
     const {
       showDistance = false,
       distance = null,
+      distanceLine = false,
       showBookmark = true,
       showStreet = true,
       showFlag = false,
@@ -130,9 +131,14 @@ class ListingCore {
     // PLZ formatieren
     const formattedPlz = zfill(location.loc.plz, location.loc.country);
 
-    // Distance Badge (nur für Nearby)
+    // Distance Badge (nur für Nearby, Desktop-Popover: links vor dem Style-Icon)
     const distanceBadgeHtml = showDistance && distance !== null
       ? `<span class="listing-dist-badge">${Math.round(distance)} km</span>`
+      : '';
+
+    // Distance als 3. Zeile unter PLZ/Stadt (Mobile Nearby): kontrastierende Pill
+    const distanceLineHtml = distanceLine && distance !== null
+      ? `<div class="listing-dist-line"><span class="listing-dist-pill">${this.formatDistance(distance)}</span></div>`
       : '';
 
     // Street-Details
@@ -166,6 +172,7 @@ class ListingCore {
           <div class="listing-item-address-lines">
             ${streetHtml}
             <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${AppConfig.escapeHtml(location.loc.city)}</b></div>
+            ${distanceLineHtml}
           </div>
           ${meetingIconHtml} <!-- Erst das Heute-Badge -->
           ${workshopsHtml}   <!-- Dann die Workshops (wird per CSS nach rechts geschoben) -->
@@ -191,6 +198,20 @@ class ListingCore {
       return 'var(--space-unknown)';
     }
     return 'var(--space-hover)';
+  }
+
+  /**
+   * Formatiert eine Entfernung: unter 10 km mit einer Dezimalstelle (lokalisiert),
+   * darüber gerundet. Für die Distanz-Pill (Mobile Nearby).
+   * @param {number} distance - Entfernung in km
+   * @returns {string} z.B. "3,2 km" / "17 km"
+   */
+  formatDistance(distance) {
+    const locale = window.currentLanguage || undefined;
+    const value = distance < 10
+      ? distance.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+      : String(Math.round(distance));
+    return `${value} km`;
   }
 
   /**
