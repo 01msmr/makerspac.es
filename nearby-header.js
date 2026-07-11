@@ -859,8 +859,14 @@ const CONFIG = AppConfig;
       }));
     }
 
-    // Untere Grenze des sichtbaren Kartenbereichs (exkl. Dropdown-UI am unteren Rand)
+    // Untere Grenze des sichtbaren Kartenbereichs (exkl. fixierter Bottom-UI).
+    // --mobile-ui-height spiegelt IMMER die volle .search-container-Höhe wider
+    // (ResizeObserver läuft geräteunabhängig, mobile-filter.js:50) — auf Desktop
+    // kann das bei aufgeklapptem Search-Dropdown (bis 70vh, adjustDropdownHeight)
+    // fälschlich groß sein. Nur auf Phone/Tablet abziehen (dort ist .search-container
+    // tatsächlich fixed am unteren Rand); Desktop-Popover braucht den vollen Viewport.
     _visibleBottom() {
+      if (!('ontouchstart' in window)) return window.innerHeight;
       const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
       return window.innerHeight - uiH;
     }
