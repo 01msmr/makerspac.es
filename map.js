@@ -258,6 +258,9 @@ function setupMap() {
     zoomControl: false,
     closePopupOnClick: !('ontouchstart' in window), // Touch-Geräte (Phone + Tablet): false, Desktop: true
     doubleClickZoom: !('ontouchstart' in window),   // Eigener touchend-Handler übernimmt auf Touch
+    // Touch: stufenloser Zoom — Pinch bleibt exakt stehen, fitBounds passt exakt
+    // (kein Abrunden auf ganze Stufen). Desktop behält Stufen (Mausrad-Raster).
+    zoomSnap: ('ontouchstart' in window) ? 0 : 1,
   });
 
   appContext.map = map;
@@ -840,11 +843,15 @@ function setupMapClickHandler() {
     clearStickyPopup();
   });
 
-  // 1-Finger-Doppeltap: eine Stufe hereinzoomen (Phone + Tablet)
-  // 2-Finger-Doppeltap: eine Stufe herauszoomen (Phone + Tablet)
+  // 1-Finger-Doppeltap: hereinzoomen (Phone + Tablet)
+  // 2-Finger-Doppeltap: herauszoomen (Phone + Tablet)
   // Leaflet's DoubleClickZoom basiert auf 'dblclick' — das wird auf Touch-Geräten
   // vom Tap-Helper nicht synthetisiert, daher eigene touchend-Zählung nötig.
   if ('ontouchstart' in window) {
+    // Zoom-Schritt pro Doppeltap: 2/3 Stufe = Faktor 2^(2/3) ≈ 1.59 (statt 2.0).
+    // Feiner dosierbar; 3 Doppeltaps = exakt 2 ganze Kachelstufen, d.h. die
+    // Rasterdarstellung landet regelmäßig wieder auf nativer Schärfe.
+    const TOUCH_ZOOM_STEP = 2 / 3;
     let prevOneFingerEnd = 0;
     let prevTwoFingerEnd = 0;
     let oneFingerMoved = false;
@@ -882,9 +889,9 @@ function setupMapClickHandler() {
         if (twoFingerMoved) { twoFingerMoved = false; prevTwoFingerEnd = 0; return; }
         if (now - prevTwoFingerEnd < 350) {
           if (lastTwoFingerPoint) {
-            map.setZoomAround(lastTwoFingerPoint, map.getZoom() - 1);
+            map.setZoomAround(lastTwoFingerPoint, map.getZoom() - TOUCH_ZOOM_STEP);
           } else {
-            map.zoomOut(1);
+            map.zoomOut(TOUCH_ZOOM_STEP);
           }
           prevTwoFingerEnd = 0;
         } else {
@@ -904,7 +911,7 @@ function setupMapClickHandler() {
           const t = e.changedTouches[0];
           const rect = mapContainer.getBoundingClientRect();
           const tapPoint = L.point(t.clientX - rect.left, t.clientY - rect.top);
-          map.setZoomAround(tapPoint, map.getZoom() + 1);
+          map.setZoomAround(tapPoint, map.getZoom() + TOUCH_ZOOM_STEP);
           prevOneFingerEnd = 0;
         } else {
           prevOneFingerEnd = now;

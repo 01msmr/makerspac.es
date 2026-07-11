@@ -82,7 +82,7 @@
 | `nearby-header.js` | Nearby-Popover (Rechtsklick), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar | `MobileFilterUI`, `window.mobileFilterUI` |
 | `i18n.js` | Übersetzungen, `t()`, `setLanguage()` | `I18n`, `window.i18n` |
-| `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom | `ZoomManager`, `window.zoomManager` |
+| `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom; Desktop-Fit als Polygon-Fit: alle Pins einzeln in der Freifläche (Viewport minus Logo minus Search/Dropdown) | `ZoomManager`, `window.zoomManager`, `computePolygonFit()`, `findFitTranslation()` |
 | `embed.js` | Embed-Karte (iframe-Standalone, lädt nur in embed.html) | `EmbedMapExtended`, `window.embedMap` |
 | `embed-overlay.js` | In-page Overlay für Embed-Anleitung (initiiert in map.js) | `initEmbedOverlay()` |
 | `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed) | `buildPopupHTML()` |

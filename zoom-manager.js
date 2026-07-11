@@ -4,6 +4,129 @@ import { appContext } from './app-context.js';
 // zoom-manager.js - Zentrale Zoom-Logik für die Karte
 // Enthält: Auto-Zoom, Three-Frame-Zoom, Zoom-Preview-Frames, Overlap-Detection
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// POLYGON-FIT (Desktop)
+// Die sichtbare Kartenfläche ist EIN rechtwinkliges Polygon: Viewport minus
+// Logo-Rechteck (oben links) minus Search-Container/Dropdown-Rechteck (oben
+// rechts). Alle Pins der aktiven Auswahl müssen einzeln in dieser Form liegen —
+// Pins dürfen sich also über die Arme der Form verteilen (Mittelspalte,
+// unterhalb der UI), auch wenn ihre gemeinsame Bounding-Box in kein einzelnes
+// Teilrechteck passt.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Innenabstand zu Viewport-Rändern und UI-Flächen (px) */
+const FIT_MARGIN = 8;
+/** Marker-Icon-Ausdehnung um den Ankerpunkt (Icon ~25×41, Anker unten Mitte) */
+const ICON_SIDE = 13;
+const ICON_UP = 41;
+
+/**
+ * Sucht eine Verschiebung t, sodass alle (fest skalierten) Punkte im Polygon
+ * liegen. Die Ausschluss-Rechtecke sind kantenverankert: Logo ab x=0, Search/
+ * Dropdown bis x=mapW, beide ab y=0. Pro Punkt gilt disjunktiv „rechts vom
+ * Logo ODER darunter" bzw. „links vom Dropdown ODER darunter" — bei fixem ty
+ * kollabiert das zu einem x-Intervall für tx. Feasibility ist monoton in ty
+ * (größeres ty = Punkte tiefer = weniger Konflikte), Wechsel nur an den
+ * Breakpoints ty = rect.bottom − p.y → exakte Prüfung über die Kandidaten,
+ * bevorzugt nahe der zentrierten Lage.
+ *
+ * @param {{x:number,y:number}[]} pts - Punkte in Container-Pixeln (skaliert)
+ * @param {number} mapW @param {number} mapH
+ * @param {{right:number,bottom:number}|null} leftUI - Logo (inkl. Icon-Puffer)
+ * @param {{left:number,bottom:number}|null} rightUI - Search/Dropdown (inkl. Icon-Puffer)
+ * @param {{top:number,right:number,bottom:number,left:number}} m - Randabstände
+ * @returns {{tx:number,ty:number}|null} Verschiebung oder null (passt nicht)
+ */
+function findFitTranslation(pts, mapW, mapH, leftUI, rightUI, m) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const txLo0 = m.left - minX, txHi0 = mapW - m.right - maxX;
+  const tyLo = m.top - minY, tyHi = mapH - m.bottom - maxY;
+  if (txLo0 > txHi0 || tyLo > tyHi) return null;
+
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  const tyCentered = clamp((mapH - minY - maxY) / 2, tyLo, tyHi);
+
+  // Kandidaten: zentrierte Lage, Extrema, alle Band-Wechsel-Breakpoints
+  const cands = new Set([tyCentered, tyHi, tyLo]);
+  for (const p of pts) {
+    if (leftUI) cands.add(leftUI.bottom - p.y);
+    if (rightUI) cands.add(rightUI.bottom - p.y);
+  }
+  const sorted = [...cands]
+    .filter(ty => ty >= tyLo && ty <= tyHi)
+    .sort((a, b) => Math.abs(a - tyCentered) - Math.abs(b - tyCentered));
+
+  for (const ty of sorted) {
+    let lo = txLo0, hi = txHi0;
+    for (const p of pts) {
+      const y = p.y + ty;
+      if (leftUI && y < leftUI.bottom) lo = Math.max(lo, leftUI.right - p.x);
+      if (rightUI && y < rightUI.bottom) hi = Math.min(hi, rightUI.left - p.x);
+      if (lo > hi) break;
+    }
+    if (lo <= hi) {
+      return { tx: clamp((mapW - minX - maxX) / 2, lo, hi), ty };
+    }
+  }
+  return null;
+}
+
+/**
+ * Maximiert per Binärsuche den Maßstab, bei dem alle Punkte ins Polygon passen,
+ * und liefert Maßstab + Verschiebung. Referenz-Maßstab 1 = Punkte wie übergeben.
+ *
+ * @param {{x:number,y:number}[]} pts - Punkte in Container-Pixeln (Referenz-Zoom)
+ * @param {number} mapW @param {number} mapH
+ * @param {{right:number,bottom:number}|null} leftUI
+ * @param {{left:number,bottom:number}|null} rightUI
+ * @param {{top:number,right:number,bottom:number,left:number,maxScale?:number}} opts
+ * @returns {{scale:number,tx:number,ty:number}}
+ */
+function computePolygonFit(pts, mapW, mapH, leftUI, rightUI, opts) {
+  const m = { top: opts.top, right: opts.right, bottom: opts.bottom, left: opts.left };
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const bw = Math.max(maxX - minX, 1e-9), bh = Math.max(maxY - minY, 1e-9);
+  const availW = mapW - m.left - m.right, availH = mapH - m.top - m.bottom;
+
+  // Obere Schranke: Bounding-Box füllt den vollen Viewport (besser geht nie)
+  const sMax = Math.min(availW / bw, availH / bh, opts.maxScale ?? Infinity);
+  // Fallback: Bounding-Box zentriert, UI-Flächen ignoriert (altes Verhalten)
+  const fallback = () => ({
+    scale: sMax,
+    tx: m.left + (availW - bw * sMax) / 2 - minX * sMax,
+    ty: m.top + (availH - bh * sMax) / 2 - minY * sMax,
+  });
+  if (availW <= 0 || availH <= 0 || sMax <= 0) return { scale: Math.max(sMax, 1e-9), tx: 0, ty: 0 };
+
+  const tryScale = (s) => findFitTranslation(
+    pts.map(p => ({ x: p.x * s, y: p.y * s })), mapW, mapH, leftUI, rightUI, m
+  );
+
+  const tMax = tryScale(sMax);
+  if (tMax) return { scale: sMax, ...tMax };
+
+  let lo = 0, hi = sMax;
+  let best = null;
+  for (let i = 0; i < 25; i++) {
+    const s = (lo + hi) / 2;
+    const t = tryScale(s);
+    if (t) { best = { scale: s, ...t }; lo = s; } else { hi = s; }
+  }
+  return best ?? fallback();
+}
+
 class ZoomManager {
   constructor() {
     this.map = null;
@@ -151,41 +274,82 @@ class ZoomManager {
   // NORMAL ZOOM
   // ═══════════════════════════════════════════════════════════════════════════
 
-  flyToBoundsTight(bounds, options = {}) {
+  /**
+   * Zoomt auf die Bounds, sodass alle Pins im freien Polygon liegen
+   * (Viewport minus Logo- und Search/Dropdown-Fläche).
+   * @param {import('leaflet').LatLngBounds} bounds
+   * @param {object} [options] - flyTo-Optionen
+   * @param {import('leaflet').LatLng[]|null} [latlngs] - Pin-Positionen;
+   *        ohne latlngs wird die Bounding-Box (4 Ecken) gefittet
+   */
+  flyToBoundsTight(bounds, options = {}, latlngs = null) {
     const origSnap = this.map.options.zoomSnap;
     this.map.options.zoomSnap = 0;
-    const zoom = this.map.getBoundsZoom(bounds);
-    let center = bounds.getCenter();
 
-    const mapEl = document.getElementById('map');
-    if (mapEl) {
-      const mapRect = mapEl.getBoundingClientRect();
+    const mapSize = this.map.getSize();
+    const zRef = this.map.getZoom();
+    const lls = (latlngs && latlngs.length) ? latlngs : [
+      bounds.getNorthWest(), bounds.getNorthEast(),
+      bounds.getSouthWest(), bounds.getSouthEast(),
+    ];
+    const pts = lls.map(ll => this.map.project(ll, zRef));
 
-      let rightUI = 0;
-      const settingsEl = document.querySelector('.language-switcher');
-      const searchEl = document.querySelector('.search-container');
-      if (settingsEl) {
-        rightUI = mapRect.right - settingsEl.getBoundingClientRect().left;
-      } else if (searchEl) {
-        rightUI = mapRect.right - searchEl.getBoundingClientRect().left;
-      }
+    const { leftUI, rightUI } = this._getUIExclusionRects();
+    const maxZoom = this.map.getMaxZoom();
+    const fit = computePolygonFit(pts, mapSize.x, mapSize.y, leftUI, rightUI, {
+      top: FIT_MARGIN + ICON_UP,
+      right: FIT_MARGIN + ICON_SIDE,
+      bottom: FIT_MARGIN,
+      left: FIT_MARGIN + ICON_SIDE,
+      maxScale: Number.isFinite(maxZoom) ? 2 ** (maxZoom - zRef) : undefined,
+    });
 
-      let leftUI = 0;
-      const titleBar = document.querySelector('.title-bar');
-      if (titleBar) {
-        leftUI = titleBar.getBoundingClientRect().right - mapRect.left;
-      }
-
-      const xShift = (leftUI - rightUI) / 2;
-
-      const centerPoint = this.map.project(center, zoom);
-      center = this.map.unproject(
-        L.point(centerPoint.x + xShift, centerPoint.y), zoom
-      );
-    }
+    const zoom = zRef + Math.log2(fit.scale);
+    // Container-Punkt (W/2 − tx, H/2 − ty) ist die Projektion des Map-Centers
+    const center = this.map.unproject(
+      L.point(mapSize.x / 2 - fit.tx, mapSize.y / 2 - fit.ty), zoom
+    );
 
     this.map.flyTo(center, zoom, options);
     this.map.once('moveend', () => { this.map.options.zoomSnap = origSnap; });
+  }
+
+  /**
+   * Liefert die UI-Ausschluss-Rechtecke in Map-Container-Koordinaten,
+   * aufgeblasen um die Marker-Icon-Ausdehnung (Icon darf UI nicht berühren).
+   * leftUI: Logo/Title-Bar · rightUI: Search-Container ∪ aktives Dropdown ∪
+   * Language-Switcher. Nicht sichtbare Elemente → null.
+   * @returns {{leftUI: {right:number,bottom:number}|null, rightUI: {left:number,bottom:number}|null}}
+   */
+  _getUIExclusionRects() {
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return { leftUI: null, rightUI: null };
+    const mapRect = mapEl.getBoundingClientRect();
+
+    const rel = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      return { left: r.left - mapRect.left, right: r.right - mapRect.left, bottom: r.bottom - mapRect.top };
+    };
+
+    const title = rel(document.querySelector('.title-bar'));
+    const leftUI = title ? { right: title.right + ICON_SIDE, bottom: title.bottom + ICON_UP } : null;
+
+    let ru = rel(document.querySelector('.search-container'));
+    if (this.suggestionsDropdown?.classList.contains('is-active')) {
+      const dd = rel(this.suggestionsDropdown);
+      if (dd) ru = ru
+        ? { left: Math.min(ru.left, dd.left), right: Math.max(ru.right, dd.right), bottom: Math.max(ru.bottom, dd.bottom) }
+        : dd;
+    }
+    const switcher = rel(document.querySelector('.language-switcher'));
+    if (switcher) ru = ru
+      ? { left: Math.min(ru.left, switcher.left), right: Math.max(ru.right, switcher.right), bottom: Math.max(ru.bottom, switcher.bottom) }
+      : switcher;
+
+    const rightUI = ru ? { left: ru.left - ICON_SIDE, bottom: ru.bottom + ICON_UP } : null;
+    return { leftUI, rightUI };
   }
 
   executeNormalZoom(bounds, markersToZoom) {
@@ -246,7 +410,11 @@ class ZoomManager {
     await new Promise(resolve => {
       this.map.once('zoomend moveend', resolve);
       if (markersToZoom.length > 1) {
-        this.flyToBoundsTight(L.featureGroup(markersToZoom).getBounds().pad(0.05), { duration: DURATION_PART_2 });
+        this.flyToBoundsTight(
+          L.featureGroup(markersToZoom).getBounds().pad(0.05),
+          { duration: DURATION_PART_2 },
+          markersToZoom.map(mk => mk.getLatLng())
+        );
       } else {
         this.map.flyTo(markersToZoom[0].getLatLng(), 13, { duration: DURATION_PART_2 });
       }
@@ -275,7 +443,11 @@ class ZoomManager {
     const zoomPromise = new Promise(resolve => {
       this.map.once('zoomend moveend', resolve);
       if (markersToZoom.length > 1) {
-        this.flyToBoundsTight(L.featureGroup(markersToZoom).getBounds().pad(0.05), zoomOptions);
+        this.flyToBoundsTight(
+          L.featureGroup(markersToZoom).getBounds().pad(0.05),
+          zoomOptions,
+          markersToZoom.map(mk => mk.getLatLng())
+        );
       } else {
         this.map.flyTo(markersToZoom[0].getLatLng(), 13, zoomOptions);
       }
@@ -546,5 +718,5 @@ class ZoomManager {
 }
 
 
-export { ZoomManager };
+export { ZoomManager, computePolygonFit, findFitTranslation };
 export const zoomManager = new ZoomManager();
