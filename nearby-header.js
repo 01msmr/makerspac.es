@@ -26,6 +26,7 @@ const CONFIG = AppConfig;
       this.popoverElement = null;
       this.mobilePanel = null; // Phone-Layout: kompaktes Header-Panel im .search-container
       this._lastTouchLongPress = 0; // Timestamp des eigenen Long-Press (Dedupe für contextmenu/click)
+      this._mobileZoomTimer = null; // Choreografie: verzögertes Kreis-Zeichnen + Zoom
       this.hintElement = null;
       this.searchCircle = null;
       this.nearbySpaces = [];
@@ -284,10 +285,17 @@ const CONFIG = AppConfig;
       // ---------------------------------------------------------
 
       this.currentRadius = this.radii[bestIndex];
-      this.drawSearchCircle(lat, lon);
       if (this._isMobileLayout()) {
+        // Choreografie: Panel + Liste sofort; 0,5s nach der Erkennung den
+        // Kreis zeichnen, dann die Karte langsam (0,7s) ans Ziel schieben
         this.showMobileNearby();
+        clearTimeout(this._mobileZoomTimer);
+        this._mobileZoomTimer = setTimeout(() => {
+          this.drawSearchCircle(lat, lon);
+          this._fitMobileToCircle();
+        }, 500);
       } else {
+        this.drawSearchCircle(lat, lon);
         this.showPopover(mouseX, mouseY);
       }
 
@@ -389,6 +397,7 @@ const CONFIG = AppConfig;
       this.popoverElement = null;
 
       // Mobile-Panel + Nearby-Modus aufräumen, normales Listing wiederherstellen
+      clearTimeout(this._mobileZoomTimer);
       if (this.mobilePanel) {
         this.mobilePanel.remove();
         this.mobilePanel = null;
@@ -762,7 +771,8 @@ const CONFIG = AppConfig;
         document.querySelector('.search-container')?.appendChild(this.mobilePanel);
       }
       this.updateMobileNearby();
-      this._fitMobileToCircle();
+      // Kein Zoom hier — die Choreografie in showAtCursor zeichnet erst den
+      // Kreis (nach 0,5s) und schiebt dann die Karte ans Ziel
     }
 
     /** Panel-Inhalt + Dropdown-Liste aktualisieren (initial und nach Radius-Wechsel) */
@@ -842,7 +852,7 @@ const CONFIG = AppConfig;
         this.map.once('moveend', () => { zm._isAutoZooming = false; });
         this.map.fitBounds(bounds, {
           animate: true,
-          duration: 0.35,
+          duration: 0.7, // gemächlich ans Ziel (halbe Geschwindigkeit)
           paddingTopLeft: L.point(8, 8),
           paddingBottomRight: L.point(8, 8 + uiH),
         });
