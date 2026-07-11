@@ -67,6 +67,23 @@ body {
 #map {
   position: absolute;
   inset: 0;
+  /* Long-Press auf der Karte darf keine OS-Textauswahl auslösen
+     (iOS: Lupe/Callout, Android: blaue Selektion) — sonst erreicht
+     der Long-Tap (Nearby) den contextmenu-Handler nicht sauber.
+     user-select vererbt auf alle Kinder (Tiles, Canvas, Marker). */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Popup-Inhalte bleiben selektierbar (z.B. Adresse kopieren) */
+#map .leaflet-popup-content,
+#map .leaflet-popup-content * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 @media (max-width: 1024px),
