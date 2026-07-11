@@ -181,8 +181,8 @@ function showOverlay(initialTab = 'addspace') {
         <div class="embed-modal-header-text">
           <h2>📍 makerspac.es</h2>
           <div class="embed-tabs">
-            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add space</span></button>
-            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed map</span></button>
+            <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add</span></button>
+            <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed</span></button>
             <button class="embed-tab" data-tab="about"><i class="fas fa-circle-info"></i> <span class="tab-label-full">${ti('about.tabTitle', 'about makerspac.es')}</span><span class="tab-label-short">about</span></button>
           </div>
         </div>
