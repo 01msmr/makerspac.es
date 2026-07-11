@@ -14,8 +14,14 @@ import { appContext } from './app-context.js';
 // Teilrechteck passt.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Innenabstand zu Viewport-Rändern und UI-Flächen (px) */
+/** Innenabstand zu UI-Flächen (Logo/Search/Dropdown), unabhängig vom Pin-Displayrand-Abstand (px) */
 const FIT_MARGIN = 8;
+/**
+ * Mindestabstand zwischen Pin und Displaykante (px): 50px vertikal (unten zur
+ * Pin-Spitze, oben zur Pin-Oberkante/Kreis-Kopf), 25px horizontal (zur Icon-Seite).
+ */
+const VERTICAL_MARGIN = 50;
+const HORIZONTAL_MARGIN = 25;
 /** Marker-Icon-Ausdehnung um den Ankerpunkt (Icon ~25×41, Anker unten Mitte) */
 const ICON_SIDE = 13;
 const ICON_UP = 41;
@@ -297,10 +303,10 @@ class ZoomManager {
     const { leftUI, rightUI } = this._getUIExclusionRects();
     const maxZoom = this.map.getMaxZoom();
     const fit = computePolygonFit(pts, mapSize.x, mapSize.y, leftUI, rightUI, {
-      top: FIT_MARGIN + ICON_UP,
-      right: FIT_MARGIN + ICON_SIDE,
-      bottom: FIT_MARGIN,
-      left: FIT_MARGIN + ICON_SIDE,
+      top: VERTICAL_MARGIN + ICON_UP,
+      right: HORIZONTAL_MARGIN + ICON_SIDE,
+      bottom: VERTICAL_MARGIN,
+      left: HORIZONTAL_MARGIN + ICON_SIDE,
       maxScale: Number.isFinite(maxZoom) ? 2 ** (maxZoom - zRef) : undefined,
     });
 
