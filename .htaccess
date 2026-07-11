@@ -41,14 +41,29 @@
         Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
 
-    # JSON-Daten: 10 Minuten (locations.json + status.json aktualisieren sich)
+    # JSON-Daten: 10 Minuten (locations.json aktualisiert sich selten)
     <FilesMatch "\.(json)$">
         Header set Cache-Control "max-age=600, must-revalidate"
     </FilesMatch>
 
-    # App-JS/CSS: 1 Tag (kein Content-Hashing, aber kurze Veralterung)
+    # status.json: IMMER beim Server nachfragen — Live-Öffnungsstatus,
+    # muss jederzeit aktuell sein (304 wenn unverändert, dank ETag billig)
+    <FilesMatch "^status\.json$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
+    # App-JS/CSS: 48h (kein Content-Hashing; SW-Versions-Bump erneuert die
+    # Caches ohnehin, sobald der Client den neuen sw.js sieht)
     <FilesMatch "\.(js|css)$">
-        Header set Cache-Control "max-age=86400, stale-while-revalidate=3600"
+        Header set Cache-Control "max-age=172800, stale-while-revalidate=3600"
+    </FilesMatch>
+
+    # Service Worker: IMMER beim Server nachfragen (304 wenn unverändert).
+    # sw.js ist der Update-Schalter für alle anderen Caches — hinge er selbst
+    # 48h im HTTP-Cache (JS-Regel oben), bekämen Geräte tagelang alte Assets.
+    # Muss NACH der JS-Regel stehen, damit dieses "Header set" gewinnt.
+    <FilesMatch "^sw\.js$">
+        Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
 
     # Schriften: 1 Jahr (ändern sich nie)

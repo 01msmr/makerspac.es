@@ -4,7 +4,8 @@
 //   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
 //   Network-First → HTML (immer aktuelle Version)
 
-const VERSION = 'v79'; // bei Deployment erhöhen → alle Caches werden erneuert
+// Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
+const VERSION = 'v80'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -142,6 +143,13 @@ self.addEventListener('fetch', event => {
   // HTML → Network-First
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(networkFirst(request, CACHE_STATIC));
+    return;
+  }
+
+  // status.json → Network-First: Live-Öffnungsstatus muss immer aktuell sein
+  // (SWR würde erst den Cache zeigen); Cache nur als Offline-Fallback
+  if (path.endsWith('/status.json')) {
+    event.respondWith(networkFirst(request, CACHE_DATA));
     return;
   }
 
