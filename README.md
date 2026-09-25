@@ -55,7 +55,9 @@ Programmed and curated by Ulrich Maasmeier & AI.
 |-------|-------|
 | `map.js` | Entry Point, initialisiert alle Services |
 | `config.js` | Zentrale Konfiguration (Farben, Workshop-Typen, Filter, Settings) |
-| `locations.json` | Makerspace-Daten (277+ Einträge) |
+| `locations.json` | Makerspace-Kerndaten: Name, Adresse, Coords, Style, Link (277+ Einträge) |
+| `loc-enrichment.json` | Ergänzungen pro ID: SpaceAPI-Endpoint, weekly, workshops, events |
+| `data/*.json` | Build-Output von `generate-map-splits.js` (beide Dateien gemerged, nicht in git) |
 | `status.json` | SpaceAPI-Status (generiert, nicht in git) |
 | `lang.json` | Übersetzungen (de, en, fr, it, nl, da, uk) |
 | `sw.js` | Service Worker (Cache-First Assets, SWR Data) |
@@ -63,7 +65,9 @@ Programmed and curated by Ulrich Maasmeier & AI.
 ### Data Flow
 
 ```
-locations.json ──► map.js ──► Leaflet-Marker + appContext.locationById
+locations.json + loc-enrichment.json ──► generate-map-splits.js ──► data/*.json
+data/*.json    ──► map.js ──► Leaflet-Marker + appContext.locationById
+loc-enrichment.json (spaceapi.endpoint) ──► fetch-spaceapi-status.js (Cron) ──► status.json
 status.json    ──► StaticSpaceAPI ──► isOpen-Flag pro Space
 lang.json      ──► I18n.load() ──► i18n.t('key') überall nutzbar
 ```

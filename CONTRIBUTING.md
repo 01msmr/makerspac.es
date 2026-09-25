@@ -95,16 +95,32 @@ node -e "
   },
   "style": "for all",                   // Pflicht: "for all" | "for youth" | "for students" | "commercial"
   "link": { "url": "https://...", "text": "toolbox-bodensee.de" },
-  "spaceapi": { "endpoint": "https://..." },   // Optional
-  "dates": { "space.init": 20240101, "datacheck.latest": 20250101 },
-  "weekly": { "weekday": 3, "time": 1900 },    // 0=So, 1=Mo ... 6=Sa, 9=kein Treffen
-  "workshops": ["3d", "laser", "electronics"]  // Optional
+  "dates": { "space.init": 20240101, "datacheck.latest": 20250101 }
+}
+```
+
+**Sortierung:** nach Land → PLZ → Name
+
+`spaceapi`, `weekly`, `workshops` und `events` gehören **nicht** in `locations.json` — sie liegen in `loc-enrichment.json`.
+
+---
+
+## loc-enrichment.json — Datenformat
+
+Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-map-splits.js` merged sie zur Build-Zeit, `fetch-spaceapi-status.js` liest die SpaceAPI-Endpoints von hier.
+
+```jsonc
+{
+  "1": {
+    "spaceapi": { "endpoint": "https://..." },
+    "weekly": { "weekday": 3, "time": 1900 },    // 0=So, 1=Mo ... 6=Sa, 9=kein Treffen
+    "workshops": ["3d", "laser", "electronics"],
+    "events": "https://..."
+  }
 }
 ```
 
 **Gültige Workshop-Keys:** `3d`, `laser`, `electronics`, `wood`, `metal`, `textile`, `cnc`, `bio`, `vr`
-
-**Sortierung:** nach Land → PLZ → Name
 
 ---
 
