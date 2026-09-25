@@ -1,11 +1,11 @@
-// scripts/fetch-spaceapi-status.js - OPTIMIERT + liest aus locations.json
+// scripts/fetch-spaceapi-status.js - OPTIMIERT + liest Endpoints aus loc-enrichment.json
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ✨ KEINE DOPPELTE PFLEGE MEHR!
-// SpaceAPI Endpoints werden direkt aus locations.json gelesen
+// SpaceAPI Endpoints werden aus loc-enrichment.json gelesen (spaceapi.endpoint, per ID), Namen aus locations.json
 
 // Konfiguration
 const TIMEOUT_MS = 45000; // 45 Sekunden
@@ -134,7 +134,7 @@ function loadSpaceAPIsFromLocations() {
       ? JSON.parse(fs.readFileSync(enrichmentPath, 'utf8'))
       : {};
 
-    // spaceapi aus locations oder enrichment zusammenführen
+    // spaceapi-Endpoint pro Location aus enrichment holen (locations.json enthält keine Endpoints)
     const spacesWithAPI = locations
       .filter(loc => loc.name !== 'TEMPLATE')
       .map(loc => {
@@ -169,7 +169,7 @@ async function main() {
   console.log(`⚙️ Config: Timeout=${TIMEOUT_MS / 1000}s, Retries=${MAX_RETRIES}`);
   console.log('='.repeat(50) + '\n');
 
-  // ✨ Lade Endpoints aus locations.json
+  // ✨ Lade Endpoints aus loc-enrichment.json (Namen aus locations.json)
   const SPACE_APIS = loadSpaceAPIsFromLocations();
 
   const startTime = Date.now();
