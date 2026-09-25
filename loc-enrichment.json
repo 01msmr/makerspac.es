@@ -49,7 +49,10 @@
     }
   },
   "7": {
-    "events": "https://oberlausitz.vonunten.org/@werkraum_zittau/events"
+    "events": "https://oberlausitz.vonunten.org/@werkraum_zittau/events",
+    "spaceapi": {
+      "endpoint": "https://www.werkraum.space/spaceapi/current/"
+    }
   },
   "8": {
     "events": "https://www.makerspace-leipzig.de/veranstaltungen/aktuelle-termine"
@@ -70,7 +73,7 @@
   "12": {
     "events": "https://eigenbaukombinat.de/unsere-veranstaltungen/",
     "spaceapi": {
-      "endpoint": "https://spaceapi.eigenbaukombinat.de/status_chaoszone.json"
+      "endpoint": "https://spaceapi.eigenbaukombinat.de/status_ebk.json"
     },
     "weekly": {
       "weekday": 2,
@@ -493,7 +496,10 @@
   },
   "95": {},
   "96": {
-    "events": "https://www.chaostreff-dortmund.de/veranstaltungen"
+    "events": "https://www.chaostreff-dortmund.de/veranstaltungen",
+    "spaceapi": {
+      "endpoint": "http://status.ctdo.de/api/spaceapi/v13"
+    }
   },
   "97": {
     "events": "https://wiki.das-labor.org/w/Kalender",
@@ -535,6 +541,11 @@
   },
   "113": {
     "events": "https://sfz-os.de/index.php/de/aktuelles"
+  },
+  "116": {
+    "spaceapi": {
+      "endpoint": "https://spaceapi.futev.de/spaceapi.json"
+    }
   },
   "117": {
     "events": "https://www.th-koeln.de/forschung/seminare_2946.php"
@@ -586,7 +597,10 @@
     }
   },
   "133": {
-    "events": "http://maschinendeck.org/events"
+    "events": "http://maschinendeck.org/events",
+    "spaceapi": {
+      "endpoint": "https://maschinenstate.42dots.de"
+    }
   },
   "135": {
     "events": "https://offenewerkstattmainz.de/kalender/"
@@ -676,7 +690,7 @@
   "161": {
     "events": "https://raumzeitlabor.de/events",
     "spaceapi": {
-      "endpoint": "https://raumzeitlabor.de/api/spaceapi.json"
+      "endpoint": "https://status.raumzeitlabor.de/api/spaceapi.json"
     }
   },
   "162": {
@@ -719,7 +733,10 @@
     "events": "https://www.tik.uni-stuttgart.de/events"
   },
   "178": {
-    "events": "https://essembly.de/pages/termine.html"
+    "events": "https://essembly.de/pages/termine.html",
+    "spaceapi": {
+      "endpoint": "https://essembly.de/spaceapi.json"
+    }
   },
   "179": {
     "events": "https://makerspace.experimenta.science/events"
@@ -764,7 +781,10 @@
     "events": "https://www.fablab-muenchen.de/kalender/"
   },
   "195": {
-    "events": "https://www.munichmakerlab.de/events"
+    "events": "https://www.munichmakerlab.de/events",
+    "spaceapi": {
+      "endpoint": "https://status.munichmakerlab.de/spaceapi.json"
+    }
   },
   "196": {
     "events": "https://www.werkbox3.de/kalender/"
@@ -863,7 +883,10 @@
       "cnc",
       "laser",
       "screenprint"
-    ]
+    ],
+    "spaceapi": {
+      "endpoint": "https://fablab-allgaeu.de/assets/files/spaceapi.json"
+    }
   },
   "209": {
     "events": "https://www.maker-space.de/kurse/?filter-6132%5B%5D=6124",
@@ -965,7 +988,10 @@
       "cnc",
       "textile",
       "bike"
-    ]
+    ],
+    "spaceapi": {
+      "endpoint": "https://fablab.fau.de/spaceapi/"
+    }
   },
   "223": {
     "events": "https://fablab.nueland.de/index.php/termine"
@@ -1036,7 +1062,7 @@
   "233": {
     "events": "https://technikkultur-erfurt.de/kalender/",
     "spaceapi": {
-      "endpoint": "https://status.bytespeicher.org/status.json"
+      "endpoint": "https://status.makerspace-erfurt.de/status.json"
     },
     "workshops": [
       "3d",
@@ -1048,7 +1074,7 @@
   },
   "234": {
     "spaceapi": {
-      "endpoint": "https://metalab.at/status.json"
+      "endpoint": "https://metalab-spaceapi.melina.jetzt/v15"
     }
   },
   "235": {
@@ -1067,7 +1093,10 @@
     }
   },
   "239": {
-    "events": "https://segvault.space/veranstaltungen/"
+    "events": "https://segvault.space/veranstaltungen/",
+    "spaceapi": {
+      "endpoint": "https://segvault.space/internal/spacecore/opendata/spaceapi"
+    }
   },
   "240": {
     "events": "https://devlol.org/wiki/TitleKalendar",
@@ -1153,7 +1182,7 @@
   "255": {
     "events": "https://amiv.ethz.ch/en/events",
     "spaceapi": {
-      "endpoint": "https://bastli.ch/hackspace_api.php"
+      "endpoint": "https://bastli.ethz.ch/spaceapi.json"
     },
     "workshops": [
       "3d",
@@ -1214,6 +1243,11 @@
       "wood"
     ]
   },
+  "261": {
+    "spaceapi": {
+      "endpoint": "https://acsgateway.hal9k.dk/spaceapi"
+    }
+  },
   "262": {
     "events": "https://makerspace.noi.bz.it/courses-events"
   },
@@ -1221,7 +1255,10 @@
     "events": "https://c3l.lu/doku.php?id=events:index"
   },
   "265": {
-    "events": "https://level2.lu/events"
+    "events": "https://level2.lu/events",
+    "spaceapi": {
+      "endpoint": "https://level2.lu/spaceapi/"
+    }
   },
   "266": {
     "events": "https://hermithive.nl/events",
