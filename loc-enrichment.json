@@ -414,7 +414,10 @@
     }
   },
   "71": {
-    "events": "https://c3pb.de/termine"
+    "events": "https://c3pb.de/termine",
+    "spaceapi": {
+      "endpoint": "https://c3pb.de/uptime.json"
+    }
   },
   "72": {
     "events": "https://www.tecup.de/events/"
@@ -428,7 +431,7 @@
   "75": {
     "events": "https://hackerspace-bielefeld.de/veranstaltungen",
     "spaceapi": {
-      "endpoint": "https://hackerspace-bielefeld.de/status.json"
+      "endpoint": "https://status.space.bi/status.json"
     }
   },
   "76": {
@@ -441,7 +444,10 @@
     "events": "https://www.makerspace-giessen.de/programm"
   },
   "78": {
-    "events": "https://maglab.space/de/events/"
+    "events": "https://maglab.space/de/events/",
+    "spaceapi": {
+      "endpoint": "https://state.maglab.space/spaceapi.json"
+    }
   },
   "79": {
     "events": "https://olaf.one/events/"
@@ -459,7 +465,10 @@
     "events": "https://macherburg.de/workshops/"
   },
   "83": {
-    "events": "https://www.netz39.de/events"
+    "events": "https://www.netz39.de/events",
+    "spaceapi": {
+      "endpoint": "https://spaceapi.n39.eu/json"
+    }
   },
   "85": {
     "events": "https://www.werkundkultur.de/tag/veranstaltungen/"
@@ -538,6 +547,11 @@
   },
   "110": {
     "events": "https://artandtech.space/events"
+  },
+  "112": {
+    "spaceapi": {
+      "endpoint": "https://chaostreff-osnabrueck.de/.well-known/space.json"
+    }
   },
   "113": {
     "events": "https://sfz-os.de/index.php/de/aktuelles"
@@ -656,6 +670,11 @@
   "150": {
     "events": "https://www.jukuz.de/veranstaltungen"
   },
+  "151": {
+    "spaceapi": {
+      "endpoint": "https://status.schaffenburg.org/spaceapi.php"
+    }
+  },
   "152": {
     "events": "https://www.chaos-darmstadt.de/termine/",
     "spaceapi": {
@@ -697,7 +716,10 @@
     "events": "https://www.comakingspace.org/kalender/"
   },
   "164": {
-    "events": "https://events.shackspace.de/calendar"
+    "events": "https://events.shackspace.de/calendar",
+    "spaceapi": {
+      "endpoint": "https://api.shackspace.de/v1/spaceapi"
+    }
   },
   "165": {
     "events": "https://hobbyhimmel.de/termine"
@@ -751,7 +773,10 @@
     }
   },
   "182": {
-    "events": "https://fablab-karlsruhe.de/termine/"
+    "events": "https://fablab-karlsruhe.de/termine/",
+    "spaceapi": {
+      "endpoint": "https://spaceapi.fablab-karlsruhe.de"
+    }
   },
   "183": {
     "events": "https://entropia.de/termine",
@@ -775,7 +800,10 @@
     "events": "https://www.uni-konstanz.de/universitaetsentwicklung-forschung-und-transfer/wissens-und-technologietransfer-wtt/fablab-konstanz/veranstaltungen-termine/"
   },
   "192": {
-    "events": "https://cccfr.de/calendar"
+    "events": "https://cccfr.de/calendar",
+    "spaceapi": {
+      "endpoint": "http://cccfr.de/status/spaceapi.py"
+    }
   },
   "194": {
     "events": "https://www.fablab-muenchen.de/kalender/"
@@ -975,7 +1003,10 @@
       "wood",
       "electronics",
       "laser"
-    ]
+    ],
+    "spaceapi": {
+      "endpoint": "http://api.fablab-nuernberg.de/spaceapi.php"
+    }
   },
   "222": {
     "events": "https://fablab.fau.de/termine/",
@@ -1048,7 +1079,10 @@
       "laser",
       "metal",
       "wood"
-    ]
+    ],
+    "spaceapi": {
+      "endpoint": "https://api.nerd2nerd.org/status.json"
+    }
   },
   "232": {
     "events": "https://www.tu-ilmenau.de/universitaet/quicklinks/zentralinstitut-fuer-bildung/angebote/unikat/workshops",
@@ -1252,7 +1286,10 @@
     "events": "https://makerspace.noi.bz.it/courses-events"
   },
   "264": {
-    "events": "https://c3l.lu/doku.php?id=events:index"
+    "events": "https://c3l.lu/doku.php?id=events:index",
+    "spaceapi": {
+      "endpoint": "https://spaceapi.c3l.lu/status.json"
+    }
   },
   "265": {
     "events": "https://level2.lu/events",
