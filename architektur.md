@@ -93,6 +93,8 @@
 | `sw.js` | Service Worker (Cache-First / SWR / Network-First) | — |
 | `fetch-spaceapi-status.js` | **Node.js** Cron-Script — SpaceAPI-Endpunkte abfragen → status.json | — |
 | `generate-map-splits.js` | **Node.js** Build-Script — locations.json + loc-enrichment.json → data/*.json | — |
+| `tools/spaceapi-directory-sync.js` | **Node.js** Cron-Script (wöchentlich) — directory.spaceapi.io mit loc-enrichment.json abgleichen → Issues `SpaceAPI: <Name>` (Label `data-update`) | `normalizeUrl`, `matchSpace`, `buildProposals`, `isAlreadyProposed`, `buildIssueBody` (export) |
+| `tools/apply-spaceapi-issues.js` | **Node.js** — offene `SpaceAPI:`-Issues → `spaceapi.endpoint` in loc-enrichment.json, Issues schließen | `parseIssue`, `applyProposal` (export) |
 
 ### CSS
 
@@ -224,6 +226,16 @@ git push main
      ├── node fetch-spaceapi-status.js  (SpaceAPI-Endpunkte abfragen)
      ├── curl FTPS → status.json hochladen
      └── kein git commit (status.json in .gitignore)
+
+.github/workflows/spaceapi-directory-sync.yml  (cron Mo 06:00 UTC)
+     └── node tools/spaceapi-directory-sync.js --create-issues
+         Match: gleicher Endpoint → Website-Host → Koordinaten ≤ 300 m (eindeutig)
+         Dedup: kein Issue, wenn gleiche ID + URL schon als Issue existiert (auch geschlossen = abgelehnt)
+
+.github/workflows/apply-spaceapi-issues.yml  (manuell)
+     ├── node tools/apply-spaceapi-issues.js --apply  (offene SpaceAPI:-Issues → loc-enrichment.json)
+     ├── git commit + push
+     └── gh workflow run deploy.yml  (GITHUB_TOKEN-Push triggert keinen Deploy)
 ```
 
 ---

@@ -24,4 +24,4 @@ jobs:
         run: node tests/validate-locations.js
 
       - name: Run unit tests
-        run: node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js
+        run: node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js tests/spaceapi-directory-sync.test.js

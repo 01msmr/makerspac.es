@@ -1,0 +1,58 @@
+name: "🔌 SpaceAPI Directory Sync"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Montags 06:00 UTC → erstellt Issues
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "create-issues"
+        default: "dry-run"
+      id:
+        description: "Einzelne Space-ID (0 = alle)"
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Ensure label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create "data-update" --color "0075ca" --description "Automatisch generierter Datenvorschlag" || true
+
+      - name: Run Directory Sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          # Cron-Lauf hat keine inputs → Issues erstellen
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.mode }}" = "create-issues" ]; then
+            ARGS="$ARGS --create-issues"
+          fi
+          if [ -n "${{ inputs.id }}" ] && [ "${{ inputs.id }}" != "0" ]; then
+            ARGS="$ARGS --id ${{ inputs.id }}"
+          fi
+          echo "Running: node tools/spaceapi-directory-sync.js $ARGS"
+          node tools/spaceapi-directory-sync.js $ARGS

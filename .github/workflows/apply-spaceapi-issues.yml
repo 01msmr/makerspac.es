@@ -1,0 +1,68 @@
+name: "✅ Apply SpaceAPI Issues"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "apply"
+        default: "dry-run"
+      id:
+        description: "Einzelne Space-ID (0 = alle)"
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run Apply Script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "apply" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ "${{ inputs.id }}" != "0" ]; then
+            ARGS="$ARGS --id ${{ inputs.id }}"
+          fi
+          echo "Running: node tools/apply-spaceapi-issues.js $ARGS"
+          node tools/apply-spaceapi-issues.js $ARGS
+
+      - name: Commit loc-enrichment.json
+        if: ${{ inputs.mode == 'apply' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add loc-enrichment.json
+          git diff --staged --quiet || git commit -m "data: apply SpaceAPI endpoints from directory sync issues"
+          git push
+
+      - name: Trigger Deploy
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy.yml --repo ${{ github.repository }}
