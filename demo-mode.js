@@ -199,6 +199,8 @@ class _DemoBase {
   }
 
   _resetToGermany() {
+    // Style filters (workshops, open, weekday, bookmarked, …) must not leak into the demo
+    this._ac.searchFilter?.clearAllStyleFilters();
     this._clearConnectionLine();
     const bar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
     if (bar) {
@@ -280,12 +282,6 @@ class _LiveFilterDemo extends _DemoBase {
 
   _showStartToast() {
     this._showToast(this._toastHtml());
-  }
-
-  _resetToGermany() {
-    // Clear all style filters (open/weekday) before base reset triggers applyFilters
-    this._ac.searchFilter?.clearAllStyleFilters();
-    super._resetToGermany();
   }
 
   _runSequence() {
