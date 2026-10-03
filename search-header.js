@@ -606,7 +606,9 @@ class SearchHeader {
   }
 
   toggleCategoryPopover(pill, categoryKey, config) {
+    const wasOpen = document.querySelector(`.filter-popover[data-pill-category="${categoryKey}"]`);
     document.querySelectorAll('.filter-popover').forEach(p => p.remove());
+    if (wasOpen) return;   // second click on the same pill closes it
 
     const popover = document.createElement('div');
     popover.classList.add('filter-popover');
@@ -648,6 +650,10 @@ class SearchHeader {
 
     setTimeout(() => {
       const closeHandler = (e) => {
+        if (!popover.isConnected) {   // already closed (pill toggle / option click)
+          document.removeEventListener('click', closeHandler);
+          return;
+        }
         if (!popover.contains(e.target) && !pill.contains(e.target)) {
           popover.remove();
           document.removeEventListener('click', closeHandler);
