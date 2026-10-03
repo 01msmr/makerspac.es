@@ -1,3 +1,7 @@
+# Zweck:  Findet Werkstätten (3D, Laser, Holz…) auf Space-Websites → Issues [Workshop-Daten] (Label workshop-data).
+# Wann: neue Spaces ohne workshops-Daten.
+# Ablauf: research (Vorschau) → create-issues → Issues prüfen, Checkbox „Freigegeben“ anhaken → „✅ Apply Workshop Issues“.
+
 name: "🔍 Workshop Crawler"
 
 env:
@@ -7,13 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — research = Vorschau · create-issues = Issues anlegen, danach Checkbox anhaken + Apply Workshop Issues"
         required: true
         default: "research"
         type: choice
         options:
           - research        # Analyse + neue Typen erkennen, keine Issues
-          - create-issues   # Issues erstellen + loc-enrichment.json aktualisieren
+          - create-issues   # Issues erstellen (Übernahme erst per Apply Workshop Issues)
       limit:
         description: "Nur N Spaces (leer = alle)"
         required: false

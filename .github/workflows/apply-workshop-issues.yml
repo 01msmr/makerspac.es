@@ -1,3 +1,7 @@
+# Zweck:  Übernimmt freigegebene [Workshop-Daten]-Issues nach loc-enrichment.json, schließt sie, deployt.
+# Wann: nachdem Issues geprüft und per Checkbox „Freigegeben zur Integration“ angehakt wurden.
+# Ablauf: JSON-Block im Issue ggf. korrigieren → Checkbox anhaken (ablehnen = Issue schließen) → dry-run → apply.
+
 name: "✅ Apply Workshop Issues"
 
 env:
@@ -7,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — Nur angehakte Issues („Freigegeben“) · dry-run = Vorschau · apply = schreiben + Issues schließen + Deploy"
         required: true
         type: choice
         options:

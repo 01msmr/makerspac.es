@@ -1,3 +1,7 @@
+# Zweck:  Übernimmt ALLE offenen „SpaceAPI:“-Issues nach loc-enrichment.json (spaceapi.endpoint), schließt sie, deployt.
+# Wann: nachdem die SpaceAPI-Issues aus dem Directory Sync geprüft wurden.
+# Ablauf: ablehnen = Issue schließen, URL ggf. im JSON-Block ändern → dry-run → apply.
+
 name: "✅ Apply SpaceAPI Issues"
 
 env:
@@ -7,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — Alle offenen Issues (ablehnen = vorher schließen) · dry-run = Vorschau · apply = schreiben + Deploy"
         required: true
         type: choice
         options:

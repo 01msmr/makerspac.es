@@ -1,3 +1,7 @@
+# Zweck:  Einmal-Tool: ergänzt die Checkbox „Freigegeben zur Integration“ in alten [Workshop-Daten]-Issues.
+# Wann: nur falls Workshop-Issues ohne Checkbox existieren (aktuell haben alle eine).
+# Ablauf: einmal starten → danach normal über „✅ Apply Workshop Issues“.
+
 name: "🔧 Patch Workshop Issues (add approval checkbox)"
 
 env:

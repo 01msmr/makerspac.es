@@ -1,3 +1,7 @@
+# Zweck:  Sucht Kalender-/Event-Seiten auf Space-Websites (Claude) → Issues „Kalenderlink: <Name>“ (Label data-update).
+# Wann: Spaces ohne events-Link.
+# Ablauf: dry-run → create-issues → Issues prüfen, unpassende schließen → „✅ Apply Calendar Issues“.
+
 name: "📅 Calendar Link Crawler"
 
 env:
@@ -7,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — dry-run = Vorschau · create-issues = Issues anlegen, danach prüfen + Apply Calendar Issues"
         required: true
         type: choice
         options:

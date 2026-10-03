@@ -1,3 +1,7 @@
+# Zweck:  Sucht Weekly-Treffen + Gründungsdatum auf Space-Websites (Claude) → Issues „Datenvorschlag: <Name>“ (Label data-update).
+# Wann: Spaces mit fehlenden weekly-/space.init-Daten.
+# Ablauf: dry-run → create-issues → Werte manuell übernehmen (kein Apply-Workflow), Issue schließen.
+
 name: "🔍 Makerspace Data Crawler"
 
 env:
@@ -7,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — dry-run = Vorschau · create-issues = Issues anlegen (Übernahme manuell, kein Apply)"
         required: true
         type: choice
         options:

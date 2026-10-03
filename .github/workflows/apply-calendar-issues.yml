@@ -1,3 +1,7 @@
+# Zweck:  Übernimmt ALLE offenen „Kalenderlink:“-Issues nach loc-enrichment.json (events), schließt sie, deployt.
+# Wann: nachdem die Kalender-Issues geprüft wurden.
+# Ablauf: ablehnen = Issue schließen, URL ggf. im JSON-Block korrigieren → dry-run → apply. report = Übersicht, close-nulls = Issues ohne Fund schließen.
+
 name: "✅ Apply Calendar Issues"
 
 env:
@@ -7,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus"
+        description: "Modus — Alle offenen Issues (ablehnen = vorher schließen) · dry-run = Vorschau · apply = schreiben + Deploy · report · close-nulls"
         required: true
         type: choice
         options:
