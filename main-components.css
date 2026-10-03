@@ -1045,12 +1045,13 @@ a#titleurl:hover h3.space-unknown .fas {
   padding: 20px 72px 0 20px;
   position: relative;
   z-index: 2;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0);
+  box-shadow: 0 1px 0 rgba(208, 208, 208, 0);
   transition: box-shadow 0.65s ease;
 }
 
+/* Scrolled: thin light-grey separator line instead of a soft shadow */
 .embed-modal-header.scrolled {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 1px 0 #d0d0d0;
 }
 
 .embed-modal-footer {
