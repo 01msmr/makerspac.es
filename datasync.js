@@ -1,3 +1,5 @@
+import { showToast } from './toast.js';
+
 // ConsentManager - Alle Daten sind funktional notwendig (Sprache, Theme, Favoriten,
 // Kartendienst) — kein Tracking. Daher immer direkt in localStorage speichern.
 class ConsentManager {
@@ -242,7 +244,7 @@ export class BookmarkSync {
       const currentLang = window.currentLanguage || 'de';
       const msg = window.translations.sync?.copied?.[currentLang] ||
         'Link kopiert!';
-      this.showNotification(msg, 'success');
+      showToast(msg);
     } catch (err) {
       // Fallback für ältere Browser
       const input = document.querySelector('.sync-url-input');
@@ -252,7 +254,7 @@ export class BookmarkSync {
         const currentLang = window.currentLanguage || 'de';
         const msg = window.translations.sync?.copied?.[currentLang] ||
           'Link kopiert!';
-        this.showNotification(msg, 'success');
+        showToast(msg);
       }
     }
   }

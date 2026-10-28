@@ -1,5 +1,6 @@
 // routing.js (ES MODULE)
 import { appContext } from './app-context.js';
+import { showToast } from './toast.js';
 
 export class RoutingManager {
   constructor(styleFilterManager, searchManager, json) {
@@ -82,28 +83,11 @@ export class RoutingManager {
       const i18n = appContext.i18n;
       const countryLabel = i18n?.t(`countries.${detectedCountry}`) || detectedCountry;
       const message = i18n?.t('filter.autoDetected').replace('{country}', countryLabel) || countryLabel;
-      this.showCenteredToast(message);
+      showToast(message);
     } else {
       // Fallback falls nichts erkannt wurde
       this.handleRouteWithPills();
     }
-  }
-
-  showCenteredToast(text) {
-    const toast = document.createElement('div');
-    toast.className = 'settings-hash-toast';
-    toast.innerHTML = text;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.classList.add('show');
-    });
-
-    setTimeout(() => {
-      toast.classList.add('zoom-out');
-      toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 500);
-    }, 3000);
   }
 
   // ========================================

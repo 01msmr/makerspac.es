@@ -66,6 +66,7 @@
 | `main.js` | Orchestrierung, Leaflet-Icons, Module verknüpfen | `initApp()`, `window.mobileFilterUI`, `window.nearbySpacesManager` |
 | `tile-loader.js` | Tile-Mode-Erkennung, lazy MapLibre-Loader; genutzt von map.js + embed.js | `detectTileMode`, `getTileMode`, `loadMaplibreIfNeeded` (idempotent, memoisiert; früh aus index.html angestoßen, lädt auch Style-JSON per Preload), `MAPLIBRE_STYLE_URL` (export) |
 | `data-preload.js` | Leaf-Modul: Länder-Erkennung aus URL-Hash, früher Preload von `markers.json`/`spaces-{cc}.json` + `lang.json` (aus index.html, vor map.js) | `detectCountryCodeFromURL`, `preloadInitialData`, `SLUG_TO_CODE` (export) |
+| `toast.js` | Leaf-Modul: Info-Toast unter dem Logo (Kopier-Bestätigungen, Auto-Land-Hinweis); Meldungen mit Schweregrad bleiben bei `datasync.showNotification` | `showToast` (export) |
 | `marker-manager.js` | Marker/Popup/Sticky/Connection-Line-Logik, aus map.js extrahiert | `initMarkerManager`, `createMarkerForLocation`, `clearStickyPopup`, `updateMarkerIconForLocation` u.a. (export) |
 | `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
 | `colours.js` | Farbdefinitionen, `isDarkMode()`, `applyCssColours()`, Dark-Mode-Helpers | `COLOURS`, `isDarkMode`, `applyCssColours` (export) |

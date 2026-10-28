@@ -1894,12 +1894,11 @@ a#titleurl:hover h3.space-unknown .fas {
   margin: 0;
 }
 
-/* Settings Hash Toast (Microtip-Optik: gelb-schwarz) */
+/* Info-Toast unter dem Logo (Microtip-Optik: gelb-schwarz) — top/left werden von toast.js gesetzt */
 .settings-hash-toast {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(1);
+  transform: scale(1);
+  transform-origin: left top;
   pointer-events: none;
   padding: 6px 11px;
   border-radius: 8px;
@@ -1917,12 +1916,12 @@ a#titleurl:hover h3.space-unknown .fas {
 
 .settings-hash-toast.show {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+  transform: scale(1);
 }
 
 .settings-hash-toast.zoom-out {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(2);
+  transform: scale(2);
 }
 
 /* Shared map backdrop — animated show/hide (loading overlay + embed overlay) */

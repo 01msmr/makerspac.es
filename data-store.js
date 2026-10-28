@@ -2,6 +2,7 @@
 
 import { consent } from './datasync.js';
 import { openOverlayTab } from './embed-overlay.js';
+import { showToast } from './toast.js';
 
 class DataStore {
   constructor() {
@@ -452,28 +453,7 @@ class DataStore {
     });
 
     dialog.querySelector('#qr-settings-copy').addEventListener('click', () => {
-      navigator.clipboard.writeText(url).then(() => {
-        const rect = dialog.querySelector('.sync-dialog').getBoundingClientRect();
-        let toast = document.querySelector('.settings-hash-toast');
-        if (!toast) {
-          toast = document.createElement('div');
-          toast.className = 'settings-hash-toast';
-          document.body.appendChild(toast);
-        } else {
-          toast.classList.remove('show', 'zoom-out');
-          clearTimeout(toast._hideTimer);
-        }
-        toast.style.top = (rect.top - 10) + 'px';
-        toast.style.left = (rect.left + rect.width / 2) + 'px';
-        toast.style.transform = 'translate(-50%, -100%)';
-        toast.innerHTML = '✓ URL kopiert';
-        requestAnimationFrame(() => toast.classList.add('show'));
-        toast._hideTimer = setTimeout(() => {
-          toast.classList.remove('show');
-          toast.classList.add('zoom-out');
-          setTimeout(() => { toast.style.transform = ''; toast.remove(); }, 300);
-        }, 2500);
-      });
+      navigator.clipboard.writeText(url).then(() => showToast('✓ URL kopiert'));
     });
   }
 
@@ -722,36 +702,15 @@ class DataStore {
 
         if (isRapid) {
           const msg = this.t('linkCopiedNew') || '<b>neuen</b> Settings-Link kopiert';
-          this.showSettingsToast(msg);
+          showToast(msg);
         } else {
           const msg = this.t('linkCopied') || 'Für Lesezeichen: Settings-Link kopiert';
-          this.showSettingsToast(msg);
+          showToast(msg);
         }
       } catch (err) {
         // Clipboard nicht verfügbar (z.B. HTTP, iframe)
       }
     }, 300);
-  }
-
-  showSettingsToast(msg) {
-    let toast = document.querySelector('.settings-hash-toast');
-    if (toast) {
-      toast.classList.remove('show', 'zoom-out');
-      clearTimeout(toast._hideTimer);
-    } else {
-      toast = document.createElement('div');
-      toast.className = 'settings-hash-toast';
-      document.body.appendChild(toast);
-    }
-
-    toast.innerHTML = msg;
-    requestAnimationFrame(() => toast.classList.add('show'));
-
-    toast._hideTimer = setTimeout(() => {
-      toast.classList.remove('show');
-      toast.classList.add('zoom-out');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
   }
 }
 

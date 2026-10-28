@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v92'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v93'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -40,6 +40,7 @@ const STATIC_ASSETS = [
   // App JS
   '/tile-loader.js',
   '/data-preload.js',
+  '/toast.js',
   '/date-utils.js',
   '/app-context.js',
   '/error-monitor.js',
