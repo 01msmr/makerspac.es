@@ -173,6 +173,14 @@
       <div class="search-input-wrapper">
         <i class="fas fa-magnifying-glass search-lupe" aria-hidden="true"></i>
         <input type="text" id="search-bar" placeholder="" autocomplete="off" spellcheck="false">
+        <script>
+          // Desktop: Suchleiste sofort fokussieren, Eingabe funktioniert schon vor dem Laden der Module.
+          // Bedingung wie SearchHeader.focusSearchBarIfDesktop() (search-header.js) — dort mitpflegen.
+          if (!/[?&]nofocus\b/.test(location.search) &&
+              !matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches) {
+            document.getElementById('search-bar').focus();
+          }
+        </script>
         <div class="search-counter" id="search-counter">0</div>
       </div>
     </div>

@@ -81,8 +81,16 @@ class SearchHeader {
     // Gesamtzahl beim Start anzeigen
     this.updateSearchCounter(this.json?.length || 0);
 
+    // Vor Init getippten Text übernehmen (index.html fokussiert die Leiste auf Desktop sofort,
+    // Eingabe funktioniert schon vor dem Laden): Filter + Dropdown wie bei normaler Eingabe.
+    if (this.searchBar.value.trim()) {
+      if (document.activeElement === this.searchBar) this.handleSearchFocus();
+      this.handleSearchInput();
+    }
+
   }
 
+  // Bedingung wird in index.html (Inline-Script nach #search-bar) für den frühen Fokus gespiegelt.
   focusSearchBarIfDesktop() {
     if (new URLSearchParams(location.search).has('nofocus')) return;
     const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
