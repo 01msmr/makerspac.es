@@ -23,6 +23,7 @@
 
   <!-- Preload kritische Ressourcen (parallel zum HTML-Parsen) -->
   <link rel="preload" href="fonts/Roboto-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="libs/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin />
   <!-- Data split preload: map.js erkennt Country aus URL-Hash und fügt <link rel=preload> ein -->
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
 
@@ -50,6 +51,48 @@
   <!-- maplibre-gl.js + leaflet-maplibre-gl.js: lazy-loaded in map.js only when WebGL/vector mode is active -->
   <script defer src="libs/qrcode.min.js"></script>
 
+  <!-- modulepreload: flacht den ES-Modul-Wasserfall (map.js → 3 Import-Ebenen) ab; Liste = Import-Graph von map.js,
+       bei neuen/entfernten Imports mitpflegen (siehe architektur.md) -->
+  <link rel="modulepreload" href="config.js" />
+  <link rel="modulepreload" href="routing.js" />
+  <link rel="modulepreload" href="bookmark-manager.js" />
+  <link rel="modulepreload" href="spaceapi-static.js" />
+  <link rel="modulepreload" href="i18n.js" />
+  <link rel="modulepreload" href="datasync.js" />
+  <link rel="modulepreload" href="zoom-manager.js" />
+  <link rel="modulepreload" href="data-store.js" />
+  <link rel="modulepreload" href="main.js" />
+  <link rel="modulepreload" href="popup-builder.js" />
+  <link rel="modulepreload" href="embed-overlay.js" />
+  <link rel="modulepreload" href="app-context.js" />
+  <link rel="modulepreload" href="tile-loader.js" />
+  <link rel="modulepreload" href="data-preload.js" />
+  <link rel="modulepreload" href="error-monitor.js" />
+  <link rel="modulepreload" href="marker-manager.js" />
+  <link rel="modulepreload" href="demo-mode.js" />
+  <link rel="modulepreload" href="colours.js" />
+  <link rel="modulepreload" href="filter-config.js" />
+  <link rel="modulepreload" href="search-filter.js" />
+  <link rel="modulepreload" href="listing-core.js" />
+  <link rel="modulepreload" href="search-header.js" />
+  <link rel="modulepreload" href="workshop-types.js" />
+  <link rel="modulepreload" href="nearby-header.js" />
+  <link rel="modulepreload" href="date-utils.js" />
+  <link rel="modulepreload" href="mobile-filter.js" />
+  <link rel="modulepreload" href="add-space-form.js" />
+  <link rel="modulepreload" href="search-pills.js" />
+  <link rel="modulepreload" href="autocomplete-manager.js" />
+
+  <!-- MapLibre früh anstoßen: tile-loader.js hat keine Abhängigkeiten und lädt parallel zum restlichen
+       Modul-Graph; map.js init() erhält später dasselbe Promise (idempotent). Vor map.js platziert, damit es
+       nicht auf dessen Modul-Graph wartet (Ausführung in Dokumentreihenfolge, nach den defer-Libs → L existiert). -->
+  <script type="module">
+    import { loadMaplibreIfNeeded } from './tile-loader.js';
+    import { preloadInitialData } from './data-preload.js';
+    preloadInitialData();                    // markers.json / spaces-{cc}.json + lang.json beim Parsen statt nach map.js
+    loadMaplibreIfNeeded().catch(() => {}); // Fehler behandelt map.js init() beim erneuten Await
+  </script>
+
   <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->
   <script type="module" src="map.js"></script>
 
@@ -72,19 +115,27 @@
   <!-- Service Worker registrieren -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
+      // Nach 'load' registrieren: der SW-Install precacht ~55 Dateien und soll nicht mit dem ersten Laden konkurrieren
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').then(reg => {
         // iOS PWA: periodisch auf Updates prüfen (alle 5 Min)
         // Kein window.location.reload() bei updatefound — würde bei jedem Deployment
         // einen Reload-Loop auf aktiven Clients auslösen. skipWaiting() im SW selbst
         // sorgt dafür dass der neue SW beim nächsten Seitenaufruf aktiv wird.
         setInterval(() => reg.update(), 5 * 60_000);
-      });
+      }));
     }
   </script>
 
 </head>
 
 <body>
+  <!-- Loading-Skeleton: statisch, damit er ab dem ersten Paint sichtbar ist (nicht erst nach dem Modul-Graph).
+       Entfernt wird er in map.js beim ersten filterResultsChanged. Texte: bewusst fest (i18n lädt erst später). -->
+  <div id="loading-backdrop" class="map-backdrop show" style="--backdrop-opacity:0.3;--backdrop-duration:1s;z-index:9998"></div>
+  <div id="loading-stack" class="loading-overlay-stack">
+    <div class="loading-overlay-toast loading-overlay-toast--large show"><i class="fas fa-cog fa-spin"></i> Karte wird geladen…</div>
+    <div class="loading-overlay-toast show">Makerspaces werden vorbereitet…</div>
+  </div>
   <div id="map"></div>
 
   <div class="title-bar">

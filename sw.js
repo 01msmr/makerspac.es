@@ -39,6 +39,7 @@ const STATIC_ASSETS = [
   '/libs/qrcode.min.js',
   // App JS
   '/tile-loader.js',
+  '/data-preload.js',
   '/date-utils.js',
   '/app-context.js',
   '/error-monitor.js',

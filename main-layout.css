@@ -67,6 +67,8 @@ body {
 #map {
   position: absolute;
   inset: 0;
+  /* Platzhalter bis der Basis-Layer (MapLibre) geladen ist — folgt Light/Dark statt Leaflet-Grau (#ddd) */
+  background: var(--bg-color);
   /* Long-Press auf der Karte darf keine OS-Textauswahl auslösen
      (iOS: Lupe/Callout, Android: blaue Selektion) — sonst erreicht
      der Long-Tap (Nearby) den contextmenu-Handler nicht sauber.

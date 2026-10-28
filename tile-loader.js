@@ -53,6 +53,12 @@ export function getTileMode() {
   return _tileMode;
 }
 
+/** Vector-Style (SSOT für map.js + embed.js + Preload). */
+export const MAPLIBRE_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+
+/** @type {Promise<void>|null} */
+let _maplibrePromise = null;
+
 /**
  * Dynamically loads maplibre-gl.js + leaflet-maplibre-gl.js + maplibre-gl.css
  * — only when vector mode is active. JS scripts are loaded sequentially (the
@@ -63,6 +69,9 @@ export function getTileMode() {
  */
 export function loadMaplibreIfNeeded(mode = getTileMode()) {
   if (mode !== 'vector') return Promise.resolve();
+  // Idempotent: index.html stößt das Laden früh an (parallel zum Modul-Graph),
+  // map.js init() ruft später erneut auf und bekommt dasselbe Promise.
+  if (_maplibrePromise) return _maplibrePromise;
 
   const loadScript = (/** @type {string} */ src) => new Promise((resolve, reject) => {
     const s = document.createElement('script');
@@ -83,9 +92,16 @@ export function loadMaplibreIfNeeded(mode = getTileMode()) {
 
   // CSS starts in parallel with the first JS script; second JS script is
   // sequential after the first (leaflet-maplibre-gl.js needs the maplibre global).
+  // Style-JSON parallel zum MapLibre-JS holen statt erst nach dessen Ausführung
+  // (spart die Wartezeit der Kette style → tilejson/sprites → tiles).
+  const pre = document.createElement('link');
+  pre.rel = 'preload'; pre.as = 'fetch'; pre.crossOrigin = 'anonymous'; pre.href = MAPLIBRE_STYLE_URL;
+  document.head.appendChild(pre);
+
   const cssPromise = loadCSS('/libs/maplibre-gl/maplibre-gl.css');
   const jsPromise = loadScript('/libs/maplibre-gl/maplibre-gl.js')
     .then(() => loadScript('/libs/maplibre-leaflet/leaflet-maplibre-gl.js'));
 
-  return Promise.all([jsPromise, cssPromise]).then(() => undefined);
+  _maplibrePromise = Promise.all([jsPromise, cssPromise]).then(() => undefined);
+  return _maplibrePromise;
 }

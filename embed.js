@@ -3,7 +3,7 @@
 import { I18n } from './i18n.js';
 import AppConfig, { createLeafletIcon } from './config.js';
 import { buildPopupHTML } from './popup-builder.js';
-import { getTileMode, loadMaplibreIfNeeded } from './tile-loader.js';
+import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { isWeeklyToday } from './date-utils.js';
 
 class EmbedMapExtended {
@@ -116,7 +116,7 @@ class EmbedMapExtended {
       await loadMaplibreIfNeeded();
       try {
         const mapLibreLayer = L.maplibreGL({
-          style: 'https://tiles.openfreemap.org/styles/liberty',
+          style: MAPLIBRE_STYLE_URL,
           attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
         });
         mapLibreLayer.addTo(this.map);

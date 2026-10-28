@@ -154,3 +154,14 @@ test('8: vector mode → lädt JS sequenziell + CSS, Promise wartet auf alle onl
   await loadPromise;
   assert.equal(resolved, true, 'Promise muss nach allen onloads resolved sein');
 });
+
+test('9: zweiter vector-Aufruf liefert dasselbe Promise und hängt nichts erneut an', async () => {
+  // Test 8 hat das Laden bereits gestartet und abgeschlossen (frühes Anstoßen aus index.html,
+  // erneuter Aufruf aus map.js init() darf keine Scripts doppelt injizieren).
+  const before = appendedElements.length;
+  const p1 = loadMaplibreIfNeeded('vector');
+  const p2 = loadMaplibreIfNeeded('vector');
+  assert.equal(p1, p2, 'gleiches Promise für wiederholte Aufrufe');
+  assert.equal(appendedElements.length, before, 'keine zusätzlichen Elemente');
+  await p1;
+});

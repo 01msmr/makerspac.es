@@ -51,6 +51,8 @@
 
 **Kein Backend, kein Build-Step, kein Framework.**
 
+**Ladepfad (index.html):** `<link rel="modulepreload">` für den kompletten Import-Graph von `map.js` (flacht den Wasserfall ab — bei neuen/entfernten Imports die Liste mitpflegen) · früher Inline-Module-Script startet `preloadInitialData()` + `loadMaplibreIfNeeded()` vor `map.js` · MapLibre blockiert den Start nicht: `setupMap()` läuft sofort, `updateMapTiles()` zieht den Vector-Layer nach (Fehler → Raster-Fallback) · statisches Loading-Skeleton in index.html (`#loading-backdrop`/`#loading-stack`), entfernt von map.js beim ersten `filterResultsChanged` · Service-Worker-Registrierung erst nach `window.load`.
+
 ---
 
 ## Datei-Karte (Root)
@@ -62,7 +64,8 @@
 | `map.js` | Einstiegspunkt, Bootstrap, AppContext-Lifecycle | `window.app`, `window.locationById`, `window.markerById`, `window.i18n` |
 | `app-context.js` | Lifecycle-Phasen, Shared State | `appContext` (import) |
 | `main.js` | Orchestrierung, Leaflet-Icons, Module verknüpfen | `initApp()`, `window.mobileFilterUI`, `window.nearbySpacesManager` |
-| `tile-loader.js` | Tile-Mode-Erkennung, lazy MapLibre-Loader; genutzt von map.js + embed.js | `detectTileMode`, `getTileMode`, `loadMaplibreIfNeeded` (export) |
+| `tile-loader.js` | Tile-Mode-Erkennung, lazy MapLibre-Loader; genutzt von map.js + embed.js | `detectTileMode`, `getTileMode`, `loadMaplibreIfNeeded` (idempotent, memoisiert; früh aus index.html angestoßen, lädt auch Style-JSON per Preload), `MAPLIBRE_STYLE_URL` (export) |
+| `data-preload.js` | Leaf-Modul: Länder-Erkennung aus URL-Hash, früher Preload von `markers.json`/`spaces-{cc}.json` + `lang.json` (aus index.html, vor map.js) | `detectCountryCodeFromURL`, `preloadInitialData`, `SLUG_TO_CODE` (export) |
 | `marker-manager.js` | Marker/Popup/Sticky/Connection-Line-Logik, aus map.js extrahiert | `initMarkerManager`, `createMarkerForLocation`, `clearStickyPopup`, `updateMarkerIconForLocation` u.a. (export) |
 | `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
 | `colours.js` | Farbdefinitionen, `isDarkMode()`, `applyCssColours()`, Dark-Mode-Helpers | `COLOURS`, `isDarkMode`, `applyCssColours` (export) |

@@ -20,7 +20,8 @@ import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
 import { DemoMode, OpenDemoMode, TodayDemoMode } from './demo-mode.js';
-import { getTileMode, loadMaplibreIfNeeded } from './tile-loader.js';
+import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
+import { detectCountryCodeFromURL } from './data-preload.js';
 import {
   initMarkerManager,
   createMarkerForLocation,
@@ -58,36 +59,19 @@ window.zoomManager = zoomManager;   // backward compat
 appContext.ready('services');
 initEmbedOverlay();
 
-// Loading overlay — backdrop + two stacked toasts, verschwindet beim ersten filterResultsChanged
+// Loading overlay — statisches Skeleton aus index.html (sichtbar ab erstem Paint), verschwindet beim ersten filterResultsChanged
 {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'map-backdrop';
-  backdrop.style.setProperty('--backdrop-opacity', '0.3');
-  backdrop.style.setProperty('--backdrop-duration', '1s');
-  backdrop.style.zIndex = '9998';
-  document.body.appendChild(backdrop);
-
-  const stack = document.createElement('div');
-  stack.className = 'loading-overlay-stack';
-
-  const main = document.createElement('div');
-  main.className = 'loading-overlay-toast loading-overlay-toast--large';
-  main.innerHTML = '<i class="fas fa-cog fa-spin"></i> Karte wird geladen\u2026';
-
-  const sub = document.createElement('div');
-  sub.className = 'loading-overlay-toast';
-  sub.textContent = 'Makerspaces werden vorbereitet\u2026';
-
-  stack.append(main, sub);
-  document.body.appendChild(stack);
-  requestAnimationFrame(() => { backdrop.classList.add('show'); main.classList.add('show'); sub.classList.add('show'); });
+  const backdrop = /** @type {HTMLElement|null} */ (document.getElementById('loading-backdrop'));
+  const stack = /** @type {HTMLElement|null} */ (document.getElementById('loading-stack'));
+  const main = stack?.querySelector('.loading-overlay-toast--large');
+  const sub = stack?.querySelector('.loading-overlay-toast:not(.loading-overlay-toast--large)');
 
   document.addEventListener('filterResultsChanged', () => {
-    backdrop.classList.add('fade-out');
-    setTimeout(() => backdrop.remove(), 1000);
-    main.classList.remove('show'); main.classList.add('zoom-out');
-    sub.classList.remove('show');  sub.classList.add('zoom-out');
-    setTimeout(() => stack.remove(), 300);
+    backdrop?.classList.add('fade-out');
+    setTimeout(() => backdrop?.remove(), 1000);
+    main?.classList.remove('show'); main?.classList.add('zoom-out');
+    sub?.classList.remove('show');  sub?.classList.add('zoom-out');
+    setTimeout(() => stack?.remove(), 300);
   }, { once: true });
 }
 
@@ -249,6 +233,7 @@ function getCountryCode(countryName) {
 // GLOBAL: Map und MapLibre Layer
 let currentMapLibreLayer = null;
 let currentRasterLayer = null;
+let maplibreAttachPending = false;
 
 
 function setupMap() {
@@ -299,15 +284,38 @@ function setupMap() {
 
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+  function addRasterLayer() {
+    if (currentRasterLayer) return;
+    currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    currentRasterLayer.addTo(map);
+  }
+
   function updateMapTiles() {
     if (getTileMode() === 'raster') {
       // Raster tiles (OSM PNG) — added once, no dark mode variant
-      if (currentRasterLayer) return;
-      currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      });
-      currentRasterLayer.addTo(map);
+      addRasterLayer();
+      return;
+    }
+
+    // MapLibre lädt parallel zu Daten/Marker (Start in index.html) — Karte und UI warten nicht darauf.
+    // Der Vector-Layer wird nachgezogen, sobald das Plugin da ist; scheitert das Laden → Raster-Fallback.
+    if (typeof L.maplibreGL !== 'function') {
+      if (!maplibreAttachPending) {
+        maplibreAttachPending = true;
+        loadMaplibreIfNeeded()
+          .then(() => {
+            if (typeof L.maplibreGL !== 'function') throw new Error('L.maplibreGL fehlt nach dem Laden');
+          })
+          .then(() => { maplibreAttachPending = false; updateMapTiles(); })
+          .catch((error) => {
+            maplibreAttachPending = false;
+            console.error('⛔ MapLibre konnte nicht geladen werden, Fallback auf Raster-Tiles:', error);
+            addRasterLayer();
+          });
+      }
       return;
     }
 
@@ -322,7 +330,7 @@ function setupMap() {
       isDarkMode = darkModeQuery.matches;
     }
 
-    const styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
+    const styleUrl = MAPLIBRE_STYLE_URL;
 
     if (currentMapLibreLayer) {
       map.removeLayer(currentMapLibreLayer);
@@ -356,11 +364,7 @@ function setupMap() {
 
     } catch (error) {
       console.error('⛔ MapLibre layer failed, falling back to raster tiles:', error);
-      currentRasterLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      });
-      currentRasterLayer.addTo(map);
+      addRasterLayer();
     }
   }
 
@@ -459,14 +463,6 @@ function initializeClustering() {
 
 // ─── Split-Loading Helpers ────────────────────────────────────────────────
 
-// URL-Slug → ISO-Code (stimmt mit routing.js normalizeSlug + config.js COUNTRY_CODES überein)
-const SLUG_TO_CODE = {
-  'germany': 'de', 'austria': 'at', 'switzerland': 'ch',
-  'france': 'fr', 'netherlands': 'nl', 'belgium': 'be',
-  'italy': 'it', 'spain': 'es', 'ukraine': 'ua',
-  'denmark': 'dk', 'luxembourg': 'lu',
-};
-
 // Geografisch benachbarte Länder-Splits → werden nach Stage-1a im Hintergrund prefetched
 const NEIGHBOR_SPLITS = {
   'de': ['at', 'ch', 'nl', 'be', 'lu'],
@@ -482,29 +478,7 @@ const NEIGHBOR_SPLITS = {
 
 // (Manuelles Prefetch-Block entfernt, da nun über index.html preload optimiert gesteuert)
 
-/**
- * Erkennt den ISO-Länder-Code aus dem URL-Hash.
- * '#/germany' → 'de', '#/germany/berlin/1,2' → 'de', '#/for-all' → null
- * @returns {string|null}
- */
-function detectCountryCodeFromURL() {
-  const hash = window.location.hash;
-  if (!hash?.startsWith('#/')) return null;
-  const firstSegment = hash.slice(2).split('/')[0].split('+')[0];
-  return SLUG_TO_CODE[firstSegment] ?? null;
-}
-
-// Preload data split at module-evaluation time — fires before loadData() runs through appContext phases.
-// Single source of truth: reuses detectCountryCodeFromURL() and SLUG_TO_CODE defined above.
-(function preloadDataSplit() {
-  const code = detectCountryCodeFromURL();
-  const href = code ? `data/spaces-${code}.json` : 'data/markers.json';
-  if (!document.querySelector(`link[rel="preload"][href="${href}"]`)) {
-    const l = document.createElement('link');
-    l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.href = href;
-    document.head.appendChild(l);
-  }
-})();
+// Startdaten-Preload (markers.json / spaces-{cc}.json / lang.json) startet früh aus index.html — siehe data-preload.js
 
 /**
  * Indexiert + erstellt Marker für eine Batch neuer Locations (Non-blocking).
@@ -1011,9 +985,9 @@ window.reportLocationIdStatus = function () {
 const init = async () => {
   try {
     // i18n und Map/Data parallel laden — map nicht auf lang.json warten lassen
-    // MapLibre wird nur im vector-Modus geladen (spart ~750KB auf Low-Memory-Geräten)
+    // MapLibre wird nur im vector-Modus geladen (spart ~750KB auf Low-Memory-Geräten) und blockiert
+    // den Start nicht: updateMapTiles() zieht den Vector-Layer nach, sobald das Plugin geladen ist.
     const i18nPromise = window.i18n.load('./lang.json');
-    await loadMaplibreIfNeeded();
     setupMap();
     initMarkerManager({ map, icons });
     initializeClustering();
