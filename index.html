@@ -130,12 +130,25 @@
 
 <body>
   <!-- Loading-Skeleton: statisch, damit er ab dem ersten Paint sichtbar ist (nicht erst nach dem Modul-Graph).
-       Entfernt wird er in map.js beim ersten filterResultsChanged. Texte: bewusst fest (i18n lädt erst später). -->
+       Entfernt wird er vom Inline-Script darunter beim ersten filterResultsChanged. Texte: bewusst fest (i18n lädt erst später). -->
   <div id="loading-backdrop" class="map-backdrop show" style="--backdrop-opacity:0.3;--backdrop-duration:1s;z-index:9998"></div>
   <div id="loading-stack" class="loading-overlay-stack">
     <div class="loading-overlay-toast loading-overlay-toast--large show"><i class="fas fa-cog fa-spin"></i> Karte wird geladen…</div>
     <div class="loading-overlay-toast show">Makerspaces werden vorbereitet…</div>
   </div>
+  <script>
+    // Dismissal liegt bewusst hier (nicht in map.js): Markup und Entfernen bleiben versionsgleich, auch wenn
+    // der Service Worker noch ein älteres map.js ausliefert (HTML network-first, JS cache-first).
+    document.addEventListener('filterResultsChanged', function () {
+      var backdrop = document.getElementById('loading-backdrop');
+      var stack = document.getElementById('loading-stack');
+      if (backdrop) { backdrop.classList.add('fade-out'); setTimeout(function () { backdrop.remove(); }, 1000); }
+      if (stack) {
+        stack.querySelectorAll('.loading-overlay-toast').forEach(function (t) { t.classList.remove('show'); t.classList.add('zoom-out'); });
+        setTimeout(function () { stack.remove(); }, 300);
+      }
+    }, { once: true });
+  </script>
   <div id="map"></div>
 
   <div class="title-bar">

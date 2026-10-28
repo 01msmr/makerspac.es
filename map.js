@@ -59,21 +59,7 @@ window.zoomManager = zoomManager;   // backward compat
 appContext.ready('services');
 initEmbedOverlay();
 
-// Loading overlay — statisches Skeleton aus index.html (sichtbar ab erstem Paint), verschwindet beim ersten filterResultsChanged
-{
-  const backdrop = /** @type {HTMLElement|null} */ (document.getElementById('loading-backdrop'));
-  const stack = /** @type {HTMLElement|null} */ (document.getElementById('loading-stack'));
-  const main = stack?.querySelector('.loading-overlay-toast--large');
-  const sub = stack?.querySelector('.loading-overlay-toast:not(.loading-overlay-toast--large)');
-
-  document.addEventListener('filterResultsChanged', () => {
-    backdrop?.classList.add('fade-out');
-    setTimeout(() => backdrop?.remove(), 1000);
-    main?.classList.remove('show'); main?.classList.add('zoom-out');
-    sub?.classList.remove('show');  sub?.classList.add('zoom-out');
-    setTimeout(() => stack?.remove(), 300);
-  }, { once: true });
-}
+// Loading-Skeleton (#loading-backdrop/#loading-stack): Markup + Dismissal liegen in index.html
 
 window.addEventListener("keydown", (e) => {
   if (e.code === 'F3' || ((e.ctrlKey || e.metaKey) && e.code === 'KeyF')) {

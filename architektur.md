@@ -51,7 +51,7 @@
 
 **Kein Backend, kein Build-Step, kein Framework.**
 
-**Ladepfad (index.html):** `<link rel="modulepreload">` für den kompletten Import-Graph von `map.js` (flacht den Wasserfall ab — bei neuen/entfernten Imports die Liste mitpflegen) · früher Inline-Module-Script startet `preloadInitialData()` + `loadMaplibreIfNeeded()` vor `map.js` · MapLibre blockiert den Start nicht: `setupMap()` läuft sofort, `updateMapTiles()` zieht den Vector-Layer nach (Fehler → Raster-Fallback) · statisches Loading-Skeleton in index.html (`#loading-backdrop`/`#loading-stack`), entfernt von map.js beim ersten `filterResultsChanged` · Service-Worker-Registrierung erst nach `window.load`.
+**Ladepfad (index.html):** `<link rel="modulepreload">` für den kompletten Import-Graph von `map.js` (flacht den Wasserfall ab — bei neuen/entfernten Imports die Liste mitpflegen) · früher Inline-Module-Script startet `preloadInitialData()` + `loadMaplibreIfNeeded()` vor `map.js` · MapLibre blockiert den Start nicht: `setupMap()` läuft sofort, `updateMapTiles()` zieht den Vector-Layer nach (Fehler → Raster-Fallback) · statisches Loading-Skeleton in index.html (`#loading-backdrop`/`#loading-stack`), samt Inline-Script zum Entfernen beim ersten `filterResultsChanged` (bewusst in index.html, versionsgleich auch bei altem gecachtem map.js) · Service-Worker-Registrierung erst nach `window.load`.
 
 ---
 
