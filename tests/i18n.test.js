@@ -11,6 +11,7 @@ global.window = {
   translations: null,
 };
 global.document = {
+  documentElement: {},
   getElementById: () => null,
   querySelector: () => null,
   querySelectorAll: () => [],
@@ -146,4 +147,27 @@ test('t(): gibt Pfad zurück wenn Sprach-Key nicht existiert', async () => {
   await i18n.load();
   i18n.setLanguage('de');
   assert.equal(i18n.t('nonexistent.key'), 'nonexistent.key');
+});
+
+// ─── resolveLanguage() ────────────────────────────────────────────────────
+
+test('resolveLanguage: gespeicherte Sprache hat Vorrang vor dem Browser', async () => {
+  const { resolveLanguage } = await import('../i18n.js');
+  assert.equal(resolveLanguage('fr', ['de-DE']), 'fr');
+});
+
+test('resolveLanguage: ungültige gespeicherte Sprache wird ignoriert', async () => {
+  const { resolveLanguage } = await import('../i18n.js');
+  assert.equal(resolveLanguage('xx', ['nl-NL']), 'nl');
+});
+
+test('resolveLanguage: Zweitsprache der Browser-Liste wird berücksichtigt', async () => {
+  const { resolveLanguage } = await import('../i18n.js');
+  assert.equal(resolveLanguage(null, ['pt-BR', 'de']), 'de');
+});
+
+test('resolveLanguage: nichts unterstützt → en', async () => {
+  const { resolveLanguage } = await import('../i18n.js');
+  assert.equal(resolveLanguage(null, ['pt-BR', 'ja']), 'en');
+  assert.equal(resolveLanguage(null, []), 'en');
 });

@@ -1,5 +1,22 @@
 // i18n.js - Simple translation helper
 
+const SUPPORTED_LANGS = ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
+
+/**
+ * Wählt die UI-Sprache: gespeicherte Wahl → erste unterstützte Sprache der Browser-Liste → 'en'.
+ * @param {string|null|undefined} saved - gespeicherte Sprache (preferred_language)
+ * @param {readonly string[]} browserLangs - z.B. navigator.languages
+ * @returns {string}
+ */
+export function resolveLanguage(saved, browserLangs) {
+  if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
+  for (const tag of browserLangs) {
+    const base = tag.substring(0, 2).toLowerCase();
+    if (SUPPORTED_LANGS.includes(base)) return base;
+  }
+  return 'en';
+}
+
 export class I18n {
   constructor() {
     this.translations = {};
@@ -14,24 +31,10 @@ export class I18n {
 
       // ✅ ZUERST: Prüfe gespeicherte Sprache
       const savedLang = window.consent ? window.consent.get('preferred_language') : localStorage.getItem('preferred_language');
-      const supportedLangs = ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
-
-      if (savedLang && supportedLangs.includes(savedLang)) {
-        // ✅ Gespeicherte Sprache hat Priorität
-        this.currentLang = savedLang;
-        window.currentLanguage = savedLang;
-      } else {
-        // ✅ Fallback: Auto-detect browser language
-        const browserLang = navigator.language.substring(0, 2);
-
-        if (supportedLangs.includes(browserLang)) {
-          this.currentLang = browserLang;
-          window.currentLanguage = browserLang;
-        } else {
-          this.currentLang = 'en'; // Fallback
-          window.currentLanguage = 'en';
-        }
-      }
+      const browserLangs = navigator.languages?.length ? navigator.languages : [navigator.language || ''];
+      this.currentLang = resolveLanguage(savedLang, browserLangs);
+      window.currentLanguage = this.currentLang;
+      document.documentElement.lang = this.currentLang;
 
       // ✅ Setze Search Placeholder direkt nach Laden
       const searchBar = document.getElementById('search-bar');
@@ -58,8 +61,9 @@ export class I18n {
   }
 
   setLanguage(lang) {
-    if (['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'].includes(lang)) {
+    if (SUPPORTED_LANGS.includes(lang)) {
       this.currentLang = lang;
+      document.documentElement.lang = lang;
 
       // ✅ Übersetze UI neu
       this.translateUI();
@@ -104,7 +108,7 @@ export class I18n {
   }
 
   getSupportedLanguages() {
-    return ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk'];
+    return [...SUPPORTED_LANGS];
   }
 
   t(path) {
