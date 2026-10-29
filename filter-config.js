@@ -32,6 +32,7 @@ export const FILTER_CATEGORIES = {
   workshops: {
     icon: 'fas fa-wrench',
     options: Object.keys(WORKSHOP_TYPES),
+    multiSelect: true, // Werkstätten schließen sich nicht aus (mehrere wählbar; UND-Verknüpfung: matchesAllWorkshops in search-filter.js)
   },
 };
 

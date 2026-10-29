@@ -178,20 +178,6 @@ class SearchPillsManager {
     return Array.from(this.pills.values());
   }
 
-  getPillIds() {
-    return Array.from(this.pills.keys());
-  }
-
-  /**
-   * Prüft ob eine Pill bereits aktiv ist.
-   * @param {Pill} suggestion
-   * @returns {boolean}
-   */
-  hasPill(suggestion) {
-    const id = this.generatePillId(suggestion);
-    return this.pills.has(id);
-  }
-
   count() {
     return this.pills.size;
   }

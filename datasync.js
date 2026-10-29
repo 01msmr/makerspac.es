@@ -268,61 +268,6 @@ export class BookmarkSync {
   }
 
   /**
-   * Zeigt Sync-Menü an
-   */
-  showSyncMenu(button) {
-    // Schließe existierendes Menü
-    const existingMenu = document.querySelector('.sync-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-      return;
-    }
-
-    const currentLang = window.currentLanguage || 'de';
-    const bookmarkCount = this.bookmarkManager.getBookmarkedIds().length;
-
-    const menu = document.createElement('div');
-    menu.className = 'sync-menu';
-
-    menu.innerHTML = `
-      <div class="sync-menu-item sync-status">
-        <i class="fas fa-bookmark"></i>
-        <span>${bookmarkCount} ${window.translations.sync?.favorites?.[currentLang] || 'Favoriten'}</span>
-      </div>
-      <div class="sync-menu-item" onclick="bookmarkSync.showExportDialog()">
-        <i class="fas fa-share-alt"></i>
-        <span>${window.translations.sync?.export?.[currentLang] || 'Teilen'}</span>
-      </div>
-      <div class="sync-menu-item" onclick="bookmarkSync.showImportDialog()">
-        <i class="fas fa-download"></i>
-        <span>${window.translations.sync?.import?.[currentLang] || 'Importieren'}</span>
-      </div>
-      <div class="sync-menu-item sync-danger" onclick="bookmarkSync.clearAllBookmarks()">
-        <i class="fas fa-trash"></i>
-        <span>${window.translations.sync?.clearAll?.[currentLang] || 'Alle löschen'}</span>
-      </div>
-    `;
-
-    // Position berechnen
-    const rect = button.getBoundingClientRect();
-    menu.style.position = 'fixed';
-    menu.style.top = `${rect.bottom + 5}px`;
-    menu.style.left = `${rect.left}px`;
-
-    document.body.appendChild(menu);
-
-    // Schließen bei Klick außerhalb
-    setTimeout(() => {
-      document.addEventListener('click', function closeMenu(e) {
-        if (!menu.contains(e.target) && e.target !== button) {
-          menu.remove();
-          document.removeEventListener('click', closeMenu);
-        }
-      });
-    }, 0);
-  }
-
-  /**
    * Löscht alle Bookmarks nach Bestätigung
    */
   clearAllBookmarks() {
@@ -395,52 +340,5 @@ export class BookmarkSync {
 
   }
 
-  /**
-   * ✅ Settings aus Sync-URL laden
-   */
-  loadSettingsFromSync(syncUrl) {
-    try {
-      const url = new URL(syncUrl);
-      const data = JSON.parse(url.searchParams.get('data') || '{}');
-
-      if (data.settings) {
-        // Color Scheme anwenden
-        if (data.settings.colorScheme) {
-          consent.set('color-scheme', data.settings.colorScheme);
-          if (window.languageSwitcher) {
-            window.languageSwitcher.setColorScheme(data.settings.colorScheme);
-          }
-        }
-
-        // Sprache anwenden
-        if (data.settings.language) {
-          consent.set('preferred_language', data.settings.language);
-          if (window.languageSwitcher) {
-            window.languageSwitcher.changeLanguage(data.settings.language);
-          }
-        }
-
-        this.showNotification('Settings synchronized', 'success');
-      }
-    } catch (error) {
-      console.error('Error loading settings from sync:', error);
-    }
-  }
-
-  /**
-   * ✅ QR-Code mit Settings generieren
-   */
-  generateSyncDataWithSettings() {
-    const bookmarks = this.bookmarkManager ? this.bookmarkManager.getBookmarkedIds() : [];
-    const settings = JSON.parse(consent.get('user-settings') || '{}');
-
-    const syncData = {
-      bookmarks: bookmarks,
-      settings: settings,
-      timestamp: Date.now()
-    };
-
-    return JSON.stringify(syncData);
-  }
 }
 

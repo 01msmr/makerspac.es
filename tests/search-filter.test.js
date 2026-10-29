@@ -191,3 +191,25 @@ test('resetMarkerDiff: updateMarkers fügt danach alle Marker erneut hinzu', asy
   sf.updateMarkers(MOCK_LOCATIONS);
   assert.equal(added.length, MOCK_LOCATIONS.length, 'nach Reset: alle Marker erneut hinzugefügt');
 });
+
+// ─── Werkstatt-Filter: UND-Verknüpfung (alle gewählten Werkstätten müssen vorhanden sein) ───
+test('matchesAllWorkshops: ohne Auswahl passt jeder Space', async () => {
+  const { matchesAllWorkshops } = await import('../search-filter.js');
+  assert.equal(matchesAllWorkshops({ workshops: ['wood'] }, new Set()), true);
+  assert.equal(matchesAllWorkshops({}, new Set()), true);
+});
+
+test('matchesAllWorkshops: mehrere gewählte Werkstätten müssen ALLE vorhanden sein (UND)', async () => {
+  const { matchesAllWorkshops } = await import('../search-filter.js');
+  const selected = new Set(['wood', 'metal']);
+  assert.equal(matchesAllWorkshops({ workshops: ['wood', 'metal', 'textile'] }, selected), true);
+  assert.equal(matchesAllWorkshops({ workshops: ['wood'] }, selected), false);   // nur eine von beiden
+  assert.equal(matchesAllWorkshops({ workshops: ['metal', 'textile'] }, selected), false);
+  assert.equal(matchesAllWorkshops({}, selected), false);                        // gar keine Werkstätten
+});
+
+test('matchesAllWorkshops: eine einzelne Auswahl verhält sich wie bisher', async () => {
+  const { matchesAllWorkshops } = await import('../search-filter.js');
+  assert.equal(matchesAllWorkshops({ workshops: ['wood', 'metal'] }, new Set(['metal'])), true);
+  assert.equal(matchesAllWorkshops({ workshops: ['wood'] }, new Set(['metal'])), false);
+});

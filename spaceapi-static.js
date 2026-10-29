@@ -90,42 +90,4 @@ export class StaticSpaceAPI {
     }
   }
 
-  // Cache-Management (für Kompatibilität mit existierendem Code)
-  getCacheStats() {
-    if (!this.statusData) {
-      return {
-        total: 0,
-        lastUpdate: null,
-        open: 0,
-        closed: 0,
-        unknown: 0
-      };
-    }
-
-    return {
-      total: Object.keys(this.statusData.spaces).length,
-      lastUpdate: this.statusData.stats.lastUpdate,
-      open: this.statusData.stats.open,
-      closed: this.statusData.stats.closed,
-      unknown: this.statusData.stats.unknown
-    };
-  }
-
-  // Logging (für Debugging)
-  logCacheInfo() {
-    if (!this.statusData) {
-      return;
-    }
-
-  }
-
-  // Dummy-Funktionen für Kompatibilität
-  cleanExpiredCache() {
-    return 0;
-  }
-
-  clearCache() {
-    this.statusData = null;
-    return 0;
-  }
 }

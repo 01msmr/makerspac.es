@@ -310,7 +310,9 @@ class MobileFilterUI {
     section.className = 'mf-section';
     section.dataset.key = key;
 
-    const activeValue = appContext.searchHeader?.getActiveFilterForCategory(key);
+    const activeValues = appContext.searchHeader?.getActiveFiltersForCategory(key) ?? [];
+    const activeValue = activeValues[0];
+    const isMulti = !!appContext.searchHeader?.isMultiSelect(key);
 
     const title = document.createElement('div');
     title.className = 'mf-section-title' + (activeValue ? ' mf-has-value' : '');
@@ -325,7 +327,7 @@ class MobileFilterUI {
     let activeItem = null;
 
     options.forEach(opt => {
-      const isActive = opt === activeValue;
+      const isActive = activeValues.includes(opt);
       const isUserCountry = opt === userCountry;
       const isDoorOpen   = key === 'doorState' && opt === 'open';
       const isDoorClosed = key === 'doorState' && opt === 'closed';
@@ -411,15 +413,17 @@ class MobileFilterUI {
         this._hasInteracted = true;
         const isCurrentlyActive = item.classList.contains('mf-opt-active');
         if (isCurrentlyActive) {
-          // Toggle off
-          appContext.searchHeader?.clearCategoryFilter(key);
+          // Toggle off: Mehrfachkategorie nur diesen Wert, sonst die ganze Kategorie
+          if (isMulti) appContext.searchHeader?.deselectCategoryOption(key, opt);
+          else appContext.searchHeader?.clearCategoryFilter(key);
           item.classList.remove('mf-opt-active');
           if (!section.querySelector('.mf-opt-active')) {
             title.classList.remove('mf-has-value');
           }
         } else {
           appContext.searchHeader?.selectCategoryOption(key, opt);
-          section.querySelectorAll('.mf-opt-item').forEach(el => el.classList.remove('mf-opt-active'));
+          // Einzelauswahl: übrige Optionen abwählen; Mehrfachauswahl: bisherige bleiben aktiv
+          if (!isMulti) section.querySelectorAll('.mf-opt-item').forEach(el => el.classList.remove('mf-opt-active'));
           item.classList.add('mf-opt-active');
           title.classList.add('mf-has-value');
         }
@@ -570,13 +574,8 @@ class MobileFilterUI {
     if (!bar) return;
 
     const categories = this.getCategories();
-    const activeEntries = Object.keys(categories)
-      .map((key) => {
-        const cfg = categories[key];
-        const val = appContext.searchHeader?.getActiveFilterForCategory(key);
-        return val ? { key, cfg, val } : null;
-      })
-      .filter(Boolean);
+    const activeEntries = Object.keys(categories).flatMap(key =>
+      (appContext.searchHeader?.getActiveFiltersForCategory(key) ?? []).map(val => ({ key, cfg: categories[key], val })));
 
     if (!activeEntries.length || !isMobileUI()) {
       bar.style.display = 'none';
@@ -600,7 +599,8 @@ class MobileFilterUI {
 
         chip.querySelector('.mf-chip-remove').addEventListener('click', e => {
           e.stopPropagation();
-          appContext.searchHeader?.clearCategoryFilter(key);
+          if (appContext.searchHeader?.isMultiSelect(key)) appContext.searchHeader.deselectCategoryOption(key, val);
+          else appContext.searchHeader?.clearCategoryFilter(key);
           this.updateChipBar();
         });
 

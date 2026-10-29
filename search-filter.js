@@ -8,6 +8,18 @@ import { appContext } from './app-context.js';
 
 // Static option sets — built once at module load (arrays never change at runtime)
 const WEEKLY_OPTIONS  = new Set(AppConfig.filterCategories.weekly?.options   || []);
+/**
+ * Werkstatt-Filter: UND — der Space muss ALLE gewählten Werkstätten haben (ohne Auswahl passt jeder Space).
+ * Einzige Stelle dieser Logik; gilt für Desktop, Tablet und Mobile (applyFilters).
+ * @param {{workshops?: string[]}} location
+ * @param {Set<string>} selected
+ */
+export function matchesAllWorkshops(location, selected) {
+  if (selected.size === 0) return true;
+  const have = location.workshops;
+  return !!have && [...selected].every(w => have.includes(w));
+}
+
 const WORKSHOP_OPTIONS = new Set(AppConfig.filterCategories.workshops?.options || []);
 
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
@@ -128,19 +140,6 @@ class SearchFilter {
   // ═══════════════════════════════════════════════════════════════════════════
   // FILTER-VERWALTUNG
   // ═══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Wählt einen Style-Filter aus/ab und wendet Filter sofort an.
-   * @param {string} style - z.B. 'for all', 'commercial', 'open'
-   */
-  toggleStyleSelection(style) {
-    if (this.selectedStyles.has(style)) {
-      this.selectedStyles.delete(style);
-    } else {
-      this.selectedStyles.add(style);
-    }
-    this.applyFilters();
-  }
 
   /**
    * Setzt einen Style-Filter (ohne sofortigen applyFilters()-Aufruf).
@@ -291,9 +290,8 @@ class SearchFilter {
       // Bookmark-Match
       const bookmarkMatch = !bookmarkFilterActive || (bookmarkedIds && bookmarkedIds.has(location.ID));
 
-      // Workshop-Match (OR innerhalb der Kategorie)
-      const workshopMatch = selectedWorkshops.size === 0 ||
-        (location.workshops && location.workshops.some(w => selectedWorkshops.has(w)));
+      // Workshop-Match (UND innerhalb der Kategorie: alle gewählten Werkstätten müssen vorhanden sein)
+      const workshopMatch = matchesAllWorkshops(location, selectedWorkshops);
 
       // AND zwischen Kategorien
       return styleMatch && stateMatch && countryMatch && weeklyMatch && bookmarkMatch && workshopMatch;

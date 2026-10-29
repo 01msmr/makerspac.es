@@ -263,16 +263,6 @@ class ListingCore {
   }
 
   /**
-   * Formatiert die Uhrzeit aus dem weekly-Format (z.B. 1900 → "19:00").
-   * @param {number} time - Vierstellige Zahl, z.B. 1900
-   * @returns {string} Formatierter String, z.B. '19:00'
-   */
-  formatWeeklyTime(time) {
-    const str = String(time).padStart(4, '0');
-    return str.slice(0, 2) + ':' + str.slice(2);
-  }
-
-  /**
    * Generiert das Workshops-Badge HTML (Anzahl + Icon).
    * @param {MakerSpace} location
    * @returns {string} HTML-String oder ''

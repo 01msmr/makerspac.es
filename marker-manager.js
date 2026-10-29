@@ -748,18 +748,6 @@ function _applyMarkerHoverHandlers(marker, location) {
     window.markerStateManager.setState(marker.locationId, { closeTimeout: closeCheckTimeout });
   });
 }
-// ============================================================================
-// OPTIMIERTE HILFSFUNKTIONEN: Nutzen ID statt find() - O(1) statt O(n)
-// ============================================================================
-/**
- * Findet Location anhand ID. O(1) via locationById-Map.
- * @param {number} id
- * @returns {MakerSpace|undefined}
- */
-function getLocationById(id) {
-  return window.locationById.get(id);
-}
-
 /**
  * Findet Marker anhand Location ID. O(1) via markerById-Map.
  * @param {number} id

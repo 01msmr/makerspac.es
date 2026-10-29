@@ -716,9 +716,6 @@ class ZoomManager {
     }
   }
 
-  resetBounds() {
-    this.previousZoomBounds = null;
-  }
 }
 
 

@@ -652,15 +652,6 @@ class DataStore {
     return this.t('storageNotSet');
   }
 
-  updateStorageSection() {
-    const section = this.settingsPopover?.querySelector('#settings-storage-section');
-    if (!section) return;
-    const span = section.querySelector('.settings-header-content span');
-    if (span) span.textContent = `${this.t('storage')}: ${this._getConsentStateText()}`;
-    const resetBtn = section.querySelector('[data-action="reset-consent"]');
-    if (resetBtn) resetBtn.title = this.t('resetConsent');
-  }
-
   loadLanguagePreference() {
     const savedLang = consent.get('preferred_language');
     if (!savedLang && window.i18n && window.i18n.currentLang) {

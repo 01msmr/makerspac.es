@@ -483,7 +483,8 @@ class SearchHeader {
           : `<i class="${config.icon}"></i> ${translatedStyle}`;
         pill.setAttribute('aria-label', config.label);
       } else {
-        const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
+        const extraCount = this.getActiveFiltersForCategory(categoryKey).length - 1; // Mehrfachauswahl: „Wert +N“
+        const translatedValue = this.translateFilterValue(categoryKey, activeFilter) + (extraCount > 0 ? ` +${extraCount}` : '');
         pill.innerHTML = `<i class="${config.icon}"></i> ${translatedValue}`;
         pill.setAttribute('aria-label', config.label);
       }
@@ -527,7 +528,8 @@ class SearchHeader {
         pill.setAttribute('aria-label', config.label);
       } else {
         const icon = this.getFilterIcon(categoryKey, activeFilter) || config.icon;
-        const translatedValue = this.translateFilterValue(categoryKey, activeFilter);
+        const extraCount = this.getActiveFiltersForCategory(categoryKey).length - 1; // Mehrfachauswahl: „Wert +N“
+        const translatedValue = this.translateFilterValue(categoryKey, activeFilter) + (extraCount > 0 ? ` +${extraCount}` : '');
         pill.innerHTML = `<i class="${icon}"></i> ${translatedValue}`;
         pill.setAttribute('aria-label', config.label);
       }
@@ -644,7 +646,7 @@ class SearchHeader {
       const optionItem = this.createPopoverOption(categoryKey, option, config);
       optionItem.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.selectCategoryOption(categoryKey, option);
+        this.toggleCategoryOption(categoryKey, option);
         popover.remove();
         this.focusSearchBarIfDesktop();
       });
@@ -710,12 +712,43 @@ class SearchHeader {
       optionItem.innerHTML = `<i class="${workshopIcon}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}`;
     }
 
-    const activeFilter = this.getActiveFilterForCategory(categoryKey);
-    if (activeFilter === option) {
+    if (this.getActiveFiltersForCategory(categoryKey).includes(option)) {
       optionItem.classList.add('active');
     }
 
     return optionItem;
+  }
+
+  /** Kategorien mit Mehrfachauswahl (filter-config.js `multiSelect`); alle anderen sind Einzelauswahl */
+  isMultiSelect(categoryKey) {
+    return !!CONFIG.filterCategories[categoryKey]?.multiSelect;
+  }
+
+  /** Alle aktiven Werte einer Kategorie (Einzelauswahl: höchstens ein Wert), in Optionsreihenfolge */
+  getActiveFiltersForCategory(categoryKey) {
+    if (!this.isMultiSelect(categoryKey)) {
+      const value = this.getActiveFilterForCategory(categoryKey);
+      return value ? [value] : [];
+    }
+    const selected = this.searchFilter?.getSelectedStyles() || [];
+    return CONFIG.filterCategories[categoryKey].options.filter(opt => selected.includes(opt));
+  }
+
+  /** Mehrfachkategorie: Wert umschalten; Einzelkategorie: Wert wählen (ersetzt den bisherigen) */
+  toggleCategoryOption(categoryKey, option) {
+    if (this.isMultiSelect(categoryKey) && this.getActiveFiltersForCategory(categoryKey).includes(option)) {
+      this.deselectCategoryOption(categoryKey, option);
+    } else {
+      this.selectCategoryOption(categoryKey, option);
+    }
+  }
+
+  /** Nimmt einen einzelnen Wert aus einer Mehrfachkategorie (die anderen bleiben aktiv) */
+  deselectCategoryOption(categoryKey, option) {
+    this.searchFilter?.setStyleFilter(option, false);
+    this.searchFilter?.applyFilters();
+    this.scrollToTop();
+    this.focusSearchBarIfDesktop();
   }
 
   selectCategoryOption(categoryKey, option) {
@@ -737,12 +770,11 @@ class SearchHeader {
       this.searchFilter?.setStyleFilter('any', false);
       this.searchFilter?.setStyleFilter(option, true);
     } else {
-      const categoryOptions = CONFIG.filterCategories[categoryKey]?.options || [];
-      categoryOptions.forEach(opt => {
-        if (opt !== option) {
-          this.searchFilter?.setStyleFilter(opt, false);
-        }
-      });
+      if (!this.isMultiSelect(categoryKey)) { // Einzelauswahl: übrige Optionen der Kategorie abwählen
+        (CONFIG.filterCategories[categoryKey]?.options || []).forEach(opt => {
+          if (opt !== option) this.searchFilter?.setStyleFilter(opt, false);
+        });
+      }
       this.searchFilter?.setStyleFilter(option, true);
     }
 
