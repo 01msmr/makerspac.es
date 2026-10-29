@@ -308,6 +308,15 @@
     gap: 0.2em;
   }
 
+  /* Der (unsichtbare) Microtip-Tooltip des „+“ liegt rechts neben dem Logo (~200px breit, opacity 0) und
+     verbreitert die scrollbare Seitenbreite über das Gerät hinaus (415 statt 390px). Mobile-Browser
+     (iOS WebKit: Safari/Vivaldi) skalieren/verschieben dann die Seite: absolut positionierte Karte schmaler
+     als fixierte UI → schwarzer Streifen rechts, v.a. nach Tastatur auf/zu. Auf Touch ohne Hover entbehrlich. */
+  .title-bar .tool-add::before,
+  .title-bar .tool-add::after {
+    display: none;
+  }
+
   .language-switcher {
     top: calc(1em + 16px);
   }

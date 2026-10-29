@@ -46,8 +46,13 @@ class MobileFilterUI {
     // Map-Bottom dynamisch an Search-Container anpassen (Mobile)
     const searchContainer = document.querySelector('.search-container');
     if (searchContainer) {
+      let mapResizeFrame = 0;
       const updateMapBottom = () => {
         document.documentElement.style.setProperty('--mobile-ui-height', searchContainer.offsetHeight + 'px');
+        // #map folgt `bottom: var(--mobile-ui-height)`: Leaflet muss die neue Containergröße kennen,
+        // sonst rechnen fitBounds/GL-Canvas mit der alten Höhe (beim Start 844 statt 655px).
+        cancelAnimationFrame(mapResizeFrame);
+        mapResizeFrame = requestAnimationFrame(() => appContext.map?.invalidateSize());
       };
       updateMapBottom();
       new ResizeObserver(updateMapBottom).observe(searchContainer);
@@ -55,11 +60,7 @@ class MobileFilterUI {
       // Android: Keyboard open/close changes visualViewport — Leaflet canvas muss neu berechnet werden
       // sonst bleibt ein schwarzer Streifen rechts (Canvas-Breite stimmt nicht mit Container überein)
       if ('ontouchstart' in window && window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-          updateMapBottom();
-          const m = appContext.map;
-          if (m) requestAnimationFrame(() => m.invalidateSize());
-        });
+        window.visualViewport.addEventListener('resize', updateMapBottom);
       }
     }
 
