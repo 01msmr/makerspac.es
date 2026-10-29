@@ -492,8 +492,8 @@ class MobileFilterUI {
   // Tablet: one 6-column table in normal order.
   _applyUnifiedGrid(track) {
     const sections = Array.from(track.querySelectorAll('.mf-section'));
-    const isPhone = isPhone() && !isTablet();
-    const numCols = isPhone ? 3 : sections.length;
+    const phoneLayout = isPhone() && !isTablet();
+    const numCols = phoneLayout ? 3 : sections.length;
     const numGroups = Math.ceil(sections.length / numCols);
 
     track.style.display = 'grid';
@@ -516,7 +516,7 @@ class MobileFilterUI {
     // Phone: second group on top (rows start at 0), first group below it.
     // Tablet: natural top-to-bottom order.
     const groupOffsets = new Array(numGroups);
-    if (isPhone && numGroups === 2) {
+    if (phoneLayout && numGroups === 2) {
       groupOffsets[1] = 0;
       groupOffsets[0] = groupMaxRows[1];
     } else {

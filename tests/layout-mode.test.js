@@ -27,3 +27,15 @@ test('3: Tablet Portrait = 4×4 à 58px, Landscape = 5×3 à 58px', () => {
 test('4: Landscape ohne Tablet zählt nicht (Phone bleibt Phone)', () => {
   assert.equal(gridSpec({ tablet: false, landscape: true }).rowH, 40);
 });
+
+test('5: kein Modul überschattet importierte Layout-Funktionen mit einer lokalen Variable (TDZ-Fehler beim Pane-Öffnen)', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  for (const f of readdirSync(new URL('..', import.meta.url)).filter(n => n.endsWith('.js'))) {
+    const src = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+    const imp = src.match(/import\s*\{([^}]*)\}\s*from\s*'\.\/layout-mode\.js'/);
+    if (!imp) continue;
+    for (const name of imp[1].split(',').map(n => n.trim()).filter(Boolean)) {
+      assert.doesNotMatch(src, new RegExp(`\\b(const|let|var)\\s+${name}\\b`), `${f}: lokale Variable '${name}' überschattet den Import`);
+    }
+  }
+});
