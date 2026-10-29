@@ -105,6 +105,8 @@
   <link rel="modulepreload" href="nearby-header.js" />
   <link rel="modulepreload" href="date-utils.js" />
   <link rel="modulepreload" href="mobile-filter.js" />
+  <link rel="modulepreload" href="dropdown-pager.js" />
+  <link rel="modulepreload" href="layout-mode.js" />
   <link rel="modulepreload" href="add-space-form.js" />
   <link rel="modulepreload" href="search-pills.js" />
   <link rel="modulepreload" href="autocomplete-manager.js" />
@@ -185,8 +187,12 @@
   </div>
 
 
-  <!-- Treffer-Zähler in der Kartenansicht (nur Phone, rechts unten); Tippen löscht den Suchtext (nicht die Filter) -->
-  <button type="button" class="map-counter" id="map-counter" aria-live="polite"></button>
+  <!-- Phone: aktive Suchbegriffe (schwarze Chips) + Treffer-Zähler in der Karte, rechts unten über der Attribution.
+       Tippen auf einen Chip oder den Zähler löscht die Suchbegriffe (Suchtext + Stadt-Pills), nicht die Filter. -->
+  <div class="map-status" id="map-status">
+    <span class="map-terms" id="map-terms"></span>
+    <button type="button" class="map-counter" id="map-counter" aria-live="polite"></button>
+  </div>
 
   <!-- search bar container -->
   <div class="search-container">

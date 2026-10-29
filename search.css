@@ -588,7 +588,7 @@
 }
 
 /* Treffer-Zähler in der Karte: nur Phone (siehe @media (max-width: 767px)) */
-.map-counter {
+.map-status {
   display: none;
 }
 
@@ -1461,12 +1461,39 @@
 
   /* Treffer-Zähler: statt in der Eingabezeile als Pille unten rechts in der Karte (über der Attribution) */
   .search-input-wrapper .search-counter { display: none; }
-  .map-counter {
+  .map-status {
     display: flex;
     position: fixed;
     right: 8px;
-    bottom: calc(var(--mobile-ui-height, 0px) + 28px);
+    /* so tief wie möglich über der Leaflet-Attribution (~17px hoch, direkt über der Bottom-UI) */
+    bottom: calc(var(--mobile-ui-height, 0px) + 20px);
     z-index: 1002;
+    align-items: center;
+    gap: 6px;
+    max-width: calc(100vw - 16px);
+    pointer-events: none;
+  }
+  .map-terms { display: flex; gap: 4px; min-width: 0; }
+  .map-term {
+    max-width: 45vw;
+    padding: 0 10px;
+    height: 28px;
+    line-height: 28px;
+    box-sizing: border-box;
+    border-radius: 14px;
+    background: black;
+    color: white;
+    font-family: var(--font-family);
+    font-size: 0.85em;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .map-status:has(.map-counter.is-clearable) { pointer-events: auto; cursor: pointer; }
+  .map-counter {
+    display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     min-width: 28px;
@@ -1486,7 +1513,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   .map-counter.visible { opacity: 1; }
-  .map-counter.is-clearable { pointer-events: auto; cursor: pointer; }
+  .map-counter.is-clearable { pointer-events: auto; }
   .map-counter.is-pill { padding: 0 8px; }
 
   /* Eingabezeile liegt nur im geöffneten Filter-Pane (mobile-filter.js verschiebt sie dorthin und zurück).
@@ -1495,6 +1522,14 @@
   .search-container.search-open > .search-input-row { display: flex; }
   .mf-overlay { flex-direction: column; align-items: stretch; justify-content: flex-end; }
   .mf-overlay > .search-input-row { flex-shrink: 0; }
+  /* Stadt-/PLZ-Vorschläge direkt über der Eingabezeile im Pane (statt fixed über dem Container → viel zu hoch) */
+  .mf-overlay > .search-input-row { position: relative; }
+  .mf-overlay .autocomplete-container {
+    position: absolute !important;
+    bottom: 100% !important;
+    left: 8px !important;
+    right: 8px !important;
+  }
 
   /* Nav-Spalte bündig zu den 3 Listenzeilen (die Chip-Leiste darüber gehört nur zur Liste) */
   .dropdown-nav { align-self: flex-end; }

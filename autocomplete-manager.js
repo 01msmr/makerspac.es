@@ -4,6 +4,8 @@
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
 /** @typedef {import('./types.js').Pill} Pill */
 
+import { isMobileUI } from './layout-mode.js';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUTOCOMPLETE MANAGER
 // Smart Autocomplete mit Filter-Integration
@@ -151,8 +153,7 @@ class AutocompleteManager {
       }
 
       this.hide();
-      const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-      if (!isMobile) this.searchBar.focus();
+      if (!isMobileUI()) this.searchBar.focus();
     }
   }
 

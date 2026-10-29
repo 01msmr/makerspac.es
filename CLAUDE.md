@@ -150,6 +150,8 @@ search-header.js    → Such-UI, Dropdown, Item-Clicks, reZoom(), Orchestrierung
 search-pills.js     → Filter-Pills in der Suchleiste (SearchPillsManager)
 autocomplete-manager.js → Autocomplete-Dropdown, Städte/PLZ-Vorschläge
 listing-core.js     → Item-Rendering, Hover, Connection Line, i18n-Cache
+layout-mode.js      → isMobileUI()/isTablet()/isPhone() + Grid-Maße (SSOT der Media-Queries, Leaf)
+dropdown-pager.js   → Blättern/Snap-Grid/Nummern im Dropdown (Phone/Tablet)
 mobile-filter.js    → Mobile Filter-Sheet
 nearby-header.js    → Nearby-Popover (Rechtsklick / Long-Press)
 routing.js          → URL-Hash → Filter, _cityCountMap, _styleCountMap

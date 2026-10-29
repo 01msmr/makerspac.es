@@ -84,6 +84,8 @@
 | `bookmark-manager.js` | Favoriten (Add/Remove/Export) | `BookmarkManager`, `window.bookmarkManager` |
 | `datasync.js` | ConsentManager, localStorage-Wrapper | `ConsentManager`, `window.consent` |
 | `nearby-header.js` | Nearby: Desktop-Popover (Rechtsklick) · Phone-Layout ≤767px: Panel im .search-container + Treffer im Dropdown (`searchHeader._nearbyMode` unterdrückt Filter-Rendering), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
+| `layout-mode.js` | SSOT der Layout-Modi: `isMobileUI()`/`isTablet()`/`isPhone()` (Media-Queries wie im CSS) und `gridSpec()` (Grid-Maße der Dropdown-Seiten: Phone 2×3 à 40px, Tablet 4×4 / 5×3 à 58px); Leaf, keine Abhängigkeiten | `isMobileUI`, `isTablet`, `isPhone`, `gridSpec`, `currentGridSpec` |
+| `dropdown-pager.js` | Seitenweises Blättern im Dropdown (Snap-Seiten, Ghost-Items, Ecken, laufende Nummern, Hoch/Runter 1×/2×/3×, Rand-Indikatoren, Mausrad) | `DropdownPager` (init aus `MobileFilterUI.init`) |
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar; setzt `--mobile-ui-height` und ruft danach `map.invalidateSize()` (rAF-koalesziert) — einziger Pfad, der die Kartengröße an die Bottom-UI-Höhe koppelt (auch bei visualViewport-Resize) | `MobileFilterUI`, `window.mobileFilterUI` |
 | `i18n.js` | Übersetzungen, `t()`, `setLanguage()` | `I18n`, `window.i18n` |
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom; Desktop-Fit als Polygon-Fit: alle Pins einzeln in der Freifläche (Viewport minus Logo minus Search/Dropdown) | `ZoomManager`, `window.zoomManager`, `computePolygonFit()`, `findFitTranslation()` |
@@ -220,8 +222,10 @@ Wenn `_isOnLocationRoute = true` und kein Query/Pill aktiv → Fast-Path: nur `a
 - Filter-Pane (`.mf-overlay`, z-index 10001) liegt **über** der Liste (z-Achse), Unterkante = unterer Rand
   (Phone; Tablet: Oberkante der Eingabezeile, `MobileFilterUI._positionSheet()`). Es schließt nicht beim Tippen ins Feld;
   `resize` schließt nur bei Breitenänderung (Tastatur ändert nur die Höhe). Auto-Close-Timer ist bei offener Suche aus.
-- Treffer-Zähler: `#map-counter` (Pille in der Karte unten rechts, `SearchHeader.updateSearchCounter` spiegelt ihn);
-  Tippen löscht nur den Suchtext, nicht die Filter. Der Zähler in der Eingabezeile ist auf Phone ausgeblendet.
+- Karten-Status (nur Phone): `#map-status` rechts unten direkt über der Attribution = schwarze Suchbegriff-Chips
+  (`.map-term`: Suchtext + Stadt-Pills) vor dem Treffer-Zähler `#map-counter` (`SearchHeader.updateSearchCounter` /
+  `renderMapTerms`). Tippen löscht die Suchbegriffe (`clearSearchTerms()`), nicht die Filter. Der Zähler in der
+  Eingabezeile ist auf Phone ausgeblendet. Stadt-Vorschläge (`.autocomplete-container`) hängen im Pane absolut über der Zeile.
 - Früher Klick-Handler für die Lupe inline in `index.html` (zeigt die Eingabezeile, bevor die Module geladen sind).
 - Auto-Zoom (`zoom-manager.js`): `#map` endet bereits über der Bottom-UI → **kein** `--mobile-ui-height`-Padding in
   `fitBounds` (sonst doppelt abgezogen); oben bleibt die Pin-Höhe frei. Wächter: `tests/mobile-layout-guards.test.js`.

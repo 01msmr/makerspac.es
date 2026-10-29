@@ -9,6 +9,7 @@ import AppConfig from './config.js';
 import { todayWeekday } from './date-utils.js';
 import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
+import { isMobileUI } from './layout-mode.js';
 
 const CONFIG = AppConfig;
 
@@ -38,6 +39,7 @@ class SearchHeader {
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
     this.mapCounter = document.getElementById('map-counter');
+    this.mapTerms = document.getElementById('map-terms');
 
     this.listingCore = null;
     this.searchFilter = null;
@@ -94,8 +96,7 @@ class SearchHeader {
   // Bedingung wird in index.html (Inline-Script nach #search-bar) für den frühen Fokus gespiegelt.
   focusSearchBarIfDesktop() {
     if (new URLSearchParams(location.search).has('nofocus')) return;
-    const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-    if (!isMobile) {
+    if (!isMobileUI()) {
       this.searchBar.focus();
     }
   }
@@ -119,8 +120,7 @@ class SearchHeader {
     document.addEventListener('click', (e) => {
       // Klicks innerhalb des Filter-Popovers (auch nach Entfernen aus DOM) ignorieren
       // Auf Mobile/Tablet-Touch: kein closeDropdown bei Außenklick
-      const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-      if (!isMobileUI &&
+      if (!isMobileUI() &&
         !/** @type {HTMLElement} */ (e.target).closest('.search-container') && !/** @type {HTMLElement} */ (e.target).closest('.mf-overlay')) {
         this.closeDropdown();
       }
@@ -176,13 +176,10 @@ class SearchHeader {
       }
     });
 
-    // Phone: Zähler-Pille in der Karte — Tippen löscht NUR den Suchtext, Filter-Pills bleiben
-    this.mapCounter?.addEventListener('click', (e) => {
+    // Phone: Suchbegriff-Chips + Zähler in der Karte — Tippen löscht die Suchbegriffe, die Filter bleiben
+    document.getElementById('map-status')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (this.searchBar.value.length === 0) return;
-      this.searchBar.value = '';
-      if (window.routingManager) window.routingManager._isOnLocationRoute = false;
-      this.triggerFilterUpdate();
+      if (this.hasSearchTerms()) this.clearSearchTerms();
     });
 
     document.addEventListener('languageChanged', () => {
@@ -1034,6 +1031,32 @@ class SearchHeader {
   // UI-HELFER
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /** Suchtext oder Stadt-/PLZ-Pills aktiv? (Filter-Chips zählen nicht dazu) */
+  hasSearchTerms() {
+    return this.searchBar.value.length > 0 || (this.pillsManager?.count() ?? 0) > 0;
+  }
+
+  /** Löscht Suchtext + Pills, lässt die Filter stehen */
+  clearSearchTerms() {
+    this.searchBar.value = '';
+    this.pillsManager?.clear();
+    // Route-Pre-Filter sonst über den empty-query-Branch weiter aktiv
+    if (window.routingManager) window.routingManager._isOnLocationRoute = false;
+    this.triggerFilterUpdate();
+  }
+
+  /** Phone: aktive Suchbegriffe als schwarze Chips vor dem Zähler in der Karte */
+  renderMapTerms() {
+    if (!this.mapTerms) return;
+    const terms = [...(this.pillsManager?.getPillsArray() ?? []).map(p => p.text), this.searchBar.value.trim()].filter(Boolean);
+    this.mapTerms.replaceChildren(...terms.map(text => {
+      const chip = document.createElement('span');
+      chip.className = 'map-term';
+      chip.textContent = text;
+      return chip;
+    }));
+  }
+
   updateSearchCounter(count) {
     this.searchCounter.innerHTML = count + '<span class="counter-x" aria-hidden="true"></span>';
     this.searchCounter.classList.add('visible');
@@ -1052,9 +1075,10 @@ class SearchHeader {
       this.mapCounter.textContent = String(count);
       this.mapCounter.classList.add('visible');
       this.mapCounter.classList.toggle('is-pill', count > 99);
-      this.mapCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0);
+      this.mapCounter.classList.toggle('is-clearable', this.hasSearchTerms());
       this.mapCounter.setAttribute('aria-label', label);
     }
+    this.renderMapTerms();
   }
 
   updateDropdownUI(shouldShow) {

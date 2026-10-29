@@ -1,5 +1,6 @@
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
+import { isMobileUI } from './layout-mode.js';
 
 // zoom-manager.js - Zentrale Zoom-Logik für die Karte
 // Enthält: Auto-Zoom, Three-Frame-Zoom, Zoom-Preview-Frames, Overlap-Detection
@@ -234,8 +235,7 @@ class ZoomManager {
 
       // Mobile/Tablet: schneller, direkter Zoom ohne Frame-Effekte
       // Nur wenn Nutzer die Karte nicht manuell bewegt hat (wird durch Searchbar-Fokus/Input zurückgesetzt)
-      const isMobileUI = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-      if (isMobileUI) {
+      if (isMobileUI()) {
         if (appContext.searchHeader?._manualSpaceClick) return;
         if (this._userMoved) return;
         this._isAutoZooming = true;
@@ -432,8 +432,7 @@ class ZoomManager {
 
     setTimeout(() => {
       this.removeZoomPreviewFrame(secondFrameInfo?.layer);
-      const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-      if (!isMobile) this.searchBar?.focus();
+      if (!isMobileUI()) this.searchBar?.focus();
     }, 800);
   }
 
@@ -465,8 +464,7 @@ class ZoomManager {
       if (!keepFrame) {
         this.removeZoomPreviewFrame(frameToRemove);
       }
-      const isMobile = window.matchMedia('(max-width: 1024px), (min-width: 768px) and (pointer: coarse)').matches;
-      if (!isMobile) this.searchBar?.focus();
+      if (!isMobileUI()) this.searchBar?.focus();
     });
   }
 
