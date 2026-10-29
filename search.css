@@ -583,6 +583,10 @@
   display: none !important;
 }
 
+#search-open-btn {
+  display: none;
+}
+
 /* =================================================================
    MOBILE RESPONSIVE
    ================================================================= */
@@ -879,7 +883,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 2px 10px;
     background: black;
   }
 
@@ -1416,6 +1420,38 @@
    ═══════════════════════════════════════════════════════ */
 
 @media (max-width: 767px) {
+  /* === PHONE: Nav-Spalte = Hoch | Runter | Lupe (je 40px) neben dem 3-Zeilen-Grid (3×40px) === */
+  .dropdown-wrap { display: flex; }
+  .dropdown-nav  { display: flex; min-height: 40px; }
+  #search-open-btn {
+    display: flex;
+    border-top: 1px solid grey;
+    font-size: 1.1em;
+  }
+  /* Ohne Treffer: nur die Lupe */
+  .dropdown-wrap:not(:has(#suggestions-dropdown.is-active)) #dropdown-nav-up,
+  .dropdown-wrap:not(:has(#suggestions-dropdown.is-active)) #dropdown-nav-down { display: none; }
+
+  /* Eingabezeile nur bei geöffneter Suche oder aktivem Suchtext; Filter-Button ersetzt durch die Lupe */
+  .filter-btn-area { display: none; }
+  .search-container:not(.search-open):not(.has-query) .search-input-row { display: none; }
+
+  #suggestions-dropdown.is-active {
+    grid-auto-rows: 40px;
+    min-height: 120px;
+    max-height: 120px;
+  }
+  #suggestions-dropdown .listing-item {
+    height: 40px;
+    padding: 4px 8px;
+    scroll-snap-align: none;
+  }
+  /* Snap-Punkt alle 3 Zeilen = jedes 6. Item */
+  #suggestions-dropdown .listing-item:nth-child(4n+1) { scroll-snap-align: none; }
+  #suggestions-dropdown .listing-item:nth-child(6n+1) { scroll-snap-align: start; }
+  /* Laufende Nummer in der Stadtzeile (rechts) statt in einer eigenen dritten Zeile */
+  #suggestions-dropdown .listing-item .item-number { bottom: 4px; }
+
   /* Pane grows to natural height — no clipping */
   .mf-sheet {
     max-height: none;

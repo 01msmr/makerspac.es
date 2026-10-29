@@ -2,6 +2,11 @@ import AppConfig from './config.js';
 import { appContext } from './app-context.js';
 import { todayWeekday } from './date-utils.js';
 
+// Phone: 3 Zeilen × 40px je Snap-Seite; Tablet: Zeilenhöhe 58px (siehe search.css)
+const PHONE_ROW_H = 40;
+const PHONE_ROWS = 3;
+const TABLET_ROW_H = 58;
+
 class MobileFilterUI {
   constructor() {
     this.sheet = null;
@@ -35,8 +40,19 @@ class MobileFilterUI {
   };
 
   init() {
-    document.getElementById('filter-toggle-btn')
-      ?.addEventListener('click', () => this.sheet ? this.close() : this.open());
+    // Phone: Lupe in der Nav-Spalte (öffnet Eingabezeile + Filter-Pane); Tablet/Desktop: Filter-Button
+    for (const id of ['filter-toggle-btn', 'search-open-btn']) {
+      document.getElementById(id)
+        ?.addEventListener('click', () => this.sheet ? this.close() : this.open());
+    }
+
+    // Eingabezeile bleibt sichtbar, solange ein Suchtext aktiv ist (sonst wäre der Filter unsichtbar)
+    document.getElementById('search-bar')
+      ?.addEventListener('input', () => this._syncQueryVisibility());
+
+    // Treffer gewählt → Pane + Tastatur weg, Karte sichtbar
+    document.getElementById('suggestions-dropdown')
+      ?.addEventListener('click', e => { if (this.sheet && e.target.closest('.listing-item')) this.close(); });
 
     document.getElementById('dropdown-nav-up')
       ?.addEventListener('click', () => this._navClick('up'));
@@ -49,6 +65,7 @@ class MobileFilterUI {
       let mapResizeFrame = 0;
       const updateMapBottom = () => {
         document.documentElement.style.setProperty('--mobile-ui-height', searchContainer.offsetHeight + 'px');
+        this._positionSheet(); // Pane sitzt direkt über dem Container (Höhe ändert sich mit der Eingabezeile)
         // #map folgt `bottom: var(--mobile-ui-height)`: Leaflet muss die neue Containergröße kennen,
         // sonst rechnen fitBounds/GL-Canvas mit der alten Höhe (beim Start 844 statt 655px).
         cancelAnimationFrame(mapResizeFrame);
@@ -119,7 +136,7 @@ class MobileFilterUI {
           this._scrollSessionDist += Math.abs(step);
 
           // Aktivieren wenn kumulativ ≥ 1 pageH in gleicher Richtung
-          if (this._scrollSessionDist >= 116 && this._touchFastDir !== dir) {
+          if (this._scrollSessionDist >= this._pageHeight() && this._touchFastDir !== dir) {
             this._touchFastDir = dir;
             clearTimeout(this._navClickTimers[dir]);
             this._navClickCounts[dir] = 1; // nächster Click → count=2 → 5×-Scroll
@@ -143,12 +160,17 @@ class MobileFilterUI {
     }
   }
 
+  _pageHeight() {
+    if (!this._isTablet()) return PHONE_ROWS * PHONE_ROW_H;
+    return window.matchMedia('(orientation: landscape)').matches ? 3 * TABLET_ROW_H : 4 * TABLET_ROW_H;
+  }
+
   scrollDropdown(direction) {
     const dropdown = document.getElementById('suggestions-dropdown');
     if (!dropdown) return;
     const isTablet   = this._isTablet();
     const landscape  = isTablet && window.matchMedia('(orientation: landscape)').matches;
-    const rowH = landscape ? 174 : isTablet ? 232 : 116; // Landscape: 3×58=174, Portrait: 4×58=232, Phone: 2×58=116
+    const rowH = this._pageHeight(); // Landscape: 3×58=174, Portrait: 4×58=232, Phone: 3×40=120
     // Basis auf nächste rowH-Grenze runden → sauberes Snapping auch nach Touch
     const base = Math.round((this._scrollTarget ?? dropdown.scrollTop) / rowH) * rowH;
     this._scrollTarget = base + direction * rowH;
@@ -324,14 +346,12 @@ class MobileFilterUI {
     this.sheet = this.buildSheet();
     document.body.appendChild(this.sheet);
 
-    // Position: bottom of overlay = top edge of search-input-row
-    // Filter pane covers the dropdown area; z-index: 10001 keeps it above dropdown
-    const searchRow = document.querySelector('.search-input-row');
-    const rect      = searchRow?.getBoundingClientRect();
-    const bottomPos = rect ? window.innerHeight - rect.top : 44;
-    this.sheet.style.left   = '0';
-    this.sheet.style.right  = '0';
-    this.sheet.style.bottom = bottomPos + 'px';
+    // Suche offen: Eingabezeile erscheint unter der Liste, Pane sitzt direkt über dem Container
+    // (Liste + Eingabe bleiben mit Tastatur sichtbar; z-index 10001 über der Karte)
+    document.querySelector('.search-container')?.classList.add('search-open');
+    this.sheet.style.left  = '0';
+    this.sheet.style.right = '0';
+    this._positionSheet();
 
     // Slide-in Animation
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -349,15 +369,21 @@ class MobileFilterUI {
     // Außerhalb tippen → schließen (Filter-Button ausgenommen)
     this._outsideHandler = (e) => {
       const filterBtn = document.getElementById('filter-toggle-btn');
-      if (this.sheet && !this.sheet.contains(e.target) && !filterBtn?.contains(e.target)) this.close();
+      const container = document.querySelector('.search-container');
+      if (this.sheet && !this.sheet.contains(e.target) && !container?.contains(e.target) && !filterBtn?.contains(e.target)) this.close();
     };
     setTimeout(() => document.addEventListener('pointerdown', this._outsideHandler), 0);
 
-    // Resize/Orientierungswechsel → sofort schließen
-    this._resizeHandler = () => this.close();
-    window.addEventListener('resize', this._resizeHandler, { once: true });
+    // Orientierungswechsel (Breite ändert sich) → schließen. Höhenänderungen (Tastatur) schließen NICHT.
+    const openWidth = window.innerWidth;
+    this._resizeHandler = () => { if (window.innerWidth !== openWidth) this.close(); };
+    window.addEventListener('resize', this._resizeHandler);
 
     document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-angle-down');
+    document.querySelector('#search-open-btn i')?.setAttribute('class', 'fas fa-angle-down');
+
+    // Direkt im Klick-Handler fokussieren (iOS öffnet die Tastatur nur in der Nutzergeste)
+    if (this._isPhone()) document.getElementById('search-bar')?.focus();
 
     this._hasInteracted = false;
     this._resetAutoClose();
@@ -392,8 +418,35 @@ class MobileFilterUI {
     }
 
     document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-filter');
+    document.querySelector('#search-open-btn i')?.setAttribute('class', 'fas fa-magnifying-glass');
+
+    document.querySelector('.search-container')?.classList.remove('search-open');
+    document.getElementById('search-bar')?.blur(); // Tastatur weg
+    this._syncQueryVisibility();
 
     this.updateChipBar();
+  }
+
+  // Layout-Branch wie der CSS-Block `@media (max-width: 767px)` (Eingabezeile nur bei geöffneter Suche)
+  _isPhone() {
+    return window.matchMedia('(max-width: 767px)').matches;
+  }
+
+  /**
+   * Pane-Unterkante: Phone = Oberkante des Search-Containers (Liste + Eingabe bleiben sichtbar);
+   * Tablet = Oberkante der Eingabezeile (Pane überdeckt die Liste wie bisher).
+   */
+  _positionSheet() {
+    if (!this.sheet) return;
+    const anchor = this._isPhone() ? '.search-container' : '.search-input-row';
+    const top = document.querySelector(anchor)?.getBoundingClientRect().top;
+    this.sheet.style.bottom = (top != null ? window.innerHeight - top : 44) + 'px';
+  }
+
+  /** Eingabezeile sichtbar halten, solange ein Suchtext gesetzt ist */
+  _syncQueryVisibility() {
+    const hasText = !!document.getElementById('search-bar')?.value.trim();
+    document.querySelector('.search-container')?.classList.toggle('has-query', hasText);
   }
 
   _setupDragToClose(panel) {
@@ -629,6 +682,8 @@ class MobileFilterUI {
   }
 
   _resetAutoClose() {
+    // Bei geöffneter Suche (Eingabezeile sichtbar) bleibt das Pane offen, bis es geschlossen wird
+    if (document.querySelector('.search-container.search-open')) return;
     clearTimeout(this._autoCloseTimer);
     clearTimeout(this._toastTimer);
     this._toastTimer = null;
@@ -812,6 +867,8 @@ class MobileFilterUI {
       }
     }
 
+    this._syncQueryVisibility();
+
     // Inline-Indicator in der Search-Input-Row
     const indicator = document.getElementById('filter-active-indicator');
     if (indicator) {
@@ -850,7 +907,7 @@ class MobileFilterUI {
   }
 
   // Scroll-Snapping + Border-Radius:
-  // Phone: 2x2
+  // Phone: 2x3 (3 Zeilen à 40px)
   // Tablet Portrait: 4x4 (16 Items)
   // Tablet Landscape: 3x5 (15 Items)
   applyGridSnapping(dropdown) {
@@ -875,11 +932,11 @@ class MobileFilterUI {
     } else {
       // Phone Default
       cols = 2;
-      rowsPerPage = 2;
+      rowsPerPage = PHONE_ROWS;
     }
 
     const itemsPerPage = cols * rowsPerPage;
-    const rowH = 58;
+    const rowH = isTablet ? TABLET_ROW_H : PHONE_ROW_H;
     const items = Array.from(dropdown.querySelectorAll('.listing-item'));
     const n = items.length;
 

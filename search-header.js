@@ -228,7 +228,7 @@ class SearchHeader {
   handleSearchFocus() {
     this.zoomManager?.resetUserMoved();
     if (window.innerWidth <= 767) {
-      window.mobileFilterUI?.close();
+      // Filter-Pane bleibt offen: Suche und Filter lassen sich kombinieren
       this.searchBar.closest('.search-container')?.classList.add('bar-focused');
     }
 
@@ -1081,7 +1081,7 @@ class SearchHeader {
   }
 
   adjustDropdownHeight() {
-    if (window.innerWidth <= 767) return; // Mobile: Höhe wird von CSS (116px) und applyGridSnapping gesetzt
+    if (window.innerWidth <= 767) return; // Mobile: Höhe wird von CSS (3×40px) und applyGridSnapping gesetzt
     const dropdown = this.suggestionsDropdown;
     if (!dropdown) return;
 

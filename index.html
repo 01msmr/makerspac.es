@@ -10,6 +10,8 @@
        ohne capable fällt iOS auf eine System-eigene, opake Statusbar zurück
        (unabhängig von Light/Dark Mode der Seite, wirkt wie ein dunkler Balken über der Karte). -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <!-- Chrome/Android: Standardname (apple-… ist dort deprecated), iOS braucht weiterhin die apple-Variante -->
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <!-- Favicons -->
@@ -191,6 +193,17 @@
             class="fas fa-angle-up"></i></button>
         <button class="dropdown-nav-btn" id="dropdown-nav-down" aria-label="Seite runter"><i
             class="fas fa-angle-down"></i></button>
+        <button class="dropdown-nav-btn search-open-btn" id="search-open-btn" aria-label="Suche"><i
+            class="fas fa-magnifying-glass"></i></button>
+        <script>
+          // Phone: Suche reagiert sofort (vor den Modulen): Eingabezeile einblenden + fokussieren (Tastatur).
+          // Sobald MobileFilterUI geladen ist, bindet dessen init() den Button selbst (öffnet zusätzlich das Filter-Pane).
+          document.getElementById('search-open-btn').addEventListener('click', function () {
+            if (window.mobileFilterUI) return;
+            document.querySelector('.search-container').classList.add('search-open');
+            document.getElementById('search-bar').focus();
+          });
+        </script>
       </div>
       <div id="suggestions-dropdown"></div>
     </div>
