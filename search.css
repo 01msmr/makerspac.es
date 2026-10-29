@@ -882,6 +882,14 @@
 
   /* mf-opt-user-country: no special styling */
 
+  /* Rechter Teil der Dropdown-Zeile: Chip-Leiste über der Liste */
+  .dropdown-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* === MOBILE ACTIVE FILTERS CHIP BAR === */
   .mobile-active-filters {
     display: none; /* flex when active filters exist */
@@ -1119,6 +1127,20 @@
   }
   #suggestions-dropdown .listing-item-address { gap: 4px; }
   #suggestions-dropdown .listing-item-details { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* PLZ + Stadt: reicht der Platz nicht für beides, bricht die PLZ in eine (abgeschnittene) zweite Zeile um —
+     row-reverse + order: Stadt wird zuerst gesetzt, PLZ steht visuell davor; justify-content hält links bündig */
+  #suggestions-dropdown .listing-city-line {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    column-gap: 0.3em;
+    height: 1.25em;
+    line-height: 1.25em;
+  }
+  #suggestions-dropdown .loc-city { order: -1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Status-Icon-Spalte so breit wie das Style-Icon im Titel → Stadt beginnt auf der x-Position des Titeltexts */
+  #suggestions-dropdown .listing-status-icon { width: 15px; justify-content: center; }
   #suggestions-dropdown .listing-meeting-today { display: none; }
   #suggestions-dropdown .listing-workshops     { display: none; }
 
@@ -1467,9 +1489,16 @@
   .map-counter.is-clearable { pointer-events: auto; cursor: pointer; }
   .map-counter.is-pill { padding: 0 8px; }
 
-  /* Eingabezeile nur bei geöffneter Suche oder aktivem Suchtext; Filter-Button ersetzt durch die Lupe */
-  .filter-btn-area { display: none; }
-  .search-container:not(.search-open):not(.has-query) .search-input-row { display: none; }
+  /* Eingabezeile liegt nur im geöffneten Filter-Pane (mobile-filter.js verschiebt sie dorthin und zurück).
+     Im Container ist sie unsichtbar — außer beim frühen Tipp auf die Lupe, bevor die Module geladen sind. */
+  .search-container > .search-input-row { display: none; }
+  .search-container.search-open > .search-input-row { display: flex; }
+  .mf-overlay { flex-direction: column; align-items: stretch; justify-content: flex-end; }
+  .mf-overlay > .search-input-row { flex-shrink: 0; }
+
+  /* Nav-Spalte bündig zu den 3 Listenzeilen (die Chip-Leiste darüber gehört nur zur Liste) */
+  .dropdown-nav { align-self: flex-end; }
+  .dropdown-nav .dropdown-nav-btn { flex: 0 0 40px; }
 
   #suggestions-dropdown.is-active {
     grid-auto-rows: 40px;

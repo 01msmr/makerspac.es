@@ -171,7 +171,7 @@ class ListingCore {
           ${addressStatusIcon}
           <div class="listing-item-address-lines">
             ${streetHtml}
-            <div class="listing-item-details">${flagHtml}${formattedPlz || ''} <b>${AppConfig.escapeHtml(location.loc.city)}</b></div>
+            <div class="listing-item-details listing-city-line"><span class="loc-plz">${flagHtml}${formattedPlz || ''}</span> <b class="loc-city">${AppConfig.escapeHtml(location.loc.city)}</b></div>
             ${distanceLineHtml}
           </div>
           ${meetingIconHtml} <!-- Erst das Heute-Badge -->

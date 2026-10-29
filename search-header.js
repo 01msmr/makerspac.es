@@ -182,7 +182,6 @@ class SearchHeader {
       if (this.searchBar.value.length === 0) return;
       this.searchBar.value = '';
       if (window.routingManager) window.routingManager._isOnLocationRoute = false;
-      window.mobileFilterUI?._syncQueryVisibility(); // Eingabezeile wieder ausblenden
       this.triggerFilterUpdate();
     });
 

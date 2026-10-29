@@ -208,6 +208,24 @@ Wenn `_isOnLocationRoute = true` und kein Query/Pill aktiv → Fast-Path: nur `a
 **Ausnahme:** `hasCountryFilter` überspringt den Fast-Path — `filterByText` muss laufen, damit `preFilteredLocations` aktuell bleibt.
 `applyCountryFilter()` setzt zusätzlich `_isOnLocationRoute = false`.
 
+### Phone-Suche (≤767px, 2026-10)
+- Untere Leiste: Nav-Spalte **Hoch | Runter | Lupe** (`#search-open-btn`, je 40px) neben dem Grid mit **3 Zeilen × 40px**
+  (Snap-Seite = 6 Items; Konstanten `PHONE_ROW_H`/`PHONE_ROWS` in `mobile-filter.js`, Tablet bleibt 58px/4×4 bzw. 3×5).
+- Eingabezeile (`.search-input-row`) liegt **nur im geöffneten Filter-Pane** (ganz unten): `MobileFilterUI` verschiebt
+  sie beim Öffnen ins Overlay und beim Schließen zurück in den Container (dort `display: none`). **Kein Auto-Fokus** —
+  Tastatur erst beim Tippen ins Feld. Der Filter-Button links in der Zeile schließt das Pane.
+- Chip-Leiste (`#mobile-active-filters`) steht über der Liste (Wrapper `.dropdown-main`), nicht über der Nav-Spalte.
+- Kachel-Adresszeile (`.listing-city-line`): PLZ (`.loc-plz`) fällt weg, wenn PLZ + Stadt nicht passen (flex row-reverse +
+  wrap); Status-Icon-Spalte 15px → Text beginnt auf der x-Position des Titeltexts.
+- Filter-Pane (`.mf-overlay`, z-index 10001) liegt **über** der Liste (z-Achse), Unterkante = unterer Rand
+  (Phone; Tablet: Oberkante der Eingabezeile, `MobileFilterUI._positionSheet()`). Es schließt nicht beim Tippen ins Feld;
+  `resize` schließt nur bei Breitenänderung (Tastatur ändert nur die Höhe). Auto-Close-Timer ist bei offener Suche aus.
+- Treffer-Zähler: `#map-counter` (Pille in der Karte unten rechts, `SearchHeader.updateSearchCounter` spiegelt ihn);
+  Tippen löscht nur den Suchtext, nicht die Filter. Der Zähler in der Eingabezeile ist auf Phone ausgeblendet.
+- Früher Klick-Handler für die Lupe inline in `index.html` (zeigt die Eingabezeile, bevor die Module geladen sind).
+- Auto-Zoom (`zoom-manager.js`): `#map` endet bereits über der Bottom-UI → **kein** `--mobile-ui-height`-Padding in
+  `fitBounds` (sonst doppelt abgezogen); oben bleibt die Pin-Höhe frei. Wächter: `tests/mobile-layout-guards.test.js`.
+
 ### Mobile-Layout-Invarianten (iOS-Streifen-Bug, 2026-10)
 Auf dem Handy müssen immer gelten:
 - `document.documentElement.scrollWidth === window.innerWidth` — die Seite darf **nie breiter als das Gerät** sein.

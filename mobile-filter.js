@@ -46,10 +46,6 @@ class MobileFilterUI {
         ?.addEventListener('click', () => this.sheet ? this.close() : this.open());
     }
 
-    // Eingabezeile bleibt sichtbar, solange ein Suchtext aktiv ist (sonst wäre der Filter unsichtbar)
-    document.getElementById('search-bar')
-      ?.addEventListener('input', () => this._syncQueryVisibility());
-
     // Treffer gewählt → Pane + Tastatur weg, Karte sichtbar
     document.getElementById('suggestions-dropdown')
       ?.addEventListener('click', e => { if (this.sheet && e.target.closest('.listing-item')) this.close(); });
@@ -346,9 +342,10 @@ class MobileFilterUI {
     this.sheet = this.buildSheet();
     document.body.appendChild(this.sheet);
 
-    // Suche offen: Eingabezeile erscheint unter der Liste; das Pane liegt (z-index 10001) über der Liste,
-    // seine Unterkante ist die Oberkante der Eingabezeile. Kein Auto-Fokus: Tastatur erst beim Tippen ins Feld.
+    // Suche offen: das Pane (z-index 10001) liegt über der Liste; auf Phone sitzt die Eingabezeile ganz unten im Pane.
+    // Kein Auto-Fokus: Tastatur erst beim Tippen ins Feld.
     document.querySelector('.search-container')?.classList.add('search-open');
+    if (this._isPhone()) this._moveInputRowIntoSheet();
     this.sheet.style.left  = '0';
     this.sheet.style.right = '0';
     this._positionSheet();
@@ -417,24 +414,38 @@ class MobileFilterUI {
     document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-filter');
     document.querySelector('#search-open-btn i')?.setAttribute('class', 'fas fa-magnifying-glass');
 
+    this._restoreInputRow(); // vor dem Slide-out: die Zeile darf nicht mit dem Overlay entfernt werden
     document.querySelector('.search-container')?.classList.remove('search-open');
     document.getElementById('search-bar')?.blur(); // Tastatur weg
-    this._syncQueryVisibility();
 
     this.updateChipBar();
   }
 
-  /** Pane-Unterkante = Oberkante der Eingabezeile; das Pane überdeckt (z-Achse) Liste und Chip-Leiste */
-  _positionSheet() {
-    if (!this.sheet) return;
-    const rect = document.querySelector('.search-input-row')?.getBoundingClientRect();
-    this.sheet.style.bottom = (rect ? window.innerHeight - rect.top : 44) + 'px';
+  // Layout-Branch wie der CSS-Block `@media (max-width: 767px)` (Eingabezeile liegt nur im Pane)
+  _isPhone() {
+    return window.matchMedia('(max-width: 767px)').matches;
   }
 
-  /** Eingabezeile sichtbar halten, solange ein Suchtext gesetzt ist */
-  _syncQueryVisibility() {
-    const hasText = !!document.getElementById('search-bar')?.value.trim();
-    document.querySelector('.search-container')?.classList.toggle('has-query', hasText);
+  _moveInputRowIntoSheet() {
+    this._inputRow = document.querySelector('.search-input-row');
+    if (this._inputRow) this.sheet.appendChild(this._inputRow);
+  }
+
+  _restoreInputRow() {
+    if (!this._inputRow) return;
+    document.querySelector('.search-container')?.prepend(this._inputRow);
+    this._inputRow = null;
+  }
+
+  /**
+   * Pane-Unterkante: Phone = unterer Rand (die Eingabezeile sitzt im Pane); Tablet = Oberkante der Eingabezeile
+   * (sie bleibt im Container). Das Pane überdeckt in beiden Fällen die Liste (z-Achse).
+   */
+  _positionSheet() {
+    if (!this.sheet) return;
+    if (this._isPhone()) { this.sheet.style.bottom = '0'; return; }
+    const rect = document.querySelector('.search-input-row')?.getBoundingClientRect();
+    this.sheet.style.bottom = (rect ? window.innerHeight - rect.top : 44) + 'px';
   }
 
   _setupDragToClose(panel) {
@@ -854,8 +865,6 @@ class MobileFilterUI {
         bar.appendChild(clearAll);
       }
     }
-
-    this._syncQueryVisibility();
 
     // Inline-Indicator in der Search-Input-Row
     const indicator = document.getElementById('filter-active-indicator');

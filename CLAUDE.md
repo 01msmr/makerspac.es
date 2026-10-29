@@ -104,6 +104,11 @@ die Seite skalieren → schwarzer Streifen rechts nach Tastatur auf/zu. Der „+
 (mobile-filter.js) ruft danach `map.invalidateSize()` — nicht an anderer Stelle duplizieren.
 Details + Schnellprüfung: `architektur.md` → „Mobile-Layout-Invarianten".
 
+### Phone-Suche — Eingabezeile nur im Filter-Pane
+Auf Phone (≤767px) liegt die Eingabezeile nur im geöffneten Filter-Pane (wird dorthin verschoben); die Lupe sitzt in der
+Nav-Spalte, das Pane liegt per z-index über der Liste, Chip-Leiste über der Liste, kein Auto-Fokus, `fitBounds` ohne `--mobile-ui-height`-Padding
+(`#map` endet bereits über der Bottom-UI). Details: `architektur.md` → „Phone-Suche".
+
 ### Ladepfad (ADR-005)
 `index.html` hält `modulepreload`-Liste (= Import-Graph von `map.js`, mit `sw.js` `STATIC_ASSETS` abgleichen),
 früher klassischer Inline-Script-Start per `import()` (`data-preload.js`, `tile-loader.js`; kein `type="module"` — deferred, startet erst nach CSS), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
