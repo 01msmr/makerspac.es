@@ -1,7 +1,7 @@
 // data-store.js - Settings: Sprache, Farbschema, Clustering, Bookmarks, Consent
 
 import { consent } from './datasync.js';
-import { openOverlayTab } from './embed-overlay.js';
+import { openOverlayTab } from './overlay-loader.js';
 import { showToast } from './toast.js';
 
 class DataStore {

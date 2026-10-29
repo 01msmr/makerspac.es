@@ -15,11 +15,10 @@ import { BookmarkSync, consent } from './datasync.js';
 import { dataStore } from './data-store.js';
 import { zoomManager } from './zoom-manager.js';
 import { initApp } from './main.js';
-import { initEmbedOverlay } from './embed-overlay.js';
+import { initOverlayTrigger } from './overlay-loader.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
-import { DemoMode, OpenDemoMode, TodayDemoMode } from './demo-mode.js';
 import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { detectCountryCodeFromURL } from './data-preload.js';
 import {
@@ -57,7 +56,7 @@ window.languageSwitcher = dataStore; // backward compat
 window.zoomManager = zoomManager;   // backward compat
 
 appContext.ready('services');
-initEmbedOverlay();
+initOverlayTrigger();
 
 // Loading-Skeleton (#loading-backdrop/#loading-stack): Markup + Dismissal liegen in index.html
 
@@ -989,8 +988,10 @@ const init = async () => {
     setupDesktopRezoomButton();
     setupTitleResetButton();
 
-    // Demo/attract mode (trade-show kiosk)
-    appContext.waitFor('app').then(() => {
+    // Demo/attract mode (trade-show kiosk): Modul (≈ 26 KB) erst nach dem Start in Leerlaufzeit laden
+    appContext.waitFor('app').then(async () => {
+      await new Promise(resolve => (window.requestIdleCallback ?? setTimeout)(resolve));
+      const { DemoMode, OpenDemoMode, TodayDemoMode } = await import('./demo-mode.js');
       const demoMode = new DemoMode(appContext);
       new OpenDemoMode(appContext);
       const todayDemo = new TodayDemoMode(appContext);

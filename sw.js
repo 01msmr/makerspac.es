@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v108'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v109'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -64,6 +64,7 @@ const STATIC_ASSETS = [
   '/embed-loader.js',
   '/add-space-form.js',
   '/embed-overlay.js',
+  '/overlay-loader.js',
   '/main.js',
   '/mobile-filter.js',
   '/dropdown-pager.js',

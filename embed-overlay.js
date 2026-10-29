@@ -95,20 +95,10 @@ export function openOverlayTab(tab) {
   showOverlay(tab);
 }
 
-export function initEmbedOverlay() {
-  const btn = document.querySelector('.tool-add');
-  if (!btn) return;
-
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    showOverlay();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') _closeEmbed();
-  });
-}
+// Der Klick auf "+" liegt in overlay-loader.js (lädt dieses Modul erst bei Bedarf); Escape gilt ab dem Laden.
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') _closeEmbed();
+});
 
 function _closeEmbed() {
   const backdrop = document.querySelector('.embed-backdrop');

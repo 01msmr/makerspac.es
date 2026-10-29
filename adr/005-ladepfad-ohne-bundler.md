@@ -53,3 +53,9 @@ Der Ladepfad wird **ohne Build-Step** optimiert (ADR-002 bleibt gültig):
 
 ---
 *Unveränderlich. Neue Entscheidung → neues ADR.*
+
+## Nachtrag 2026-10: selten gebrauchte Module per `import()`
+Statt Dateien zu bündeln (Build-Schritt, siehe oben) werden Module, die nur auf Nutzeraktion oder in Sonderfällen
+gebraucht werden, erst bei Bedarf geladen: das „+“-Overlay (`embed-overlay.js` + `add-space-form.js`, ≈ 70 KB roh) über
+`overlay-loader.js` und `demo-mode.js` (≈ 26 KB) nach dem Start in Leerlaufzeit. Zusammen ≈ 95 KB (≈ 25 KB gzip) weniger im
+kritischen Pfad. Sie bleiben im Service-Worker-Precache und fehlen in `modulepreload`.
