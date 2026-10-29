@@ -37,6 +37,7 @@ class SearchHeader {
     this.searchBar = /** @type {HTMLInputElement|null} */ (document.getElementById('search-bar'));
     this.suggestionsDropdown = document.getElementById('suggestions-dropdown');
     this.searchCounter = document.getElementById('search-counter');
+    this.mapCounter = document.getElementById('map-counter');
 
     this.listingCore = null;
     this.searchFilter = null;
@@ -173,6 +174,16 @@ class SearchHeader {
         this.focusSearchBarIfDesktop();
         this.triggerFilterUpdate();
       }
+    });
+
+    // Phone: Zähler-Pille in der Karte — Tippen löscht NUR den Suchtext, Filter-Pills bleiben
+    this.mapCounter?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.searchBar.value.length === 0) return;
+      this.searchBar.value = '';
+      if (window.routingManager) window.routingManager._isOnLocationRoute = false;
+      window.mobileFilterUI?._syncQueryVisibility(); // Eingabezeile wieder ausblenden
+      this.triggerFilterUpdate();
     });
 
     document.addEventListener('languageChanged', () => {
@@ -1037,6 +1048,14 @@ class SearchHeader {
     this.searchCounter.setAttribute('role', 'tooltip');
     this.searchCounter.setAttribute('data-microtip-position', 'bottom-left');
     this.searchCounter.setAttribute('aria-label', label);
+
+    if (this.mapCounter) {
+      this.mapCounter.textContent = String(count);
+      this.mapCounter.classList.add('visible');
+      this.mapCounter.classList.toggle('is-pill', count > 99);
+      this.mapCounter.classList.toggle('is-clearable', this.searchBar.value.length > 0);
+      this.mapCounter.setAttribute('aria-label', label);
+    }
   }
 
   updateDropdownUI(shouldShow) {

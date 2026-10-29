@@ -587,6 +587,11 @@
   display: none;
 }
 
+/* Treffer-Zähler in der Karte: nur Phone (siehe @media (max-width: 767px)) */
+.map-counter {
+  display: none;
+}
+
 /* =================================================================
    MOBILE RESPONSIVE
    ================================================================= */
@@ -1431,6 +1436,36 @@
   /* Ohne Treffer: nur die Lupe */
   .dropdown-wrap:not(:has(#suggestions-dropdown.is-active)) #dropdown-nav-up,
   .dropdown-wrap:not(:has(#suggestions-dropdown.is-active)) #dropdown-nav-down { display: none; }
+
+  /* Treffer-Zähler: statt in der Eingabezeile als Pille unten rechts in der Karte (über der Attribution) */
+  .search-input-wrapper .search-counter { display: none; }
+  .map-counter {
+    display: flex;
+    position: fixed;
+    right: 8px;
+    bottom: calc(var(--mobile-ui-height, 0px) + 28px);
+    z-index: 1002;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    font: inherit;
+    font-family: var(--font-family);
+    font-weight: bold;
+    color: var(--space-hover);
+    background-color: var(--dropdown-bg);
+    border: 1px solid var(--space-hover);
+    border-radius: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .map-counter.visible { opacity: 1; }
+  .map-counter.is-clearable { pointer-events: auto; cursor: pointer; }
+  .map-counter.is-pill { padding: 0 8px; }
 
   /* Eingabezeile nur bei geöffneter Suche oder aktivem Suchtext; Filter-Button ersetzt durch die Lupe */
   .filter-btn-area { display: none; }

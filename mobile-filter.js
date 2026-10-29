@@ -346,8 +346,8 @@ class MobileFilterUI {
     this.sheet = this.buildSheet();
     document.body.appendChild(this.sheet);
 
-    // Suche offen: Eingabezeile erscheint unter der Liste, Pane sitzt direkt über dem Container
-    // (Liste + Eingabe bleiben mit Tastatur sichtbar; z-index 10001 über der Karte)
+    // Suche offen: Eingabezeile erscheint unter der Liste; das Pane liegt (z-index 10001) über der Liste,
+    // seine Unterkante ist die Oberkante der Eingabezeile. Kein Auto-Fokus: Tastatur erst beim Tippen ins Feld.
     document.querySelector('.search-container')?.classList.add('search-open');
     this.sheet.style.left  = '0';
     this.sheet.style.right = '0';
@@ -381,9 +381,6 @@ class MobileFilterUI {
 
     document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-angle-down');
     document.querySelector('#search-open-btn i')?.setAttribute('class', 'fas fa-angle-down');
-
-    // Direkt im Klick-Handler fokussieren (iOS öffnet die Tastatur nur in der Nutzergeste)
-    if (this._isPhone()) document.getElementById('search-bar')?.focus();
 
     this._hasInteracted = false;
     this._resetAutoClose();
@@ -427,20 +424,11 @@ class MobileFilterUI {
     this.updateChipBar();
   }
 
-  // Layout-Branch wie der CSS-Block `@media (max-width: 767px)` (Eingabezeile nur bei geöffneter Suche)
-  _isPhone() {
-    return window.matchMedia('(max-width: 767px)').matches;
-  }
-
-  /**
-   * Pane-Unterkante: Phone = Oberkante des Search-Containers (Liste + Eingabe bleiben sichtbar);
-   * Tablet = Oberkante der Eingabezeile (Pane überdeckt die Liste wie bisher).
-   */
+  /** Pane-Unterkante = Oberkante der Eingabezeile; das Pane überdeckt (z-Achse) Liste und Chip-Leiste */
   _positionSheet() {
     if (!this.sheet) return;
-    const anchor = this._isPhone() ? '.search-container' : '.search-input-row';
-    const top = document.querySelector(anchor)?.getBoundingClientRect().top;
-    this.sheet.style.bottom = (top != null ? window.innerHeight - top : 44) + 'px';
+    const rect = document.querySelector('.search-input-row')?.getBoundingClientRect();
+    this.sheet.style.bottom = (rect ? window.innerHeight - rect.top : 44) + 'px';
   }
 
   /** Eingabezeile sichtbar halten, solange ein Suchtext gesetzt ist */

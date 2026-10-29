@@ -162,6 +162,9 @@
   </div>
 
 
+  <!-- Treffer-Zähler in der Kartenansicht (nur Phone, rechts unten); Tippen löscht den Suchtext (nicht die Filter) -->
+  <button type="button" class="map-counter" id="map-counter" aria-live="polite"></button>
+
   <!-- search bar container -->
   <div class="search-container">
     <div class="search-input-row">
@@ -196,12 +199,11 @@
         <button class="dropdown-nav-btn search-open-btn" id="search-open-btn" aria-label="Suche"><i
             class="fas fa-magnifying-glass"></i></button>
         <script>
-          // Phone: Suche reagiert sofort (vor den Modulen): Eingabezeile einblenden + fokussieren (Tastatur).
+          // Phone: Suche reagiert sofort (vor den Modulen): Eingabezeile einblenden (ohne Auto-Fokus/Tastatur).
           // Sobald MobileFilterUI geladen ist, bindet dessen init() den Button selbst (öffnet zusätzlich das Filter-Pane).
           document.getElementById('search-open-btn').addEventListener('click', function () {
             if (window.mobileFilterUI) return;
             document.querySelector('.search-container').classList.add('search-open');
-            document.getElementById('search-bar').focus();
           });
         </script>
       </div>
