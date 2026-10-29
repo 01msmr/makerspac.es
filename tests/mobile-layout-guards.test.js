@@ -1,6 +1,6 @@
 // tests/mobile-layout-guards.test.js
 // Statische Regressions-Wächter (CI-tauglich, ohne Browser) für zwei Fehler, die auf iOS als schwarzer
-// Streifen rechts sichtbar wurden. Echter Layout-Beweis im Browser: `npm run check:layout`.
+// Streifen rechts sichtbar wurden. Echter Layout-Beweis: Schnellprüfung in architektur.md → „Mobile-Layout-Invarianten“ + Test am iPhone.
 // Läuft mit: node --test tests/mobile-layout-guards.test.js
 
 import { test } from 'node:test';
