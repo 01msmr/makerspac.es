@@ -40,3 +40,10 @@ test('3: der visualViewport-Handler nutzt denselben Pfad (kein zweiter, abweiche
   const src = read('mobile-filter.js');
   assert.match(src, /visualViewport\.addEventListener\('resize',\s*updateMapBottom\)/);
 });
+
+test('4: fitBounds zieht die Bottom-UI nicht doppelt ab (#map endet bereits über ihr, Leaflet-Größe = sichtbare Karte)', () => {
+  for (const f of ['zoom-manager.js', 'map.js', 'nearby-header.js']) {
+    const src = read(f);
+    assert.doesNotMatch(src, /paddingBottomRight:\s*L\.point\(8,\s*8\s*\+\s*uiH\)/, `${f}: uiH-Padding verschiebt die Auswahl nach oben`);
+  }
+});

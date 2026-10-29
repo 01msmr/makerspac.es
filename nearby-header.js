@@ -842,10 +842,9 @@ const CONFIG = AppConfig;
       // Panel wurde gerade eingehängt → --mobile-ui-height erst nach ResizeObserver-Tick aktuell
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (!this.searchCircle) return;
-        // 20% Luft um den Umkreis; symmetrisches Padding relativ zum sichtbaren
-        // Kartenbereich (Bottom-UI via uiH ausgeglichen) → Kreis vertikal mittig
+        // 20% Luft um den Umkreis; symmetrisches Padding; #map endet bereits
+        // über der Bottom-UI (Leaflet-Größe = sichtbare Karte) → Kreis vertikal mittig
         const bounds = this.searchCircle.getBounds().pad(0.2);
-        const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
         zm.previousZoomBounds = bounds; // → Rezoom-Button zoomt auf die Nearby-Gesamtheit
         zm._isAutoZooming = true;
         zm._userMoved = false;
@@ -854,7 +853,7 @@ const CONFIG = AppConfig;
           animate: true,
           duration: 0.7, // gemächlich ans Ziel (halbe Geschwindigkeit)
           paddingTopLeft: L.point(8, 8),
-          paddingBottomRight: L.point(8, 8 + uiH),
+          paddingBottomRight: L.point(8, 8),
         });
       }));
     }

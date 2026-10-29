@@ -238,13 +238,13 @@ class ZoomManager {
       if (isMobileUI) {
         if (appContext.searchHeader?._manualSpaceClick) return;
         if (this._userMoved) return;
-        const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
         this._isAutoZooming = true;
         this.map.fitBounds(newBounds, {
           animate: true,
           duration: 0.35,
-          paddingTopLeft: L.point(8, 8),
-          paddingBottomRight: L.point(8, 8 + uiH),
+          // Pin-Symbol ragt über seinen Ankerpunkt nach oben → oben dessen Höhe als Platz lassen
+          paddingTopLeft: L.point(8, 8 + (markersToZoom[0].options.icon?.options?.iconSize?.[1] ?? 41)),
+          paddingBottomRight: L.point(8, 8),
         });
         this.map.once('moveend', () => { this._isAutoZooming = false; });
         this.previousZoomBounds = newBounds;

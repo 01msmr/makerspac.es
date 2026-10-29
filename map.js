@@ -734,7 +734,6 @@ function setupZoomOutButton() {
 
   btn.addEventListener('click', () => {
     if (!zoomManager.previousZoomBounds) return;
-    const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
     // Treat like an auto-zoom so zoomstart doesn't re-set _userMoved
     zoomManager._isAutoZooming = true;
     zoomManager._userMoved = false;
@@ -743,7 +742,7 @@ function setupZoomOutButton() {
       animate: true,
       duration: 0.35,
       paddingTopLeft: L.point(8, 8),
-      paddingBottomRight: L.point(8, 8 + uiH),
+      paddingBottomRight: L.point(8, 8),
     });
     updateButtonVisibility(); // fade out immediately
   });
