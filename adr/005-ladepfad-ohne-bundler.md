@@ -19,7 +19,7 @@ Der Ladepfad wird **ohne Build-Step** optimiert (ADR-002 bleibt gültig):
 
 1. **`<link rel="modulepreload">`** in `index.html` für den kompletten Import-Graph von `map.js`
    (flacht den Wasserfall ab). Die Liste wird von Hand gepflegt und entspricht `sw.js` `STATIC_ASSETS`.
-2. **Früher Inline-Module-Script** (vor `map.js`) importiert nur dependency-freie Leaf-Module:
+2. **Früher klassischer Inline-Script mit `import()`** (läuft sofort beim Parsen; ein Module-Script wäre deferred und startete erst nach CSS: gemessen ~5,7 s statt ~2,4 s bei Slow-4G) importiert nur dependency-freie Leaf-Module:
    `data-preload.js` (Länder-Erkennung, Preload von `markers.json`/`spaces-{cc}.json`/`lang.json`) und
    `tile-loader.js` (`loadMaplibreIfNeeded()`, idempotent, preloadet zusätzlich das Style-JSON).
 3. **Karte entkoppelt von MapLibre:** `setupMap()` läuft sofort; `updateMapTiles()` hängt den Vector-Layer an,

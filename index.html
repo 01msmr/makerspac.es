@@ -84,14 +84,13 @@
   <link rel="modulepreload" href="search-pills.js" />
   <link rel="modulepreload" href="autocomplete-manager.js" />
 
-  <!-- MapLibre früh anstoßen: tile-loader.js hat keine Abhängigkeiten und lädt parallel zum restlichen
-       Modul-Graph; map.js init() erhält später dasselbe Promise (idempotent). Vor map.js platziert, damit es
-       nicht auf dessen Modul-Graph wartet (Ausführung in Dokumentreihenfolge, nach den defer-Libs → L existiert). -->
-  <script type="module">
-    import { loadMaplibreIfNeeded } from './tile-loader.js';
-    import { preloadInitialData } from './data-preload.js';
-    preloadInitialData();                    // markers.json / spaces-{cc}.json + lang.json beim Parsen statt nach map.js
-    loadMaplibreIfNeeded().catch(() => {}); // Fehler behandelt map.js init() beim erneuten Await
+  <!-- Früher Start: Daten-Preload + MapLibre-Laden. Klassisches Inline-Script mit dynamic import() läuft SOFORT beim
+       Parsen — ein <script type="module"> wäre deferred und liefe erst nach CSS + defer-Libs (gemessen: ~5,7 s statt
+       ~0,2 s bei Slow-4G). tile-loader.js wartet vor dem Plugin selbst auf Leaflet. map.js init() erhält später
+       dasselbe Promise (idempotent). -->
+  <script>
+    import('./data-preload.js').then(m => m.preloadInitialData()).catch(() => {});
+    import('./tile-loader.js').then(m => m.loadMaplibreIfNeeded()).catch(() => {}); // Fehler behandelt map.js init() erneut
   </script>
 
   <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->

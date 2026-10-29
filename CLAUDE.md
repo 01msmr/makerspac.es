@@ -106,7 +106,7 @@ Details + Schnellprüfung: `architektur.md` → „Mobile-Layout-Invarianten".
 
 ### Ladepfad (ADR-005)
 `index.html` hält `modulepreload`-Liste (= Import-Graph von `map.js`, mit `sw.js` `STATIC_ASSETS` abgleichen),
-früher Inline-Module-Start (`data-preload.js`, `tile-loader.js`), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
+früher klassischer Inline-Script-Start per `import()` (`data-preload.js`, `tile-loader.js`; kein `type="module"` — deferred, startet erst nach CSS), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
 idempotent; die Karte darf **nie** auf MapLibre warten. Neue Imports → Liste in `index.html` + `sw.js` pflegen.
 
 ### Listener auf persistenten Containern — idempotent halten

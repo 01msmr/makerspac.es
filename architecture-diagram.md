@@ -400,7 +400,7 @@ sequenceDiagram
     participant RT as routing.js
 
     Note over html: parse: modulepreload (whole import graph),<br/>preload fonts, static loading skeleton
-    html->>html: inline module (before map.js):<br/>preloadInitialData() → markers/spaces-{cc}/lang.json<br/>loadMaplibreIfNeeded() → MapLibre + style JSON (idempotent)
+    html->>html: classic inline script, import() (runs at parse time):<br/>preloadInitialData() → markers/spaces-{cc}/lang.json<br/>loadMaplibreIfNeeded() → MapLibre + style JSON (idempotent)
     html->>html: search bar focused (desktop) — typing works before init
 
     map->>AC: new AppContext()

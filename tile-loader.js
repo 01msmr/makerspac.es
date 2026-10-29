@@ -98,9 +98,18 @@ export function loadMaplibreIfNeeded(mode = getTileMode()) {
   pre.rel = 'preload'; pre.as = 'fetch'; pre.crossOrigin = 'anonymous'; pre.href = MAPLIBRE_STYLE_URL;
   document.head.appendChild(pre);
 
+  // Plugin (10 KB) parallel vorladen statt erst nach Ausführung von maplibre-gl.js zu laden (spart 1 RTT)
+  const prePlugin = document.createElement('link');
+  prePlugin.rel = 'preload'; prePlugin.as = 'script'; prePlugin.href = '/libs/maplibre-leaflet/leaflet-maplibre-gl.js';
+  document.head.appendChild(prePlugin);
+
   const cssPromise = loadCSS('/libs/maplibre-gl/maplibre-gl.css');
-  const jsPromise = loadScript('/libs/maplibre-gl/maplibre-gl.js')
-    .then(() => loadScript('/libs/maplibre-leaflet/leaflet-maplibre-gl.js'));
+  // Das Plugin erweitert L → bei frühem Start (vor den defer-Libs) bis DOMContentLoaded warten
+  const pluginSrc = '/libs/maplibre-leaflet/leaflet-maplibre-gl.js';
+  const jsPromise = loadScript('/libs/maplibre-gl/maplibre-gl.js').then(() =>
+    document.readyState === 'loading'
+      ? new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true })).then(() => loadScript(pluginSrc))
+      : loadScript(pluginSrc));
 
   _maplibrePromise = Promise.all([jsPromise, cssPromise]).then(() => undefined);
   return _maplibrePromise;
