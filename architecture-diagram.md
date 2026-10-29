@@ -59,6 +59,8 @@ subgraph SUPPORT["Support / Services"]
     BM["bookmark-manager.js\nbookmarkManager"]
     DSYNC["datasync.js\nBookmarkSync + ConsentManager"]
     ERR["error-monitor.js"]
+    DPRE["data-preload.js\npreloadInitialData · detectCountryCodeFromURL"]
+    TOAST["toast.js\nshowToast"]
     SW["sw.js\nService Worker"]
 end
 
@@ -66,6 +68,12 @@ end
 COLS --> CFG
 FCFG --> CFG
 WT --> CFG
+
+%% early leaf modules (ADR-005 / toast unification)
+MAP --> DPRE
+DS --> TOAST
+RT --> TOAST
+DSYNC --> TOAST
 
 %% map.js imports everything at boot
 AC --> MAP
@@ -385,18 +393,24 @@ stateDiagram-v2
 
 ```mermaid
 sequenceDiagram
+    participant html as index.html
     participant map as map.js
     participant AC as app-context.js
     participant main as main.js
     participant RT as routing.js
 
+    Note over html: parse: modulepreload (whole import graph),<br/>preload fonts, static loading skeleton
+    html->>html: inline module (before map.js):<br/>preloadInitialData() → markers/spaces-{cc}/lang.json<br/>loadMaplibreIfNeeded() → MapLibre + style JSON (idempotent)
+    html->>html: search bar focused (desktop) — typing works before init
+
     map->>AC: new AppContext()
     map->>map: init i18n, consent,<br/>bookmarks, dataStore, zoomManager
     map->>AC: ready('services') ← phase 1
 
-    map->>map: L.map() + L.markerClusterGroup()
+    map->>map: L.map() + L.markerClusterGroup()  (no base layer yet)
     map->>map: applyMarkerClickHandlers()
     map->>AC: ready('map') ← phase 2
+    Note over map: vector layer is attached later by updateMapTiles()<br/>once MapLibre has loaded (failure → raster fallback)<br/>— UI/markers never wait for it (ADR-005)
 
     par fetch in parallel
         map->>map: fetch('spaces-{cc}.json') (Stage 1)

@@ -27,6 +27,16 @@ Live Server Extension
 
 Dann: `http://localhost:8080`
 
+**Lokal testen — Stolperfallen**
+
+- `status.json` liegt nicht im Repo (`.gitignore`) → lokal `curl https://makerspac.es/status.json -o status.json`
+  (sonst 404 und keine Live-Status-Pins). Wird nie committet.
+- Der **Service Worker** liefert JS/CSS cache-first: nach Änderungen DevTools → Application → Service Workers →
+  *Unregister* + Reload (oder „Bypass for network"). Sonst testest du alte Dateien.
+- Mobile-Verhalten (Tastatur, Safe-Area, Standalone/PWA) lässt sich nicht emulieren — am echten Gerät prüfen
+  (iOS: Safari Web Inspector; Android: `chrome://inspect`). Layout-Schnellprüfung: siehe
+  [architektur.md → Mobile-Layout-Invarianten](architektur.md).
+
 ---
 
 ## Tests
@@ -50,6 +60,10 @@ Tests liegen in [tests/](tests/):
 | `search-filter.test.js` | Suchlogik, Filter, Länder |
 | `i18n.test.js` | Übersetzungen, Spracherkennung, Fallbacks |
 | `routing.test.js` | Slug-Generierung, URL-Routing-Logik |
+| `tile-loader.test.js` | Tile-Modus-Erkennung, MapLibre-Lader (idempotent) |
+| `data-preload.test.js` | Länder-Erkennung aus Hash, Preload der Startdaten |
+| `toast.test.js` | Info-Toast: Position, Wiederverwendung, Ausblenden |
+| `mobile-layout-guards.test.js` | statische Wächter gegen den iOS-Streifen-Bug (Tooltip-Überhang, Map-Resize-Pfad) |
 | `validate-locations.js` | JSON-Schema-Check für alle Makerspace-Einträge |
 
 ---

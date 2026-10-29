@@ -51,7 +51,7 @@
 
 **Kein Backend, kein Build-Step, kein Framework.**
 
-**Ladepfad (index.html):** `<link rel="modulepreload">` für den kompletten Import-Graph von `map.js` (flacht den Wasserfall ab — bei neuen/entfernten Imports die Liste mitpflegen) · früher Inline-Module-Script startet `preloadInitialData()` + `loadMaplibreIfNeeded()` vor `map.js` · MapLibre blockiert den Start nicht: `setupMap()` läuft sofort, `updateMapTiles()` zieht den Vector-Layer nach (Fehler → Raster-Fallback) · statisches Loading-Skeleton in index.html (`#loading-backdrop`/`#loading-stack`), samt Inline-Script zum Entfernen beim ersten `filterResultsChanged` (bewusst in index.html, versionsgleich auch bei altem gecachtem map.js) · Service-Worker-Registrierung erst nach `window.load`.
+**Ladepfad (index.html, Begründung: [ADR-005](adr/005-ladepfad-ohne-bundler.md)):** `<link rel="modulepreload">` für den kompletten Import-Graph von `map.js` (flacht den Wasserfall ab — bei neuen/entfernten Imports die Liste mitpflegen) · früher Inline-Module-Script startet `preloadInitialData()` + `loadMaplibreIfNeeded()` vor `map.js` · MapLibre blockiert den Start nicht: `setupMap()` läuft sofort, `updateMapTiles()` zieht den Vector-Layer nach (Fehler → Raster-Fallback) · statisches Loading-Skeleton in index.html (`#loading-backdrop`/`#loading-stack`), samt Inline-Script zum Entfernen beim ersten `filterResultsChanged` (bewusst in index.html, versionsgleich auch bei altem gecachtem map.js) · Service-Worker-Registrierung erst nach `window.load`.
 
 ---
 
@@ -207,6 +207,23 @@ Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindung
 Wenn `_isOnLocationRoute = true` und kein Query/Pill aktiv → Fast-Path: nur `applyFilters()` (kein `filterByText`).
 **Ausnahme:** `hasCountryFilter` überspringt den Fast-Path — `filterByText` muss laufen, damit `preFilteredLocations` aktuell bleibt.
 `applyCountryFilter()` setzt zusätzlich `_isOnLocationRoute = false`.
+
+### Mobile-Layout-Invarianten (iOS-Streifen-Bug, 2026-10)
+Auf dem Handy müssen immer gelten:
+- `document.documentElement.scrollWidth === window.innerWidth` — die Seite darf **nie breiter als das Gerät** sein.
+  Schon ein unsichtbarer Überhang (z.B. `::after` eines Microtip-Tooltips mit `opacity: 0`) lässt iOS WebKit
+  (Safari **und** Vivaldi/Chrome auf iOS) die Seite skalieren/verschieben → absolut positionierte Karte schmaler als
+  fixierte UI → schwarzer Body-Streifen rechts, besonders nach Tastatur auf/zu.
+  Ursache damals: `.title-bar .tool-add::after` (~200px). Fix: im `@media (max-width: 767px)` ausgeblendet.
+- `map.getSize()` entspricht der Box von `#map` — `#map` folgt `bottom: var(--mobile-ui-height)`;
+  `mobile-filter.js updateMapBottom()` ist der **einzige** Pfad, der danach `map.invalidateSize()` auslöst.
+- `#search-bar` hat auf Mobile ≥ 16px Schrift (sonst zoomt iOS beim Fokus).
+
+Schnellprüfung (Konsole / Remote-Inspector am Gerät):
+`[innerWidth, document.documentElement.scrollWidth, map.getSize().x, document.getElementById('map').offsetWidth]`
+— alle vier gleich. Statische CI-Wächter: `tests/mobile-layout-guards.test.js`.
+Test-Falle: der Service Worker liefert cache-first alte CSS/JS — beim Testen SW deregistrieren
+(DevTools → Application) oder in CDP `Network.setBypassServiceWorker`.
 
 ### Brace-Depth-Check nach CSS-Änderungen
 ```bash

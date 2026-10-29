@@ -96,6 +96,19 @@ _isAutoZooming      → true während executeZoom() + executeThreeFrameZoom() (D
 - `document.dispatchEvent(new Event('filterResultsChanged'))` — feuert nach jedem `_notifyResultsChange()`
 - Dropdown: alle gefilterten Locations werden gerendert (kein Cap) — `CONFIG.settings.maxListItems` gilt nur noch für das Nearby-Popover (nearby-header.js), nicht für das Dropdown
 
+### Mobile-Layout — Seite nie breiter als das Gerät
+`document.documentElement.scrollWidth` muss `window.innerWidth` entsprechen. Unsichtbare Überhänge
+(`::after`-Tooltips mit `opacity: 0`, absolut positionierte Elemente) lassen iOS WebKit (Safari **und** Vivaldi iOS)
+die Seite skalieren → schwarzer Streifen rechts nach Tastatur auf/zu. Der „+"-Tooltip ist deshalb im
+`@media (max-width: 767px)` ausgeblendet. Karte: `#map` folgt `--mobile-ui-height`, `updateMapBottom()`
+(mobile-filter.js) ruft danach `map.invalidateSize()` — nicht an anderer Stelle duplizieren.
+Details + Schnellprüfung: `architektur.md` → „Mobile-Layout-Invarianten".
+
+### Ladepfad (ADR-005)
+`index.html` hält `modulepreload`-Liste (= Import-Graph von `map.js`, mit `sw.js` `STATIC_ASSETS` abgleichen),
+früher Inline-Module-Start (`data-preload.js`, `tile-loader.js`), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
+idempotent; die Karte darf **nie** auf MapLibre warten. Neue Imports → Liste in `index.html` + `sw.js` pflegen.
+
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
 - Diff-basiert: vergleicht `_visibleMarkerIds` (Set) mit neuen Locations → nur Deltas ändern
@@ -110,6 +123,8 @@ map.js              → Einstieg, Bootstrap, AppContext-Lifecycle, Marker-Setup
 main.js             → Orchestrierung, Module verknüpfen
 app-context.js      → Shared State, Phase-Barrieren
 tile-loader.js      → Tile-Mode-Erkennung, lazy MapLibre-Loader (map.js + embed.js)
+data-preload.js     → Länder-Erkennung aus Hash, früher Preload der Startdaten (Leaf, aus index.html)
+toast.js            → Info-Toast unter dem Logo (Leaf; Schweregrad-Meldungen: datasync.showNotification)
 marker-manager.js   → Marker/Popup/Sticky/Connection-Line-Logik
 
 config.js           → Zentrale Config (assembliert aus Sub-Modulen)
