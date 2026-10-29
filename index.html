@@ -29,23 +29,46 @@
   <!-- Data split preload: map.js erkennt Country aus URL-Hash und fügt <link rel=preload> ein -->
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
 
+  <!-- CSS-Ladestrategie: blockierend nur, was der erste Paint braucht (leaflet, Icon-Font, main-layout inkl. Skeleton,
+       main-responsive, search). Alles andere lädt mit media="print"→"all" nicht-blockierend (Reihenfolge im Cascade
+       bleibt die Dokumentreihenfolge). Neue Regeln für Elemente im statischen HTML → in eine blockierende Datei. -->
   <!-- Bibliotheks-CSS -->
   <link rel="stylesheet" href="libs/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.css" />
-  <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.Default.css" media="print" onload="this.media='all'" />
   <!-- maplibre-gl.css: lazy-loaded in tile-loader.js only when WebGL/vector mode is active -->
-  <link rel="stylesheet" href="libs/microtip.css" />
-  <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
+  <link rel="stylesheet" href="libs/microtip.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" media="print" onload="this.media='all'" />
   <link rel="stylesheet" href="libs/fontawesome/css/subset.min.css" />
 
   <!-- App CSS -->
   <link rel="stylesheet" href="main-layout.css" />
-  <link rel="stylesheet" href="main-components.css" />
+  <link rel="stylesheet" href="main-components.css" media="print" onload="this.media='all'" />
   <link rel="stylesheet" href="main-responsive.css" />
-  <link rel="stylesheet" href="listing-core.css" />
+  <link rel="stylesheet" href="listing-core.css" media="print" onload="this.media='all'" />
   <link rel="stylesheet" href="search.css" />
-  <link rel="stylesheet" href="nearby.css" />
-  <link rel="stylesheet" href="styles-autocomplete.css" />
+  <link rel="stylesheet" href="nearby.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="styles-autocomplete.css" media="print" onload="this.media='all'" />
+
+  <script>
+    // Promise: alle nicht-blockierenden Stylesheets angewendet (load oder error → nie hängen bleiben); map.js wartet darauf
+    window.__cssReady = Promise.all([].map.call(document.querySelectorAll('link[rel=stylesheet][media=print]'), function (l) {
+      return new Promise(function (r) {
+        if (l.media === 'all') return r();
+        l.addEventListener('load', r); l.addEventListener('error', r);
+      });
+    }));
+  </script>
+  <noscript>
+    <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.css" />
+    <link rel="stylesheet" href="libs/leaflet-markercluster/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="libs/microtip.css" />
+    <link rel="stylesheet" href="libs/flag-icons/css/flag-icons.min.css" />
+    <link rel="stylesheet" href="main-components.css" />
+    <link rel="stylesheet" href="listing-core.css" />
+    <link rel="stylesheet" href="nearby.css" />
+    <link rel="stylesheet" href="styles-autocomplete.css" />
+  </noscript>
 
   <!-- Bibliotheks-JS: defer → paralleler Download, Ausführung nach DOM-Parsing -->
   <script defer src="libs/leaflet/leaflet.js"></script>

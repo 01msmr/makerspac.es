@@ -1924,57 +1924,6 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: scale(2);
 }
 
-/* Shared map backdrop — animated show/hide (loading overlay + embed overlay) */
-.map-backdrop {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--backdrop-duration, 0.7s);
-}
-
-.map-backdrop.show     { opacity: var(--backdrop-opacity, 0.45); }
-.map-backdrop.fade-out { opacity: 0; }
-
-.loading-overlay-stack {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.loading-overlay-toast {
-  padding: 6px 11px;
-  border-radius: 8px;
-  background: var(--microtip-background-color);
-  color: var(--microtip-color);
-  border: 3px solid var(--microtip-border-color);
-  font-family: var(--font-family);
-  font-size: var(--microtip-font-size, 12px);
-  font-weight: var(--microtip-font-weight, 600);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.3s ease-in;
-}
-
-.loading-overlay-toast.show { opacity: 1; }
-
-.loading-overlay-toast.zoom-out {
-  opacity: 0;
-  transform: scale(2);
-}
-
-.loading-overlay-toast--large {
-  font-size: calc(var(--microtip-font-size, 12px) * 1.5);
-}
-
 /* Settings Confirm Tooltip (Microtip-Stil) */
 .settings-confirm-tooltip {
   position: fixed;

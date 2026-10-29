@@ -977,6 +977,8 @@ const init = async () => {
     initMarkerManager({ map, icons });
     initializeClustering();
     await Promise.all([i18nPromise, loadData()]);
+    // Nicht-blockierendes CSS (index.html) muss angewendet sein, bevor UI-Module Layout messen (Auto-Zoom-Rects)
+    await window.__cssReady;
     bookmarkSync.init(window.translations);
 
     setupSearch();
