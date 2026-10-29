@@ -109,6 +109,12 @@ Details + Schnellprüfung: `architektur.md` → „Mobile-Layout-Invarianten".
 früher Inline-Module-Start (`data-preload.js`, `tile-loader.js`), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
 idempotent; die Karte darf **nie** auf MapLibre warten. Neue Imports → Liste in `index.html` + `sw.js` pflegen.
 
+### Listener auf persistenten Containern — idempotent halten
+`setupItemListeners()` läuft bei **jedem** Dropdown-Rebuild (jede Eingabe). Alles, was dort/davon auf den
+(persistenten) Container gehängt wird, muss die alte Referenz vorher entfernen (`container._tapHandlers`,
+`container._tooltipScroll`). Sonst summieren sich Listener (war: 176 Scroll-Listener nach dem Laden, +1 je Render →
+~43ms pro Scroll-Event, doppelte Eingabe-Latenz beim Löschen). Prüfen: Anzahl Aufrufe pro Event nach mehreren Renders.
+
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
 - Diff-basiert: vergleicht `_visibleMarkerIds` (Set) mit neuen Locations → nur Deltas ändern

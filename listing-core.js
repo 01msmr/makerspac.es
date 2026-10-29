@@ -322,6 +322,11 @@ class ListingCore {
   initMeetingTooltipObserver(container) {
     if (!container) return;
     const update = () => this.updateMeetingTooltipPositions(container);
+    // Wird bei jedem Dropdown-Rebuild aufgerufen (setupItemListeners) — alten Listener entfernen,
+    // sonst summieren sich die Listener (176 nach dem Laden, +1 je Render) und jedes Scroll-Event
+    // führt die Positionsberechnung hundertfach aus (~43ms pro Event auf gedrosselter CPU).
+    if (container._tooltipScroll) container.removeEventListener('scroll', container._tooltipScroll);
+    container._tooltipScroll = update;
     container.addEventListener('scroll', update, { passive: true });
     // Einmal initial ausführen
     update();
@@ -334,10 +339,14 @@ class ListingCore {
   updateMeetingTooltipPositions(container) {
     const containerRect = container.getBoundingClientRect();
     const halfY = containerRect.top + containerRect.height / 2;
-    container.querySelectorAll('.listing-meeting-today, .listing-workshops').forEach(el => {
-      const elRect = el.getBoundingClientRect();
-      const inLowerHalf = elRect.top > halfY;
-      el.setAttribute('data-microtip-position', inLowerHalf ? 'top-left' : 'bottom-left');
+    const els = [...container.querySelectorAll('.listing-meeting-today, .listing-workshops')];
+    // Erst alle Positionen lesen, dann schreiben: Read→Write je Element erzwang pro Badge ein Layout
+    // (~290ms bei voller Liste auf gedrosselter CPU). Nur geänderte Attribute schreiben (kein Style-Invalidate).
+    const positions = els.map(el => el.getBoundingClientRect().top > halfY ? 'top-left' : 'bottom-left');
+    els.forEach((el, i) => {
+      if (el.getAttribute('data-microtip-position') !== positions[i]) {
+        el.setAttribute('data-microtip-position', positions[i]);
+      }
     });
   }
 
