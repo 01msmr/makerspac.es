@@ -2,6 +2,7 @@
 import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
+import { isPhone } from './layout-mode.js';
 
 // search-filter.js - Zentrale Such- und Filter-Logik
 // Reine Geschäftslogik ohne UI-Komponenten
@@ -303,7 +304,7 @@ class SearchFilter {
 
     // 1. Liste für Marker & Dropdown (Display) - ID-Match als Bonus
     let locationsForDisplay = finalFiltered;
-    if (this._currentIdMatch && window.innerWidth > 767) {
+    if (this._currentIdMatch && !isPhone()) {
       const idMatchId = this._currentIdMatch.ID;
       const alreadyIncluded = finalFiltered.some(loc => loc.ID === idMatchId);
       if (!alreadyIncluded) {
@@ -364,7 +365,7 @@ class SearchFilter {
     document.dispatchEvent(new Event('filterResultsChanged'));
     if (this._onResultsChange) {
       this._onResultsChange(filteredLocations, locationsForZoom,
-        window.innerWidth > 767 ? this._currentIdMatch : null);
+        !isPhone() ? this._currentIdMatch : null);
     }
   }
 

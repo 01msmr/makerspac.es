@@ -3,6 +3,7 @@ import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
 import { isWeeklyToday } from './date-utils.js';
+import { isPhone, isTouch } from './layout-mode.js';
 
 // listing-core.js - Gemeinsame Item-Darstellung, Navigation und Hover-Effekte
 // Wird von search-header.js und nearby-header.js genutzt
@@ -29,7 +30,7 @@ import { isWeeklyToday } from './date-utils.js';
  */
 
 // Connection Line / SVG nur auf Desktop ohne Touch (nicht Smartphone/Tablet)
-const isDesktopNonTouch = () => window.innerWidth > 767 && !('ontouchstart' in window);
+const isDesktopNonTouch = () => !isPhone() && !(isTouch());
 
 /**
  * Gemeinsame Rendering- und Interaktions-Logik für Listing-Items.
@@ -957,7 +958,7 @@ class ListingCore {
       // werden – sonst wird handleItemClick doppelt aufgerufen, was den Popup-Flicker verursacht.
       if (onItemClick) {
         item.addEventListener('click', (e) => {
-          if ('ontouchstart' in window) {
+          if (isTouch()) {
             if (_tapFired) { _tapFired = false; return; }
             if (_touchDidMove) return;
             e.stopPropagation();

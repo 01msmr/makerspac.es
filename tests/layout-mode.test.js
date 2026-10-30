@@ -39,3 +39,42 @@ test('5: kein Modul überschattet importierte Layout-Funktionen mit einer lokale
     }
   }
 });
+
+test('6: Breakpoint-Prüfungen laufen über isPhone() — kein `innerWidth <= 767` / `> 767` mehr', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  for (const f of readdirSync(new URL('..', import.meta.url)).filter(n => n.endsWith('.js'))) {
+    assert.doesNotMatch(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /innerWidth\s*(<=|>)\s*767/, `${f}: isPhone() aus layout-mode.js nutzen`);
+  }
+});
+
+test('7: isTouch() folgt `ontouchstart in window` (Projektregel, nie über die Breite)', async () => {
+  const { isTouch } = await import('../layout-mode.js');
+  delete global.window.ontouchstart;
+  assert.equal(isTouch(), false);
+  global.window.ontouchstart = null;
+  assert.equal(isTouch(), true);
+  delete global.window.ontouchstart;
+});
+
+test('8: Touch-Erkennung nur über isTouch() — kein direktes `ontouchstart in window` außer in layout-mode.js', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  for (const f of readdirSync(new URL('..', import.meta.url)).filter(n => n.endsWith('.js') && n !== 'layout-mode.js')) {
+    assert.doesNotMatch(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /'ontouchstart' in window/, `${f}: isTouch() aus layout-mode.js nutzen`);
+  }
+});
+
+test('9: Dark-Mode nur über isDarkMode() (colours.js) — kein eigenes prefers-color-scheme-matches', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  for (const f of readdirSync(new URL('..', import.meta.url)).filter(n => n.endsWith('.js') && n !== 'colours.js')) {
+    assert.doesNotMatch(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /prefers-color-scheme: dark\)'\)\.matches/, `${f}: isDarkMode() aus colours.js nutzen`);
+  }
+});
+
+test('10: die JS-Queries aus layout-mode.js stehen wörtlich in den CSS-Dateien (Breakpoints nicht auseinanderlaufen lassen)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = ['main-layout.css', 'search.css', 'main-responsive.css', 'nearby.css'].map(f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')).join('\n');
+  const norm = s => s.replace(/\s+/g, ' ');
+  for (const [name, q] of [['MOBILE_UI_QUERY', MOBILE_UI_QUERY], ['TABLET_QUERY', TABLET_QUERY], ['PHONE_QUERY', PHONE_QUERY]]) {
+    assert.ok(norm(css).includes(`@media ${q}`), `${name} (${q}) kommt in keiner CSS-Datei als @media-Block vor`);
+  }
+});

@@ -13,6 +13,7 @@
 
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
+import { isPhone, isTouch } from './layout-mode.js';
 
 const CONFIG = AppConfig;
 
@@ -85,8 +86,8 @@ const CONFIG = AppConfig;
       this.hintElement = document.createElement('div');
       this.hintElement.className = 'nearby-cursor-hint';
 
-      const hintKey = ('ontouchstart' in window) ? 'nearbySpaces.hintTouch' : 'nearbySpaces.hint';
-      const hintText = window.i18n?.t(hintKey) || (('ontouchstart' in window) ? 'Lange tippen für lokale Makerspaces' : 'Rechtsklick für lokale Makerspaces');
+      const hintKey = (isTouch()) ? 'nearbySpaces.hintTouch' : 'nearbySpaces.hint';
+      const hintText = window.i18n?.t(hintKey) || ((isTouch()) ? 'Lange tippen für lokale Makerspaces' : 'Rechtsklick für lokale Makerspaces');
       this.hintElement.innerHTML = `
         <div class="hint-icon-wrapper">
           <i class="${CONFIG.icons.ui.crosshairs}"></i>
@@ -140,7 +141,7 @@ const CONFIG = AppConfig;
       // Leaflets tapHold ist im iOS-Safari-TAB unzuverlässig: Safaris eigener
       // Long-Press-Recognizer feuert bei ~500ms ein touchcancel und bricht
       // tapHold ab (im Standalone-/PWA-Modus passiert das nicht).
-      if ('ontouchstart' in window) {
+      if (isTouch()) {
         this._setupTouchLongPress();
       }
 
@@ -179,8 +180,8 @@ const CONFIG = AppConfig;
           this.showPopover();
         }
         if (this.hintElement?.parentElement) {
-          const hintKey = ('ontouchstart' in window) ? 'nearbySpaces.hintTouch' : 'nearbySpaces.hint';
-          const hintText = window.i18n?.t(hintKey) || (('ontouchstart' in window) ? 'Lange tippen für lokale Makerspaces' : 'Rechtsklick für lokale Makerspaces');
+          const hintKey = (isTouch()) ? 'nearbySpaces.hintTouch' : 'nearbySpaces.hint';
+          const hintText = window.i18n?.t(hintKey) || ((isTouch()) ? 'Lange tippen für lokale Makerspaces' : 'Rechtsklick für lokale Makerspaces');
           const span = this.hintElement.querySelector('span');
           if (span) span.textContent = hintText;
         }
@@ -707,7 +708,7 @@ const CONFIG = AppConfig;
 
     /** Phone-Layout? Layout-Frage → Breite (Tablets behalten den Desktop-Popover) */
     _isMobileLayout() {
-      return window.innerWidth <= 767;
+      return isPhone();
     }
 
     /**
@@ -865,7 +866,7 @@ const CONFIG = AppConfig;
     // fälschlich groß sein. Nur auf Phone/Tablet abziehen (dort ist .search-container
     // tatsächlich fixed am unteren Rand); Desktop-Popover braucht den vollen Viewport.
     _visibleBottom() {
-      if (!('ontouchstart' in window)) return window.innerHeight;
+      if (!(isTouch())) return window.innerHeight;
       const uiH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-ui-height')) || 0;
       return window.innerHeight - uiH;
     }

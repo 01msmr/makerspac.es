@@ -9,7 +9,7 @@ import AppConfig from './config.js';
 import { todayWeekday } from './date-utils.js';
 import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
-import { isMobileUI } from './layout-mode.js';
+import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
 
 const CONFIG = AppConfig;
 
@@ -107,7 +107,15 @@ class SearchHeader {
 
   initializeEventListeners() {
     this.focusSearchBarIfDesktop();
+    this._bindSearchBar();
+    this._bindDropdown();
+    this._bindMap();
+    this._bindCounters();
+    this._bindGlobalEvents();
+  }
 
+  /** Eingabefeld: Tastatur, Fokus/Blur, Filter-Button, Klick außerhalb schließt das Dropdown (Desktop) */
+  _bindSearchBar() {
     document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
     this.searchBar.addEventListener('input', () => this.handleSearchInput());
     this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
@@ -125,7 +133,10 @@ class SearchHeader {
         this.closeDropdown();
       }
     });
+  }
 
+  /** Dropdown-Liste: Hover-SVG nachziehen, Mausverfolgung, Wheel/Mousedown */
+  _bindDropdown() {
     this.suggestionsDropdown.addEventListener('scroll', () => {
       if (this._pendingSVGRedraw) return;
       this._pendingSVGRedraw = requestAnimationFrame(() => {
@@ -149,7 +160,10 @@ class SearchHeader {
     this.suggestionsDropdown.addEventListener('mousedown', (e) => {
       e.preventDefault();
     });
+  }
 
+  /** Karte: Verbindungslinie beim Bewegen entfernen und danach neu zeichnen */
+  _bindMap() {
     if (this.map) {
       this.map.on('zoomstart movestart', () => {
         this.listingCore?.removeConnectionLine();
@@ -162,7 +176,10 @@ class SearchHeader {
         });
       });
     }
+  }
 
+  /** Treffer-Zähler (Desktop/Tablet: Pille in der Zeile) und Karten-Status (Phone): Suchbegriffe löschen */
+  _bindCounters() {
     this.searchCounter.addEventListener('click', (e) => {
       e.stopPropagation();
       if (this.searchBar.value.length > 0 || this.pillsManager?.count() > 0) {
@@ -181,7 +198,10 @@ class SearchHeader {
       e.stopPropagation();
       if (this.hasSearchTerms()) this.clearSearchTerms();
     });
+  }
 
+  /** Sprachwechsel und Fenstergröße */
+  _bindGlobalEvents() {
     document.addEventListener('languageChanged', () => {
       this.createActiveFiltersSection();
       if (this.suggestionsDropdown.classList.contains('is-active')) {
@@ -234,7 +254,7 @@ class SearchHeader {
 
   handleSearchFocus() {
     this.zoomManager?.resetUserMoved();
-    if (window.innerWidth <= 767) {
+    if (isPhone()) {
       // Filter-Pane bleibt offen: Suche und Filter lassen sich kombinieren
       this.searchBar.closest('.search-container')?.classList.add('bar-focused');
     }
@@ -252,7 +272,7 @@ class SearchHeader {
   }
 
   handleSearchBlur() {
-    if (window.innerWidth <= 767) {
+    if (isPhone()) {
       if (this._filterBtnDown) {
         this._filterBtnDown = false;
         return; // Filter-Button getippt → Bar bleibt expandiert
@@ -363,7 +383,7 @@ class SearchHeader {
     // Mobile Chip-Bar synchron halten (auch bei Routing-getriggerten Filter-Änderungen)
     window.app?.mobileFilterUI?.updateChipBar?.();
     // Mobile: Dropdown nach Filteränderung zum ersten Item scrollen
-    if (window.innerWidth <= 767) this.suggestionsDropdown.scrollTop = 0;
+    if (isPhone()) this.suggestionsDropdown.scrollTop = 0;
 
     const query = this.searchBar.value.trim();
     const hasPills = this.pillsManager?.count() > 0;
@@ -973,7 +993,7 @@ class SearchHeader {
   // ═══════════════════════════════════════════════════════════════════════════
 
   handleItemClick(location) {
-    const isMobile = window.innerWidth <= 767 || ('ontouchstart' in window);
+    const isMobile = isPhone() || (isTouch());
 
     // Doppelklick / Doppeltap erkennen
     if (!this._clickTimestamps) this._clickTimestamps = {};
@@ -1155,7 +1175,7 @@ class SearchHeader {
   }
 
   adjustDropdownHeight() {
-    if (window.innerWidth <= 767) return; // Mobile: Höhe wird von CSS (3×40px) und applyGridSnapping gesetzt
+    if (isPhone()) return; // Mobile: Höhe wird von CSS (3×40px) und applyGridSnapping gesetzt
     const dropdown = this.suggestionsDropdown;
     if (!dropdown) return;
 
@@ -1179,7 +1199,7 @@ class SearchHeader {
   }
 
   scrollToTop() {
-    const behavior = window.innerWidth <= 767 ? 'instant' : 'smooth';
+    const behavior = isPhone() ? 'instant' : 'smooth';
     this.suggestionsDropdown?.scrollTo({ top: 0, behavior });
     this.listingCore.keyboardIndex = 0;
   }

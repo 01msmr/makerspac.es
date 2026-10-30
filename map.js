@@ -21,6 +21,7 @@ import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
 import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { detectCountryCodeFromURL } from './data-preload.js';
+import { isPhone, isTouch } from './layout-mode.js';
 import {
   initMarkerManager,
   createMarkerForLocation,
@@ -226,11 +227,11 @@ function setupMap() {
   map = new L.Map('map', {
     maxZoom: 18,
     zoomControl: false,
-    closePopupOnClick: !('ontouchstart' in window), // Touch-Geräte (Phone + Tablet): false, Desktop: true
-    doubleClickZoom: !('ontouchstart' in window),   // Eigener touchend-Handler übernimmt auf Touch
+    closePopupOnClick: !(isTouch()), // Touch-Geräte (Phone + Tablet): false, Desktop: true
+    doubleClickZoom: !(isTouch()),   // Eigener touchend-Handler übernimmt auf Touch
     // Touch: stufenloser Zoom — Pinch bleibt exakt stehen, fitBounds passt exakt
     // (kein Abrunden auf ganze Stufen). Desktop behält Stufen (Mausrad-Raster).
-    zoomSnap: ('ontouchstart' in window) ? 0 : 1,
+    zoomSnap: (isTouch()) ? 0 : 1,
   });
 
   appContext.map = map;
@@ -312,7 +313,7 @@ function setupMap() {
     } else if (colorScheme === 'light') {
       isDarkMode = false;
     } else {
-      isDarkMode = darkModeQuery.matches;
+      isDarkMode = AppConfig.isDarkMode();
     }
 
     const styleUrl = MAPLIBRE_STYLE_URL;
@@ -383,7 +384,7 @@ function initializeClustering() {
     spiderfyOnMaxZoom: true,
     spiderfyDistanceMultiplier: 2,
     showCoverageOnHover: false,
-    zoomToBoundsOnClick: !('ontouchstart' in window), // Mobile: kein Zoom bei Cluster-Tap
+    zoomToBoundsOnClick: !(isTouch()), // Mobile: kein Zoom bei Cluster-Tap
     animate: true,
     animateAddingMarkers: false,
     chunkedLoading: true,
@@ -428,7 +429,7 @@ function initializeClustering() {
   // Mobile/Tablet: Cluster-Tap → Spiderify statt Zoom
   // (zoomToBoundsOnClick ist false auf Touch-Geräten, daher sonst kein Effekt)
   // Bibliothek wählt automatisch: Kreis (<9 Marker) oder wachsende Spirale (≥9 Marker)
-  if ('ontouchstart' in window) {
+  if (isTouch()) {
     clusterGroup.on('clusterclick', (e) => {
       clearStickyPopup(); // offenes Popup schließen bevor Cluster aufspringt
       e.layer.spiderfy();
@@ -667,7 +668,7 @@ async function loadData() {
     // Mobile-Optimierung: Defer enrichment to prioritize tile loading bandwidth
     if (needsEnrichment) {
       appContext.waitFor('app').then(() => {
-        const enrichmentDelay = (window.innerWidth <= 767) ? 3000 : 800;
+        const enrichmentDelay = isPhone() ? 3000 : 800;
         setTimeout(() => {
           loadAndMergeFullData();
         }, enrichmentDelay);
@@ -748,7 +749,7 @@ function setupZoomOutButton() {
 }
 
 function setupDesktopRezoomButton() {
-  if ('ontouchstart' in window) return;
+  if (isTouch()) return;
   const btn = document.getElementById('desktop-rezoom-btn');
   if (!btn) return;
 
@@ -791,7 +792,7 @@ function setupMapClickHandler() {
     // Touch: Leaflet's Tap-Helper feuert den map-click auf dem Map-Container (nicht auf dem Marker-Icon).
     // Der .leaflet-marker-icon-Guard funktioniert deshalb auf Touch nicht — stattdessen prüfen
     // ob ein Marker-Tap gerade stattgefunden hat (marker-click feuert immer vor dem map-click).
-    if ('ontouchstart' in window) {
+    if (isTouch()) {
       if (Date.now() - getLastMarkerTapTime() < 350) return;
     } else {
       if (!e.originalEvent?.target) return;
@@ -805,7 +806,7 @@ function setupMapClickHandler() {
   // 2-Finger-Doppeltap: herauszoomen (Phone + Tablet)
   // Leaflet's DoubleClickZoom basiert auf 'dblclick' — das wird auf Touch-Geräten
   // vom Tap-Helper nicht synthetisiert, daher eigene touchend-Zählung nötig.
-  if ('ontouchstart' in window) {
+  if (isTouch()) {
     // Zoom-Schritt pro Doppeltap: 2/3 Stufe = Faktor 2^(2/3) ≈ 1.59 (statt 2.0).
     // Feiner dosierbar; 3 Doppeltaps = exakt 2 ganze Kachelstufen, d.h. die
     // Rasterdarstellung landet regelmäßig wieder auf nativer Schärfe.

@@ -12,6 +12,9 @@ export const PHONE_QUERY = '(max-width: 767px)';
 
 const matches = query => window.matchMedia(query).matches;
 
+/** Touch-Gerät (Phone + Tablet). Projektregel: immer so erkennen, nie über die Breite (CLAUDE.md). */
+export const isTouch = () => 'ontouchstart' in window;
+
 export const isMobileUI = () => matches(MOBILE_UI_QUERY);
 export const isTablet = () => matches(TABLET_QUERY);
 export const isPhone = () => matches(PHONE_QUERY);

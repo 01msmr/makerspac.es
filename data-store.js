@@ -3,6 +3,8 @@
 import { consent } from './datasync.js';
 import { openOverlayTab } from './overlay-loader.js';
 import { showToast } from './toast.js';
+import { isTouch } from './layout-mode.js';
+import { isDarkMode as prefersDark } from './colours.js';
 
 class DataStore {
   constructor() {
@@ -82,7 +84,7 @@ class DataStore {
     });
 
     // Rezoom button — links vom Gear, nur Desktop, Sichtbarkeit via map.js
-    if (!('ontouchstart' in window)) {
+    if (!(isTouch())) {
       const rezoomButton = document.createElement('button');
       rezoomButton.id = 'desktop-rezoom-btn';
       rezoomButton.className = 'settings-gear-button-solo desktop-rezoom-btn';
@@ -529,7 +531,7 @@ class DataStore {
     if (mode === 'dark') {
       isDarkMode = true;
     } else if (mode === 'auto') {
-      isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      isDarkMode = prefersDark();
     }
     const mapContainer = document.getElementById('map');
     if (mapContainer) {

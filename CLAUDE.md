@@ -26,8 +26,9 @@ ADR anlegen (`adr/NNN-titel.md`) wenn eine **grundlegende Designentscheidung** g
 
 ### Mobile/Desktop-Branching
 ```javascript
-// Touch-Erkennung (Phone + Tablet) — IMMER so, nie window.innerWidth:
-if ('ontouchstart' in window) { ... }
+// Touch-Erkennung (Phone + Tablet) — IMMER über layout-mode.js (= 'ontouchstart' in window), nie window.innerWidth:
+import { isTouch, isPhone, isMobileUI } from './layout-mode.js';
+if (isTouch()) { ... }
 
 // CSS-Breakpoint für Layout:
 // @media (max-width: 767px)

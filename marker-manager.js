@@ -19,6 +19,7 @@ import { appContext } from './app-context.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { consent } from './datasync.js';
 import { buildPopupHTML } from './popup-builder.js';
+import { isPhone, isTouch } from './layout-mode.js';
 
 // ─── Injizierte Abhängigkeiten (in initMarkerManager gesetzt) ───────────────
 /** @type {import('leaflet').Map} */
@@ -135,9 +136,7 @@ function removeConnectionLine() {
 function createConnectionLine(suggestionItem, targetMarker, color = null, weight = 6) {
   // Wenn keine Farbe übergeben, nutze HOVER-Farbe (Dark Mode aware)
   if (!color) {
-    const isDarkMode = window.matchMedia &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    color = isDarkMode ? window.MapIcons.colors.HOVER_DARK : window.MapIcons.colors.HOVER_LIGHT;
+    color = AppConfig.isDarkMode() ? window.MapIcons.colors.HOVER_DARK : window.MapIcons.colors.HOVER_LIGHT;
   }
 
   removeConnectionLine();
@@ -485,7 +484,7 @@ function _applyMarkerClickHandler(marker) {
       clearTimeout(window.app.searchHeader.zoomManager?.zoomDebounceTimeout);
       setTimeout(() => { window.app.searchHeader._manualSpaceClick = false; }, 1000);
     }
-    if ('ontouchstart' in window) {
+    if (isTouch()) {
       _lastMarkerTapTime = Date.now(); // map-click kommt nach marker-click → guard in setupMapClickHandler
       // Gespiderfied: _suppressUnspiderify setzen damit unser gepatchter map-click-Handler
       // _unspiderfyWrapper überspringt. Das Flag wird im selben Tick gesetzt und im nächsten
@@ -528,7 +527,7 @@ function _applyPopupOpenHandler(marker, location) {
     if (!wasOpenedByHover) {
       setStickyPopup(marker);
       // Mobile: Listing-Item im Dropdown als aktiv markieren
-      if (window.innerWidth <= 767) {
+      if (isPhone()) {
         const dropdown = document.getElementById('suggestions-dropdown');
         if (dropdown) {
           dropdown.querySelectorAll('.listing-item.active').forEach(el => el.classList.remove('active'));
@@ -686,7 +685,7 @@ function _applyMarkerHoverHandlers(marker, location) {
   // Touch-Geräte (Phone + Tablet) haben kein Hover-Konzept.
   // mouseover/mouseout werden dort durch Tap-Events simuliert und führen
   // zu falschem isHovering-State und stickyTimeout-Fehlern (Popup-Schließen, ungewollter Zoom).
-  if ('ontouchstart' in window) return;
+  if (isTouch()) return;
 
   marker.on('mouseover', () => {
     const state = window.markerStateManager.getState(marker.locationId);

@@ -1,7 +1,7 @@
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
 import { todayWeekday } from './date-utils.js';
-import { isMobileUI, isTablet, isPhone } from './layout-mode.js';
+import { isMobileUI, isTablet, isPhone, isTouch } from './layout-mode.js';
 import { DropdownPager } from './dropdown-pager.js';
 
 class MobileFilterUI {
@@ -51,7 +51,7 @@ class MobileFilterUI {
 
       // Android: Keyboard open/close changes visualViewport — Leaflet canvas muss neu berechnet werden
       // sonst bleibt ein schwarzer Streifen rechts (Canvas-Breite stimmt nicht mit Container überein)
-      if ('ontouchstart' in window && window.visualViewport) {
+      if (isTouch() && window.visualViewport) {
         window.visualViewport.addEventListener('resize', updateMapBottom);
       }
     }
