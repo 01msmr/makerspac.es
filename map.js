@@ -19,7 +19,7 @@ import { initOverlayTrigger } from './overlay-loader.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
-import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
+import { getTileMode, loadMaplibreIfNeeded, loadMaplibreAfterPins, loadTrimmedStyle, splitSymbolLayers, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { detectCountryCodeFromURL } from './data-preload.js';
 import { isPhone, isTouch } from './layout-mode.js';
 import {
@@ -220,6 +220,7 @@ function getCountryCode(countryName) {
 let currentMapLibreLayer = null;
 let currentRasterLayer = null;
 let maplibreAttachPending = false;
+let vectorLayerCall = 0; // Zähler: nur der jüngste updateMapTiles()-Aufruf hängt den Vektor-Layer an
 
 
 function setupMap() {
@@ -291,7 +292,7 @@ function setupMap() {
     if (typeof L.maplibreGL !== 'function') {
       if (!maplibreAttachPending) {
         maplibreAttachPending = true;
-        loadMaplibreIfNeeded()
+        loadMaplibreAfterPins() // Kacheln erst nach den Pins (Bandbreite zuerst für Daten/Marker)
           .then(() => {
             if (typeof L.maplibreGL !== 'function') throw new Error('L.maplibreGL fehlt nach dem Laden');
           })
@@ -316,15 +317,25 @@ function setupMap() {
       isDarkMode = AppConfig.isDarkMode();
     }
 
-    const styleUrl = MAPLIBRE_STYLE_URL;
+    // Stil vorab holen und optimieren (Natural-Earth-Relief begrenzen, siehe tile-loader.js trimStyle); scheitert das,
+    // lädt MapLibre den Original-Stil per URL. attachVectorLayer ist der bisherige synchrone Teil.
+    const call = ++vectorLayerCall;
+    loadTrimmedStyle()
+      .catch(() => MAPLIBRE_STYLE_URL)
+      .then(style => { if (call === vectorLayerCall) attachVectorLayer(style, isDarkMode); });
+  }
 
+  function attachVectorLayer(style, isDarkMode) {
     if (currentMapLibreLayer) {
       map.removeLayer(currentMapLibreLayer);
     }
 
+    // Beschriftungen (Symbol-Layer) erst nach den ersten Kacheln: spart im Start ≈ 1,2 MB Glyphen-PBFs (tile-loader.js)
+    const { base, deferred } = typeof style === 'string' ? { base: style, deferred: [] } : splitSymbolLayers(style);
+
     try {
       currentMapLibreLayer = L.maplibreGL({
-        style: styleUrl,
+        style: base,
         attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       });
 
@@ -332,6 +343,14 @@ function setupMap() {
 
       // Suppress benign MapLibre GL tile parsing errors (null values in OpenFreeMap vector tiles)
       const glMap = currentMapLibreLayer.getMaplibreMap();
+      if (glMap && deferred.length) {
+        glMap.once('idle', () => {
+          if (currentMapLibreLayer?.getMaplibreMap() !== glMap) return; // Layer wurde inzwischen ersetzt (Dark-Mode-Wechsel)
+          for (const { layer, before } of deferred) {
+            try { glMap.addLayer(layer, before); } catch (e) { console.warn('MapLibre Beschriftung:', e.message); }
+          }
+        });
+      }
       if (glMap) {
         glMap.on('error', (e) => {
           if (e.error?.message?.includes('Expected value to be of type number')) return;
@@ -1002,6 +1021,7 @@ const init = async () => {
     // ✅ Nearby Spaces wird von AppMain.init() initialisiert
   } catch (error) {
     console.error('⛔ A critical error occurred during app initialization:', error);
+    loadMaplibreIfNeeded().catch(() => {}); // ohne Pins kommt das Gate nie → Kacheln trotzdem laden
     alert('The application could not be started. Please check the developer console. — [F12]');
   }
 };

@@ -16,6 +16,8 @@
 
   --title-background: rgba(111, 233, 166, 1);
   --bg-color: white;
+  /* Kartenfarbe vor dem Laden der Kacheln = Hintergrund des OpenFreeMap-Stils „liberty“ (#f8f4f0); Dark: gleicher Filter wie die Karte */
+  --map-placeholder: #f8f4f0;
   --text-color: black;
   --border-color: #ccc;
   --shadow-color: rgba(0, 0, 0, 0.5);
@@ -68,7 +70,7 @@ body {
   position: absolute;
   inset: 0;
   /* Platzhalter bis der Basis-Layer (MapLibre) geladen ist — folgt Light/Dark statt Leaflet-Grau (#ddd) */
-  background: var(--bg-color);
+  background: var(--map-placeholder, var(--bg-color));
   /* Long-Press auf der Karte darf keine OS-Textauswahl auslösen
      (iOS: Lupe/Callout, Android: blaue Selektion) — sonst erreicht
      der Long-Tap (Nearby) den contextmenu-Handler nicht sauber.

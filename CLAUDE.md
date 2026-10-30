@@ -114,6 +114,8 @@ Nav-Spalte, das Pane liegt per z-index über der Liste, Chip-Leiste über der Li
 `index.html` hält `modulepreload`-Liste (= Import-Graph von `map.js`, mit `sw.js` `STATIC_ASSETS` abgleichen),
 früher klassischer Inline-Script-Start per `import()` (`data-preload.js`, `tile-loader.js`; kein `type="module"` — deferred, startet erst nach CSS), statisches Skeleton. `loadMaplibreIfNeeded()` bleibt
 idempotent; die Karte darf **nie** auf MapLibre warten. Neue Imports → Liste in `index.html` + `sw.js` pflegen.
+Karte: MapLibre erst **nach den Pins** (`loadMaplibreAfterPins`), Stil über `loadTrimmedStyle` (Relief gestutzt) +
+`splitSymbolLayers` (Beschriftungen nach `idle`), Platzhalterfarbe `--map-placeholder` (ADR-005 Nachtrag).
 Selten gebrauchte Module (`embed-overlay.js`/`add-space-form.js` via `overlay-loader.js`, `demo-mode.js` nach dem Start in
 Leerlaufzeit) werden per `import()` nachgeladen und stehen **nicht** in `modulepreload`, aber im SW-Precache
 (Wächter: `tests/load-path-guards.test.js`).

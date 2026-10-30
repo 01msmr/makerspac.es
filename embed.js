@@ -3,7 +3,7 @@
 import { I18n } from './i18n.js';
 import AppConfig, { createLeafletIcon } from './config.js';
 import { buildPopupHTML } from './popup-builder.js';
-import { getTileMode, loadMaplibreIfNeeded, MAPLIBRE_STYLE_URL } from './tile-loader.js';
+import { getTileMode, loadMaplibreIfNeeded, loadTrimmedStyle, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { isWeeklyToday } from './date-utils.js';
 
 class EmbedMapExtended {
@@ -114,9 +114,10 @@ class EmbedMapExtended {
 
     if (getTileMode() === 'vector') {
       await loadMaplibreIfNeeded();
+      const style = await loadTrimmedStyle().catch(() => MAPLIBRE_STYLE_URL); // ohne 1,4 MB Relief-PNGs im Start-Ausschnitt
       try {
         const mapLibreLayer = L.maplibreGL({
-          style: MAPLIBRE_STYLE_URL,
+          style,
           attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
         });
         mapLibreLayer.addTo(this.map);

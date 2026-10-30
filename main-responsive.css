@@ -11,6 +11,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-color: #1a1a1a;
+    --map-placeholder: #201e1d; /* #f8f4f0 durch den Karten-Dark-Filter (invert/hue/brightness/contrast/saturate) */
     --text-color: #e0e0e0;
     --border-color: #444;
     --shadow-color: rgba(0, 0, 0, 0.7);
@@ -36,6 +37,7 @@
 /* Dark Mode per Attribute */
 [data-color-scheme="dark"] {
   --bg-color: #1a1a1a;
+  --map-placeholder: #201e1d;
   --text-color: #e0e0e0;
   --border-color: #444;
   --shadow-color: rgba(0, 0, 0, 0.7);
@@ -52,6 +54,7 @@
 
 [data-color-scheme="light"] {
   --bg-color: white;
+  --map-placeholder: #f8f4f0;
   --text-color: black;
   --border-color: #ccc;
   --shadow-color: rgba(0, 0, 0, 0.35);

@@ -57,6 +57,70 @@ export function getTileMode() {
 export const MAPLIBRE_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
 /** @type {Promise<void>|null} */
+// ── Stil-Optimierung ────────────────────────────────────────────────────────
+// Der OpenFreeMap-Stil „liberty“ legt ein Natural-Earth-Relief (PNG-Kacheln, je ≈ 130–190 KB!) unter die Karte, das bei
+// Zoom ≥ 6 nur noch 10 % Deckkraft hat. Im Start-Ausschnitt wären das ≈ 15 Kacheln ≈ 2 MB für kaum sichtbare Pixel.
+// Der Layer wird deshalb auf Zoom < RELIEF_MAX_ZOOM begrenzt; beim weiten Herauszoomen lädt er wie gewohnt.
+// ACHTUNG: MapLibre-Zoom = Leaflet-Zoom − 1 (512-px-Kacheln); der Start-Ausschnitt liegt bei MapLibre-Zoom ≈ 4,8.
+const RELIEF_SOURCE = 'ne2_shaded';
+const RELIEF_MAX_ZOOM = 4;
+
+/**
+ * Begrenzt den Relief-Layer des Stils auf Zoom < RELIEF_MAX_ZOOM (rein, mutiert die Eingabe nicht).
+ * @param {any} style MapLibre-Stil (JSON)
+ * @returns {any}
+ */
+export function trimStyle(style) {
+  if (!Array.isArray(style?.layers)) return style;
+  return {
+    ...style,
+    layers: style.layers.map(layer => layer.source === RELIEF_SOURCE
+      ? { ...layer, maxzoom: Math.min(layer.maxzoom ?? RELIEF_MAX_ZOOM, RELIEF_MAX_ZOOM) }
+      : layer),
+  };
+}
+
+/**
+ * Trennt die Symbol-Layer (Beschriftungen, Icons) vom Rest des Stils. Ohne Symbol-Layer lädt MapLibre weder die
+ * Glyphen-PBFs (im Start-Ausschnitt ≈ 23 Dateien ≈ 1,2 MB, nötig für Namen in vielen Schriften) noch zeichnet es
+ * Text: Straßen, Wasser und Flächen erscheinen sofort. Die Symbol-Layer werden danach mit addLayer nachgereicht.
+ * `before` = erster folgende Nicht-Symbol-Layer (Einfügeposition), undefined = ganz oben. Rein, mutiert nichts.
+ * @param {any} style
+ * @returns {{base: any, deferred: {layer: any, before: string|undefined}[]}}
+ */
+export function splitSymbolLayers(style) {
+  if (!Array.isArray(style?.layers) || !style.layers.some(l => l.type === 'symbol')) return { base: style, deferred: [] };
+  const { layers } = style;
+  const deferred = layers.flatMap((layer, i) => layer.type !== 'symbol' ? [] : [{
+    layer,
+    before: layers.slice(i + 1).find(l => l.type !== 'symbol')?.id,
+  }]);
+  return { base: { ...style, layers: layers.filter(l => l.type !== 'symbol') }, deferred };
+}
+
+/** Lädt den (per <link rel=preload> schon angeforderten) Stil und wendet trimStyle an */
+export const loadTrimmedStyle = () => fetch(MAPLIBRE_STYLE_URL)
+  .then(r => { if (!r.ok) throw new Error(`Stil ${r.status}`); return r.json(); })
+  .then(trimStyle);
+
+// ── Pins zuerst ─────────────────────────────────────────────────────────────
+// MapLibre (≈ 190 KB br) + Style konkurrieren sonst mit Daten und Modulen um die Bandbreite. Die Pins (Marker) sind
+// der eigentliche Inhalt; die Kacheln dürfen nachziehen. Gate = erstes filterResultsChanged (dasselbe Ereignis,
+// das das Loading-Skeleton beendet).
+let resolvePinsShown;
+const pinsShown = new Promise(resolve => { resolvePinsShown = resolve; });
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  document.addEventListener('filterResultsChanged', () => resolvePinsShown(), { once: true });
+} else {
+  resolvePinsShown(); // keine DOM-Umgebung (Tests/Worker): nicht blockieren
+}
+
+/** Resolved, sobald die ersten Treffer/Pins angezeigt wurden */
+export const whenPinsShown = () => pinsShown;
+
+/** Wie loadMaplibreIfNeeded(), aber erst nachdem die Pins angezeigt wurden */
+export const loadMaplibreAfterPins = () => pinsShown.then(() => loadMaplibreIfNeeded());
+
 let _maplibrePromise = null;
 
 /**

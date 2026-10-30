@@ -59,3 +59,17 @@ Statt Dateien zu bündeln (Build-Schritt, siehe oben) werden Module, die nur auf
 gebraucht werden, erst bei Bedarf geladen: das „+“-Overlay (`embed-overlay.js` + `add-space-form.js`, ≈ 70 KB roh) über
 `overlay-loader.js` und `demo-mode.js` (≈ 26 KB) nach dem Start in Leerlaufzeit. Zusammen ≈ 95 KB (≈ 25 KB gzip) weniger im
 kritischen Pfad. Sie bleiben im Service-Worker-Precache und fehlen in `modulepreload`.
+
+## Nachtrag 2026-10: Karten-Kacheln — Pins zuerst, Kacheln danach
+Gemessen im gedrosselten Test (200 KB/s, 150 ms, CPU 4×; lokaler Server unkomprimiert, absolute Zeiten daher zu hoch):
+Erste Vektor-Kachel sichtbar nach ≈ 12,8 s statt ≈ 26 s. Maßnahmen (alle in `tile-loader.js` / `map.js`, ohne Build-Schritt):
+1. **Pins zuerst:** MapLibre + Stil laden erst nach dem ersten `filterResultsChanged` (`loadMaplibreAfterPins`), damit Daten und
+   Marker die Bandbreite zuerst bekommen.
+2. **Relief begrenzen (`trimStyle`):** der OpenFreeMap-Stil legt ein Natural-Earth-PNG-Relief (je 130–190 KB) unter die Karte, im
+   Start-Ausschnitt ≈ 15 Kacheln ≈ 2 MB bei 10 % Deckkraft → nur noch bei MapLibre-Zoom < 4 (**MapLibre-Zoom = Leaflet-Zoom − 1**).
+3. **Beschriftungen nachreichen (`splitSymbolLayers`):** die 25 Symbol-Layer fehlen im ersten Stil (spart ≈ 1,2 MB Glyphen-PBFs) und
+   werden nach dem ersten `idle` per `addLayer` ergänzt.
+4. **Optik:** `#map` zeigt `--map-placeholder` (Hintergrundfarbe des Stils, Dark: gefiltert).
+Bewusst verworfen (kein messbarer Gewinn bzw. Fehlerquelle): Service-Worker-Registrierung erst nach den Kacheln (`maptilesready`) und
+ein Einblenden der GL-Ebene (`.tiles-ready` — blieb die Karte unsichtbar, wenn das Ereignis nie kam).
+Die Vektor-Kacheln selbst (Drittanbieter, bereits komprimiert) lassen sich clientseitig nicht verkleinern.

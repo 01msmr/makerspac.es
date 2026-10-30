@@ -115,7 +115,7 @@
        dasselbe Promise (idempotent). -->
   <script>
     import('./data-preload.js').then(m => m.preloadInitialData()).catch(() => {});
-    import('./tile-loader.js').then(m => m.loadMaplibreIfNeeded()).catch(() => {}); // Fehler behandelt map.js init() erneut
+    import('./tile-loader.js').then(m => m.loadMaplibreAfterPins()).catch(() => {}); // erst nach den Pins; Fehler behandelt map.js erneut
   </script>
 
   <!-- App-JS: map.js als ES Module (importiert alle App-Module) -->
