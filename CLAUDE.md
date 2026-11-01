@@ -1,4 +1,5 @@
-# CLAUDE.md — Verpflichtungen für Claude Code
+# CLAUDE.md — makerspac.es
+> Governed by **CLAUDE MASTER** (`../CLAUDE.md`). Rules here extend it; they do not override it.
 
 ## Pflichtlektüre vor Dateiänderungen
 
@@ -167,14 +168,17 @@ data-store.js       → Settings-Popover, Language-Switcher, Rezoom-Button (Desk
 datasync.js         → QR-Code-Sync, ConsentManager, Bookmarks-Sync
 bookmark-manager.js → Bookmark-State, debounced saveBookmarks()
 spaceapi-static.js  → SpaceAPI-Status-Verarbeitung
+fetch-spaceapi-status.js → Liest SpaceAPI-Endpunkte aus enrichment.json, aktualisiert status.json
 popup-builder.js    → Leaflet-Popup HTML
 i18n.js             → Internationalisierung
 embed.js            → Embed-Modus (iframe)
+embed-loader.js     → Lädt Embed-Modus (tile-loader.js-Pendant für embed.js)
 embed-overlay.js    → Embed-Overlay UI
 demo-mode.js        → Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode)
 error-monitor.js    → Dev-Tool, Fehler-Overlay
 add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
 sw.js               → Service Worker (Cache-First / SWR)
+generate-map-splits.js → Dev-Tool: erzeugt Karten-Splits (`npm run generate`)
 ```
 
 CSS-Vars: `main-layout.css` · Komponenten: `main-components.css` · Responsive: `main-responsive.css`
@@ -182,6 +186,14 @@ Mobile/Search: `search.css` · Listing: `listing-core.css` · Nearby: `nearby.cs
 Vollständige Referenz: **`architektur.md`** · Designentscheidungen: **`adr/`**
 
 ---
+
+## Befehle
+
+```bash
+node --test 'tests/*.test.js'   # Unit-Tests (vor jedem Push)
+node tests/validate-locations.js # Locations-Validierung
+npm run generate                 # Karten-Splits neu erzeugen
+```
 
 ## Deployment
 
