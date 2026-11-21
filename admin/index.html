@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin – Review</title>
+  <link rel="stylesheet" href="/main-layout.css">
+  <link rel="stylesheet" href="/main-responsive.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header id="bar">
+    <strong>SpaceAPI-Review</strong>
+    <span id="counter"></span>
+    <span class="grow"></span>
+    <button id="apply" hidden></button>
+    <button id="logout" hidden>abmelden</button>
+  </header>
+
+  <section id="login" hidden>
+    <p>Fine-grained PAT (nur <code>01msmr/makerspac.es</code>, Issues R/W + Actions R/W):</p>
+    <input id="token" type="password" autocomplete="off" placeholder="github_pat_…">
+    <button id="save-token">Speichern</button>
+  </section>
+
+  <main id="review" hidden>
+    <section id="left">
+      <h2 id="title"></h2>
+      <table id="compare"></table>
+      <p id="hint"></p>
+      <form id="edit" hidden>
+        <input id="edit-url" type="url" required>
+        <button>Speichern + ok</button>
+      </form>
+      <p id="keys"><kbd>y</kbd> ok · <kbd>a</kbd> anpassen · <kbd>n</kbd> ablehnen · <kbd>s</kbd> später · <kbd>w</kbd>/<kbd>e</kbd> Website/Endpoint</p>
+      <p id="status" role="status"></p>
+    </section>
+    <section id="right">
+      <div id="viewbar">
+        <button id="show-site">Website</button>
+        <button id="show-endpoint">Endpoint</button>
+        <button id="open-tab">im Tab öffnen</button>
+      </div>
+      <iframe id="frame" title="Vorschau" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </section>
+  </main>
+
+  <p id="done" hidden></p>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
