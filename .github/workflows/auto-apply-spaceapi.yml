@@ -1,0 +1,30 @@
+# Zweck:  Übernimmt „ok“-gelabelte SpaceAPI-Issues automatisch: ab 10 Stück oder 1 h nach der letzten Änderung.
+# Wie:    Cron prüft alle 15 Min (tools/auto-apply-check.js) und startet apply-spaceapi-issues.yml (apply-ok).
+# Hinweis: Cron-Läufe starten nur vom Default-Branch und können sich um einige Minuten verzögern.
+
+name: "⏱️ Auto-Apply SpaceAPI (ok-Issues)"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Prüfen und ggf. apply-ok starten
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/auto-apply-check.js
