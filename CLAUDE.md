@@ -148,6 +148,7 @@ marker-manager.js   → Marker/Popup/Sticky/Connection-Line-Logik
 config.js           → Zentrale Config (assembliert aus Sub-Modulen)
 colours.js          → Farbdefinitionen, applyCssColours(), Dark-Mode-Helpers
 filter-config.js    → Filter-Kategorien, IGNORED_STYLES_SET, FILTER_ORDER_SET
+workshop-keywords.js → Stichwörter je Workshop-Typ (SSOT; Crawler + /admin/)
 workshop-types.js   → Workshop-Definitionen, WORKSHOP_ORDER_MAP, getSortedWorkshops()
 types.js            → JSDoc-Typen (MakerSpace, Pill, AppPhase, …)
 date-utils.js       → Weekday-SSOT: WEEKDAY_NAMES, todayWeekday, isWeeklyToday (pure)

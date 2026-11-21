@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { WORKSHOP_KEYWORDS } from '../workshop-keywords.js';
 
 // Enrichment-Datei
 const ENRICHMENT_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'loc-enrichment.json');
@@ -40,93 +41,7 @@ const EQUIPMENT_PATHS = [
   '/raeume', '/raum', '/spaces', '/facilities',
 ];
 
-// Bekannte Workshop-Typen (bereits in workshop-types.js definiert)
-const WORKSHOP_KEYWORDS = {
-  '3d': [
-    '3d-drucker', '3d drucker', '3d-druck', '3d druck', '3d printer', '3d printing',
-    'fdm drucker', 'fdm-drucker', 'resin drucker', 'sla drucker', 'dlp drucker',
-    'filamentdrucker', 'filament drucker', 'additive fertigung',
-    'prusa', 'bambulab', 'bambu lab', 'ultimaker', 'creality',
-  ],
-  'laser': [
-    'lasercutter', 'laser cutter', 'lasergravur', 'laser gravur',
-    'lasergravierer', 'laser engraver', 'co2-laser', 'co2 laser',
-    'laserschneider', 'laser schneider', 'laseranlage', 'laser anlage',
-    'trotec', 'epilog laser', 'full spectrum',
-  ],
-  'electronics': [
-    'lötstation', 'loetstation', 'löten', 'loeten', 'lötkolben', 'loetkolben',
-    'lötplatz', 'loetplatz', 'elektronikwerkstatt', 'elektronik werkstatt',
-    'elektroniklabor', 'elektronik labor', 'lötbereich',
-    'oszilloskop', 'oszi', 'multimeter', 'pcb fräse', 'platinenfräse',
-    'reflow ofen', 'heißluftlötstation',
-  ],
-  'coding': [
-    'programmierworkshop', 'programmier-workshop', 'hackathon',
-    'coding workshop', 'software workshop', 'coding space', 'hack space',
-    'code & coffee', 'code and coffee', 'linux workshop', 'python workshop',
-    'maker education', 'stem workshop',
-  ],
-  'vr': [
-    'vr-brille', 'vr brille', 'virtual reality', 'vr-headset', 'vr headset',
-    'vr-raum', 'vr raum', 'oculus', 'meta quest', 'htc vive', 'valve index',
-    'augmented reality', 'mixed reality',
-  ],
-  'music': [
-    'musikstudio', 'musik studio', 'recording studio', 'aufnahmestudio',
-    'aufnahme studio', 'tonstudio', 'ton studio', 'synthesizer',
-    'midi studio', 'musikproduktion', 'musik produktion',
-    'proberaum', 'probe raum', 'drum machine', 'modular synth',
-  ],
-  'wood': [
-    'holzwerkstatt', 'holz werkstatt', 'tischkreissäge', 'tischkreissaege',
-    'drechselbank', 'oberfräse', 'oberfraese',
-    'bandsäge', 'bandsaege', 'holzbearbeitung', 'holzfräse', 'holzfraese',
-    'tischfräse', 'kreissäge', 'stichsäge',
-    'woodworking', 'carpentry', 'wood shop', 'woodshop',
-  ],
-  'metal': [
-    'schweißen', 'schweissen', 'schweißgerät', 'schweissgeraet',
-    'mig/mag', 'mig-schweißen', 'tig-schweißen', 'wig-schweißen',
-    'drehbank', 'metallwerkstatt', 'metall werkstatt',
-    'plasmaschneider', 'plasma schneider', 'metallbearbeitung',
-    'metallfräse', 'metall fräse', 'cnc drehen',
-    'schlosser', 'schmieden', 'schmied',
-  ],
-  'textile': [
-    'nähmaschine', 'naehmaschine', 'nähen', 'naehen', 'stickmaschine',
-    'sticken', 'textilwerkstatt', 'textil werkstatt', 'nähwerkstatt',
-    'naehwerkstatt', 'webmaschine', 'stricken', 'schneidern',
-    'silhouette', 'cricut', 'vinylcutter',
-  ],
-  'screenprint': [
-    'siebdruck', 'siebdruckanlage', 'siebdruck-anlage', 'siebdruck anlage',
-    'screen print', 'screenprint', 'siebdruckwerkstatt',
-    'risographie', 'riso druck',
-  ],
-  'cnc': [
-    'cnc-fräse', 'cnc fräse', 'cnc-router', 'cnc router',
-    'cnc maschine', 'cnc-maschine', 'cnc milling', 'portalfräse',
-    'computergesteuertes fräsen', 'cnc gravieren', 'cnc-gravur',
-  ],
-  'ceramics': [
-    'töpferei', 'toepferei', 'töpfern', 'toepfern', 'keramikwerkstatt',
-    'brennofen', 'töpferofen', 'töpferscheibe', 'glasur',
-    'ceramics', 'pottery', 'kiln', 'keramik werkstatt',
-  ],
-  'photo': [
-    'fotostudio', 'foto studio', 'fotolabor', 'foto labor',
-    'dunkelkammer', 'darkroom', 'analoge fotografie',
-    'filmentwicklung', 'fotoentwicklung', 'lichtstudio',
-    'blitzanlage', 'studiobeleuchtung', 'greenscreen', 'green screen',
-    'podcaststudio', 'podcast studio',
-  ],
-  'bike': [
-    'fahrradwerkstatt', 'fahrrad werkstatt', 'fahrrad reparatur',
-    'velowerkstatt', 'velo werkstatt', 'fahrrad selbsthilfe',
-    'bike repair', 'bike workshop', 'fahrrad selbst reparieren',
-  ],
-};
+// Stichwörter je Workshop-Typ: SSOT in workshop-keywords.js (auch von /admin/ genutzt)
 
 // Kandidaten für noch nicht erfasste Workshop-Typen
 // Format: 'label' → { keywords: [...], suggestedId: 'id', description: '...' }

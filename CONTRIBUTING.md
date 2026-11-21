@@ -140,7 +140,7 @@ Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-m
 
 ## Vorschläge prüfen (`/admin/`)
 
-Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Label `workshop-data`; Reiter „Workshops", `b` = Typen als Liste eingeben) werden auf `makerspac.es/admin/` abgearbeitet (nicht verlinkt, `noindex`):
+Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Label `workshop-data`; Reiter „Workshops", `b` = Typen per Checkboxen setzen, optional Freitext einfügen → erkannte Typen werden angehakt) werden auf `makerspac.es/admin/` abgearbeitet (nicht verlinkt, `noindex`):
 
 1. Fine-grained PAT anlegen: nur Repo `01msmr/makerspac.es`, **Issues R/W** + **Actions R/W**, mit Ablauf; auf der Seite einfügen.
 2. Je Vorschlag (`j`/`k` = Website/Endpoint rechts): `y` = ok (Label `ok`) · `b` = Endpoint anpassen + ok · `n` = ablehnen (Issue schließen) · `l` = später.
