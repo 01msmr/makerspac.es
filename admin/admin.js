@@ -116,7 +116,6 @@ function updateBar() {
 async function show() {
   const k = cur();
   updateBar();
-  closeEdit();
   $('extra').replaceChildren();
   setStatus('');
   const p = k.queue[k.idx];
@@ -131,6 +130,7 @@ async function show() {
   $('done').hidden = true;
   $('review').hidden = false;
   state.current = p;
+  fillEdit(p);
   const loc = state.locations.get(p.spaceId);
   $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
   $('show-endpoint').hidden = state.tab !== 'spaceapi';
@@ -273,32 +273,41 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
   $('edit-checks').append(label);
 }
 
-/** Bearbeiten-Formular schließen und zurücksetzen (Freitext/URL, Erkennungshinweis, Haken) */
-function closeEdit() {
-  $('edit').hidden = true;
-  $('edit-free').value = '';
-  $('edit-detected').textContent = '';
-  $('edit-input').value = '';
-  for (const box of checks()) box.checked = false;
-}
-
-function openEdit() {
-  const p = state.current;
+/** Eingabefelder (immer sichtbar) mit dem Vorschlag der aktuellen Issue füllen; verwirft alte Eingaben */
+function fillEdit(p) {
   const isWs = state.tab === 'workshops';
   $('edit-input').hidden = isWs;
-  $('edit-input').disabled = isWs; // sonst blockiert „required“ das Absenden
+  $('edit-input').disabled = isWs;
   $('edit-ws').hidden = !isWs;
-  $('hint').textContent = '';
+  $('edit-free').value = '';
+  $('edit-detected').textContent = '';
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
-    $('edit-free').value = '';
-    $('edit-detected').textContent = '';
   } else {
     $('edit-input').type = 'url';
     $('edit-input').value = p.endpoint;
   }
-  $('edit').hidden = false;
-  (isWs ? $('edit-free') : $('edit-input')).focus();
+}
+
+/** Aktuelle Eingabe: Endpoint (String) bzw. angehakte Workshop-Typen (Array) */
+function editValue() {
+  return state.tab === 'workshops' ? checks().filter(b => b.checked).map(b => b.value) : $('edit-input').value.trim();
+}
+
+function editChanged(p) {
+  const v = editValue();
+  return state.tab === 'workshops' ? !(v.length === p.workshops.length && v.every(w => p.workshops.includes(w))) : v !== p.endpoint;
+}
+
+/** y / „Speichern + ok“: geänderte Eingabe in die Issue schreiben + ok, unveränderter Vorschlag nur ok */
+function confirmOk() {
+  const p = state.current;
+  if (!p) return;
+  if (editChanged(p)) act('a', editValue()); else act('y');
+}
+
+function focusEdit() {
+  (state.tab === 'workshops' ? $('edit-free') : $('edit-input')).focus();
 }
 
 // Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
@@ -327,7 +336,7 @@ $('edit-scan').addEventListener('click', async () => {
     await gh(`/repos/${REPO}/actions/workflows/scan-workshop-url.yml/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { url, issue: String(p.number), scan_id: scanId } } });
     for (let i = 0; i < SCAN_MAX_POLLS; i++) {
       await sleep(SCAN_POLL_MS);
-      if (state.current !== p || $('edit').hidden) return; // weitergegangen / abgebrochen
+      if (state.current !== p) return; // weitergegangen
       const comments = await gh(`/repos/${REPO}/issues/${p.number}/comments?per_page=100`);
       for (const c of comments) {
         const r = parseScanComment(c.body || '', scanId);
@@ -347,22 +356,22 @@ $('edit-scan').addEventListener('click', async () => {
   }
 });
 
-$('edit').addEventListener('submit', e => {
-  e.preventDefault();
-  if (state.tab === 'workshops') act('a', checks().filter(b => b.checked).map(b => b.value));
-  else act('a', $('edit-input').value.trim());
-});
+$('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) { if (e.key === 'Escape') { closeEdit(); e.target.blur(); } return; }
+  // Tasten nur ignorieren, solange in ein Textfeld getippt wird (Checkboxen/Buttons lassen sie durch)
+  if (e.target instanceof HTMLTextAreaElement || (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')) {
+    if (e.key === 'Escape') { fillEdit(state.current); e.target.blur(); } // Esc: Änderungen verwerfen
+    return;
+  }
   switch (e.key.toLowerCase()) {
-    case 'y': act('y'); break;
+    case 'y': confirmOk(); break;
     case 'n': act('n'); break;
     case 'l': cur().idx++; show(); break;
     case 'j': setView('site'); break;
     case 'k': if (state.tab === 'spaceapi') setView('endpoint'); break;
-    case 'b': e.preventDefault(); openEdit(); break;
+    case 'b': e.preventDefault(); focusEdit(); break;
   }
 });
 
