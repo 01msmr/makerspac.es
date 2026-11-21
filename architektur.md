@@ -71,6 +71,7 @@
 | `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
 | `colours.js` | Farbdefinitionen, `isDarkMode()`, `applyCssColours()`, Dark-Mode-Helpers | `COLOURS`, `isDarkMode`, `applyCssColours` (export) |
 | `types.js` | JSDoc-Typdefinitionen (MakerSpace, Pill, AppPhase, …) — kein Runtime-Export | `export {}` |
+| `workshop-keywords.js` | Stichwörter je Workshop-Typ (SSOT, pure) — vom Crawler (`tools/workshop-crawler.js`) und von `/admin/` (Freitext → Typen) genutzt | `WORKSHOP_KEYWORDS`, `detectTypes` |
 | `workshop-types.js` | Workshop-Typen, `getSortedWorkshops()`, Icons, Tooltip | `WORKSHOP_TYPES`, `getSortedWorkshops`, `getWorkshopIcon` (export) |
 | `filter-config.js` | Filter-Kategorien, `IGNORED_STYLES_SET`, `FILTER_ORDER_SET`, `getStyleIcon` | exports |
 | `date-utils.js` | Weekday-SSOT: `WEEKDAY_NAMES`, `todayWeekday`, `isWeeklyToday` (pure, keine Browser-Deps) | exports |

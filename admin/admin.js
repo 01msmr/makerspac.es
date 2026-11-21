@@ -3,7 +3,7 @@
 import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
-  parseWorkshopIssue, parseWorkshopList, replaceWorkshops, buildWorkshopComparison,
+  parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 
@@ -229,9 +229,7 @@ function adjustedBody(body, value) {
     if (!nb) throw new Error('Ungültige URL oder JSON-Block fehlt');
     return nb;
   }
-  const { list, invalid } = parseWorkshopList(value);
-  if (invalid.length) throw new Error(`Unbekannte Typen: ${invalid.join(', ')}`);
-  const nb = replaceWorkshops(body, list);
+  const nb = replaceWorkshops(body, value); // value = Array der angehakten Typen
   if (!nb) throw new Error('Mindestens ein Typ nötig oder JSON-Block fehlt');
   return nb;
 }
@@ -264,25 +262,52 @@ async function act(action, value) {
   }
 }
 
-function openEdit() {
-  const p = state.current;
-  const input = $('edit-input');
-  if (state.tab === 'spaceapi') {
-    input.type = 'url'; input.value = p.endpoint; input.placeholder = '';
-    $('hint').textContent = '';
-  } else {
-    input.type = 'text'; input.value = p.workshops.join(', '); input.placeholder = 'z. B. 3d, laser, wood';
-    $('hint').textContent = `Erlaubt: ${Object.keys(WORKSHOP_TYPES).join(', ')}`;
-  }
-  $('edit').hidden = false;
-  input.focus();
+const checks = () => [...document.querySelectorAll('#edit-checks input')];
+
+// Checkboxen einmalig aus WORKSHOP_TYPES erzeugen
+for (const key of Object.keys(WORKSHOP_TYPES)) {
+  const label = document.createElement('label');
+  const box = document.createElement('input');
+  box.type = 'checkbox'; box.value = key;
+  label.append(box, key);
+  $('edit-checks').append(label);
 }
 
-$('edit').addEventListener('submit', e => { e.preventDefault(); act('a', $('edit-input').value.trim()); });
+function openEdit() {
+  const p = state.current;
+  const isWs = state.tab === 'workshops';
+  $('edit-input').hidden = isWs;
+  $('edit-input').disabled = isWs; // sonst blockiert „required“ das Absenden
+  $('edit-ws').hidden = !isWs;
+  $('hint').textContent = '';
+  if (isWs) {
+    for (const box of checks()) box.checked = p.workshops.includes(box.value);
+    $('edit-free').value = '';
+    $('edit-detected').textContent = '';
+  } else {
+    $('edit-input').type = 'url';
+    $('edit-input').value = p.endpoint;
+  }
+  $('edit').hidden = false;
+  (isWs ? $('edit-free') : $('edit-input')).focus();
+}
+
+// Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
+$('edit-free').addEventListener('input', () => {
+  const found = detectFromText($('edit-free').value);
+  for (const box of checks()) if (found.includes(box.value)) box.checked = true;
+  $('edit-detected').textContent = found.length ? `erkannt: ${found.join(', ')}` : '';
+});
+
+$('edit').addEventListener('submit', e => {
+  e.preventDefault();
+  if (state.tab === 'workshops') act('a', checks().filter(b => b.checked).map(b => b.value));
+  else act('a', $('edit-input').value.trim());
+});
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
-  if (e.target instanceof HTMLInputElement) { if (e.key === 'Escape') { $('edit').hidden = true; e.target.blur(); } return; }
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) { if (e.key === 'Escape') { $('edit').hidden = true; e.target.blur(); } return; }
   switch (e.key.toLowerCase()) {
     case 'y': act('y'); break;
     case 'n': act('n'); break;

@@ -1,6 +1,7 @@
 // admin/admin-lib.js — pure Funktionen der Review-Seite (kein DOM, kein fetch → testbar)
 
 import { WORKSHOP_TYPES } from '../workshop-types.js';
+import { detectTypes } from '../workshop-keywords.js';
 
 export const REPO = '01msmr/makerspac.es';
 export const OK_LABEL = 'ok';
@@ -125,6 +126,15 @@ export function parseWorkshopIssue(issue) {
 export function parseWorkshopList(text) {
   const parts = [...new Set(String(text).toLowerCase().split(/[\s,;]+/).filter(Boolean))];
   return { list: parts.filter(p => p in WORKSHOP_TYPES), invalid: parts.filter(p => !(p in WORKSHOP_TYPES)) };
+}
+
+/**
+ * Freitext → Workshop-Typen: gültige Typ-Kürzel (z. B. "3d, laser") UND Stichwörter ("Lasercutter", "Nähmaschine").
+ * @returns {string[]} eindeutig, in der Reihenfolge von WORKSHOP_TYPES
+ */
+export function detectFromText(text) {
+  const found = new Set([...parseWorkshopList(text).list, ...detectTypes(text)]);
+  return Object.keys(WORKSHOP_TYPES).filter(t => found.has(t));
 }
 
 /** Ersetzt die Workshop-Liste im JSON-Block; null wenn Liste leer/ungültig oder Block fehlt. */

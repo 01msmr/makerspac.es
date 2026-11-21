@@ -35,7 +35,14 @@
       <p id="hint"></p>
       <form id="edit" hidden>
         <input id="edit-input" required>
+        <fieldset id="edit-ws" hidden>
+          <legend>Workshops</legend>
+          <div id="edit-checks"></div>
+          <textarea id="edit-free" rows="3" placeholder="Freitext einfügen (z. B. Text von der Website) — erkannte Typen werden angehakt"></textarea>
+          <p id="edit-detected"></p>
+        </fieldset>
         <button>Speichern + ok</button>
+        <small>Das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
       </form>
       <p id="keys"><kbd>y</kbd> ok · <kbd>b</kbd> anpassen · <kbd>n</kbd> ablehnen · <kbd>l</kbd> später · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint</p>
       <p id="status" role="status"></p>

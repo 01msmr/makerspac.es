@@ -114,3 +114,19 @@ test('buildWorkshopComparison markiert Abweichung', () => {
   assert.equal(rows.find(r => r.label === 'Workshops').differs, true);
   assert.equal(buildWorkshopComparison({ name: 'X' }, ['laser', '3d'], ['3d', 'laser']).find(r => r.label === 'Workshops').differs, false);
 });
+
+import { detectFromText } from '../admin/admin-lib.js';
+import { detectTypes, WORKSHOP_KEYWORDS } from '../workshop-keywords.js';
+import { WORKSHOP_TYPES } from '../workshop-types.js';
+
+test('detectFromText: Kürzel und Stichwörter, Reihenfolge wie WORKSHOP_TYPES', () => {
+  assert.deepEqual(detectFromText('Wir haben einen Lasercutter und eine Nähmaschine'), ['laser', 'textile']);
+  assert.deepEqual(detectFromText('wood, 3d'), ['3d', 'wood']);
+  assert.deepEqual(detectFromText('Lötstation + Tonstudio, cnc'), ['cnc', 'electronics', 'music']);
+  assert.deepEqual(detectFromText('nichts Passendes hier'), []);
+});
+
+test('workshop-keywords: jeder Typ aus workshop-types.js hat Stichwörter', () => {
+  for (const t of Object.keys(WORKSHOP_TYPES)) assert.ok(WORKSHOP_KEYWORDS[t]?.length, `Stichwörter für ${t}`);
+  assert.deepEqual(detectTypes('SIEBDRUCK'), ['screenprint']);
+});
