@@ -92,3 +92,15 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
   #toasts { left: 1rem; right: 1rem; max-width: none; }
 }
+
+/* Statusanzeige Freitext / Scan: grün = ausgewertet · gelb = nichts erkannt · rot = Fehler */
+#scan-target { flex-basis: 100%; color: var(--hover-text-color); margin-left: .5rem; }
+#edit-detected { padding: 0; }
+#edit-detected[data-state="ok"] { color: var(--space-open); font-weight: 600; }
+#edit-detected[data-state="none"] { color: var(--space-unknown); font-weight: 600; }
+#edit-detected[data-state="error"] { color: var(--space-closed); font-weight: 600; }
+#edit-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
+
+#edit-free-label { display: block; margin-bottom: .25rem; font-weight: 600; }

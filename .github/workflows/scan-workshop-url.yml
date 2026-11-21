@@ -1,5 +1,5 @@
 # Zweck:  Liest eine Website serverseitig aus (Workshop-Crawler) und schreibt die erkannten Typen als Kommentar ans Issue.
-# Wer:    startet /admin/ (Reiter Workshops → Bearbeiten → „Scannen“); die Seite liest den Kommentar und löscht ihn wieder.
+# Wer:    startet /admin/ (Reiter Workshops → Website auslesen (Server)); die Seite liest den Kommentar und löscht ihn wieder.
 # Manuell: url + issue (Nummer) + scan_id (beliebiger Kurztext) angeben.
 
 name: "🌐 Scan Workshop URL"
