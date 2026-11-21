@@ -21,7 +21,24 @@ export function parseIssue(issue) {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), endpoint,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     url: issue.html_url,
+    updated: Date.parse(issue.updated_at) || 0,
   };
+}
+
+export const AUTO_APPLY_COUNT = 10;          // so viele ok-Vorschläge → sofort übernehmen
+export const AUTO_APPLY_IDLE_MS = 60 * 60 * 1000; // oder 1 h ohne neuen ok-Vorschlag
+
+/**
+ * Wann soll automatisch übernommen werden?
+ * @param {number} okCount  Anzahl Issues mit Label ok
+ * @param {number} lastOkAt Zeitpunkt (ms) des letzten neuen ok-Vorschlags
+ * @param {number} now
+ * @returns {number|null} null = nichts zu übernehmen, sonst Wartezeit in ms (0 = jetzt)
+ */
+export function autoApplyDelay(okCount, lastOkAt, now) {
+  if (okCount <= 0) return null;
+  if (okCount >= AUTO_APPLY_COUNT) return 0;
+  return Math.max(0, lastOkAt + AUTO_APPLY_IDLE_MS - now);
 }
 
 /** Ersetzt spaceapi.endpoint im JSON-Block des Bodys; null wenn kein Block / ungültige URL. */

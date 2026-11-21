@@ -103,6 +103,7 @@
 | `tools/spaceapi-directory-sync.js` | **Node.js** Cron-Script (wöchentlich) — directory.spaceapi.io mit loc-enrichment.json abgleichen → Issues `SpaceAPI: <Name>` (Label `data-update`) | `normalizeUrl`, `matchSpace`, `buildProposals`, `isAlreadyProposed`, `buildIssueBody` (export) |
 | `tools/apply-spaceapi-issues.js` | **Node.js** — offene `SpaceAPI:`-Issues → `spaceapi.endpoint` in loc-enrichment.json, Issues schließen; `--only-ok` = nur Label `ok` + Live-Check des Endpoints (ungültig → Kommentar, Label entfernt) | `parseIssue`, `applyProposal`, `filterOk`, `isValidSpaceApi`, `checkEndpoint` (export) |
 | `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
+| `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-spaceapi-issues.yml` (`apply-ok`) ab 10 `ok`-Issues oder 1 h nach der letzten Änderung | `decide` (export) |
 | `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters` |
 
 ### CSS
@@ -283,6 +284,9 @@ git push main
      │   mode apply-ok: --apply --only-ok  (nur Label „ok“ aus /admin/, Live-Check; concurrency data-apply)
      ├── git commit + push
      └── gh workflow run deploy.yml  (GITHUB_TOKEN-Push triggert keinen Deploy)
+
+.github/workflows/auto-apply-spaceapi.yml  (cron */15)
+     └── node tools/auto-apply-check.js  (≥10 ok-Issues oder 1 h Ruhe → apply-ok starten)
 ```
 
 ---
