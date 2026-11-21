@@ -104,3 +104,14 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
 
 #edit-free-label { display: block; margin-bottom: .25rem; font-weight: 600; }
+
+/* Ergebnis der Text-Auswertung / des Scans: deutlich sichtbar (Box + Chips), Treffer in der Liste grün markiert */
+#edit-detected[data-state="ok"], #edit-detected[data-state="none"], #edit-detected[data-state="error"], #edit-detected[data-state="info"], #edit-detected[data-state="working"] {
+  margin: .5rem 0 0; padding: .6rem .75rem; border-radius: 8px; border: 1px solid var(--dropdown-border); font-size: 1.05rem; font-weight: 600; color: var(--text-color); min-height: 0;
+}
+#edit-detected[data-state="ok"] { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); }
+#edit-detected[data-state="none"] { border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
+#edit-detected[data-state="error"] { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
+#edit-detected .chip { display: inline-block; margin: .35rem .4rem 0 0; padding: .15rem .8rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-size: 1.1rem; font-weight: 700; }
+#edit-checks label.auto { padding: 0 .4rem; border-radius: 6px; font-weight: 700; background: color-mix(in srgb, var(--space-open) 24%, transparent); box-shadow: inset 3px 0 0 var(--space-open); }
+#edit-checks label.auto::after { content: "✓"; margin-left: auto; color: var(--space-open); }

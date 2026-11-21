@@ -437,6 +437,7 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
   const label = document.createElement('label');
   const box = document.createElement('input');
   box.type = 'checkbox'; box.value = key;
+  box.addEventListener('change', () => { if (!box.checked) label.classList.remove('auto'); });
   label.append(box, key);
   $('edit-checks').append(label);
 }
@@ -450,6 +451,7 @@ function fillEdit(p) {
   $('edit-ws').hidden = !isWs;
   $('edit-free').value = '';
   setIndicator('idle', '');
+  markAuto([]);
   updateScanTarget();
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
@@ -477,9 +479,17 @@ function confirmOk() {
 }
 
 /** Statusanzeige unter dem Freitext: idle · info · ok (grün) · none (gelb) · working · error (rot) */
-function setIndicator(stateName, text) {
-  $('edit-detected').dataset.state = stateName;
-  $('edit-detected').textContent = text;
+function setIndicator(stateName, text, types = []) {
+  const box = $('edit-detected');
+  box.dataset.state = stateName;
+  box.replaceChildren(text);
+  for (const t of types) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+  if (stateName !== 'idle') box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // Ergebnis in den sichtbaren Bereich holen
+}
+
+/** Automatisch angehakte Typen in der Checkbox-Liste hervorheben (grün + „✓ erkannt“) */
+function markAuto(types) {
+  for (const box of checks()) box.parentElement.classList.toggle('auto', types.includes(box.value) && box.checked);
 }
 
 /** Zeigt, was „Website auslesen (Server)“ auslesen würde (URL im Feld, sonst die Website des Spaces) */
@@ -504,7 +514,8 @@ $('edit-free').addEventListener('input', () => {
   if (looksLikeUrl(v)) { setIndicator('info', 'URL erkannt — mit „Website auslesen (Server)“ serverseitig auslesen.'); return; }
   const found = detectFromText(v);
   for (const box of checks()) if (found.includes(box.value)) box.checked = true;
-  setIndicator(found.length ? 'ok' : 'none', `✓ Text ausgewertet (${v.length} Zeichen) — ${found.length ? `erkannt: ${found.join(', ')}` : 'nichts erkannt'}`);
+  markAuto(found);
+  setIndicator(found.length ? 'ok' : 'none', found.length ? `✓ Text ausgewertet (${v.length} Zeichen) — ${found.length} erkannt und angehakt:` : `✓ Text ausgewertet (${v.length} Zeichen) — nichts erkannt`, found);
 });
 
 // URL-Scan: Workflow scan-workshop-url.yml liest die Seite aus und kommentiert das Issue; wir holen den Kommentar (Polling) und löschen ihn wieder
@@ -527,7 +538,7 @@ $('edit-scan').addEventListener('click', async () => {
   };
   const timer = setInterval(tick, 1000);
   tick();
-  const done = (stateName, msg) => { if (state.current === p) setIndicator(stateName, msg); };
+  const done = (stateName, msg, types = []) => { if (state.current === p) setIndicator(stateName, msg, types); };
   try {
     await gh(`/repos/${REPO}/actions/workflows/scan-workshop-url.yml/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { url, issue: String(p.number), scan_id: scanId } } });
     for (let i = 0; i < SCAN_MAX_POLLS; i++) {
@@ -539,9 +550,9 @@ $('edit-scan').addEventListener('click', async () => {
         if (!r) continue;
         gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
         if (r.error) { done('error', `✗ Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
-        for (const box of checks()) if (r.types.includes(box.value)) box.checked = true;
+        if (state.current === p) { for (const box of checks()) if (r.types.includes(box.value)) box.checked = true; markAuto(r.types); }
         toast(r.types.length ? `Scan: ${r.types.join(', ')} erkannt` : 'Scan: nichts erkannt', r.types.length ? 'ok' : 'warn');
-        done(r.types.length ? 'ok' : 'none', r.types.length ? `✓ Scan fertig (${r.pages} Seite(n), ${Math.round((Date.now() - t0) / 1000)} s) — erkannt: ${r.types.join(', ')} — bitte prüfen, dann „Speichern + ok“.` : `✓ Scan fertig (${r.pages} Seite(n)) — nichts erkannt.`);
+        done(r.types.length ? 'ok' : 'none', r.types.length ? `✓ Scan fertig (${r.pages} Seite(n), ${Math.round((Date.now() - t0) / 1000)} s) — ${r.types.length} erkannt und angehakt (bitte prüfen, dann „Speichern + ok“):` : `✓ Scan fertig (${r.pages} Seite(n)) — nichts erkannt.`, r.types);
         return;
       }
     }
@@ -573,6 +584,7 @@ document.addEventListener('keydown', e => {
     case 'n': act('n'); break;
     case 'l': skip(); break;
     case 'z': undo(); break;
+    case 'escape': if (state.current) fillEdit(state.current); break; // Änderungen verwerfen (auch mit Fokus auf einer Checkbox)
     case 'j': setView('site'); break;
     case 'k': if (cur().urlOf) setView('endpoint'); break;
   }
