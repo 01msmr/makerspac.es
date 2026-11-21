@@ -120,10 +120,22 @@ export const WORKSHOP_LOOSE_KEYWORDS = {
   'ceramics':    ['keramik', 'töpfer', 'toepfer'],
 };
 
-/** Wie detectTypes, zusätzlich mit lockeren Stichwörtern (nur für eingefügten Text). */
+/**
+ * Lockere GANZE Wörter (nicht Teil eines längeren Worts) — für kurze Begriffe wie „Code", die als Teilstring zu viele
+ * Fehlalarme gäben („Unicode", „Barcode"). Nur für eingefügten Text im Admin.
+ * @type {Record<string, string[]>}
+ */
+export const WORKSHOP_LOOSE_WORDS = {
+  'coding': ['code', 'coding', 'programmieren', 'programmierung', 'software', 'github', 'gitlab', 'python', 'javascript'],
+};
+
+const wordRe = kw => new RegExp(`(?<![\\p{L}\\p{N}])${kw}(?![\\p{L}\\p{N}])`, 'iu');
+
+/** Wie detectTypes, zusätzlich mit lockeren Stichwörtern und ganzen Wörtern (nur für eingefügten Text). */
 export function detectTypesLoose(text) {
   const lower = String(text).toLowerCase();
   const strict = new Set(detectTypes(text));
   const loose = Object.keys(WORKSHOP_LOOSE_KEYWORDS).filter(t => WORKSHOP_LOOSE_KEYWORDS[t].some(kw => lower.includes(kw)));
-  return Object.keys(WORKSHOP_KEYWORDS).filter(t => strict.has(t) || loose.includes(t));
+  const words = Object.keys(WORKSHOP_LOOSE_WORDS).filter(t => WORKSHOP_LOOSE_WORDS[t].some(kw => wordRe(kw).test(String(text))));
+  return Object.keys(WORKSHOP_KEYWORDS).filter(t => strict.has(t) || loose.includes(t) || words.includes(t));
 }

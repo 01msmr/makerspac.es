@@ -218,3 +218,10 @@ test('RepRap ist streng erkannt (auch für den Crawler), Carvera/ESP8266 nur loc
   assert.deepEqual(detectTypes('Carvera ESP8266'), []);
   assert.deepEqual(detectTypesLoose('Carvera ESP8266'), ['electronics', 'metal', 'cnc']);
 });
+
+test('detectFromText: "Code"-Liste (Jabberoid, Time Machine for Android …) → coding; ganzes Wort, kein Teilstring', () => {
+  const text = '"Code"\n\n* [Jabberoid](https://x.de/wiki/Jabberoid)\n* [Time_Machine_for_Android](https://x.de/wiki/Time_Machine_for_Android)\n* [Facepalm](https://x.de/wiki/Facepalm)';
+  assert.deepEqual(detectFromText(text), ['coding']);
+  assert.deepEqual(detectFromText('Unicode und Barcode-Leser'), []); // Teilstring ≠ Wort
+  assert.deepEqual(detectFromText('QR-Code lesen'), ['coding']);       // Wort mit Bindestrich zählt (locker, bitte prüfen)
+});
