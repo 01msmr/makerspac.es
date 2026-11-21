@@ -449,7 +449,8 @@ function fillEdit(p) {
   $('edit-input').disabled = isWs;
   $('edit-ws').hidden = !isWs;
   $('edit-free').value = '';
-  $('edit-detected').textContent = '';
+  setIndicator('idle', '');
+  updateScanTarget();
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
   } else {
@@ -475,12 +476,35 @@ function confirmOk() {
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
 
-// Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
+/** Statusanzeige unter dem Freitext: idle · info · ok (grün) · none (gelb) · working · error (rot) */
+function setIndicator(stateName, text) {
+  $('edit-detected').dataset.state = stateName;
+  $('edit-detected').textContent = text;
+}
+
+/** Zeigt, was „Website auslesen (Server)“ auslesen würde (URL im Feld, sonst die Website des Spaces) */
+function scanTarget() {
+  const free = $('edit-free').value.trim();
+  return looksLikeUrl(free) ? free : websiteOf(state.current ?? {});
+}
+
+function updateScanTarget() {
+  const free = $('edit-free').value.trim();
+  const url = scanTarget();
+  $('scan-target').textContent = url
+    ? `Scan-Ziel: ${url}${free && !looksLikeUrl(free) ? ' — der eingefügte Text wird dafür nicht verwendet (er wird direkt ausgewertet)' : ''}`
+    : 'Kein Scan-Ziel: keine Website bekannt — oben eine URL einfügen.';
+}
+
+// Freitext: wird sofort ausgewertet, erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
 $('edit-free').addEventListener('input', () => {
-  if (looksLikeUrl($('edit-free').value)) { $('edit-detected').textContent = 'URL erkannt — „Website scannen“ liest sie serverseitig aus.'; return; }
-  const found = detectFromText($('edit-free').value);
+  const v = $('edit-free').value;
+  updateScanTarget();
+  if (!v.trim()) { setIndicator('idle', ''); return; }
+  if (looksLikeUrl(v)) { setIndicator('info', 'URL erkannt — mit „Website auslesen (Server)“ serverseitig auslesen.'); return; }
+  const found = detectFromText(v);
   for (const box of checks()) if (found.includes(box.value)) box.checked = true;
-  $('edit-detected').textContent = found.length ? `erkannt: ${found.join(', ')}` : '';
+  setIndicator(found.length ? 'ok' : 'none', `✓ Text ausgewertet (${v.length} Zeichen) — ${found.length ? `erkannt: ${found.join(', ')}` : 'nichts erkannt'}`);
 });
 
 // URL-Scan: Workflow scan-workshop-url.yml liest die Seite aus und kommentiert das Issue; wir holen den Kommentar (Polling) und löschen ihn wieder
@@ -490,14 +514,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 $('edit-scan').addEventListener('click', async () => {
   const p = state.current;
-  const free = $('edit-free').value.trim();
-  const url = looksLikeUrl(free) ? free : websiteOf(p);
-  const note = msg => { $('edit-detected').textContent = msg; };
-  if (!url) { note('Keine URL vorhanden — oben eine URL einfügen.'); return; }
+  const url = scanTarget();
+  if (!url) { setIndicator('error', 'Keine URL vorhanden — oben eine URL einfügen.'); return; }
   const scanId = [...crypto.getRandomValues(new Uint8Array(4))].map(b => b.toString(16).padStart(2, '0')).join('');
-  $('edit-scan').disabled = true;
+  const btn = $('edit-scan');
+  btn.disabled = true;
+  btn.textContent = 'Scan läuft …';
+  const t0 = Date.now();
+  const tick = () => {
+    if (state.current !== p) { clearInterval(timer); return; } // weitergegangen: Anzeige gehört nicht mehr dazu
+    setIndicator('working', `⏳ Scan läuft für ${url} … ${Math.round((Date.now() - t0) / 1000)} s (meist 30–60 s)`);
+  };
+  const timer = setInterval(tick, 1000);
+  tick();
+  const done = (stateName, msg) => { if (state.current === p) setIndicator(stateName, msg); };
   try {
-    note(`Scan läuft für ${url} … (30–60 s)`);
     await gh(`/repos/${REPO}/actions/workflows/scan-workshop-url.yml/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { url, issue: String(p.number), scan_id: scanId } } });
     for (let i = 0; i < SCAN_MAX_POLLS; i++) {
       await sleep(SCAN_POLL_MS);
@@ -507,18 +538,20 @@ $('edit-scan').addEventListener('click', async () => {
         const r = parseScanComment(c.body || '', scanId);
         if (!r) continue;
         gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
-        if (r.error) { note(`Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
+        if (r.error) { done('error', `✗ Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
         for (const box of checks()) if (r.types.includes(box.value)) box.checked = true;
         toast(r.types.length ? `Scan: ${r.types.join(', ')} erkannt` : 'Scan: nichts erkannt', r.types.length ? 'ok' : 'warn');
-        note(r.types.length ? `Scan (${r.pages} Seite(n)): erkannt: ${r.types.join(', ')} — bitte prüfen, dann „Speichern + ok“.` : `Scan (${r.pages} Seite(n)): nichts erkannt.`);
+        done(r.types.length ? 'ok' : 'none', r.types.length ? `✓ Scan fertig (${r.pages} Seite(n), ${Math.round((Date.now() - t0) / 1000)} s) — erkannt: ${r.types.join(', ')} — bitte prüfen, dann „Speichern + ok“.` : `✓ Scan fertig (${r.pages} Seite(n)) — nichts erkannt.`);
         return;
       }
     }
-    note('Scan hat nicht rechtzeitig geantwortet — Run unter GitHub → Actions → „Scan Workshop URL“ prüfen.');
+    done('error', '✗ Scan hat nicht rechtzeitig geantwortet — Run unter GitHub → Actions → „Scan Workshop URL“ prüfen.');
   } catch (err) {
-    note(`Fehler: ${err.message}`);
+    done('error', `✗ Fehler: ${err.message}`);
   } finally {
-    $('edit-scan').disabled = false;
+    clearInterval(timer);
+    btn.disabled = false;
+    btn.textContent = 'Website auslesen (Server)';
   }
 });
 
