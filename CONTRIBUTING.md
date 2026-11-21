@@ -143,7 +143,7 @@ Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-m
 Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Label `workshop-data`; Reiter „Workshops", `b` = Typen als Liste eingeben) werden auf `makerspac.es/admin/` abgearbeitet (nicht verlinkt, `noindex`):
 
 1. Fine-grained PAT anlegen: nur Repo `01msmr/makerspac.es`, **Issues R/W** + **Actions R/W**, mit Ablauf; auf der Seite einfügen.
-2. Je Vorschlag (`j`/`k` = Website/Endpoint rechts): `y` = ok (Label `ok`) · `b` = Endpoint anpassen + ok · `n` = ablehnen (Issue schließen) · `s` = später.
+2. Je Vorschlag (`j`/`k` = Website/Endpoint rechts): `y` = ok (Label `ok`) · `b` = Endpoint anpassen + ok · `n` = ablehnen (Issue schließen) · `l` = später.
 3. Übernommen wird automatisch ab 10 `ok`-Vorschlägen oder 1 h nach dem letzten (Cron `auto-apply-spaceapi.yml`, auch bei geschlossenem Tab); „Übernehmen (N)" startet es sofort, „Sitzung beenden" übernimmt und meldet ab (Token wird gelöscht): → Workflow `apply-spaceapi-issues.yml` (`apply-ok`) prüft die Endpoints live, schreibt `loc-enrichment.json`, 1 Commit + 1 Deploy.
 4. Das Label `ok` wird beim ersten Setzen automatisch angelegt (sonst einmalig manuell).
 

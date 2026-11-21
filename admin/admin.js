@@ -286,7 +286,7 @@ document.addEventListener('keydown', e => {
   switch (e.key.toLowerCase()) {
     case 'y': act('y'); break;
     case 'n': act('n'); break;
-    case 's': cur().idx++; show(); break;
+    case 'l': cur().idx++; show(); break;
     case 'j': setView('site'); break;
     case 'k': if (state.tab === 'spaceapi') setView('endpoint'); break;
     case 'b': e.preventDefault(); openEdit(); break;
