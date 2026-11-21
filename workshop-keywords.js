@@ -8,7 +8,7 @@ export const WORKSHOP_KEYWORDS = {
     '3d-drucker', '3d drucker', '3d-druck', '3d druck', '3d printer', '3d printing',
     'fdm drucker', 'fdm-drucker', 'resin drucker', 'sla drucker', 'dlp drucker',
     'filamentdrucker', 'filament drucker', 'additive fertigung',
-    'prusa', 'bambulab', 'bambu lab', 'ultimaker', 'creality',
+    'prusa', 'bambulab', 'bambu lab', 'ultimaker', 'creality', 'reprap',
   ],
   'laser': [
     'lasercutter', 'laser cutter', 'lasergravur', 'laser gravur',
@@ -110,10 +110,10 @@ export function detectTypes(text) {
 export const WORKSHOP_LOOSE_KEYWORDS = {
   '3d':          ['3d'],
   'laser':       ['laser'],
-  'cnc':         ['cnc'],
-  'electronics': ['elektronik', 'electronics'],
+  'cnc':         ['cnc', 'fräse', 'fraese', 'carvera', 'makera'],
+  'electronics': ['elektronik', 'electronics', 'esp8266', 'esp32', 'arduino', 'raspberry pi', 'mikrocontroller', 'microcontroller', 'ws2812', 'led-strip', 'led strip', 'sensor', 'platine'],
   'wood':        ['holz', 'wood'],
-  'metal':       ['metall', 'metal'],
+  'metal':       ['metall', 'metal', 'carvera'], // Carvera = Desktop-CNC, fräst u. a. Aluminium (Annahme, bitte prüfen)
   'bike':        ['fahrrad', 'bike', 'velo'],
   'textile':     ['textil', 'nähen', 'naehen'],
   'screenprint': ['siebdruck'],

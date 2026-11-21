@@ -207,3 +207,14 @@ test('lockere Stichwörter gelten nicht für den Crawler (detectTypes bleibt str
   assert.deepEqual(detectTypesLoose('HOLZ • METALL'), ['wood', 'metal']);
   assert.deepEqual(detectTypesLoose('nichts Passendes'), []);
 });
+
+test('detectFromText: CCC-Mannheim-Liste (RepRap, Carvera, ESP8266, WS2812 …)', () => {
+  const text = '* [CNC-Fräse](https://x.de/CNC-Fr%C3%A4se)\n* [RepRap](https://x.de/RepRap)\n* [Fräse - Carvera Air (Makera)](https://x.de/Carvera)\n* [Raumuhr basierend auf ESP8266 und WS2812](https://x.de/ws2812-clock)\n* [LED-Strip](https://x.de/LED-Strip)\n* [Platinenfräse](https://x.de/Platinenfr%C3%A4se)';
+  assert.deepEqual(detectFromText(text), ['3d', 'cnc', 'electronics', 'metal']);
+});
+
+test('RepRap ist streng erkannt (auch für den Crawler), Carvera/ESP8266 nur locker', () => {
+  assert.deepEqual(detectTypes('RepRap'), ['3d']);
+  assert.deepEqual(detectTypes('Carvera ESP8266'), []);
+  assert.deepEqual(detectTypesLoose('Carvera ESP8266'), ['electronics', 'metal', 'cnc']);
+});
