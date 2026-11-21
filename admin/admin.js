@@ -188,8 +188,6 @@ document.addEventListener('keydown', e => {
     case 'y': act('y'); break;
     case 'n': act('n'); break;
     case 's': state.idx++; show(); break;
-    case 'w': setView('site'); break;
-    case 'e': setView('endpoint'); break;
     case 'a':
       e.preventDefault();
       $('edit').hidden = false;
