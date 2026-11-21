@@ -156,3 +156,30 @@ export function buildWorkshopComparison(loc, currentWorkshops, proposed) {
     { label: 'Workshops', ours: cur.length ? cur.join(', ') : dash, proposed: proposed.join(', '), differs: !same },
   ];
 }
+
+// ─── URL-Scan (Workflow scan-workshop-url.yml → Kommentar am Issue) ───────────
+
+/** true, wenn der Text nur aus einer http(s)-URL besteht */
+export function looksLikeUrl(text) {
+  return /^https?:\/\/\S+$/i.test(String(text).trim());
+}
+
+/** Kommentar-Text, den der Scan-Workflow ans Issue schreibt (Marker + JSON-Block). */
+export function buildScanComment(scanId, url, result) {
+  const scan = result.error
+    ? { id: scanId, url, error: String(result.error) }
+    : { id: scanId, url, types: result.types, evidence: result.evidence ?? {}, pages: result.pages ?? 0 };
+  return `<!-- scan:${scanId} -->\nURL-Scan: ${url}\n\n\`\`\`json\n${JSON.stringify({ scan }, null, 2)}\n\`\`\`\n`;
+}
+
+/** @returns {{types?:string[], evidence?:object, pages?:number, error?:string}|null} null = Kommentar gehört nicht zu scanId */
+export function parseScanComment(body, scanId) {
+  if (!String(body).includes(`<!-- scan:${scanId} -->`)) return null;
+  const m = body.match(RE_JSON);
+  if (!m) return { error: 'Scan-Ergebnis nicht lesbar' };
+  try {
+    const scan = JSON.parse(m[1]).scan;
+    if (scan.error) return { error: scan.error };
+    return { types: (scan.types || []).filter(t => t in WORKSHOP_TYPES), evidence: scan.evidence || {}, pages: scan.pages || 0 };
+  } catch { return { error: 'Scan-Ergebnis nicht lesbar' }; }
+}

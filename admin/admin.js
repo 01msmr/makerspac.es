@@ -3,7 +3,7 @@
 import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
-  parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText,
+  parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 
@@ -294,9 +294,48 @@ function openEdit() {
 
 // Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
 $('edit-free').addEventListener('input', () => {
+  if (looksLikeUrl($('edit-free').value)) { $('edit-detected').textContent = 'URL erkannt — „Website scannen“ liest sie serverseitig aus.'; return; }
   const found = detectFromText($('edit-free').value);
   for (const box of checks()) if (found.includes(box.value)) box.checked = true;
   $('edit-detected').textContent = found.length ? `erkannt: ${found.join(', ')}` : '';
+});
+
+// URL-Scan: Workflow scan-workshop-url.yml liest die Seite aus und kommentiert das Issue; wir holen den Kommentar (Polling) und löschen ihn wieder
+const SCAN_POLL_MS = 5000;
+const SCAN_MAX_POLLS = 36; // ≈ 3 min
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+$('edit-scan').addEventListener('click', async () => {
+  const p = state.current;
+  const free = $('edit-free').value.trim();
+  const url = looksLikeUrl(free) ? free : websiteOf(p);
+  const note = msg => { $('edit-detected').textContent = msg; };
+  if (!url) { note('Keine URL vorhanden — oben eine URL einfügen.'); return; }
+  const scanId = [...crypto.getRandomValues(new Uint8Array(4))].map(b => b.toString(16).padStart(2, '0')).join('');
+  $('edit-scan').disabled = true;
+  try {
+    note(`Scan läuft für ${url} … (30–60 s)`);
+    await gh(`/repos/${REPO}/actions/workflows/scan-workshop-url.yml/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { url, issue: String(p.number), scan_id: scanId } } });
+    for (let i = 0; i < SCAN_MAX_POLLS; i++) {
+      await sleep(SCAN_POLL_MS);
+      if (state.current !== p || $('edit').hidden) return; // weitergegangen / abgebrochen
+      const comments = await gh(`/repos/${REPO}/issues/${p.number}/comments?per_page=100`);
+      for (const c of comments) {
+        const r = parseScanComment(c.body || '', scanId);
+        if (!r) continue;
+        gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
+        if (r.error) { note(`Scan fehlgeschlagen: ${r.error}`); return; }
+        for (const box of checks()) if (r.types.includes(box.value)) box.checked = true;
+        note(r.types.length ? `Scan (${r.pages} Seite(n)): erkannt: ${r.types.join(', ')} — bitte prüfen, dann „Speichern + ok“.` : `Scan (${r.pages} Seite(n)): nichts erkannt.`);
+        return;
+      }
+    }
+    note('Scan hat nicht rechtzeitig geantwortet — Run unter GitHub → Actions → „Scan Workshop URL“ prüfen.');
+  } catch (err) {
+    note(`Fehler: ${err.message}`);
+  } finally {
+    $('edit-scan').disabled = false;
+  }
 });
 
 $('edit').addEventListener('submit', e => {

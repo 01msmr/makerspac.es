@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { WORKSHOP_KEYWORDS } from '../workshop-keywords.js';
 
 // Enrichment-Datei
@@ -321,7 +321,7 @@ function createGitHubIssue(space, detection) {
 
 // === Crawl one space ===
 
-async function crawlSpace(space) {
+export async function crawlSpace(space) {
   const allDetections = {};
   const allCandidates = {};   // research only
   const allRawTerms = [];     // research only
@@ -556,7 +556,10 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error('Fataler Fehler:', err);
-  process.exit(1);
-});
+// Nur bei direktem Aufruf starten (tools/scan-workshop-url.js importiert crawlSpace)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(err => {
+    console.error('Fataler Fehler:', err);
+    process.exit(1);
+  });
+}

@@ -130,3 +130,26 @@ test('workshop-keywords: jeder Typ aus workshop-types.js hat Stichwörter', () =
   for (const t of Object.keys(WORKSHOP_TYPES)) assert.ok(WORKSHOP_KEYWORDS[t]?.length, `Stichwörter für ${t}`);
   assert.deepEqual(detectTypes('SIEBDRUCK'), ['screenprint']);
 });
+
+import { looksLikeUrl, buildScanComment, parseScanComment } from '../admin/admin-lib.js';
+import { summarize } from '../tools/scan-workshop-url.js';
+
+test('looksLikeUrl: nur einzelne http(s)-URL', () => {
+  assert.equal(looksLikeUrl(' https://a.de/x '), true);
+  assert.equal(looksLikeUrl('http://a.de'), true);
+  assert.equal(looksLikeUrl('Lasercutter bei https://a.de'), false);
+  assert.equal(looksLikeUrl('javascript:alert(1)'), false);
+});
+
+test('Scan-Kommentar: Roundtrip, fremde scanId → null, unbekannte Typen gefiltert', () => {
+  const body = buildScanComment('ab12cd34', 'https://a.de', { types: ['laser', 'quatsch', 'wood'], evidence: { laser: { matches: ['lasercutter'], sources: ['homepage'] } }, pages: 3 });
+  assert.deepEqual(parseScanComment(body, 'ab12cd34'), { types: ['laser', 'wood'], evidence: { laser: { matches: ['lasercutter'], sources: ['homepage'] } }, pages: 3 });
+  assert.equal(parseScanComment(body, 'ffff0000'), null);
+  assert.deepEqual(parseScanComment(buildScanComment('ab12cd34', 'https://a.de', { error: 'HTTP 404' }), 'ab12cd34'), { error: 'HTTP 404' });
+});
+
+test('summarize: Reihenfolge wie WORKSHOP_TYPES, Fehler durchgereicht', () => {
+  const det = { wood: { matches: ['holzwerkstatt'], sources: ['homepage'] }, '3d': { matches: ['3d-druck'], sources: ['/raum'] } };
+  assert.deepEqual(summarize({ detections: det, pagesChecked: 2 }).types, ['3d', 'wood']);
+  assert.deepEqual(summarize({ error: 'HTTP 500' }), { error: 'HTTP 500' });
+});
