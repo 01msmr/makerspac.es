@@ -50,3 +50,20 @@ test('buildComparison ohne Live-Daten wirft nicht', () => {
 test('distanceMeters ~111 km pro Breitengrad', () => {
   assert.ok(Math.abs(distanceMeters(0, 0, 1, 0) - 111195) < 200);
 });
+
+import { autoApplyDelay, AUTO_APPLY_COUNT, AUTO_APPLY_IDLE_MS } from '../admin/admin-lib.js';
+
+test('autoApplyDelay: nichts zu tun → null', () => {
+  assert.equal(autoApplyDelay(0, 0, 1000), null);
+});
+
+test('autoApplyDelay: ab 10 ok-Vorschlägen sofort', () => {
+  assert.equal(autoApplyDelay(AUTO_APPLY_COUNT, 5000, 5000), 0);
+  assert.equal(autoApplyDelay(AUTO_APPLY_COUNT + 3, 5000, 5000), 0);
+});
+
+test('autoApplyDelay: sonst 1 h nach dem letzten ok-Vorschlag', () => {
+  assert.equal(autoApplyDelay(3, 1000, 1000), AUTO_APPLY_IDLE_MS);
+  assert.equal(autoApplyDelay(3, 1000, 1000 + 600000), AUTO_APPLY_IDLE_MS - 600000);
+  assert.equal(autoApplyDelay(3, 1000, 1000 + AUTO_APPLY_IDLE_MS + 5), 0);
+});

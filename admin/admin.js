@@ -1,6 +1,6 @@
 // admin/admin.js — Review-Seite für „SpaceAPI:“-Issues. Schreibt NUR Issues (Label/Body/Status) und löst
 // den Apply-Workflow aus; Daten schreibt ausschließlich der GitHub-Workflow (siehe adr/006).
-import { REPO, OK_LABEL, parseIssue, replaceEndpoint, buildComparison } from './admin-lib.js';
+import { REPO, OK_LABEL, parseIssue, replaceEndpoint, buildComparison, autoApplyDelay, AUTO_APPLY_COUNT } from './admin-lib.js';
 
 const API = 'https://api.github.com';
 const RAW = `https://raw.githubusercontent.com/${REPO}/main`;
@@ -10,7 +10,7 @@ const $ = id => document.getElementById(id);
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
 
-const state = { queue: [], idx: 0, okCount: 0, locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null, data: null };
+const state = { queue: [], idx: 0, okCount: 0, locations: new Map(), enrichment: {}, lastOkAt: 0, timer: null, busy: false, view: 'site', current: null, data: null };
 
 async function gh(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${API}${path}`, {
@@ -56,6 +56,7 @@ async function start() {
     const parsed = issues.map(parseIssue).filter(Boolean);
     state.queue = parsed.filter(p => !p.ok);
     state.okCount = parsed.filter(p => p.ok).length;
+    state.lastOkAt = Math.max(0, ...parsed.filter(p => p.ok).map(p => p.updated));
     state.idx = 0;
     const [locs, enr] = await Promise.all([
       fetch(`${RAW}/locations.json`).then(r => r.json()),
@@ -74,10 +75,13 @@ async function start() {
 // ─── Anzeige ─────────────────────────────────────────────────────────────
 function updateBar() {
   const n = state.queue.length;
-  $('counter').textContent = n && state.idx < n ? `${state.idx + 1} / ${n}` : '';
+  const open = Math.max(0, n - state.idx);
+  $('counter').textContent = open ? `${state.idx + 1} / ${n} · offen: ${open}` : '';
   const btn = $('apply');
   btn.hidden = state.okCount === 0;
   btn.textContent = `Übernehmen (${state.okCount})`;
+  btn.title = `Wird automatisch gestartet bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
+  scheduleAutoApply();
 }
 
 async function show() {
@@ -150,6 +154,13 @@ $('open-tab').addEventListener('click', () => {
 });
 
 // ─── Aktionen ────────────────────────────────────────────────────────────
+function scheduleAutoApply() {
+  clearTimeout(state.timer);
+  const delay = autoApplyDelay(state.okCount, state.lastOkAt, Date.now());
+  if (delay === null) return;
+  state.timer = setTimeout(() => applyNow(true), Math.min(delay, 2 ** 31 - 1));
+}
+
 const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', body: { labels: [OK_LABEL] } });
 
 async function act(kind, value) {
@@ -157,7 +168,7 @@ async function act(kind, value) {
   if (!p || state.busy) return;
   state.busy = true;
   try {
-    if (kind === 'y') { setStatus('Setze Label …'); await addOk(p.number); state.okCount++; }
+    if (kind === 'y') { setStatus('Setze Label …'); await addOk(p.number); state.okCount++; state.lastOkAt = Date.now(); }
     else if (kind === 'a') {
       setStatus('Passe Issue an …');
       const issue = await gh(`/repos/${REPO}/issues/${p.number}`);
@@ -166,6 +177,7 @@ async function act(kind, value) {
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { body } });
       await addOk(p.number);
       state.okCount++;
+      state.lastOkAt = Date.now();
     } else if (kind === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
@@ -198,24 +210,25 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── Übernehmen ──────────────────────────────────────────────────────────
-$('apply').addEventListener('click', async () => {
+async function applyNow(auto = false) {
   if (!state.okCount || state.busy) return;
   state.busy = true;
+  const n = state.okCount;
   try {
     await gh(`/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: 'apply-ok', id: '0' } } });
-    $('review').hidden = true;
-    $('done').hidden = false;
-    $('done').replaceChildren('Workflow gestartet: ');
-    const a = document.createElement('a');
-    a.href = `https://github.com/${REPO}/actions/workflows/${WORKFLOW}`;
-    a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Run ansehen';
-    $('done').append(a);
     state.okCount = 0;
+    state.busy = false;
+    const link = document.createElement('a');
+    link.href = `https://github.com/${REPO}/actions/workflows/${WORKFLOW}`;
+    link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Run ansehen';
+    $('status').replaceChildren(`${auto ? 'Automatisch' : ''} ${n} Vorschlag/Vorschläge übernommen — Workflow gestartet: `.trim() + ' ', link);
     updateBar();
+    if (!state.queue[state.idx]) { $('review').hidden = true; $('done').hidden = false; $('done').replaceChildren($('status').cloneNode(true)); }
   } catch (err) {
+    state.busy = false;
     setStatus(`Fehler: ${err.message}`);
   }
-  state.busy = false;
-});
+}
+$('apply').addEventListener('click', () => applyNow(false));
 
 if (token) start(); else $('login').hidden = false;
