@@ -718,35 +718,100 @@
   "162": {
     "events": "https://www.comakingspace.org/kalender/"
   },
+  "163": {
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "coding",
+      "textile"
+    ]
+  },
   "164": {
     "events": "https://events.shackspace.de/calendar",
     "spaceapi": {
       "endpoint": "https://api.shackspace.de/v1/spaceapi"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "coding",
+      "metal",
+      "bike",
+      "textile"
+    ]
   },
   "165": {
-    "events": "https://hobbyhimmel.de/termine"
+    "events": "https://hobbyhimmel.de/termine",
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "wood",
+      "metal",
+      "bike",
+      "textile"
+    ]
   },
   "166": {
     "events": "https://hdm-stuttgart.de/makerspace/terminkalender"
+  },
+  "167": {
+    "workshops": [
+      "3d",
+      "electronics",
+      "coding"
+    ]
   },
   "168": {
     "events": "https://chaostreff-backnang.de/#termine",
     "spaceapi": {
       "endpoint": "https://spaceapi.ctbk.de"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "coding"
+    ]
   },
   "169": {
-    "events": "https://www.maked-digital.de/workshops/"
+    "events": "https://www.maked-digital.de/workshops/",
+    "workshops": [
+      "3d",
+      "coding",
+      "laser"
+    ]
   },
   "170": {
-    "events": "https://www.tinkertank.de/termine"
+    "events": "https://www.tinkertank.de/termine",
+    "workshops": [
+      "3d",
+      "electronics",
+      "metal",
+      "textile"
+    ]
   },
   "171": {
-    "events": "https://www.fablab-neckar-alb.org/?post_type=tribe_events"
+    "events": "https://www.fablab-neckar-alb.org/?post_type=tribe_events",
+    "workshops": [
+      "3d",
+      "bike",
+      "cnc",
+      "electronics",
+      "metal",
+      "textile",
+      "wood",
+      "coding"
+    ]
   },
   "172": {
-    "events": "https://franzwerk-tuebingen.de/veranstaltungen"
+    "events": "https://franzwerk-tuebingen.de/veranstaltungen",
+    "workshops": [
+      "3d",
+      "cnc",
+      "music",
+      "metal"
+    ]
   },
   "173": {
     "events": "https://ki-maker.space/kalender",
@@ -792,7 +857,12 @@
     ]
   },
   "177": {
-    "events": "https://www.tik.uni-stuttgart.de/events"
+    "events": "https://www.tik.uni-stuttgart.de/events",
+    "workshops": [
+      "3d",
+      "laser",
+      "textile"
+    ]
   },
   "178": {
     "events": "https://essembly.de/pages/termine.html",
