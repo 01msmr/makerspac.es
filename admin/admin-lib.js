@@ -78,7 +78,7 @@ export function buildComparison(loc, current, data, endpoint) {
   const dist = loc?.loc && typeof lat === 'number' && typeof lon === 'number'
     ? Math.round(distanceMeters(loc.loc.lat, loc.loc.long, lat, lon)) : null;
   const lc = data?.state?.lastchange;
-  return [
+  const rows = [
     { label: 'Name', ours: loc?.name ?? dash, proposed: data?.space ?? dash,
       differs: !!data && (loc?.name ?? '').toLowerCase() !== String(data.space ?? '').toLowerCase() },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: data?.location?.address ?? dash, differs: false },
@@ -92,6 +92,8 @@ export function buildComparison(loc, current, data, endpoint) {
     { label: 'Letzte Änderung', ours: dash,
       proposed: typeof lc === 'number' ? new Date(lc * 1000).toISOString().slice(0, 10) : dash, differs: false },
   ];
+  // verdächtige Abweichungen (gelb) vs. normale Änderungen (rot→grün)
+  return rows.map(r => ['Name', 'Website', 'Koordinaten'].includes(r.label) ? { ...r, warn: r.differs } : r);
 }
 
 // ─── Workshop-Daten ([Workshop-Daten]-Issues, Label workshop-data) ───────────
@@ -182,4 +184,79 @@ export function parseScanComment(body, scanId) {
     if (scan.error) return { error: scan.error };
     return { types: (scan.types || []).filter(t => t in WORKSHOP_TYPES), evidence: scan.evidence || {}, pages: scan.pages || 0 };
   } catch { return { error: 'Scan-Ergebnis nicht lesbar' }; }
+}
+
+// ─── Kalenderlink ("Kalenderlink:"-Issues, Label data-update) ───────────────
+
+const RE_EVENTS = /```json\s*\{\s*"events":\s*"([^"]+)"\s*\}\s*```/s;
+const RE_CONFIDENCE = /\|\s*(high|medium|low)\s*\|/i;
+
+/** @returns {{number:number,title:string,spaceId:number,events:string,ok:boolean,url:string,updated:number,website:string,confidence:string}|null} */
+export function parseCalendarIssue(issue) {
+  if (!issue?.title?.startsWith('Kalenderlink:') || issue.pull_request) return null;
+  const body = issue.body || '';
+  const id = body.match(RE_ID);
+  const ev = body.match(RE_EVENTS);
+  if (!id || !ev || !/^https?:\/\//.test(ev[1])) return null; // ohne Fund (null) → Listen-Reiter
+  return {
+    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), events: ev[1],
+    ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
+    website: body.match(RE_WEBSITE)?.[1] ?? '', confidence: body.match(RE_CONFIDENCE)?.[1]?.toLowerCase() ?? '',
+  };
+}
+
+/** Ersetzt die events-URL im JSON-Block; null bei ungültiger URL / fehlendem Block. */
+export function replaceEvents(body, url) {
+  if (!/^https?:\/\/\S+$/.test(url) || url.includes('"')) return null;
+  if (!RE_EVENTS.test(body)) return null;
+  return body.replace(RE_EVENTS, () => '```json\n{\n  "events": "' + url + '"\n}\n```');
+}
+
+export function buildCalendarComparison(loc, currentEvents, proposed, confidence) {
+  const dash = '–';
+  return [
+    { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
+    { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
+    { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
+    { label: 'Kalender', ours: currentEvents || dash, proposed, differs: (currentEvents || '') !== proposed },
+    { label: 'Confidence', ours: dash, proposed: confidence || dash, differs: confidence === 'low', warn: confidence === 'low' },
+  ];
+}
+
+// ─── Listen-Reiter (alles ohne eigenen Review-Ablauf; nur Anzeige + Link zu GitHub) ─
+
+/** [Schlüssel, Reiter-Name, Überschrift] */
+export const INBOX_GROUPS = [
+  ['pr', 'PRs', 'Pull Requests'],
+  ['add', 'Neu', 'Neuer Space (Formular)'],
+  ['update', 'Änderung', 'Änderung an Space (Formular)'],
+  ['calendar0', 'Kalender ohne Fund', 'Kalenderlink ohne gefundene URL'],
+  ['data', 'Daten', 'Datenvorschläge (Weekly / Gründung)'],
+  ['other', 'Sonstige', 'Sonstige Issues'],
+];
+
+const hasLabel = (item, name) => (item.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === name);
+
+/** Gruppe eines offenen Issues/PRs; null = hat einen eigenen Review-Reiter (SpaceAPI / Workshops / Kalender). */
+export function classifyItem(item) {
+  const title = item?.title || '';
+  if (item.pull_request) return 'pr';
+  if (title.startsWith('SpaceAPI:') || title.startsWith('[Workshop-Daten]')) return null;
+  if (title.startsWith('Kalenderlink:')) return parseCalendarIssue(item) ? null : 'calendar0';
+  if (title.startsWith('Datenvorschlag:')) return 'data';
+  if (hasLabel(item, 'add-space')) return 'add';
+  if (hasLabel(item, 'update-space')) return 'update';
+  return 'other';
+}
+
+/** @returns {Record<string, object[]>} Gruppe → Einträge (leere fehlen); nur echte GitHub-Links */
+export function groupInbox(items) {
+  const out = {};
+  for (const item of items) {
+    const g = classifyItem(item);
+    if (!g || !/^https:\/\/github\.com\//.test(item.html_url || '')) continue;
+    (out[g] ??= []).push(item);
+  }
+  return out;
 }

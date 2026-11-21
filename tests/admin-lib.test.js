@@ -153,3 +153,42 @@ test('summarize: Reihenfolge wie WORKSHOP_TYPES, Fehler durchgereicht', () => {
   assert.deepEqual(summarize({ detections: det, pagesChecked: 2 }).types, ['3d', 'wood']);
   assert.deepEqual(summarize({ error: 'HTTP 500' }), { error: 'HTTP 500' });
 });
+
+import { parseCalendarIssue, replaceEvents, buildCalendarComparison, classifyItem, groupInbox } from '../admin/admin-lib.js';
+
+const CBODY = (url, conf = 'high') => `## Kalenderlink-Vorschlag: X\n\n**ID:** 235\n**Website:** https://x.de\n\n| URL | Confidence | Grund |\n|-----|------------|-------|\n| ${url} | ${conf} | Allgemeine Seite |\n\n### Vorgeschlagener Wert\n\`\`\`json\n{\n  "events": "${url}"\n}\n\`\`\`\n`;
+const cissue = (url, labels = []) => ({ number: 235, title: 'Kalenderlink: X', body: CBODY(url), labels: labels.map(name => ({ name })), html_url: 'https://github.com/o/r/issues/235' });
+
+test('parseCalendarIssue: ID, events-URL, Confidence, ok-Label', () => {
+  const p = parseCalendarIssue(cissue('https://x.de/events/', ['data-update', 'ok']));
+  assert.equal(p.spaceId, 235); assert.equal(p.events, 'https://x.de/events/'); assert.equal(p.confidence, 'high'); assert.equal(p.ok, true);
+  assert.equal(parseCalendarIssue({ ...cissue('https://x.de'), body: '**ID:** 1\nkein Block' }), null);
+  assert.equal(parseCalendarIssue({ ...cissue('https://x.de'), title: 'SpaceAPI: x' }), null);
+});
+
+test('replaceEvents: Roundtrip, ungültige URL → null', () => {
+  const nb = replaceEvents(CBODY('https://alt.de'), 'https://neu.de/kalender');
+  assert.equal(parseCalendarIssue({ ...cissue('x'), body: nb }).events, 'https://neu.de/kalender');
+  assert.equal(replaceEvents(CBODY('https://alt.de'), 'javascript:alert(1)'), null);
+  assert.equal(replaceEvents(CBODY('https://alt.de'), 'https://a.de/"x'), null);
+});
+
+test('buildCalendarComparison: Abweichung + niedrige Confidence markiert', () => {
+  const rows = Object.fromEntries(buildCalendarComparison({ name: 'X' }, undefined, 'https://x.de/e', 'low').map(r => [r.label, r]));
+  assert.equal(rows.Kalender.differs, true); assert.equal(rows.Confidence.differs, true);
+});
+
+test('classifyItem/groupInbox: eigene Reiter ausgenommen, Rest nach Art', () => {
+  const gh = (o) => ({ number: 1, html_url: 'https://github.com/o/r/issues/1', labels: [], ...o });
+  assert.equal(classifyItem(gh({ title: 'SpaceAPI: X' })), null);
+  assert.equal(classifyItem(gh({ title: '[Workshop-Daten] X' })), null);
+  assert.equal(classifyItem(cissue('https://x.de')), null);
+  assert.equal(classifyItem(gh({ title: 'Kalenderlink: X', body: '**ID:** 1\nkein Fund' })), 'calendar0');
+  assert.equal(classifyItem(gh({ title: 'Datenvorschlag: X' })), 'data');
+  assert.equal(classifyItem(gh({ title: 'Neuer Space', labels: [{ name: 'add-space' }] })), 'add');
+  assert.equal(classifyItem(gh({ title: 'Änderung', labels: [{ name: 'update-space' }] })), 'update');
+  assert.equal(classifyItem(gh({ title: 'PR', pull_request: {} })), 'pr');
+  assert.equal(classifyItem(gh({ title: 'Irgendwas' })), 'other');
+  const g = groupInbox([gh({ title: 'PR', pull_request: {} }), gh({ title: 'x', html_url: 'https://evil.example/x' }), gh({ title: 'SpaceAPI: y' })]);
+  assert.deepEqual(Object.keys(g), ['pr']); // fremde Links und eigene Reiter fallen raus
+});

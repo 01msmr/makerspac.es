@@ -103,10 +103,10 @@
 | `generate-map-splits.js` | **Node.js** Build-Script — locations.json + loc-enrichment.json → data/*.json | — |
 | `tools/spaceapi-directory-sync.js` | **Node.js** Cron-Script (wöchentlich) — directory.spaceapi.io mit loc-enrichment.json abgleichen → Issues `SpaceAPI: <Name>` (Label `data-update`) | `normalizeUrl`, `matchSpace`, `buildProposals`, `isAlreadyProposed`, `buildIssueBody` (export) |
 | `tools/apply-spaceapi-issues.js` | **Node.js** — offene `SpaceAPI:`-Issues → `spaceapi.endpoint` in loc-enrichment.json, Issues schließen; `--only-ok` = nur Label `ok` + Live-Check des Endpoints (ungültig → Kommentar, Label entfernt) | `parseIssue`, `applyProposal`, `filterOk`, `isValidSpaceApi`, `checkEndpoint` (export) |
-| `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` mit Reitern **SpaceAPI** und **Workshops** (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s (j/k = Website/Endpoint) ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
+| `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` mit Review-Reitern **SpaceAPI**, **Workshops**, **Kalender** und Listen-Reitern (Pull Requests, Neu, Änderung, Daten, Kalender ohne Fund, Sonstige — nur Anzeige + Link, nur sichtbar wenn etwas offen ist); am Ende einer Liste springt die Seite zum nächsten Reiter mit offenen Vorschlägen; Toasts + Rückgängig-Stapel (`z`); Farben aus `colours.js` (`applyCssColours`), Hintergrund `--dropdown-alt-bg` (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s (j/k = Website/Endpoint) ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
 | `tools/scan-workshop-url.js` | **Node.js** — liest eine URL mit dem Workshop-Crawler (`crawlSpace`, exportiert) aus und kommentiert das Issue mit den erkannten Typen (Workflow `scan-workshop-url.yml`, gestartet von `/admin/`; die Seite löscht den Kommentar wieder) | `summarize` (export) |
 | `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-spaceapi-issues.yml` (`apply-ok`) ab 10 `ok`-Issues oder 1 h nach der letzten Änderung | `decide` (export) |
-| `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters`, `autoApplyDelay`, `parseWorkshopIssue`, `parseWorkshopList`, `replaceWorkshops`, `buildWorkshopComparison` |
+| `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters`, `autoApplyDelay`, `parseWorkshopIssue`, `parseWorkshopList`, `replaceWorkshops`, `buildWorkshopComparison`, `detectFromText`, `parseCalendarIssue`, `replaceEvents`, `buildCalendarComparison`, `classifyItem`, `groupInbox`, `parseScanComment` |
 
 ### CSS
 
@@ -288,7 +288,7 @@ git push main
      └── gh workflow run deploy.yml  (GITHUB_TOKEN-Push triggert keinen Deploy)
 
 .github/workflows/auto-apply-spaceapi.yml  (cron */15)
-     └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi (apply-ok) bzw. apply-workshop (apply) starten)
+     └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi / apply-calendar (apply-ok) bzw. apply-workshop (apply) starten)
 
 .github/workflows/scan-workshop-url.yml  (workflow_dispatch aus /admin/: url + issue + scan_id)
      └── node tools/scan-workshop-url.js  → Kommentar `<!-- scan:ID -->` + JSON am Issue (Admin pollt, liest, löscht ihn)
