@@ -28,8 +28,9 @@ const setStatus = msg => { $('status').textContent = msg || ''; };
 // ─── Login ───────────────────────────────────────────────────────────────
 function logout() {
   token = '';
+  clearTimeout(state.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'apply', 'logout']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'apply', 'logout', 'finish']) $(id).hidden = true;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
@@ -46,6 +47,7 @@ $('save-token').addEventListener('click', () => {
 async function start() {
   $('login').hidden = true;
   $('logout').hidden = false;
+  $('finish').hidden = false;
   try {
     const issues = [];
     for (let page = 1; page <= 3; page++) {
@@ -230,5 +232,19 @@ async function applyNow(auto = false) {
   }
 }
 $('apply').addEventListener('click', () => applyNow(false));
+
+// Sitzung beenden: offene ok-Vorschläge übernehmen, dann abmelden (Token wird gelöscht)
+$('finish').addEventListener('click', async () => {
+  if (state.busy) return;
+  const hadOk = state.okCount > 0;
+  if (hadOk) {
+    await applyNow(false);
+    if (state.okCount > 0) return; // Start fehlgeschlagen → Fehlermeldung bleibt, Sitzung bleibt offen
+  }
+  const note = hadOk ? [...$('status').childNodes].map(n => n.cloneNode(true)) : [];
+  logout();
+  $('done').hidden = false;
+  $('done').replaceChildren('Sitzung beendet. ', ...note);
+});
 
 if (token) start(); else $('login').hidden = false;
