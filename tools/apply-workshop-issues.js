@@ -1,5 +1,5 @@
 // tools/apply-workshop-issues.js
-// Liest offene GitHub Issues mit Label "workshop-data",
+// Liest offene GitHub Issues mit Label "workshop-data" (freigegeben = Checkbox oder Label "ok"),
 // parst die vorgeschlagenen Workshop-Typen und trägt sie in loc-enrichment.json ein.
 //
 // Usage:
@@ -10,7 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -24,7 +24,7 @@ const targetId = idIndex !== -1 ? parseInt(args[idIndex + 1], 10) : 0;
 
 function fetchIssues() {
   const raw = execSync(
-    'gh issue list --label workshop-data --state open --json number,title,body --limit 500',
+    'gh issue list --label workshop-data --state open --json number,title,body,labels --limit 500',
     { cwd: root, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
   );
   return JSON.parse(raw);
@@ -36,9 +36,14 @@ const RE_ID        = /\*\*ID:\*\*\s*(\d+)/;
 const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
 const RE_APPROVED  = /- \[x\] Freigegeben/i;
 
-function parseIssue(issue) {
+/** Freigegeben = Checkbox angehakt ODER Label "ok" (gesetzt von /admin/) */
+export function isApproved(issue) {
+  return RE_APPROVED.test(issue.body || '') || (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === 'ok');
+}
+
+export function parseIssue(issue) {
   if (!issue.title.startsWith('[Workshop-Daten]')) return null;
-  if (!RE_APPROVED.test(issue.body)) return null;  // not approved yet
+  if (!isApproved(issue)) return null;  // not approved yet
 
   const idMatch        = issue.body.match(RE_ID);
   const workshopsMatch = issue.body.match(RE_WORKSHOPS);
@@ -166,7 +171,9 @@ async function main() {
   console.log(`Angewendet: ${stats.applied} | Übersprungen: ${stats.skipped} | Fehler: ${stats.errors}`);
 }
 
-main().catch(err => {
-  console.error('Fataler Fehler:', err);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(err => {
+    console.error('Fataler Fehler:', err);
+    process.exit(1);
+  });
+}

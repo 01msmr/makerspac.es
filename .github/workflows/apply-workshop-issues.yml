@@ -24,6 +24,10 @@ on:
         type: number
         default: 0
 
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
+
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -56,16 +60,23 @@ jobs:
           node tools/apply-workshop-issues.js $ARGS
 
       - name: Commit loc-enrichment.json
+        id: commit
         if: ${{ inputs.mode == 'apply' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add loc-enrichment.json
-          git diff --staged --quiet || git commit -m "data: apply workshop data from issues"
-          git push
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: apply workshop data from issues"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Trigger Deploy
-        if: ${{ inputs.mode == 'apply' }}
+        if: ${{ steps.commit.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

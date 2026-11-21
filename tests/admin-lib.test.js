@@ -67,3 +67,50 @@ test('autoApplyDelay: sonst 1 h nach dem letzten ok-Vorschlag', () => {
   assert.equal(autoApplyDelay(3, 1000, 1000 + 600000), AUTO_APPLY_IDLE_MS - 600000);
   assert.equal(autoApplyDelay(3, 1000, 1000 + AUTO_APPLY_IDLE_MS + 5), 0);
 });
+
+import { parseWorkshopIssue, parseWorkshopList, replaceWorkshops, buildWorkshopComparison } from '../admin/admin-lib.js';
+import { parseIssue as parseWorkshopForApply, isApproved } from '../tools/apply-workshop-issues.js';
+
+const WBODY = (ws, checked = ' ') => `## Workshop-Daten für: X\n\n**ID:** 122\n**Website:** https://x.de\n\n### Gefundene Workshop-Typen\n\n| Typ | Keywords | Confidence | Quelle(n) |\n|-----|----------|------------|----------|\n| \`3d\` | 3d-druck | **high** | homepage |\n\n### Evidenz\n\n**3d:** "…Drucker…"\n\n### Vorgeschlagene Änderung in locations.json\n\n\`\`\`json\n"workshops": ${JSON.stringify(ws)}\n\`\`\`\n\n- [${checked}] Freigegeben zur Integration\n`;
+const wissue = (ws, labels = [], checked) => ({ number: 380, title: '[Workshop-Daten] X (#122)', body: WBODY(ws, checked), labels: labels.map(name => ({ name })) });
+
+test('parseWorkshopIssue: ID, Typen, Website, Tabelle, Evidenz', () => {
+  const p = parseWorkshopIssue(wissue(['3d', 'laser']));
+  assert.equal(p.spaceId, 122); assert.deepEqual(p.workshops, ['3d', 'laser']);
+  assert.equal(p.website, 'https://x.de'); assert.equal(p.ok, false);
+  assert.deepEqual(p.rows[0], { type: '3d', keywords: '3d-druck', confidence: 'high', sources: 'homepage' });
+  assert.match(p.evidence, /Drucker/);
+});
+
+test('parseWorkshopIssue: ok per Label oder Checkbox; fremde Titel/leer → null', () => {
+  assert.equal(parseWorkshopIssue(wissue(['3d'], ['ok'])).ok, true);
+  assert.equal(parseWorkshopIssue(wissue(['3d'], [], 'x')).ok, true);
+  assert.equal(parseWorkshopIssue({ ...wissue(['3d']), title: 'SpaceAPI: x' }), null);
+  assert.equal(parseWorkshopIssue(wissue([])), null);
+});
+
+test('parseWorkshopList: gültige Typen, Duplikate raus, Unbekannte gemeldet', () => {
+  assert.deepEqual(parseWorkshopList('3D, laser;wood  3d'), { list: ['3d', 'laser', 'wood'], invalid: [] });
+  assert.deepEqual(parseWorkshopList('3d, foo').invalid, ['foo']);
+});
+
+test('replaceWorkshops: Roundtrip lesbar für Admin- und Apply-Parser', () => {
+  const nb = replaceWorkshops(WBODY(['3d']), ['wood', 'metal']);
+  assert.deepEqual(parseWorkshopIssue({ ...wissue(['3d']), body: nb }).workshops, ['wood', 'metal']);
+  assert.deepEqual(parseWorkshopForApply({ ...wissue(['3d'], ['ok']), body: nb }).workshops, ['wood', 'metal']);
+  assert.equal(replaceWorkshops(WBODY(['3d']), []), null);
+  assert.equal(replaceWorkshops(WBODY(['3d']), ['quatsch']), null);
+});
+
+test('Apply-Skript: Label ok gilt als freigegeben, sonst nur Checkbox', () => {
+  assert.equal(isApproved(wissue(['3d'], ['ok'])), true);
+  assert.equal(isApproved(wissue(['3d'], [], 'x')), true);
+  assert.equal(isApproved(wissue(['3d'])), false);
+  assert.equal(parseWorkshopForApply(wissue(['3d'])), null);
+});
+
+test('buildWorkshopComparison markiert Abweichung', () => {
+  const rows = buildWorkshopComparison({ name: 'X' }, ['3d'], ['3d', 'laser']);
+  assert.equal(rows.find(r => r.label === 'Workshops').differs, true);
+  assert.equal(buildWorkshopComparison({ name: 'X' }, ['laser', '3d'], ['3d', 'laser']).find(r => r.label === 'Workshops').differs, false);
+});

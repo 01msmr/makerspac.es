@@ -32,3 +32,10 @@ tr.differs td:last-child { font-weight: 700; box-shadow: inset 3px 0 0 var(--foc
   #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
   #left { border-right: 0; border-bottom: 1px solid var(--border-color); }
 }
+
+/* Reiter + Workshop-Details */
+#tabs { display: flex; gap: .25rem; }
+#tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; }
+#extra { margin-top: 1rem; font-size: .9rem; }
+#extra table td, #extra table th { font-weight: 400; color: var(--text-color); }
+#extra blockquote { margin: .3rem 0 .8rem; padding-left: .6rem; border-left: 3px solid var(--dropdown-border); color: var(--hover-text-color); }

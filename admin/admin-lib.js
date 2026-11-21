@@ -1,5 +1,7 @@
 // admin/admin-lib.js — pure Funktionen der Review-Seite (kein DOM, kein fetch → testbar)
 
+import { WORKSHOP_TYPES } from '../workshop-types.js';
+
 export const REPO = '01msmr/makerspac.es';
 export const OK_LABEL = 'ok';
 
@@ -88,5 +90,59 @@ export function buildComparison(loc, current, data, endpoint) {
       differs: (current?.endpoint ?? '') !== endpoint },
     { label: 'Letzte Änderung', ours: dash,
       proposed: typeof lc === 'number' ? new Date(lc * 1000).toISOString().slice(0, 10) : dash, differs: false },
+  ];
+}
+
+// ─── Workshop-Daten ([Workshop-Daten]-Issues, Label workshop-data) ───────────
+
+const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
+const RE_APPROVED = /- \[x\] Freigegeben/i;
+const RE_WEBSITE = /\*\*Website:\*\*\s*(\S+)/;
+const RE_ROW = /^\|\s*`([^`]+)`\s*\|\s*(.*?)\s*\|\s*\*\*(\w+)\*\*\s*\|\s*(.*?)\s*\|\s*$/;
+
+/** @returns {{number:number,title:string,spaceId:number,workshops:string[],ok:boolean,url:string,updated:number,website:string,rows:object[],evidence:string}|null} */
+export function parseWorkshopIssue(issue) {
+  if (!issue?.title?.startsWith('[Workshop-Daten]') || issue.pull_request) return null;
+  const body = issue.body || '';
+  const id = body.match(RE_ID);
+  const js = body.match(RE_WORKSHOPS);
+  if (!id || !js) return null;
+  let workshops;
+  try { workshops = JSON.parse(js[1]); } catch { return null; }
+  if (!Array.isArray(workshops) || workshops.length === 0 || workshops.some(w => typeof w !== 'string')) return null;
+  const rows = body.split('\n').map(l => l.match(RE_ROW)).filter(Boolean)
+    .map(m => ({ type: m[1], keywords: m[2], confidence: m[3], sources: m[4] }));
+  const ev = body.match(/### Evidenz\s*([\s\S]*?)(?=\n### |\n```|$)/);
+  return {
+    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), workshops,
+    ok: RE_APPROVED.test(body) || (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
+    website: body.match(RE_WEBSITE)?.[1] ?? '', rows, evidence: ev ? ev[1].trim() : '',
+  };
+}
+
+/** "3d, laser;wood" → {list, invalid}; list nur mit gültigen, eindeutigen Typen */
+export function parseWorkshopList(text) {
+  const parts = [...new Set(String(text).toLowerCase().split(/[\s,;]+/).filter(Boolean))];
+  return { list: parts.filter(p => p in WORKSHOP_TYPES), invalid: parts.filter(p => !(p in WORKSHOP_TYPES)) };
+}
+
+/** Ersetzt die Workshop-Liste im JSON-Block; null wenn Liste leer/ungültig oder Block fehlt. */
+export function replaceWorkshops(body, list) {
+  if (!Array.isArray(list) || list.length === 0 || list.some(w => !(w in WORKSHOP_TYPES))) return null;
+  if (!RE_WORKSHOPS.test(body)) return null;
+  return body.replace(RE_WORKSHOPS, () => '```json\n"workshops": ' + JSON.stringify(list) + '\n```');
+}
+
+/** Vergleichszeilen für Workshop-Vorschläge. */
+export function buildWorkshopComparison(loc, currentWorkshops, proposed) {
+  const dash = '–';
+  const cur = Array.isArray(currentWorkshops) ? currentWorkshops : [];
+  const same = cur.length === proposed.length && cur.every(w => proposed.includes(w));
+  return [
+    { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
+    { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
+    { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
+    { label: 'Workshops', ours: cur.length ? cur.join(', ') : dash, proposed: proposed.join(', '), differs: !same },
   ];
 }
