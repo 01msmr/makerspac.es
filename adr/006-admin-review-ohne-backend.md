@@ -19,6 +19,7 @@ Die wöchentlichen `SpaceAPI:`-Issues (Directory Sync) sollen schnell und von je
 - Service Worker fängt `/admin/` nicht ab.
 - Gleiches Muster für `[Workshop-Daten]`-Issues (Reiter „Workshops"): `ok`-Label ersetzt die Checkbox „Freigegeben" (die Checkbox gilt weiter), „anpassen" ersetzt die Typ-Liste im JSON-Block. Apply: `apply-workshop-issues.yml` (`apply`).
 - Auto-Übernehmen serverseitig: Cron `auto-apply-spaceapi.yml` (je Art ≥10 `ok`-Issues oder 1 h Ruhe). Apply-Workflows teilen `concurrency: data-apply` und deployen nur bei geänderter Datei.
+- URL-Scan: Der Browser darf fremde Seiten nicht lesen (CORS) → `/admin/` startet `scan-workshop-url.yml`; der Workflow kommentiert das Issue mit den erkannten Typen, die Seite pollt, liest und löscht den Kommentar. Kein Drittanbieter-Proxy.
 
 ## Verworfen
 

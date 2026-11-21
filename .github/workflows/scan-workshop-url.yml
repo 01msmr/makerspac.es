@@ -1,0 +1,44 @@
+# Zweck:  Liest eine Website serverseitig aus (Workshop-Crawler) und schreibt die erkannten Typen als Kommentar ans Issue.
+# Wer:    startet /admin/ (Reiter Workshops → Bearbeiten → „Scannen“); die Seite liest den Kommentar und löscht ihn wieder.
+# Manuell: url + issue (Nummer) + scan_id (beliebiger Kurztext) angeben.
+
+name: "🌐 Scan Workshop URL"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Zu scannende URL (http/https)"
+        required: true
+        type: string
+      issue:
+        description: "Issue-Nummer, an die das Ergebnis als Kommentar geht"
+        required: true
+        type: string
+      scan_id:
+        description: "Kennung (4–40 Zeichen: A–Z a–z 0–9 -)"
+        required: true
+        type: string
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SCAN_URL: ${{ inputs.url }}
+          SCAN_ISSUE: ${{ inputs.issue }}
+          SCAN_ID: ${{ inputs.scan_id }}
+        run: node tools/scan-workshop-url.js --url "$SCAN_URL" --issue "$SCAN_ISSUE" --scan-id "$SCAN_ID"
