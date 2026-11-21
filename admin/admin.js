@@ -276,6 +276,7 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
 /** Bearbeiten-Formular schließen und zurücksetzen (Freitext/URL, Erkennungshinweis, Haken) */
 function closeEdit() {
   $('edit').hidden = true;
+  $('edit-ws').hidden = true;
   $('edit-free').value = '';
   $('edit-detected').textContent = '';
   $('edit-input').value = '';

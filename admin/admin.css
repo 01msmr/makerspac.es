@@ -1,3 +1,6 @@
+/* Autoren-CSS mit display:flex/grid würde sonst das hidden-Attribut aushebeln */
+[hidden] { display: none !important; }
+
 /* Admin-Review — nutzt die Variablen aus main-layout.css / main-responsive.css (Dark Mode inklusive) */
 html, body { height: 100%; overflow: auto; }
 body { display: flex; flex-direction: column; font-size: 15px; }
