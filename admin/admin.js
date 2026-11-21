@@ -475,10 +475,6 @@ function confirmOk() {
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
 
-function focusEdit() {
-  (cur().edit === 'workshops' ? $('edit-free') : $('edit-input')).focus();
-}
-
 // Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
 $('edit-free').addEventListener('input', () => {
   if (looksLikeUrl($('edit-free').value)) { $('edit-detected').textContent = 'URL erkannt — „Website scannen“ liest sie serverseitig aus.'; return; }
@@ -528,7 +524,6 @@ $('edit-scan').addEventListener('click', async () => {
 
 $('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
 $('act-y').addEventListener('click', confirmOk);
-$('act-b').addEventListener('click', focusEdit);
 $('act-n').addEventListener('click', () => act('n'));
 $('act-l').addEventListener('click', skip);
 $('act-z').addEventListener('click', undo);
@@ -547,7 +542,6 @@ document.addEventListener('keydown', e => {
     case 'z': undo(); break;
     case 'j': setView('site'); break;
     case 'k': if (cur().urlOf) setView('endpoint'); break;
-    case 'b': e.preventDefault(); focusEdit(); break;
   }
 });
 
