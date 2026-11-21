@@ -138,6 +138,15 @@ Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-m
 
 ---
 
+## Vorschläge prüfen (`/admin/`)
+
+Bot-Issues `SpaceAPI: …` (Label `data-update`) werden auf `makerspac.es/admin/` abgearbeitet (nicht verlinkt, `noindex`):
+
+1. Fine-grained PAT anlegen: nur Repo `01msmr/makerspac.es`, **Issues R/W** + **Actions R/W**, mit Ablauf; auf der Seite einfügen.
+2. Je Vorschlag: `y` = ok (Label `ok`) · `a` = Endpoint anpassen + ok · `n` = ablehnen (Issue schließen) · `s` = später.
+3. Am Ende „Übernehmen (N)" → Workflow `apply-spaceapi-issues.yml` (`apply-ok`) prüft die Endpoints live, schreibt `loc-enrichment.json`, 1 Commit + 1 Deploy.
+4. Das Label `ok` wird beim ersten Setzen automatisch angelegt (sonst einmalig manuell).
+
 ## Deployment
 
 Push auf `main` → GitHub Actions deployed automatisch auf www via FTPS.

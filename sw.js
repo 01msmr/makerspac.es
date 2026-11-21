@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v118'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v119'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -143,6 +143,9 @@ self.addEventListener('fetch', event => {
 
   // Nur eigene Origin abfangen (außer Tiles)
   if (url.origin !== self.location.origin) return;
+
+  // Admin-Review (/admin/) nie cachen — immer frisch vom Netz
+  if (path.startsWith('/admin/')) return;
 
   // HTML → Stale-While-Revalidate: Start sofort aus dem Cache (kein Warten auf langsames Netz).
   // Passt zu JS/CSS (cache-first, pro SW-VERSION neu vorgecacht) → HTML und Assets bleiben konsistent.
