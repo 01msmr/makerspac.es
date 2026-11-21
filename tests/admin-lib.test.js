@@ -192,3 +192,18 @@ test('classifyItem/groupInbox: eigene Reiter ausgenommen, Rest nach Art', () => 
   const g = groupInbox([gh({ title: 'PR', pull_request: {} }), gh({ title: 'x', html_url: 'https://evil.example/x' }), gh({ title: 'SpaceAPI: y' })]);
   assert.deepEqual(Object.keys(g), ['pr']); // fremde Links und eigene Reiter fallen raus
 });
+
+import { detectTypesLoose } from '../workshop-keywords.js';
+import { readFileSync } from 'node:fs';
+
+test('detectFromText: Überschriften-Text (Hobbyhimmel-Stil) wird erkannt', () => {
+  const text = 'Werkbereichen: [HOLZ](https://x.de/holz) • [METALL](https://x.de/metall) • ELEKTRONIK• [FABLAB](https://x.de/fablab) • [KREATIV](https://x.de/kreativ) • FAHRRAD';
+  assert.deepEqual(detectFromText(text), ['electronics', 'wood', 'metal', 'bike']); // FABLAB allein leitet nichts ab
+  assert.deepEqual(detectFromText('FABLAB'), []);
+});
+
+test('lockere Stichwörter gelten nicht für den Crawler (detectTypes bleibt streng)', () => {
+  assert.deepEqual(detectTypes('HOLZ • METALL'), []);
+  assert.deepEqual(detectTypesLoose('HOLZ • METALL'), ['wood', 'metal']);
+  assert.deepEqual(detectTypesLoose('nichts Passendes'), []);
+});

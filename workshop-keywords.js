@@ -99,3 +99,31 @@ export function detectTypes(text) {
   const lower = String(text).toLowerCase();
   return Object.keys(WORKSHOP_KEYWORDS).filter(type => WORKSHOP_KEYWORDS[type].some(kw => lower.includes(kw)));
 }
+
+/**
+ * Bewusst KEIN „fablab": Ein FabLab hat typischerweise digitale Fertigung (Laser, 3D-Druck, CNC), aber das ist nicht garantiert —
+ * ohne genannte Geräte wird nichts abgeleitet (der „Website scannen"-Knopf liest die konkreten Geräte aus).
+ * Lockere Stichwörter NUR für bewusst eingefügten Text (Admin-Freitext), z. B. Überschriften wie
+ * „HOLZ • METALL • ELEKTRONIK • FABLAB • FAHRRAD". Nicht fürs Crawlen fremder Websites verwenden (zu viele Fehlalarme).
+ * @type {Record<string, string[]>}
+ */
+export const WORKSHOP_LOOSE_KEYWORDS = {
+  '3d':          ['3d'],
+  'laser':       ['laser'],
+  'cnc':         ['cnc'],
+  'electronics': ['elektronik', 'electronics'],
+  'wood':        ['holz', 'wood'],
+  'metal':       ['metall', 'metal'],
+  'bike':        ['fahrrad', 'bike', 'velo'],
+  'textile':     ['textil', 'nähen', 'naehen'],
+  'screenprint': ['siebdruck'],
+  'ceramics':    ['keramik', 'töpfer', 'toepfer'],
+};
+
+/** Wie detectTypes, zusätzlich mit lockeren Stichwörtern (nur für eingefügten Text). */
+export function detectTypesLoose(text) {
+  const lower = String(text).toLowerCase();
+  const strict = new Set(detectTypes(text));
+  const loose = Object.keys(WORKSHOP_LOOSE_KEYWORDS).filter(t => WORKSHOP_LOOSE_KEYWORDS[t].some(kw => lower.includes(kw)));
+  return Object.keys(WORKSHOP_KEYWORDS).filter(t => strict.has(t) || loose.includes(t));
+}
