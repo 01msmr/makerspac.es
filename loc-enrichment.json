@@ -650,10 +650,21 @@
     "events": "https://infotastic.academy/programm"
   },
   "143": {
-    "events": "https://fablab-hamm.de/workshop"
+    "events": "https://fablab-hamm.de/workshop",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "coding",
+      "ceramics"
+    ]
   },
   "144": {
-    "events": "https://www.kreativwerkstatt-ffm.de/kunsthandwerk"
+    "events": "https://www.kreativwerkstatt-ffm.de/kunsthandwerk",
+    "workshops": [
+      "wood",
+      "ceramics"
+    ]
   },
   "145": {
     "events": "https://www.uni-frankfurt.de/f7/events-147202943"
@@ -662,7 +673,13 @@
     "events": "https://ccc-ffm.de",
     "spaceapi": {
       "endpoint": "https://status.ccc-ffm.de/spaceapi.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "vr"
+    ]
   },
   "147": {
     "events": "https://www.hackerspace-ffm.de/wiki/index.php?title=Termine",
@@ -674,6 +691,15 @@
       "wood",
       "metal",
       "textile"
+    ]
+  },
+  "148": {
+    "workshops": [
+      "cnc",
+      "electronics",
+      "coding",
+      "wood",
+      "metal"
     ]
   },
   "149": {
