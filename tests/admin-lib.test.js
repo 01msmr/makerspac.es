@@ -198,7 +198,8 @@ import { readFileSync } from 'node:fs';
 
 test('detectFromText: Überschriften-Text (Hobbyhimmel-Stil) wird erkannt', () => {
   const text = 'Werkbereichen: [HOLZ](https://x.de/holz) • [METALL](https://x.de/metall) • ELEKTRONIK• [FABLAB](https://x.de/fablab) • [KREATIV](https://x.de/kreativ) • FAHRRAD';
-  assert.deepEqual(detectFromText(text), ['3d', 'laser', 'electronics', 'wood', 'metal', 'bike']);
+  assert.deepEqual(detectFromText(text), ['electronics', 'wood', 'metal', 'bike']); // FABLAB allein leitet nichts ab
+  assert.deepEqual(detectFromText('FABLAB'), []);
 });
 
 test('lockere Stichwörter gelten nicht für den Crawler (detectTypes bleibt streng)', () => {

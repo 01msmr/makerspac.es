@@ -101,13 +101,15 @@ export function detectTypes(text) {
 }
 
 /**
+ * Bewusst KEIN „fablab": Ein FabLab hat typischerweise digitale Fertigung (Laser, 3D-Druck, CNC), aber das ist nicht garantiert —
+ * ohne genannte Geräte wird nichts abgeleitet (der „Website scannen"-Knopf liest die konkreten Geräte aus).
  * Lockere Stichwörter NUR für bewusst eingefügten Text (Admin-Freitext), z. B. Überschriften wie
  * „HOLZ • METALL • ELEKTRONIK • FABLAB • FAHRRAD". Nicht fürs Crawlen fremder Websites verwenden (zu viele Fehlalarme).
  * @type {Record<string, string[]>}
  */
 export const WORKSHOP_LOOSE_KEYWORDS = {
-  '3d':          ['3d', 'fablab', 'fab lab'],
-  'laser':       ['laser', 'fablab', 'fab lab'],
+  '3d':          ['3d'],
+  'laser':       ['laser'],
   'cnc':         ['cnc'],
   'electronics': ['elektronik', 'electronics'],
   'wood':        ['holz', 'wood'],
