@@ -116,7 +116,7 @@ function updateBar() {
 async function show() {
   const k = cur();
   updateBar();
-  $('edit').hidden = true;
+  closeEdit();
   $('extra').replaceChildren();
   setStatus('');
   const p = k.queue[k.idx];
@@ -273,6 +273,15 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
   $('edit-checks').append(label);
 }
 
+/** Bearbeiten-Formular schließen und zurücksetzen (Freitext/URL, Erkennungshinweis, Haken) */
+function closeEdit() {
+  $('edit').hidden = true;
+  $('edit-free').value = '';
+  $('edit-detected').textContent = '';
+  $('edit-input').value = '';
+  for (const box of checks()) box.checked = false;
+}
+
 function openEdit() {
   const p = state.current;
   const isWs = state.tab === 'workshops';
@@ -346,7 +355,7 @@ $('edit').addEventListener('submit', e => {
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) { if (e.key === 'Escape') { $('edit').hidden = true; e.target.blur(); } return; }
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) { if (e.key === 'Escape') { closeEdit(); e.target.blur(); } return; }
   switch (e.key.toLowerCase()) {
     case 'y': act('y'); break;
     case 'n': act('n'); break;
