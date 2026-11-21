@@ -6,6 +6,7 @@
 //   node tools/apply-calendar-issues.js           # Dry-Run
 //   node tools/apply-calendar-issues.js --apply   # Aenderungen anwenden + Issues schliessen
 //   node tools/apply-calendar-issues.js --id 235  # Nur Issue fuer Space-ID 235
+//   node tools/apply-calendar-issues.js --apply --only-ok  # Nur Issues mit Label "ok" (Admin-Review)
 
 import fs from 'fs';
 import path from 'path';
@@ -21,6 +22,7 @@ const args = process.argv.slice(2);
 const applyMode = args.includes('--apply');
 const closeNulls = args.includes('--close-nulls');
 const reportMode = args.includes('--report');
+const onlyOk = args.includes('--only-ok');
 const idIndex = args.indexOf('--id');
 const targetId = idIndex !== -1 ? parseInt(args[idIndex + 1], 10) : 0;
 
@@ -28,7 +30,7 @@ const targetId = idIndex !== -1 ? parseInt(args[idIndex + 1], 10) : 0;
 
 function fetchIssues() {
   const raw = execSync(
-    'gh issue list --label data-update --state open --json number,title,body --limit 200',
+    'gh issue list --label data-update --state open --json number,title,body,labels --limit 200',
     { cwd: path.join(__dirname, '..'), encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
   );
   return JSON.parse(raw);
@@ -141,7 +143,8 @@ async function main() {
   }
 
   // Parsen (Apply-Modus)
-  const kalenderIssues = issues.filter(i => i.title.startsWith('Kalenderlink:'));
+  const hasOk = i => (i.labels || []).some(l => l.name === 'ok');
+  const kalenderIssues = issues.filter(i => i.title.startsWith('Kalenderlink:')).filter(i => !onlyOk || hasOk(i));
   let parsed = kalenderIssues.map(parseIssue).filter(Boolean);
 
   if (targetId) {

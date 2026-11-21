@@ -20,6 +20,8 @@ Die wöchentlichen `SpaceAPI:`-Issues (Directory Sync) sollen schnell und von je
 - Gleiches Muster für `[Workshop-Daten]`-Issues (Reiter „Workshops"): `ok`-Label ersetzt die Checkbox „Freigegeben" (die Checkbox gilt weiter), „anpassen" ersetzt die Typ-Liste im JSON-Block. Apply: `apply-workshop-issues.yml` (`apply`).
 - Auto-Übernehmen serverseitig: Cron `auto-apply-spaceapi.yml` (je Art ≥10 `ok`-Issues oder 1 h Ruhe). Apply-Workflows teilen `concurrency: data-apply` und deployen nur bei geänderter Datei.
 - URL-Scan: Der Browser darf fremde Seiten nicht lesen (CORS) → `/admin/` startet `scan-workshop-url.yml`; der Workflow kommentiert das Issue mit den erkannten Typen, die Seite pollt, liest und löscht den Kommentar. Kein Drittanbieter-Proxy.
+- Weitere Arten: Reiter „Kalender" (`Kalenderlink:`, `apply-calendar-issues.yml` Modus `apply-ok`) mit demselben Ablauf. Alles ohne eigenen Review-Ablauf (PRs, Formular-Issues `add-space`/`update-space`, `Datenvorschlag:`, Kalender ohne Fund, Sonstige) bekommt je einen **Listen-Reiter** (nur Anzeige + Link zu GitHub, nur sichtbar wenn etwas offen ist). Am Listenende springt die Seite zum nächsten Reiter mit offenen Vorschlägen.
+- Bedienung: Toasts für jede Aktion, Rückgängig (`z`: Label entfernen / Issue wieder öffnen / alten Body zurückschreiben; verfällt für übernommene Issues). Farben: Status-Töne aus `colours.js` (`--space-open/-closed/-unknown`), Seitenhintergrund `--dropdown-alt-bg` — keine Hex-Werte im Admin-CSS.
 
 ## Verworfen
 

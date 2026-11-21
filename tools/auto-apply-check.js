@@ -1,5 +1,5 @@
 // tools/auto-apply-check.js
-// Läuft per Cron (auto-apply-spaceapi.yml): startet je Art (SpaceAPI / Workshops) den Apply-Workflow,
+// Läuft per Cron (auto-apply-spaceapi.yml): startet je Art (SpaceAPI / Workshops / Kalender) den Apply-Workflow,
 // wenn ≥10 Issues das Label "ok" tragen ODER das letzte ok-Issue seit ≥1 h unverändert ist.
 // Regel identisch zur Admin-Seite (autoApplyDelay in admin/admin-lib.js).
 //
@@ -27,6 +27,7 @@ const gh = (...args) => execFileSync('gh', args, { cwd: ROOT, encoding: 'utf8' }
 const KINDS = [
   { name: 'SpaceAPI', prefix: 'SpaceAPI:', workflow: 'apply-spaceapi-issues.yml', mode: 'apply-ok' },
   { name: 'Workshops', prefix: '[Workshop-Daten]', workflow: 'apply-workshop-issues.yml', mode: 'apply' },
+  { name: 'Kalender', prefix: 'Kalenderlink:', workflow: 'apply-calendar-issues.yml', mode: 'apply-ok' },
 ];
 
 function main() {

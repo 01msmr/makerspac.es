@@ -11,12 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Modus — Alle offenen Issues (ablehnen = vorher schließen) · dry-run = Vorschau · apply = schreiben + Deploy · report · close-nulls"
+        description: "Modus — Alle offenen Issues (ablehnen = vorher schließen) · dry-run = Vorschau · apply = schreiben + Deploy · apply-ok = nur Label ok (Admin-Review) · report · close-nulls"
         required: true
         type: choice
         options:
           - "dry-run"
           - "apply"
+          - "apply-ok"
           - "report"
           - "close-nulls"
         default: "dry-run"
@@ -25,6 +26,10 @@ on:
         required: false
         type: number
         default: 0
+
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
 
 jobs:
   apply:
@@ -50,6 +55,8 @@ jobs:
           ARGS=""
           if [ "${{ inputs.mode }}" = "apply" ]; then
             ARGS="$ARGS --apply"
+          elif [ "${{ inputs.mode }}" = "apply-ok" ]; then
+            ARGS="$ARGS --apply --only-ok"
           elif [ "${{ inputs.mode }}" = "report" ]; then
             ARGS="$ARGS --report"
           elif [ "${{ inputs.mode }}" = "close-nulls" ]; then
@@ -62,16 +69,23 @@ jobs:
           node tools/apply-calendar-issues.js $ARGS
 
       - name: Commit loc-enrichment.json
-        if: ${{ inputs.mode == 'apply' }}
+        id: commit
+        if: ${{ inputs.mode == 'apply' || inputs.mode == 'apply-ok' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add loc-enrichment.json
-          git diff --staged --quiet || git commit -m "data: apply calendar links from issues"
-          git push
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: apply calendar links from issues"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Trigger Deploy
-        if: ${{ inputs.mode == 'apply' }}
+        if: ${{ steps.commit.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

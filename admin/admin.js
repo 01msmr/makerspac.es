@@ -4,24 +4,36 @@ import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
+  parseCalendarIssue, replaceEvents, buildCalendarComparison, INBOX_GROUPS, groupInbox,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
+import { applyCssColours } from '../colours.js';
+
+// Status-Farben (--space-open/-closed/-unknown) aus colours.js (SSOT), reagiert auf Dark Mode
+applyCssColours();
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', applyCssColours);
 
 const API = 'https://api.github.com';
 const RAW = `https://raw.githubusercontent.com/${REPO}/main`;
 const $ = id => document.getElementById(id);
 
-/** Je Art: Quelle (Label), Parser, Apply-Workflow. Workshops: mode "apply" = alle freigegebenen (Label ok) übernehmen. */
+/**
+ * Je Art: Quelle (Label), Parser, Apply-Workflow (+ Modus), Eingabeart.
+ * edit 'url' = ein URL-Feld (urlOf/replaceUrl), 'workshops' = Checkboxen. Workshops: mode "apply" = alle freigegebenen (Label ok).
+ */
 const KINDS = {
-  spaceapi: { label: 'SpaceAPI', query: 'data-update', parse: parseIssue, workflow: 'apply-spaceapi-issues.yml', mode: 'apply-ok' },
-  workshops: { label: 'Workshops', query: 'workshop-data', parse: parseWorkshopIssue, workflow: 'apply-workshop-issues.yml', mode: 'apply' },
+  spaceapi: { label: 'SpaceAPI', query: 'data-update', parse: parseIssue, workflow: 'apply-spaceapi-issues.yml', mode: 'apply-ok',
+    edit: 'url', urlOf: p => p.endpoint, replaceUrl: replaceEndpoint, viewLabel: 'Endpoint' },
+  workshops: { label: 'Workshops', query: 'workshop-data', parse: parseWorkshopIssue, workflow: 'apply-workshop-issues.yml', mode: 'apply', edit: 'workshops' },
+  calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue, workflow: 'apply-calendar-issues.yml', mode: 'apply-ok',
+    edit: 'url', urlOf: p => p.events, replaceUrl: replaceEvents, viewLabel: 'Kalender' },
 };
-for (const k of Object.values(KINDS)) Object.assign(k, { queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
+for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
 
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
 
-const state = { tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
+const state = { undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
 const cur = () => KINDS[state.tab];
 
 async function gh(path, { method = 'GET', body } = {}) {
@@ -35,6 +47,25 @@ async function gh(path, { method = 'GET', body } = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+// ─── Toasts ──────────────────────────────────────────────────────────────
+/** tone: ok (grün) · no (rot) · warn (gelb) · info. withUndo = Rückgängig-Knopf im Toast. */
+function toast(message, tone = 'info', { withUndo = false } = {}) {
+  const box = $('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.dataset.tone = tone;
+  t.append(Object.assign(document.createElement('span'), { textContent: message }));
+  if (withUndo) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Rückgängig';
+    b.addEventListener('click', () => { t.remove(); undo(); });
+    t.append(b);
+  }
+  box.append(t);
+  while (box.children.length > 4) box.firstElementChild.remove();
+  setTimeout(() => t.remove(), withUndo ? 8000 : 5000);
+}
+
 const setStatus = msg => { $('status').textContent = msg || ''; };
 const websiteOf = p => state.locations.get(p.spaceId)?.link?.url || p.website || '';
 
@@ -43,7 +74,7 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'apply', 'logout', 'finish', 'tabs']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'finish', 'tabs']) $(id).hidden = true;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
@@ -75,8 +106,9 @@ async function start() {
   $('login').hidden = true;
   for (const id of ['logout', 'finish', 'tabs']) $(id).hidden = false;
   try {
-    const [, , locs, enr] = await Promise.all([
-      loadKind(KINDS.spaceapi), loadKind(KINDS.workshops),
+    const [, , , , locs, enr] = await Promise.all([
+      loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar),
+      loadInbox().catch(() => {}),
       fetch(`${RAW}/locations.json`).then(r => r.json()),
       fetch(`${RAW}/loc-enrichment.json`).then(r => r.json()),
     ]);
@@ -87,12 +119,71 @@ async function start() {
     $('done').textContent = `Fehler: ${err.message}`;
     return;
   }
-  state.tab = KINDS.spaceapi.queue.length || !KINDS.workshops.queue.length ? 'spaceapi' : 'workshops';
+  state.tab = Object.keys(KINDS).find(n => openCount(KINDS[n]) > 0) ?? 'spaceapi';
   show();
 }
 
+// Listen-Reiter (je Art einer, nur sichtbar wenn etwas offen ist) hinter den Review-Reitern anlegen
+for (const [key, label] of INBOX_GROUPS) {
+  const b = document.createElement('button');
+  b.id = `tab-list-${key}`; b.dataset.list = key; b.hidden = true; b.textContent = label;
+  $('tabs').append(b);
+}
+
 for (const btn of document.querySelectorAll('#tabs button')) {
-  btn.addEventListener('click', () => { if (!state.busy) { state.tab = btn.dataset.kind; show(); } });
+  btn.addEventListener('click', () => {
+    if (state.busy) return;
+    if (btn.dataset.list) { showList(btn.dataset.list); return; }
+    state.tab = btn.dataset.kind;
+    show();
+  });
+}
+
+// ─── Listen-Reiter: offene PRs/Issues ohne eigenen Review-Ablauf (nur Anzeige + Link zu GitHub) ───
+async function loadInbox() {
+  const items = [];
+  for (let page = 1; page <= 5; page++) {
+    const batch = await gh(`/repos/${REPO}/issues?state=open&per_page=100&page=${page}`);
+    items.push(...batch);
+    if (batch.length < 100) break;
+  }
+  state.inboxItems = items;
+}
+
+function renderList(key) {
+  const box = $('inbox');
+  box.replaceChildren();
+  const [, label, heading] = INBOX_GROUPS.find(g => g[0] === key);
+  const list = groupInbox(state.inboxItems)[key] || [];
+  const h = document.createElement('h2');
+  h.textContent = `${heading} (${list.length})`;
+  box.append(h);
+  if (!list.length) { box.append('Nichts offen.'); return; }
+  const ul = document.createElement('ul');
+  for (const it of list) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = it.html_url; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = `#${it.number} ${it.title}`;
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = ` · ${it.user?.login ?? '?'} · ${(it.updated_at || '').slice(0, 10)}`;
+    li.append(a, meta);
+    ul.append(li);
+  }
+  box.append(ul);
+}
+
+async function showList(key) {
+  state.list = key;
+  $('review').hidden = true;
+  $('done').hidden = true;
+  $('inbox').hidden = false;
+  $('inbox').textContent = 'Lade …';
+  updateBar();
+  try { await loadInbox(); } catch (err) { $('inbox').textContent = `Fehler: ${err.message}`; return; }
+  renderList(key);
+  updateBar();
 }
 
 // ─── Anzeige ─────────────────────────────────────────────────────────────
@@ -102,24 +193,49 @@ function updateBar() {
   for (const [name, k] of Object.entries(KINDS)) {
     const b = $(`tab-${name}`);
     b.textContent = `${k.label} (${openCount(k)})`;
-    b.setAttribute('aria-pressed', String(name === state.tab));
+    b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
+  const groups = groupInbox(state.inboxItems);
+  for (const [key, label] of INBOX_GROUPS) {
+    const n = groups[key]?.length || 0;
+    const b = $(`tab-list-${key}`);
+    b.hidden = n === 0 && state.list !== key; // leere Listen-Reiter ausblenden
+    b.textContent = `${label} (${n})`;
+    b.setAttribute('aria-pressed', String(state.list === key));
+  }
+  $('act-z').disabled = state.undo.length === 0;
   const k = cur();
-  $('counter').textContent = openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
+  $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
   const btn = $('apply');
-  btn.hidden = k.okCount === 0;
+  btn.hidden = k.okCount === 0 || !!state.list;
   btn.textContent = `Übernehmen (${k.okCount})`;
   btn.title = `Wird automatisch gestartet bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
 }
 
+/** Nächster Review-Reiter (nach dem aktuellen, reihum) mit noch offenen Vorschlägen */
+function nextTabWithItems() {
+  const names = Object.keys(KINDS);
+  const start = names.indexOf(state.tab);
+  for (let i = 1; i < names.length; i++) {
+    const n = names[(start + i) % names.length];
+    if (openCount(KINDS[n]) > 0) return n;
+  }
+  return null;
+}
+
 async function show() {
   const k = cur();
+  state.list = null;
+  $('inbox').hidden = true;
   updateBar();
   $('extra').replaceChildren();
-  setStatus('');
+  setStatus(state.notice);
+  state.notice = '';
   const p = k.queue[k.idx];
   if (!p) {
+    const next = nextTabWithItems(); // Ende der Liste → weiter im nächsten Reiter
+    if (next) { state.notice = `${k.label} fertig — weiter mit ${KINDS[next].label}.`; toast(state.notice, 'info'); state.tab = next; return show(); }
     $('review').hidden = true;
     $('done').hidden = false;
     $('done').textContent = k.okCount
@@ -133,10 +249,12 @@ async function show() {
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
   $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
-  $('show-endpoint').hidden = state.tab !== 'spaceapi';
+  $('show-endpoint').hidden = !k.urlOf;
+  if (k.viewLabel) $('show-endpoint').textContent = k.viewLabel;
   $('hint').textContent = '';
   if (state.tab === 'spaceapi') await showSpaceApi(p, loc);
-  else showWorkshop(p, loc);
+  else if (state.tab === 'workshops') showWorkshop(p, loc);
+  else showCalendar(p, loc);
 }
 
 async function showSpaceApi(p, loc) {
@@ -154,6 +272,13 @@ async function showSpaceApi(p, loc) {
   } catch {
     if (state.current === p) $('hint').textContent = 'Endpoint nicht direkt ladbar (CORS/Timeout/Fehler) — rechts „Endpoint“ bzw. „im Tab öffnen“ prüfen.';
   }
+}
+
+function showCalendar(p, loc) {
+  const current = state.enrichment[String(p.spaceId)]?.events;
+  renderCompare(buildCalendarComparison(loc, current, p.events, p.confidence));
+  setView('endpoint');
+  if (current) $('hint').textContent = 'Hinweis: bei uns ist schon ein Kalender gesetzt — beim Übernehmen wird dieses Issue nur geschlossen.';
 }
 
 function showWorkshop(p, loc) {
@@ -185,7 +310,7 @@ function renderCompare(rows) {
   for (const t of ['', 'bei uns', 'Vorschlag']) { const th = document.createElement('th'); th.textContent = t; head.append(th); }
   for (const r of rows) {
     const tr = table.insertRow();
-    tr.className = r.differs ? 'differs' : '';
+    tr.className = r.warn ? 'warn' : r.differs ? 'differs' : '';
     const th = document.createElement('th'); th.textContent = r.label;
     const a = tr.insertCell(); a.textContent = r.ours;
     const b = tr.insertCell(); b.textContent = r.proposed;
@@ -195,7 +320,7 @@ function renderCompare(rows) {
 
 function viewUrl(view) {
   const p = state.current;
-  return view === 'site' ? websiteOf(p) : p.endpoint;
+  return view === 'site' ? websiteOf(p) : cur().urlOf?.(p);
 }
 
 function setView(view) {
@@ -224,8 +349,8 @@ const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', bod
 
 /** Neuer Body für „anpassen“ — wirft bei ungültiger Eingabe. */
 function adjustedBody(body, value) {
-  if (state.tab === 'spaceapi') {
-    const nb = replaceEndpoint(body, value);
+  if (cur().edit === 'url') {
+    const nb = cur().replaceUrl(body, value);
     if (!nb) throw new Error('Ungültige URL oder JSON-Block fehlt');
     return nb;
   }
@@ -240,25 +365,68 @@ async function act(action, value) {
   if (!p || state.busy) return;
   state.busy = true;
   try {
-    if (action === 'y') { setStatus('Setze Label …'); await addOk(p.number); k.okCount++; k.lastOkAt = Date.now(); }
+    const entry = { kind: k.name, idx: k.idx, p, type: action };
+    if (action === 'y') { setStatus('Setze Label …'); await addOk(p.number); k.okCount++; k.lastOkAt = Date.now(); toast(`✓ #${p.number} ok`, 'ok', { withUndo: true }); }
     else if (action === 'a') {
       setStatus('Passe Issue an …');
       const issue = await gh(`/repos/${REPO}/issues/${p.number}`);
-      const body = adjustedBody(issue.body || '', value);
+      entry.prevBody = issue.body || '';
+      const body = adjustedBody(entry.prevBody, value);
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { body } });
       await addOk(p.number);
       k.okCount++;
       k.lastOkAt = Date.now();
+      toast(`✎ #${p.number} angepasst + ok`, 'warn', { withUndo: true });
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
+      toast(`✗ #${p.number} abgelehnt (geschlossen)`, 'no', { withUndo: true });
     }
+    state.undo.push(entry);
     k.idx++;
     state.busy = false;
     show();
   } catch (err) {
     state.busy = false;
     setStatus(`Fehler: ${err.message}`);
+    toast(`Fehler: ${err.message}`, 'no');
+  }
+}
+
+function skip() {
+  const k = cur();
+  const p = state.current;
+  if (!p) return;
+  state.undo.push({ kind: k.name, idx: k.idx, p, type: 'l' });
+  toast(`↷ #${p.number} später`, 'warn', { withUndo: true });
+  k.idx++;
+  show();
+}
+
+/** Letzte Aktion rückgängig machen: y → Label weg · ä/b → Body zurück + Label weg · n → Issue wieder öffnen · l → zurück */
+async function undo() {
+  if (state.busy) return;
+  const e = state.undo.pop();
+  if (!e) return;
+  state.busy = true;
+  try {
+    const k = KINDS[e.kind];
+    if (e.type === 'y' || e.type === 'a') {
+      if (e.type === 'a') await gh(`/repos/${REPO}/issues/${e.p.number}`, { method: 'PATCH', body: { body: e.prevBody } });
+      await gh(`/repos/${REPO}/issues/${e.p.number}/labels/${OK_LABEL}`, { method: 'DELETE' });
+      k.okCount = Math.max(0, k.okCount - 1);
+    } else if (e.type === 'n') {
+      await gh(`/repos/${REPO}/issues/${e.p.number}`, { method: 'PATCH', body: { state: 'open' } });
+    }
+    k.idx = e.idx;
+    state.tab = e.kind;
+    state.busy = false;
+    toast(`↶ Rückgängig: #${e.p.number}`, 'info');
+    show();
+  } catch (err) {
+    state.undo.push(e); // nicht verloren geben
+    state.busy = false;
+    toast(`Rückgängig fehlgeschlagen: ${err.message}`, 'no');
   }
 }
 
@@ -275,7 +443,8 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
 
 /** Eingabefelder (immer sichtbar) mit dem Vorschlag der aktuellen Issue füllen; verwirft alte Eingaben */
 function fillEdit(p) {
-  const isWs = state.tab === 'workshops';
+  if ($('edit').contains(document.activeElement)) document.activeElement.blur(); // sonst schlucken Textfelder die Tasten y/n/l der nächsten Issue
+  const isWs = cur().edit === 'workshops';
   $('edit-input').hidden = isWs;
   $('edit-input').disabled = isWs;
   $('edit-ws').hidden = !isWs;
@@ -285,18 +454,18 @@ function fillEdit(p) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
   } else {
     $('edit-input').type = 'url';
-    $('edit-input').value = p.endpoint;
+    $('edit-input').value = cur().urlOf(p);
   }
 }
 
 /** Aktuelle Eingabe: Endpoint (String) bzw. angehakte Workshop-Typen (Array) */
 function editValue() {
-  return state.tab === 'workshops' ? checks().filter(b => b.checked).map(b => b.value) : $('edit-input').value.trim();
+  return cur().edit === 'workshops' ? checks().filter(b => b.checked).map(b => b.value) : $('edit-input').value.trim();
 }
 
 function editChanged(p) {
   const v = editValue();
-  return state.tab === 'workshops' ? !(v.length === p.workshops.length && v.every(w => p.workshops.includes(w))) : v !== p.endpoint;
+  return cur().edit === 'workshops' ? !(v.length === p.workshops.length && v.every(w => p.workshops.includes(w))) : v !== cur().urlOf(p);
 }
 
 /** y / „Speichern + ok“: geänderte Eingabe in die Issue schreiben + ok, unveränderter Vorschlag nur ok */
@@ -307,7 +476,7 @@ function confirmOk() {
 }
 
 function focusEdit() {
-  (state.tab === 'workshops' ? $('edit-free') : $('edit-input')).focus();
+  (cur().edit === 'workshops' ? $('edit-free') : $('edit-input')).focus();
 }
 
 // Freitext: erkannte Typen werden angehakt (bestehende Haken bleiben); gespeichert wird erst per Button
@@ -342,8 +511,9 @@ $('edit-scan').addEventListener('click', async () => {
         const r = parseScanComment(c.body || '', scanId);
         if (!r) continue;
         gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
-        if (r.error) { note(`Scan fehlgeschlagen: ${r.error}`); return; }
+        if (r.error) { note(`Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
         for (const box of checks()) if (r.types.includes(box.value)) box.checked = true;
+        toast(r.types.length ? `Scan: ${r.types.join(', ')} erkannt` : 'Scan: nichts erkannt', r.types.length ? 'ok' : 'warn');
         note(r.types.length ? `Scan (${r.pages} Seite(n)): erkannt: ${r.types.join(', ')} — bitte prüfen, dann „Speichern + ok“.` : `Scan (${r.pages} Seite(n)): nichts erkannt.`);
         return;
       }
@@ -357,6 +527,11 @@ $('edit-scan').addEventListener('click', async () => {
 });
 
 $('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
+$('act-y').addEventListener('click', confirmOk);
+$('act-b').addEventListener('click', focusEdit);
+$('act-n').addEventListener('click', () => act('n'));
+$('act-l').addEventListener('click', skip);
+$('act-z').addEventListener('click', undo);
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
@@ -368,9 +543,10 @@ document.addEventListener('keydown', e => {
   switch (e.key.toLowerCase()) {
     case 'y': confirmOk(); break;
     case 'n': act('n'); break;
-    case 'l': cur().idx++; show(); break;
+    case 'l': skip(); break;
+    case 'z': undo(); break;
     case 'j': setView('site'); break;
-    case 'k': if (state.tab === 'spaceapi') setView('endpoint'); break;
+    case 'k': if (cur().urlOf) setView('endpoint'); break;
     case 'b': e.preventDefault(); focusEdit(); break;
   }
 });
@@ -384,7 +560,9 @@ async function applyNow(k, auto = false) {
   try {
     await gh(`/repos/${REPO}/actions/workflows/${k.workflow}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: k.mode, id: '0' } } });
     k.okCount = 0;
+    state.undo = state.undo.filter(e => !(e.kind === k.name && (e.type === 'y' || e.type === 'a'))); // bereits übernommen → nicht mehr rückgängig
     state.busy = false;
+    toast(`${auto ? 'Automatisch: ' : ''}${k.label} — ${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
     const link = document.createElement('a');
     link.href = `https://github.com/${REPO}/actions/workflows/${k.workflow}`;
     link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Run ansehen';
@@ -395,6 +573,7 @@ async function applyNow(k, auto = false) {
   } catch (err) {
     state.busy = false;
     setStatus(`Fehler: ${err.message}`);
+    toast(`Fehler: ${err.message}`, 'no');
     return { ok: false };
   }
 }

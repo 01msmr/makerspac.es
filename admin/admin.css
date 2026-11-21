@@ -1,53 +1,94 @@
+/* Admin-Review — nutzt die Variablen aus main-layout.css / main-responsive.css (Dark Mode inklusive).
+   Status-Farben: --space-open (grün) · --space-closed (rot) · --space-unknown (gelb/orange), gesetzt von colours.js (applyCssColours).
+   Seitenhintergrund = --dropdown-alt-bg (hellgrau bzw. dunkelgrau im Dark Mode), Karten = --dropdown-bg. */
+
 /* Autoren-CSS mit display:flex/grid würde sonst das hidden-Attribut aushebeln */
 [hidden] { display: none !important; }
 
-/* Admin-Review — nutzt die Variablen aus main-layout.css / main-responsive.css (Dark Mode inklusive) */
 html, body { height: 100%; overflow: auto; }
-body { display: flex; flex-direction: column; font-size: 15px; }
+body { display: flex; flex-direction: column; font-size: 15px; background: var(--dropdown-alt-bg); }
 
-#bar { display: flex; align-items: center; gap: .75rem; padding: .5rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--dropdown-bg); }
+/* ── Kopfzeile + Reiter ───────────────────────────────────────────── */
+#bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; padding: .5rem 1rem; border-bottom: 1px solid var(--dropdown-border); background: var(--dropdown-bg); }
 .grow { flex: 1; }
-button, input { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 4px; padding: .3rem .7rem; }
-button { cursor: pointer; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--focus-color); }
-kbd { border: 1px solid var(--dropdown-border); border-radius: 3px; padding: 0 .3rem; background: var(--dropdown-alt-bg); }
+#counter { color: var(--hover-text-color); }
+#tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
+#tabs button { border-radius: 999px; }
+#tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; box-shadow: inset 0 0 0 1px var(--focus-color); }
 
-#login, #done { padding: 1rem; }
+button, input { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .75rem; }
+button { cursor: pointer; }
+button:hover:not(:disabled) { background: var(--dropdown-alt-bg); }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 1px; }
+kbd { border: 1px solid var(--dropdown-border); border-radius: 3px; padding: 0 .3rem; background: var(--dropdown-alt-bg); font-size: .85em; }
+
+/* Übernehmen = grün hervorgehoben */
+#apply { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
+
+#login, #done { margin: 1rem; padding: 1rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #login input { width: min(32rem, 100%); }
 
-#review { flex: 1; display: grid; grid-template-columns: minmax(20rem, 40%) 1fr; min-height: 0; }
-#left { padding: 1rem; overflow: auto; border-right: 1px solid var(--border-color); }
-#right { display: flex; flex-direction: column; min-height: 0; }
-#viewbar { display: flex; gap: .5rem; padding: .5rem; border-bottom: 1px solid var(--border-color); }
+/* ── Review-Layout ────────────────────────────────────────────────── */
+#review { flex: 1; display: grid; grid-template-columns: minmax(22rem, 42%) 1fr; gap: .75rem; padding: .75rem; min-height: 0; }
+#left, #right { background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; min-height: 0; }
+#left { padding: 1rem; overflow: auto; }
+#right { display: flex; flex-direction: column; overflow: hidden; }
+#viewbar { display: flex; gap: .5rem; padding: .5rem; border-bottom: 1px solid var(--dropdown-border); }
 #viewbar button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; }
 #frame { flex: 1; width: 100%; border: 0; background: var(--bg-color); }
 
 h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
+
+/* ── Vergleich: rot = bei uns (alt) · grün = Vorschlag (neu) · gelb = verdächtig ── */
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; vertical-align: top; padding: .3rem .4rem; border-bottom: 1px solid var(--dropdown-alt-border); word-break: break-word; }
+th, td { text-align: left; vertical-align: top; padding: .35rem .5rem; border-bottom: 1px solid var(--dropdown-alt-border); word-break: break-word; }
 th { font-weight: 600; color: var(--hover-text-color); white-space: nowrap; }
-tr.differs td:last-child { font-weight: 700; box-shadow: inset 3px 0 0 var(--focus-color); }
+tr.differs td:nth-child(2) { background: color-mix(in srgb, var(--space-closed) 16%, transparent); box-shadow: inset 3px 0 0 var(--space-closed); }
+tr.differs td:nth-child(3) { background: color-mix(in srgb, var(--space-open) 16%, transparent); box-shadow: inset 3px 0 0 var(--space-open); font-weight: 600; }
+tr.warn td:nth-child(2), tr.warn td:nth-child(3) { background: color-mix(in srgb, var(--space-unknown) 20%, transparent); box-shadow: inset 3px 0 0 var(--space-unknown); }
+tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #hint, #status { color: var(--hover-text-color); }
-#edit { display: flex; gap: .5rem; }
-#edit input { flex: 1; }
+#hint:not(:empty) { padding: .4rem .6rem; border-radius: 6px; background: color-mix(in srgb, var(--space-unknown) 16%, transparent); }
 
-@media (max-width: 767px) {
-  #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
-  #left { border-right: 0; border-bottom: 1px solid var(--border-color); }
-}
+/* ── Aktionen ─────────────────────────────────────────────────────── */
+#actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 .25rem; }
+#actions button[data-tone="ok"] { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
+#actions button[data-tone="no"] { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
+#actions button[data-tone="warn"] { border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
+#keys { margin: .25rem 0 .75rem; color: var(--hover-text-color); font-size: .9em; }
 
-/* Reiter + Workshop-Details */
-#tabs { display: flex; gap: .25rem; }
-#tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; }
+/* ── Bearbeiten-Formular ──────────────────────────────────────────── */
+#edit { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-start; margin-top: .75rem; }
+#edit > input { flex: 1; }
+#edit small { flex-basis: 100%; color: var(--hover-text-color); }
+#edit-ws { flex: 1 1 100%; margin: 0; padding: .5rem; border: 1px solid var(--dropdown-border); border-radius: 6px; }
+#edit-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .25rem .75rem; margin-bottom: .5rem; }
+#edit-checks label { display: flex; align-items: center; gap: .35rem; cursor: pointer; }
+#edit-free { width: 100%; box-sizing: border-box; font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .5rem; }
+#edit-detected { margin: .3rem 0 0; color: var(--hover-text-color); min-height: 1.2em; }
+
+/* ── Workshop-Details + Listen-Reiter ─────────────────────────────── */
 #extra { margin-top: 1rem; font-size: .9rem; }
 #extra table td, #extra table th { font-weight: 400; color: var(--text-color); }
 #extra blockquote { margin: .3rem 0 .8rem; padding-left: .6rem; border-left: 3px solid var(--dropdown-border); color: var(--hover-text-color); }
+#inbox { margin: .75rem; padding: 1rem; overflow: auto; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
+#inbox ul { margin: 0; padding-left: 1.2rem; }
+#inbox li { margin: .25rem 0; }
+#inbox .meta { color: var(--hover-text-color); }
+#inbox a { color: var(--focus-color); }
 
-/* Bearbeiten-Formular */
-#edit { flex-wrap: wrap; align-items: flex-start; }
-#edit small { flex-basis: 100%; color: var(--hover-text-color); }
-#edit-ws { flex: 1 1 100%; margin: 0; padding: .5rem; border: 1px solid var(--dropdown-border); border-radius: 4px; }
-#edit-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .25rem .75rem; margin-bottom: .5rem; }
-#edit-checks label { display: flex; align-items: center; gap: .35rem; cursor: pointer; }
-#edit-free { width: 100%; box-sizing: border-box; font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 4px; padding: .3rem .5rem; }
-#edit-detected { margin: .3rem 0 0; color: var(--hover-text-color); min-height: 1.2em; }
+/* ── Toasts: grün = ok · rot = abgelehnt/Fehler · gelb = angepasst/später ── */
+#toasts { position: fixed; right: 1rem; bottom: 1rem; z-index: 100; display: flex; flex-direction: column; gap: .5rem; max-width: min(26rem, calc(100vw - 2rem)); }
+.toast { display: flex; align-items: center; gap: .75rem; justify-content: space-between; padding: .6rem .8rem; border-radius: 8px; background: var(--dropdown-bg); color: var(--text-color); border: 1px solid var(--dropdown-border); border-left: 5px solid var(--focus-color); box-shadow: 0 4px 14px var(--shadow-color); animation: toast-in .18s ease-out; }
+.toast[data-tone="ok"] { border-left-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 12%, var(--dropdown-bg)); }
+.toast[data-tone="no"] { border-left-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 12%, var(--dropdown-bg)); }
+.toast[data-tone="warn"] { border-left-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 14%, var(--dropdown-bg)); }
+.toast button { flex: none; padding: .15rem .6rem; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+@media (max-width: 767px) {
+  #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
+  #toasts { left: 1rem; right: 1rem; max-width: none; }
+}

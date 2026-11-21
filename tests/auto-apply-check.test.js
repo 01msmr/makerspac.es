@@ -35,3 +35,8 @@ test('decide mit Präfix: Workshops getrennt von SpaceAPI', () => {
   assert.equal(decide(mixed, NOW, '[Workshop-Daten]').count, 1);
   assert.equal(decide(mixed, NOW).count, 1);
 });
+
+test('decide: Kalender-Präfix getrennt', () => {
+  const mixed = [{ ...iss(1, 90), title: 'Kalenderlink: X' }, iss(2, 90)];
+  assert.equal(decide(mixed, NOW, 'Kalenderlink:').count, 1);
+});

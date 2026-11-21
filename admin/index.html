@@ -14,6 +14,7 @@
     <nav id="tabs" hidden>
       <button id="tab-spaceapi" data-kind="spaceapi">SpaceAPI</button>
       <button id="tab-workshops" data-kind="workshops">Workshops</button>
+      <button id="tab-calendar" data-kind="calendar">Kalender</button>
     </nav>
     <span id="counter"></span>
     <span class="grow"></span>
@@ -45,7 +46,14 @@
         <button>Speichern + ok</button>
         <small>Änderungen werden erst mit <kbd>y</kbd> / „Speichern + ok“ ins Issue geschrieben; das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
       </form>
-      <p id="keys"><kbd>y</kbd> ok (mit deinen Änderungen) · <kbd>b</kbd> Eingabefeld · <kbd>Esc</kbd> Änderungen verwerfen · <kbd>n</kbd> ablehnen · <kbd>l</kbd> später · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint</p>
+      <div id="actions">
+        <button type="button" id="act-y" data-tone="ok"><kbd>y</kbd> ok</button>
+        <button type="button" id="act-b" data-tone="neutral"><kbd>b</kbd> ändern</button>
+        <button type="button" id="act-n" data-tone="no"><kbd>n</kbd> ablehnen</button>
+        <button type="button" id="act-l" data-tone="warn"><kbd>l</kbd> später</button>
+        <button type="button" id="act-z" data-tone="neutral" disabled><kbd>z</kbd> rückgängig</button>
+      </div>
+      <p id="keys"><kbd>Esc</kbd> Änderungen verwerfen · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint/Kalender</p>
       <p id="status" role="status"></p>
       <div id="extra"></div>
     </section>
@@ -59,7 +67,10 @@
     </section>
   </main>
 
+  <section id="inbox" hidden></section>
+
   <p id="done" hidden></p>
+  <div id="toasts" aria-live="polite"></div>
   <script type="module" src="admin.js"></script>
 </body>
 </html>
