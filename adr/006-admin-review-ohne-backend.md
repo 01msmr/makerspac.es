@@ -13,7 +13,7 @@ Die wöchentlichen `SpaceAPI:`-Issues (Directory Sync) sollen schnell und von je
 
 - Statische Seite `/admin/` (Vanilla, kein Build; ADR-001/002), `noindex`, `Disallow` in `robots.txt`, nicht verlinkt.
 - Login = Fine-grained PAT im `localStorage` (nur dieses Repo, Issues R/W + Actions R/W, mit Ablauf). Kein Contents-Write.
-- Die Seite ändert **nur Issues**: `y` = Label `ok`, `a` = Endpoint im JSON-Block des Bodys ersetzen + `ok`, `n` = schließen (`not_planned`).
+- Die Seite ändert **nur Issues**: `y` = Label `ok`, `ä` = Endpoint im JSON-Block des Bodys ersetzen + `ok`, `n` = schließen (`not_planned`).
 - „Übernehmen“ = `workflow_dispatch` von `apply-spaceapi-issues.yml` mit `mode=apply-ok`: nur `ok`-Issues, Live-Check des Endpoints, ein Commit, ein Deploy. Der Workflow bleibt einziger Schreiber der Daten.
 - `locations.json` / `loc-enrichment.json` kommen von `raw.githubusercontent.com` (nicht deployt, CORS-fähig).
 - Service Worker fängt `/admin/` nicht ab.
