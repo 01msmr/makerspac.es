@@ -102,9 +102,9 @@
 | `generate-map-splits.js` | **Node.js** Build-Script — locations.json + loc-enrichment.json → data/*.json | — |
 | `tools/spaceapi-directory-sync.js` | **Node.js** Cron-Script (wöchentlich) — directory.spaceapi.io mit loc-enrichment.json abgleichen → Issues `SpaceAPI: <Name>` (Label `data-update`) | `normalizeUrl`, `matchSpace`, `buildProposals`, `isAlreadyProposed`, `buildIssueBody` (export) |
 | `tools/apply-spaceapi-issues.js` | **Node.js** — offene `SpaceAPI:`-Issues → `spaceapi.endpoint` in loc-enrichment.json, Issues schließen; `--only-ok` = nur Label `ok` + Live-Check des Endpoints (ungültig → Kommentar, Label entfernt) | `parseIssue`, `applyProposal`, `filterOk`, `isValidSpaceApi`, `checkEndpoint` (export) |
-| `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
+| `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` mit Reitern **SpaceAPI** und **Workshops** (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s (j/k = Website/Endpoint) ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
 | `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-spaceapi-issues.yml` (`apply-ok`) ab 10 `ok`-Issues oder 1 h nach der letzten Änderung | `decide` (export) |
-| `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters` |
+| `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters`, `autoApplyDelay`, `parseWorkshopIssue`, `parseWorkshopList`, `replaceWorkshops`, `buildWorkshopComparison` |
 
 ### CSS
 
@@ -286,7 +286,10 @@ git push main
      └── gh workflow run deploy.yml  (GITHUB_TOKEN-Push triggert keinen Deploy)
 
 .github/workflows/auto-apply-spaceapi.yml  (cron */15)
-     └── node tools/auto-apply-check.js  (≥10 ok-Issues oder 1 h Ruhe → apply-ok starten)
+     └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi (apply-ok) bzw. apply-workshop (apply) starten)
+
+.github/workflows/apply-workshop-issues.yml  (manuell / Cron-Auslöser / Admin)
+     └── freigegeben = Checkbox „Freigegeben“ ODER Label ok; Deploy nur bei geänderter loc-enrichment.json
 ```
 
 ---

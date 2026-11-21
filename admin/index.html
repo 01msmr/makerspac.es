@@ -11,7 +11,10 @@
 </head>
 <body>
   <header id="bar">
-    <strong>SpaceAPI-Review</strong>
+    <nav id="tabs" hidden>
+      <button id="tab-spaceapi" data-kind="spaceapi">SpaceAPI</button>
+      <button id="tab-workshops" data-kind="workshops">Workshops</button>
+    </nav>
     <span id="counter"></span>
     <span class="grow"></span>
     <button id="apply" hidden></button>
@@ -31,11 +34,12 @@
       <table id="compare"></table>
       <p id="hint"></p>
       <form id="edit" hidden>
-        <input id="edit-url" type="url" required>
+        <input id="edit-input" required>
         <button>Speichern + ok</button>
       </form>
-      <p id="keys"><kbd>y</kbd> ok · <kbd>a</kbd> anpassen · <kbd>n</kbd> ablehnen · <kbd>s</kbd> später</p>
+      <p id="keys"><kbd>y</kbd> ok · <kbd>b</kbd> anpassen · <kbd>n</kbd> ablehnen · <kbd>l</kbd> später · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint</p>
       <p id="status" role="status"></p>
+      <div id="extra"></div>
     </section>
     <section id="right">
       <div id="viewbar">

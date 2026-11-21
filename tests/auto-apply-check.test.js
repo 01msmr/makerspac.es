@@ -29,3 +29,9 @@ test('10 ok-Issues → sofort, auch wenn frisch', () => {
 test('fremde Titel zählen nicht', () => {
   assert.equal(decide([iss(1, 500, true, 'Kalenderlink: X')], NOW).delay, null);
 });
+
+test('decide mit Präfix: Workshops getrennt von SpaceAPI', () => {
+  const mixed = [iss(1, 90), { ...iss(2, 90), title: '[Workshop-Daten] X (#1)' }];
+  assert.equal(decide(mixed, NOW, '[Workshop-Daten]').count, 1);
+  assert.equal(decide(mixed, NOW).count, 1);
+});
