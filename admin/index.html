@@ -33,9 +33,9 @@
       <h2 id="title"></h2>
       <table id="compare"></table>
       <p id="hint"></p>
-      <form id="edit" hidden>
+      <form id="edit">
         <input id="edit-input" required>
-        <fieldset id="edit-ws" hidden>
+        <fieldset id="edit-ws">
           <legend>Workshops</legend>
           <div id="edit-checks"></div>
           <textarea id="edit-free" rows="3" placeholder="Text oder URL einfügen — Text: erkannte Typen werden angehakt · URL: „Website scannen“ liest sie serverseitig aus"></textarea>
@@ -43,9 +43,9 @@
           <p id="edit-detected"></p>
         </fieldset>
         <button>Speichern + ok</button>
-        <small>Das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
+        <small>Änderungen werden erst mit <kbd>y</kbd> / „Speichern + ok“ ins Issue geschrieben; das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
       </form>
-      <p id="keys"><kbd>y</kbd> ok · <kbd>b</kbd> anpassen · <kbd>n</kbd> ablehnen · <kbd>l</kbd> später · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint</p>
+      <p id="keys"><kbd>y</kbd> ok (mit deinen Änderungen) · <kbd>b</kbd> Eingabefeld · <kbd>Esc</kbd> Änderungen verwerfen · <kbd>n</kbd> ablehnen · <kbd>l</kbd> später · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint</p>
       <p id="status" role="status"></p>
       <div id="extra"></div>
     </section>
