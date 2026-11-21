@@ -289,7 +289,7 @@ document.addEventListener('keydown', e => {
     case 's': cur().idx++; show(); break;
     case 'j': setView('site'); break;
     case 'k': if (state.tab === 'spaceapi') setView('endpoint'); break;
-    case 'ä': e.preventDefault(); openEdit(); break;
+    case 'b': e.preventDefault(); openEdit(); break;
   }
 });
 
