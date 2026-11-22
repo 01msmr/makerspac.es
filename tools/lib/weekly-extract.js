@@ -17,17 +17,23 @@ const DAY_RE = new RegExp(`\\b(${DAYS.flatMap(([, n]) => n).join('|')})s?\\b`, '
 const SHORT_RE = new RegExp(`\\b(${Object.keys(SHORT).join('|')})\\b\\.?:?\\s*(?=(?:ab\\s+)?\\d{1,2}(?:[:.]\\d{2}|\\s*(?:uhr|h|pm|am)\\b))`, 'i');
 const TIME_RE = /(?:\bab\s+|\bum\s+|\bfrom\s+|\bat\s+|\b)(\d{1,2})(?:[:.](\d{2}))?\s*(uhr|h|pm|am)?\b/gi;
 const EVERY_RE = /\b(jeden|jede|jedes|every|each|wöchentlich|woechentlich|weekly|immer)\b/i;
+// Nicht wöchentlich (monatlich, jeden 3. Donnerstag, alle zwei Wochen …) → kein Weekly-Treffen
+const NOT_WEEKLY_RE = /\b(?:jeden|jede|jedes|every|each)\s+(?:(?:ersten|zweiten|dritten|vierten|letzten|1\.|2\.|3\.|4\.|other|first|second|third|fourth|last|2nd|3rd|4th|1st)\b|(?:zweite|zweiten|andere|other)\b)|\b(?:monatlich|monatliche\w*|monthly|vierzehntägig|14-tägig|zweiwöchentlich|biweekly|fortnightly|alle\s+(?:zwei|2|drei|3|vier|4)\s+wochen|every\s+(?:two|2|three|3|four|4)\s+weeks)\b/i;
+// Teilgruppe/Kurs statt des Space-Treffens → höchstens „medium“
+const SUBGROUP_RE = /\b(node|team|gruppe|arbeitsgruppe|projektgruppe|ag|workshop|kurs|course|class|training)\b/i;
 const CONTEXT_RE = /\b(treffen|treff|offen\w*|open\s+\w+|stammtisch|plenum|öffnungszeit\w*|oeffnungszeit\w*|meeting|meetup|hours|abend|night|evening)\b/i;
 
 /** Erste plausible Uhrzeit (HHMM) im Text nach dem Wochentag, sonst null. */
-export function parseTime(s) {
+export function parseTime(s) {   // s = Satzteil; Vorlauf vor dem Treffer wird für „bis/until“ ausgewertet
   TIME_RE.lastIndex = 0;
   let m;
   while ((m = TIME_RE.exec(s))) {
     let h = parseInt(m[1], 10);
     const min = m[2] ? parseInt(m[2], 10) : 0;
     const unit = (m[3] || '').toLowerCase();
-    if (!m[2] && !unit) continue;                       // nackte Zahl ohne Uhr/h/:mm — kein Zeitbezug
+    const rest = s.slice(m.index + m[0].length);
+    if (/(?:\bbis|\buntil|\btill|\bto|[-–])\s*$/i.test(s.slice(0, m.index))) continue;   // Endzeit („bis 20:00“) ist nicht der Beginn
+    if (!m[2] && !unit && !/^\s*(?:bis|–|-|to|until|till)\s*\d/i.test(rest)) continue;       // nackte Zahl ohne Uhr/h/:mm — kein Zeitbezug (außer Bereichsbeginn „18 bis 22 Uhr“)
     if (unit === 'pm' && h < 12) h += 12;
     if (unit === 'am' && h === 12) h = 0;
     if (h > 23 || min > 59) continue;
@@ -54,10 +60,10 @@ export function extractWeeklyCandidates(text) {
     const s = raw.trim();
     if (!s || s.length > 300) continue;
     const d = dayIn(s);
-    if (!d || !CONTEXT_RE.test(s) && !EVERY_RE.test(s)) continue;
+    if (!d || !CONTEXT_RE.test(s) && !EVERY_RE.test(s) || NOT_WEEKLY_RE.test(s)) continue;
     const time = parseTime(s.slice(d.end)) ?? parseTime(s.slice(0, d.idx));
     if (time == null) continue;
-    out.push({ weekday: d.weekday, time, confidence: EVERY_RE.test(s) ? 'high' : 'medium', source: s });
+    out.push({ weekday: d.weekday, time, confidence: EVERY_RE.test(s) && !SUBGROUP_RE.test(s) ? 'high' : 'medium', source: s });
   }
   return out;
 }
