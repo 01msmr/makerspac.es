@@ -13,6 +13,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
+import { stampLocationsFile } from './lib/edit-stamp.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -213,6 +214,8 @@ async function main() {
   );
   fs.writeFileSync(enrichmentPath, JSON.stringify(sorted, null, 2) + '\n', 'utf8');
   console.log(`\nloc-enrichment.json aktualisiert (${stats.applied} Einträge)`);
+  const stamped = stampLocationsFile(path.join(root, 'locations.json'), toApply.map(i => i.spaceId));
+  console.log(`locations.json: space.edited.latest bei ${stamped} Einträgen gesetzt`);
 
   console.log('');
   console.log('='.repeat(50));
