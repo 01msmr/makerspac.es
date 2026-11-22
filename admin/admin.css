@@ -121,3 +121,5 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #problem { margin: 0 0 .75rem; padding: .6rem .75rem; border-radius: 8px; border: 1px solid var(--space-closed); background: color-mix(in srgb, var(--space-closed) 12%, var(--dropdown-bg)); white-space: pre-wrap; }
 #inbox h3 { margin: 1rem 0 .3rem; }
 #inbox .hint { color: var(--hover-text-color); margin: 0 0 .4rem; }
+
+#empty-hint { margin: .5rem 0 0; padding: .5rem .75rem; border-radius: 8px; border: 1px solid var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }

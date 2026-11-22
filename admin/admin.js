@@ -429,7 +429,7 @@ function adjustedBody(body, value) {
   return nb;
 }
 
-async function act(action, value) {
+async function act(action, value, opts = {}) {
   const k = cur();
   const p = state.current;
   if (!p || state.busy) return;
@@ -450,7 +450,8 @@ async function act(action, value) {
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
-      toast(`✗ #${p.number} abgelehnt (geschlossen)`, 'no', { withUndo: true });
+      if (opts.noWorkshops) await gh(`/repos/${REPO}/issues/${p.number}/comments`, { method: 'POST', body: { body: 'Keine Werkstatt/Räume vorhanden — nichts übernommen (Admin-Review).' } });
+      toast(opts.noWorkshops ? `✗ #${p.number} keine Werkstatt — geschlossen, nichts übernommen` : `✗ #${p.number} abgelehnt (geschlossen)`, 'no', { withUndo: true });
     }
     if (p.problem && action !== 'n') gh(`/repos/${REPO}/issues/${p.number}/labels/${PROBLEM_LABEL}`, { method: 'DELETE' }).catch(() => { /* Label schon weg */ });
     state.undo.push(entry);
@@ -508,7 +509,7 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
   const label = document.createElement('label');
   const box = document.createElement('input');
   box.type = 'checkbox'; box.value = key;
-  box.addEventListener('change', () => { if (!box.checked) label.classList.remove('auto'); });
+  box.addEventListener('change', () => { if (!box.checked) label.classList.remove('auto'); updateEmptyHint(); });
   label.append(box, key);
   $('edit-checks').append(label);
 }
@@ -530,6 +531,7 @@ function fillEdit(p) {
     $('edit-input').type = 'url';
     $('edit-input').value = cur().urlOf(p);
   }
+  updateEmptyHint();
 }
 
 /** Aktuelle Eingabe: Endpoint (String) bzw. angehakte Workshop-Typen (Array) */
@@ -546,6 +548,8 @@ function editChanged(p) {
 function confirmOk() {
   const p = state.current;
   if (!p) return;
+  // Workshops: kein Typ angehakt = Space hat (noch) keine Werkstatt → Issue schließen, nichts übernehmen (wie Spaces ohne Infos)
+  if (cur().edit === 'workshops' && editValue().length === 0) { act('n', null, { noWorkshops: true }); return; }
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
 
@@ -558,9 +562,21 @@ function setIndicator(stateName, text, types = []) {
   if (stateName !== 'idle') box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // Ergebnis in den sichtbaren Bereich holen
 }
 
+/** Hinweis, wenn kein Workshop-Typ angehakt ist: y schließt das Issue ohne Übernahme */
+function updateEmptyHint() {
+  const box = $('empty-hint');
+  box.hidden = !(cur().edit === 'workshops' && state.current && checks().every(b => !b.checked));
+  if (box.hidden) return;
+  const existing = state.enrichment[String(state.current.spaceId)]?.workshops;
+  box.replaceChildren(existing?.length
+    ? `Kein Typ angehakt: y schließt das Issue ohne Übernahme. Die bereits gesetzten Workshops (${existing.join(', ')}) bleiben bestehen — sie werden dadurch NICHT entfernt.`
+    : 'Kein Typ angehakt: y schließt das Issue ohne Übernahme (der Space hat — wie bisher — keine Werkstatt-Angaben). Mit z wieder öffnen.');
+}
+
 /** Automatisch angehakte Typen in der Checkbox-Liste hervorheben (grün + „✓ erkannt“) */
 function markAuto(types) {
   for (const box of checks()) box.parentElement.classList.toggle('auto', types.includes(box.value) && box.checked);
+  updateEmptyHint();
 }
 
 /** Zeigt, was „Website auslesen (Server)“ auslesen würde (URL im Feld, sonst die Website des Spaces) */
