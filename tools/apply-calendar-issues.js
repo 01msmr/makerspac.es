@@ -11,7 +11,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 
@@ -42,11 +42,14 @@ function fetchIssues() {
 
 const RE_ID          = /\*\*ID:\*\*\s*(\d+)/;
 const RE_WEBSITE     = /\*\*Website:\*\*\s*(https?:\/\/\S+)/;
-const RE_EVENTS      = /```json\s*\{\s*"events":\s*"([^"]+)"\s*\}\s*```/s;
+const RE_EVENTS      = /```json\s*\{\s*"events":\s*"([^"]*)"\s*\}\s*```/s;
+// Explizit gewählter Modus (vom Admin geschrieben): vorhandenen Kalenderlink ERSETZEN bzw. bei leerer URL ENTFERNEN.
+// Ohne diese Zeile wird ein vorhandener Link nie überschrieben (nur Lücken füllen).
+const RE_REPLACE     = /\*\*Modus:\*\*\s*ersetzen/i;
 const RE_CONFIDENCE  = /\|\s*(high|medium|low)\s*\|/i;
 const RE_ALTERNATIVES = /### (?:Weitere gefundene Links|Kein eigener Kalender.*)\n\|[^\n]+\n\|[^\n]+\n([\s\S]*?)(?:\n###|\n---|\n$)/;
 
-function parseIssue(issue) {
+export function parseIssue(issue) {
   if (!issue.title.startsWith('Kalenderlink:')) return null;
 
   const idMatch     = issue.body.match(RE_ID);
@@ -55,10 +58,14 @@ function parseIssue(issue) {
   if (!idMatch) return null;     // Kein ID-Block — kaputtes Issue
   if (!eventsMatch) return null; // Kein JSON-Block — calendar_url war null
 
+  const replace = RE_REPLACE.test(issue.body);
+  if (eventsMatch[1] === '' && !replace) return null; // leere URL ist nur im Modus „ersetzen“ gültig (= entfernen)
+
   return {
     issueNumber : issue.number,
     spaceId     : parseInt(idMatch[1], 10),
     eventsUrl   : eventsMatch[1],
+    replace,
   };
 }
 
@@ -90,9 +97,9 @@ function parseIssueFullInfo(issue) {
 
 // === Issue schliessen ===
 
-function closeIssue(number) {
+function closeIssue(number, comment = 'Angewendet auf loc-enrichment.json') {
   execSync(
-    `gh issue close ${number} --comment "Angewendet auf loc-enrichment.json"`,
+    `gh issue close ${number} --comment "${comment}"`,
     { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
   );
 }
@@ -187,7 +194,7 @@ async function main() {
   const stats = { total: parsed.length, applied: 0, skipped_already_set: 0, skipped_not_found: 0, errors: 0 };
   const toApply = [];
 
-  for (const { issueNumber, spaceId, eventsUrl } of parsed) {
+  for (const { issueNumber, spaceId, eventsUrl, replace } of parsed) {
     if (!nameById.has(spaceId)) {
       console.log(`[#${issueNumber}] ID ${spaceId}: NICHT in locations.json gefunden — uebersprungen`);
       stats.skipped_not_found++;
@@ -196,6 +203,32 @@ async function main() {
 
     const name  = nameById.get(spaceId);
     const entry = enrichment[String(spaceId)];
+
+    // Ein fest in locations.json eingetragener events-Link hat auf der Karte Vorrang (Enrichment füllt nur Lücken)
+    const fixedEvents = locations.find(l => l.ID === spaceId)?.events;
+    if (fixedEvents) {
+      if (applyMode) {
+        try { execFileSync('gh', ['issue', 'close', String(issueNumber), '--comment', 'events steht fest in locations.json (hat Vorrang) - nichts uebernommen'], { cwd: path.join(__dirname, '..'), stdio: 'pipe' }); } catch (err) { console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`); stats.errors++; }
+      }
+      console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): events steht fest in locations.json ("${fixedEvents}") — ${applyMode ? 'Issue geschlossen' : 'wuerde Issue schliessen'}`);
+      stats.skipped_already_set++;
+      continue;
+    }
+
+    // Modus „ersetzen“ (explizit im Admin gewählt): vorhandenen Kalenderlink ersetzen bzw. entfernen
+    if (replace) {
+      if (!entry?.events && !eventsUrl) {
+        if (applyMode) {
+          try { closeIssue(issueNumber, 'Kein Kalenderlink vorhanden - nichts zu entfernen'); } catch (err) { console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`); stats.errors++; }
+        }
+        console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): kein Kalenderlink vorhanden — nichts zu entfernen`);
+        stats.skipped_already_set++;
+        continue;
+      }
+      console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): ${eventsUrl ? `ERSETZEN ${entry?.events || '–'} → ${eventsUrl}` : `ENTFERNEN (${entry.events})`}`);
+      toApply.push({ spaceId, eventsUrl, issueNumber, name, replace: true });
+      continue;
+    }
 
     if (entry?.events) {
       if (applyMode) {
@@ -235,6 +268,7 @@ async function main() {
 
   // Jeden Vorschlag isoliert prüfen BEVOR geschrieben/geschlossen wird — ungültige überspringen (Kommentar + ok-Label weg)
   for (const item of [...toApply]) {
+    if (!item.eventsUrl) continue; // Entfernen: es wird nichts geschrieben, nur gelöscht
     const invalid = validateProposal(enrichment, item.spaceId, 'events', item.eventsUrl, new Set(nameById.keys()));
     if (!invalid.length) continue;
     console.log(`❌ [#${item.issueNumber}] ${item.name} (ID ${item.spaceId}): ${invalid.join('; ')} — uebersprungen`);
@@ -260,12 +294,18 @@ async function main() {
   console.log('Wende Aenderungen an...\n');
 
   for (const { spaceId, eventsUrl, issueNumber, name } of toApply) {
-    if (!enrichment[String(spaceId)]) enrichment[String(spaceId)] = {};
-    enrichment[String(spaceId)].events = eventsUrl;
+    if (!eventsUrl) {
+      // Entfernen: Schlüssel löschen (kein leerer Marker); leeren Eintrag ganz entfernen
+      delete enrichment[String(spaceId)]?.events;
+      if (enrichment[String(spaceId)] && Object.keys(enrichment[String(spaceId)]).length === 0) delete enrichment[String(spaceId)];
+    } else {
+      if (!enrichment[String(spaceId)]) enrichment[String(spaceId)] = {};
+      enrichment[String(spaceId)].events = eventsUrl;
+    }
 
     try {
-      closeIssue(issueNumber);
-      console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): events gesetzt, Issue geschlossen`);
+      closeIssue(issueNumber, eventsUrl ? undefined : 'Kalenderlink entfernt (loc-enrichment.json)');
+      console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): ${eventsUrl ? 'events gesetzt' : 'events entfernt'}, Issue geschlossen`);
       stats.applied++;
     } catch (err) {
       console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`);
@@ -291,7 +331,10 @@ async function main() {
   console.log(`Fehler:              ${stats.errors}`);
 }
 
-main().catch(err => {
-  console.error('Fataler Fehler:', err);
-  process.exit(1);
-});
+// Nur bei direktem Aufruf starten (Tests importieren parseIssue)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(err => {
+    console.error('Fataler Fehler:', err);
+    process.exit(1);
+  });
+}

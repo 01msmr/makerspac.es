@@ -152,10 +152,13 @@ export function detectFromText(text) {
 export function replaceWorkshops(body, list, replace = false) {
   if (!Array.isArray(list) || (list.length === 0 && !replace) || list.some(w => !(w in WORKSHOP_TYPES))) return null;
   if (!RE_WORKSHOPS.test(body)) return null;
-  let out = body.replace(RE_WORKSHOPS, () => '```json\n"workshops": ' + JSON.stringify(list) + '\n```');
-  out = out.replace(/\n\*\*Modus:\*\*[^\n]*/gi, '');                       // alte Zeile entfernen (idempotent)
-  if (replace) out = out.replace(RE_ID, m => `${m}\n**Modus:** ersetzen`);   // direkt unter die ID-Zeile
-  return out;
+  return setModeMarker(body.replace(RE_WORKSHOPS, () => '```json\n"workshops": ' + JSON.stringify(list) + '\n```'), replace);
+}
+
+/** Zeile „**Modus:** ersetzen“ direkt unter die ID-Zeile schreiben (replace=true) bzw. entfernen (false) — idempotent */
+export function setModeMarker(body, replace) {
+  const out = body.replace(/\n\*\*Modus:\*\*[^\n]*/gi, '');
+  return replace ? out.replace(RE_ID, m => `${m}\n**Modus:** ersetzen`) : out;
 }
 
 /** Vergleichszeilen für Workshop-Vorschläge. */
@@ -200,7 +203,7 @@ export function parseScanComment(body, scanId) {
 
 // ─── Kalenderlink ("Kalenderlink:"-Issues, Label data-update) ───────────────
 
-const RE_EVENTS = /```json\s*\{\s*"events":\s*"([^"]+)"\s*\}\s*```/s;
+const RE_EVENTS = /```json\s*\{\s*"events":\s*"([^"]*)"\s*\}\s*```/s;
 const RE_CONFIDENCE = /\|\s*(high|medium|low)\s*\|/i;
 
 /** @returns {{number:number,title:string,spaceId:number,events:string,ok:boolean,url:string,updated:number,website:string,confidence:string}|null} */
@@ -209,9 +212,11 @@ export function parseCalendarIssue(issue) {
   const body = issue.body || '';
   const id = body.match(RE_ID);
   const ev = body.match(RE_EVENTS);
-  if (!id || !ev || !/^https?:\/\//.test(ev[1])) return null; // ohne Fund (null) → Listen-Reiter
+  const replace = RE_REPLACE.test(body);
+  // leere URL ist nur im Modus „ersetzen“ gültig (= Kalenderlink entfernen); ohne Fund (null) → Listen-Reiter
+  if (!id || !ev || (ev[1] === '' ? !replace : !/^https?:\/\//.test(ev[1]))) return null;
   return {
-    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), events: ev[1],
+    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), events: ev[1], replace,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
@@ -219,11 +224,15 @@ export function parseCalendarIssue(issue) {
   };
 }
 
-/** Ersetzt die events-URL im JSON-Block; null bei ungültiger URL / fehlendem Block. */
-export function replaceEvents(body, url) {
-  if (!/^https?:\/\/\S+$/.test(url) || url.includes('"')) return null;
+/**
+ * Ersetzt die events-URL im JSON-Block; null bei ungültiger URL / fehlendem Block.
+ * replace=true: schreibt zusätzlich „**Modus:** ersetzen“ (vorhandenen Kalenderlink ersetzen; leere URL = entfernen),
+ * replace=false entfernt die Zeile wieder. Eine leere URL ist nur mit replace=true erlaubt.
+ */
+export function replaceEvents(body, url, replace = false) {
+  if (url === '' ? !replace : (!/^https?:\/\/\S+$/.test(url) || url.includes('"'))) return null;
   if (!RE_EVENTS.test(body)) return null;
-  return body.replace(RE_EVENTS, () => '```json\n{\n  "events": "' + url + '"\n}\n```');
+  return setModeMarker(body.replace(RE_EVENTS, () => '```json\n{\n  "events": "' + url + '"\n}\n```'), replace);
 }
 
 export function buildCalendarComparison(loc, currentEvents, proposed, confidence) {
@@ -232,7 +241,7 @@ export function buildCalendarComparison(loc, currentEvents, proposed, confidence
     { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
     { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
-    { label: 'Kalender', ours: currentEvents || dash, proposed, differs: (currentEvents || '') !== proposed },
+    { label: 'Kalender', ours: currentEvents || dash, proposed: proposed || '(entfernen)', differs: (currentEvents || '') !== (proposed || ''), warn: !proposed && !!currentEvents },
     { label: 'Confidence', ours: dash, proposed: confidence || dash, differs: confidence === 'low', warn: confidence === 'low' },
   ];
 }

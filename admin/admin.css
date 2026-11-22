@@ -129,3 +129,6 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 
 #data-stand { color: var(--hover-text-color); font-size: .85em; }
 #refresh { padding: .15rem .5rem; }
+
+#replace-wrap, #remove-wrap, #empty-hint { flex: 1 1 100%; box-sizing: border-box; }
+#remove-wrap { display: flex; align-items: center; gap: .5rem; margin: .25rem 0; padding: .4rem .6rem; border-radius: 6px; border: 1px dashed var(--space-closed); cursor: pointer; }

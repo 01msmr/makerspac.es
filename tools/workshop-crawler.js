@@ -17,6 +17,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { WORKSHOP_KEYWORDS } from '../workshop-keywords.js';
+import { loadMergedLocations, loadSpaceIssues, decideProposal, closeSuperseded } from './lib/crawl-selection.js';
 
 // Enrichment-Datei
 const ENRICHMENT_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'loc-enrichment.json');
@@ -300,18 +301,20 @@ function buildIssueBody(space, detection) {
   return body;
 }
 
-function createGitHubIssue(space, detection) {
+function createGitHubIssue(space, detection, supersedes = []) {
   const title = `[Workshop-Daten] ${space.name} (#${space.ID})`;
-  const body = buildIssueBody(space, detection);
+  let body = buildIssueBody(space, detection);
+  if (supersedes.length) body = body.replace('### Gefundene Workshop-Typen', `**Ersetzt:** ${supersedes.map(n => '#' + n).join(', ')}\n\n### Gefundene Workshop-Typen`);
   const tmpFile = path.join(__dirname, '.issue-body-tmp.md');
   fs.writeFileSync(tmpFile, body, 'utf8');
   try {
-    execSync(
+    const out = execSync(
       `gh issue create --title "${title.replace(/"/g, '\\"')}" --body-file "${tmpFile}" --label "${ISSUE_LABEL}"`,
       { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
-    );
+    ).toString();
     fs.unlinkSync(tmpFile);
-    return true;
+    const m = out.match(/issues\/(\d+)/);
+    return m ? Number(m[1]) : true;
   } catch (err) {
     fs.unlinkSync(tmpFile);
     console.error(`   Fehler: ${err.message}`);
@@ -397,16 +400,17 @@ async function main() {
   if (targetId) console.log(`Ziel-ID: ${targetId}`);
   console.log('');
 
-  const locationsPath = path.join(__dirname, '..', 'locations.json');
-  const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
+  // Ist-Stand = verschmolzen (locations.json + loc-enrichment.json), wie die Karte
+  const root = path.join(__dirname, '..');
+  const locations = loadMergedLocations(root);
 
   let spaces = locations;
   if (targetId) {
     spaces = spaces.filter(s => s.ID === targetId);
     if (!spaces.length) { console.error(`ID ${targetId} nicht gefunden.`); process.exit(1); }
-  } else if (!force) {
-    spaces = spaces.filter(s => !s.workshops || s.workshops.length === 0);
   }
+  // Alle Spaces werden gecrawlt; ob ein Fund vorgeschlagen wird, entscheidet der INHALT (decideProposal), nicht die Existenz von Issues
+  const issuesBySpace = loadSpaceIssues({ label: ISSUE_LABEL, prefix: '[Workshop-Daten]', required: createIssues, root });
   if (limit && limit < spaces.length) spaces = spaces.slice(0, limit);
 
   console.log(`${spaces.length} Spaces zu prüfen\n`);
@@ -466,10 +470,19 @@ async function main() {
       }
     }
 
-    // Issues erstellen
-    if (createIssues && foundTypes.length > 0) {
-      const ok = createGitHubIssue(space, detections);
-      if (ok) { stats.issues++; console.log(`   → Issue erstellt`); }
+    // Vorschlag nur bei neuerer Änderung (Inhalt), nicht bei Gleichem
+    if (foundTypes.length > 0) {
+      const d = decideProposal({ kind: 'workshops', found: foundTypes.slice().sort(), integrated: space.workshops || [], issues: issuesBySpace.get(space.ID) || [] });
+      if (d.action === 'skip') { stats.unchanged = (stats.unchanged || 0) + 1; console.log(`   → kein Vorschlag: ${d.reason}`); }
+      else if (!createIssues) console.log(`   → würde vorschlagen (${d.reason}${d.supersede.length ? `, ersetzt ${d.supersede.map(n => '#' + n).join(', ')}` : ''})`);
+      else {
+        const n = createGitHubIssue(space, detections, d.supersede);
+        if (n) {
+          stats.issues++;
+          console.log(`   → Issue ${typeof n === 'number' ? '#' + n + ' ' : ''}erstellt (${d.reason})`);
+          if (typeof n === 'number') closeSuperseded(d.supersede, n, root);
+        }
+      }
     }
 
     await sleep(DELAY_BETWEEN_SPACES_MS);
@@ -482,6 +495,7 @@ async function main() {
   console.log(`Gesamt:       ${stats.total}`);
   console.log(`Gefetched:    ${stats.fetched}`);
   console.log(`Mit Befunden: ${stats.detected}`);
+  if (stats.unchanged) console.log(`Unverändert:  ${stats.unchanged} (gleich wie integrierter Stand oder jüngster Vorschlag)`);
   if (createIssues) console.log(`Issues:       ${stats.issues}`);
   console.log(`Fehler:       ${stats.errors}`);
 

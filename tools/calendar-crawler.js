@@ -12,6 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { loadMergedLocations, loadSpaceIssues, decideProposal, closeSuperseded } from './lib/crawl-selection.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,7 @@ const EXTERNAL_CALENDAR_PATTERNS = [
 
 const args = process.argv.slice(2);
 const createIssues = args.includes('--create-issues');
+const force = args.includes('--force'); // auch Spaces mit bereits integriertem Kalenderlink prüfen (Apply überschreibt vorhandene events nicht)
 const limitIndex = args.indexOf('--limit');
 const limit = limitIndex !== -1 ? parseInt(args[limitIndex + 1], 10) : 0;
 const idIndex = args.indexOf('--id');
@@ -302,10 +304,12 @@ function detectExternalService(url) {
   return null;
 }
 
-function createGitHubIssue(space, calendarUrl, confidence, reason, alternatives) {
+function createGitHubIssue(space, calendarUrl, confidence, reason, alternatives, supersedes = []) {
   let body = `## Kalenderlink-Vorschlag: ${space.name}\n\n`;
   body += `**ID:** ${space.ID}\n`;
-  body += `**Website:** ${space.link.url}\n\n`;
+  body += `**Website:** ${space.link.url}\n`;
+  if (supersedes.length) body += `**Ersetzt:** ${supersedes.map(n => '#' + n).join(', ')}\n`;
+  body += '\n';
 
   if (calendarUrl) {
     body += `### Gefundener Kalenderlink\n`;
@@ -340,11 +344,12 @@ function createGitHubIssue(space, calendarUrl, confidence, reason, alternatives)
 
   try {
     fs.writeFileSync(tmpFile, body, 'utf8');
-    execSync(
+    const out = execSync(
       `gh issue create --title "${title.replace(/"/g, '\\"')}" --body-file "${tmpFile}" --label "${ISSUE_LABEL}"`,
       { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
-    );
-    return true;
+    ).toString();
+    const m = out.match(/issues\/(\d+)/);
+    return m ? Number(m[1]) : true;
   } catch (error) {
     console.error(`   Fehler beim Issue-Erstellen: ${error.message}`);
     return false;
@@ -369,8 +374,9 @@ async function main() {
   if (targetId) console.log(`Ziel-ID: ${targetId}`);
   console.log('');
 
-  const locationsPath = path.join(__dirname, '..', 'locations.json');
-  const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
+  // Ist-Stand = verschmolzen (locations.json + loc-enrichment.json), wie die Karte
+  const root = path.join(__dirname, '..');
+  const locations = loadMergedLocations(root);
 
   let spaces = locations.slice(1);
 
@@ -381,9 +387,11 @@ async function main() {
       process.exit(1);
     }
   } else {
-    // Nur Spaces ohne events-Feld und mit Website
-    spaces = spaces.filter(s => !s.events && s.link && s.link.url);
+    // Spaces ohne events-Link (verschmolzener Stand) mit Website; --force: auch integrierte
+    spaces = spaces.filter(s => s.link && s.link.url && (force || !s.events));
   }
+  // Ob ein Fund vorgeschlagen wird, entscheidet der INHALT (decideProposal), nicht die Existenz von Issues
+  const issuesBySpace = loadSpaceIssues({ label: 'data-update', prefix: 'Kalenderlink:', required: createIssues, root });
 
   if (limit && limit < spaces.length) {
     spaces = spaces.slice(0, limit);
@@ -479,12 +487,18 @@ async function main() {
       console.log(`   -> Alternativen: ${alternatives.join(', ')}`);
     }
 
-    // 7. Issue erstellen
-    if (createIssues) {
-      const ok = createGitHubIssue(space, calendar_url, confidence, reason, alternatives);
-      if (ok) {
-        stats.issues++;
-        console.log(`   Issue erstellt`);
+    // 7. Vorschlag nur bei neuerer Änderung (Inhalt), nicht bei Gleichem
+    {
+      const d = decideProposal({ kind: 'events', found: calendar_url || null, integrated: space.events || null, issues: issuesBySpace.get(space.ID) || [] });
+      if (d.action === 'skip') { stats.unchanged = (stats.unchanged || 0) + 1; console.log(`   -> kein Vorschlag: ${d.reason}`); }
+      else if (!createIssues) console.log(`   -> wuerde vorschlagen (${d.reason}${d.supersede.length ? `, ersetzt ${d.supersede.map(n => '#' + n).join(', ')}` : ''})`);
+      else {
+        const n = createGitHubIssue(space, calendar_url, confidence, reason, alternatives, d.supersede);
+        if (n) {
+          stats.issues++;
+          console.log(`   Issue ${typeof n === 'number' ? '#' + n + ' ' : ''}erstellt (${d.reason})`);
+          if (typeof n === 'number') closeSuperseded(d.supersede, n, root);
+        }
       }
     }
   }
@@ -497,6 +511,7 @@ async function main() {
   console.log(`Gefetched:   ${stats.fetched}`);
   console.log(`Analysiert:  ${stats.analyzed}`);
   console.log(`Mit Daten:   ${stats.findings}`);
+  if (stats.unchanged) console.log(`Unveraendert:${stats.unchanged} (gleich wie integrierter Stand oder juengster Vorschlag)`);
   console.log(`Issues:      ${stats.issues}`);
   console.log(`Fehler:      ${stats.errors}`);
 
