@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v121'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v122'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -147,13 +147,8 @@ self.addEventListener('fetch', event => {
   // Admin-Review (/admin/) nie cachen — immer frisch vom Netz
   if (path.startsWith('/admin/')) return;
 
-  // HTML → Stale-While-Revalidate: Start sofort aus dem Cache (kein Warten auf langsames Netz).
-  // Passt zu JS/CSS (cache-first, pro SW-VERSION neu vorgecacht) → HTML und Assets bleiben konsistent.
-  if (request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(staleWhileRevalidate(request, CACHE_STATIC));
-    return;
-  }
-
+  // Daten zuerst prüfen — VOR dem HTML-Test: Öffnet man eine Daten-URL direkt im Browser-Tab (Navigation, Accept: text/html),
+  // darf sie nicht als HTML per SWR aus dem Cache kommen (zeigte den alten Stand).
   // status.json → Network-First: Live-Öffnungsstatus muss immer aktuell sein
   // (SWR würde erst den Cache zeigen); Cache nur als Offline-Fallback
   if (path.endsWith('/status.json')) {
@@ -165,6 +160,13 @@ self.addEventListener('fetch', event => {
   // Cache nur als Rückfall (offline / Netz zu langsam). DATA_URLS: exakte Pfad-Matches; zusätzlich /data/spaces-*.json per Regex
   if (DATA_URLS.some(u => path.endsWith(u)) || /^\/data\/spaces-[a-z]+\.json$/.test(path)) {
     event.respondWith(networkFirstFresh(request, CACHE_DATA));
+    return;
+  }
+
+  // HTML → Stale-While-Revalidate: Start sofort aus dem Cache (kein Warten auf langsames Netz).
+  // Passt zu JS/CSS (cache-first, pro SW-VERSION neu vorgecacht) → HTML und Assets bleiben konsistent.
+  if (request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(staleWhileRevalidate(request, CACHE_STATIC));
     return;
   }
 
