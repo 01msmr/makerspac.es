@@ -77,3 +77,10 @@ test('Workflows der Concurrency-Gruppe data-apply holen main zum Ausführungszei
     assert.match(text, /actions\/checkout@v4\s*\n\s*with:\s*\n\s*ref:\s*main/, `${name}: actions/checkout braucht "with: ref: main"`);
   }
 });
+
+test('PR-Check überspringt Update-Bot-PRs (bereits im Update-Workflow geprüft; kein roter Haken ohne Jobs)', () => {
+  const t = workflows.find(w => w.name === 'validate.yml').text;
+  assert.match(t, /if:\s*\$\{\{\s*!startsWith\(github\.head_ref,\s*'update-space-id-'\)\s*\}\}/);
+  assert.match(t, /push:\s*\n\s*branches:\s*\[main\]/, 'push auf main bleibt geprüft');
+  assert.match(workflows.find(w => w.name === 'update-makerspace-pr.yml').text, /uses: \.\/\.github\/actions\/validate-data/, 'Update-Workflow prüft selbst');
+});

@@ -12,6 +12,9 @@ on:
 
 jobs:
   validate:
+    # Bot-PRs (Update-Formular) hat der Update-Workflow VOR dem PR schon geprüft (validate-data) und mergt sofort —
+    # der PR-Check würde nur doppelt prüfen und bricht bei sofortigem Merge ohne Jobs ab (ADR-007). Bei push/dispatch ist head_ref leer → läuft.
+    if: ${{ !startsWith(github.head_ref, 'update-space-id-') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
