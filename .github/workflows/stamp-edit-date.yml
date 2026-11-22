@@ -1,5 +1,5 @@
 # Zweck:  Setzt dates["space.edited.latest"] (Berliner Datum, YYYYMMDD) beim MERGE eines Add-Space-PRs (Branch add-space-id-*).
-# Update-PRs (update-space-id-*) stempelt update-makerspace-pr.yml selbst; Admin-Übernahmen stempeln die Apply-Skripte.
+# Update-Formular-Änderungen stempelt update-makerspace-pr.yml selbst (direkter Commit, kein PR); Admin-Übernahmen stempeln die Apply-Skripte.
 # Bot-Commits lösen weder CI noch Deploy aus → Validierung hier, Deploy explizit (ADR-007).
 
 name: "🕒 Stamp Edit Date"

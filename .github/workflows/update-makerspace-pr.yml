@@ -18,9 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
       issues: write
-      actions: write   # gh workflow run deploy.yml (Bot-Merges lösen sonst keinen Deploy aus)
+      actions: write   # gh workflow run deploy.yml (Bot-Pushes lösen sonst keinen Deploy aus)
 
     steps:
       - name: Checkout Repository
@@ -135,7 +134,7 @@ jobs:
             const newLong = getNumber('Longitude');
             if (newLong) space.loc.long = newLong;
 
-            // Zuletzt bearbeitet = heute (Datum in Berlin, YYYYMMDD). Der Update-PR wird sofort automatisch gemergt.
+            // Zuletzt bearbeitet = heute (Datum in Berlin, YYYYMMDD). Die Änderung wird direkt nach main committet (kein PR).
             const today = parseInt(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date()).replace(/-/g, ''), 10);
             space.dates = { ...space.dates, 'space.edited.latest': today };
 
@@ -225,49 +224,47 @@ jobs:
         with:
           fail-on-error: 'false'
 
-      - name: Create Pull Request
-        id: create_pr
+      # Direkt auf main committen (wie die Apply-Workflows): Die Daten sind eben geprüft (validate-data), ein Bot-PR hätte
+      # nur einen sinnlosen zweiten Check ausgelöst (roter Haken ohne Jobs, ADR-007). Nachweis = Commit + Kommentar am Issue.
+      - name: Commit nach main
+        id: commit
         if: steps.validate.outputs.ok == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update makerspace: ${{ steps.update_script.outputs.space_name }} (ID ${{ steps.update_script.outputs.space_id }})"
-          title: "✏️ Update: ${{ steps.update_script.outputs.space_name }} (ID ${{ steps.update_script.outputs.space_id }})"
-          branch: "update-space-id-${{ steps.update_script.outputs.space_id }}"
-          base: main
-          delete-branch: true
-          body: |
-            Automatischer Update-PR für: **${{ steps.update_script.outputs.space_name }}**
-            ID: `${{ steps.update_script.outputs.space_id }}`
-
-            Basierend auf Issue #${{ github.event.issue.number }}
-          labels: automated-pr
-
-      - name: Auto-merge Pull Request
-        if: steps.create_pr.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --delete-branch --repo ${{ github.repository }}
+          SPACE_NAME: ${{ steps.update_script.outputs.space_name }}
+          SPACE_ID: ${{ steps.update_script.outputs.space_id }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add locations.json loc-enrichment.json
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Update makerspace: $SPACE_NAME (ID $SPACE_ID) — Issue #$ISSUE"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      # GITHUB_TOKEN-Merges lösen weder CI noch Deploy aus → Deploy hier explizit starten
+      # GITHUB_TOKEN-Pushes lösen keinen Deploy aus → Deploy hier explizit starten
       - name: Trigger Deploy
-        if: steps.create_pr.outputs.pull-request-number != ''
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run deploy.yml --repo ${{ github.repository }}
 
       - name: Feedback Comment + Close Issue
-        if: steps.create_pr.outputs.pull-request-number != ''
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue comment ${{ github.event.issue.number }} \
-            --body "✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID \`${{ steps.update_script.outputs.space_id }}\`) wurde geprüft, in main gemergt und der Deploy wurde gestartet." \
+            --body "✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID \`${{ steps.update_script.outputs.space_id }}\`) wurde geprüft, nach main übernommen und der Deploy wurde gestartet." \
             --repo ${{ github.repository }}
           gh issue close ${{ github.event.issue.number }} --reason completed --repo ${{ github.repository }}
 
       - name: Keine Änderung nötig
-        if: steps.validate.outputs.ok == 'true' && steps.create_pr.outputs.pull-request-number == ''
+        if: steps.commit.outputs.changed == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
