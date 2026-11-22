@@ -564,7 +564,13 @@ function setIndicator(stateName, text, types = []) {
 
 /** Hinweis, wenn kein Workshop-Typ angehakt ist: y schließt das Issue ohne Übernahme */
 function updateEmptyHint() {
-  $('empty-hint').hidden = !(cur().edit === 'workshops' && state.current && checks().every(b => !b.checked));
+  const box = $('empty-hint');
+  box.hidden = !(cur().edit === 'workshops' && state.current && checks().every(b => !b.checked));
+  if (box.hidden) return;
+  const existing = state.enrichment[String(state.current.spaceId)]?.workshops;
+  box.replaceChildren(existing?.length
+    ? `Kein Typ angehakt: y schließt das Issue ohne Übernahme. Die bereits gesetzten Workshops (${existing.join(', ')}) bleiben bestehen — sie werden dadurch NICHT entfernt.`
+    : 'Kein Typ angehakt: y schließt das Issue ohne Übernahme (der Space hat — wie bisher — keine Werkstatt-Angaben). Mit z wieder öffnen.');
 }
 
 /** Automatisch angehakte Typen in der Checkbox-Liste hervorheben (grün + „✓ erkannt“) */
