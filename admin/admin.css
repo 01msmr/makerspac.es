@@ -126,3 +126,6 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 
 #replace-wrap { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 .5rem; padding: .4rem .6rem; border-radius: 6px; border: 1px dashed var(--space-closed); font-weight: 600; cursor: pointer; }
 #empty-hint[data-tone="danger"] { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); font-weight: 700; }
+
+#data-stand { color: var(--hover-text-color); font-size: .85em; }
+#refresh { padding: .15rem .5rem; }
