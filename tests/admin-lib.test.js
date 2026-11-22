@@ -378,3 +378,45 @@ test('mergeQueue: angezeigtes Issue inzwischen geschlossen → gone, Rest nachr�
   assert.equal(r.gone, true);
   assert.equal(mergeQueue([], 0, [q(1)], null).gone, false);   // nichts angezeigt → nichts „weg“
 });
+
+import { parseWeeklyIssue, parseWeeklyInput, replaceWeekly, weeklyText, formatWeekly, buildWeeklyComparison } from '../admin/admin-lib.js';
+
+const WKBODY = d => `## Treffen-Vorschlag: X\n\n**ID:** 7\n**Website:** https://x.de\n\n\`\`\`json\n${JSON.stringify(d, null, 2)}\n\`\`\``;
+const wkissue = (d, labels = []) => ({ number: 4, title: 'Treffen-Daten: X', body: WKBODY(d), labels: labels.map(name => ({ name })), html_url: 'u', updated_at: '2026-01-01T00:00:00Z' });
+
+test('Treffen: parseWeeklyIssue liest weekly + space.init, ok-Label, Website', () => {
+  const p = parseWeeklyIssue(wkissue({ weekly: { weekday: 2, time: 1900 }, 'space.init': 20150501 }, ['ok']));
+  assert.deepEqual([p.spaceId, p.weekly, p.init, p.ok, p.website], [7, { weekday: 2, time: 1900 }, 20150501, true, 'https://x.de']);
+  assert.equal(weeklyText(p), 'Di 19:00, 2015-05-01');
+  assert.equal(parseWeeklyIssue(wkissue({})), null);
+  assert.equal(parseWeeklyIssue({ ...wkissue({ weekly: { weekday: 2, time: 1900 } }), title: 'Andere' }), null);
+});
+
+test('Treffen: parseWeeklyInput — Kurz-/Langform, Sonntag=0, Jahr/Monat/Datum, Ungültiges → null', () => {
+  assert.deepEqual(parseWeeklyInput('Di 19:00, 2015'), { weekly: { weekday: 2, time: 1900 }, init: 20150101 });
+  assert.deepEqual(parseWeeklyInput('Sonntag 11.30'), { weekly: { weekday: 0, time: 1130 } });
+  assert.deepEqual(parseWeeklyInput('2015-05'), { init: 20150501 });
+  assert.deepEqual(parseWeeklyInput('20150625'), { init: 20150625 });
+  for (const bad of ['', 'Xx 19:00', 'Di 25:00', '2015-13', 'irgendwas']) assert.equal(parseWeeklyInput(bad), null, bad);
+});
+
+test('Treffen: replaceWeekly schreibt den JSON-Block neu (Apply liest ihn wieder); ungültig → null', () => {
+  const nb = replaceWeekly(WKBODY({ weekly: { weekday: 2, time: 1900 } }), 'Mi 18:30, 2016-06-25');
+  const p = parseWeeklyIssue({ ...wkissue({}), body: nb });
+  assert.deepEqual([p.weekly, p.init], [{ weekday: 3, time: 1830 }, 20160625]);
+  assert.equal(replaceWeekly(WKBODY({ weekly: { weekday: 2, time: 1900 } }), 'kaputt'), null);
+});
+
+test('Treffen: Vergleich zeigt Treffen + Gründung (bei uns / Vorschlag) und Zuletzt bearbeitet', () => {
+  const rows = buildWeeklyComparison({ name: 'X', dates: { 'space.edited.latest': 20250101 } }, { weekly: { weekday: 9, time: 0 }, dates: { 'space.init': 20010000 } }, { weekly: { weekday: 2, time: 1900 }, init: 20150501 });
+  const by = l => rows.find(r => r.label === l);
+  assert.deepEqual([by('Treffen').ours, by('Treffen').proposed, by('Treffen').differs], ['–', 'Di 19:00', true]);
+  assert.deepEqual([by('Gründung').ours, by('Gründung').proposed], ['–', '2015-05-01']);
+  assert.equal(by('Zuletzt bearbeitet').ours, '2025-01-01');
+  assert.equal(formatWeekly({ weekday: 9, time: 0 }), '–');
+});
+
+test('classifyItem: Treffen-Daten hat eigenen Reiter (parsebar), sonst Liste „data“', () => {
+  assert.equal(classifyItem(wkissue({ weekly: { weekday: 2, time: 1900 } })), null);
+  assert.equal(classifyItem(wkissue({})), 'data');
+});

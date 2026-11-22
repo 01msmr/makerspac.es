@@ -4,7 +4,7 @@ import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
-  parseCalendarIssue, replaceEvents, buildCalendarComparison, INBOX_GROUPS, groupInbox,
+  parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, INBOX_GROUPS, groupInbox,
   PROBLEM_LABEL, failedRuns, stuckOk, problemReason, mergeQueue,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
@@ -28,6 +28,9 @@ const KINDS = {
   workshops: { label: 'Workshops', query: 'workshop-data', parse: parseWorkshopIssue, workflow: 'apply-workshop-issues.yml', mode: 'apply', edit: 'workshops' },
   calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue, workflow: 'apply-calendar-issues.yml', mode: 'apply-ok',
     edit: 'url', urlOf: p => p.events, replaceUrl: replaceEvents, viewLabel: 'Kalender' },
+  // Treffen: ein Textfeld „Di 19:00, 2015“ (Weekly + Gründung); kein Endpoint-Frame (kein urlOf)
+  weekly: { label: 'Treffen', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
+    edit: 'url', textOf: weeklyText, replaceUrl: replaceWeekly },
 };
 for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
 
@@ -187,7 +190,7 @@ async function start() {
   for (const id of ['logout', 'finish', 'tabs', 'refresh']) $(id).hidden = false;
   try {
     await Promise.all([
-      loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar),
+      loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
       loadInbox().catch(() => {}),
       loadData(),
     ]);
@@ -402,6 +405,7 @@ async function show() {
   $('hint').textContent = '';
   if (state.tab === 'spaceapi') await showSpaceApi(p, loc);
   else if (state.tab === 'workshops') showWorkshop(p, loc);
+  else if (state.tab === 'weekly') showWeekly(p, loc);
   else showCalendar(p, loc);
 }
 
@@ -428,6 +432,12 @@ function setCalendarHint(p, current) {
   const hint = $('hint');
   if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
   else hint.textContent = '';
+}
+
+function showWeekly(p, loc) {
+  renderCompare(buildWeeklyComparison(loc, effective(p), p));
+  setView('site');
+  $('hint').textContent = 'Eingabe: „Di 19:00, 2015“ — Wochentag + Uhrzeit und/oder Gründung (Jahr, Jahr-Monat oder Datum).';
 }
 
 function showCalendar(p, loc) {
@@ -473,6 +483,7 @@ function refreshCompare() {
   const loc = state.locations.get(p.spaceId);
   const eff = effective(p);
   if (state.tab === 'spaceapi') renderCompare(buildComparison(loc, eff.spaceapi, state.live, p.endpoint));
+  else if (state.tab === 'weekly') renderCompare(buildWeeklyComparison(loc, eff, p));
   else if (state.tab === 'workshops') {
     renderCompare(buildWorkshopComparison(loc, eff.workshops, p.workshops));
     setWorkshopHint(p, eff.workshops);
@@ -534,7 +545,7 @@ const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', bod
 function adjustedBody(body, value, opts = {}) {
   if (cur().edit === 'url') {
     const nb = cur().replaceUrl(body, value, !!opts.replace); // replace: Kalender „ersetzen bzw. entfernen“
-    if (!nb) throw new Error('Ungültige URL oder JSON-Block fehlt');
+    if (!nb) throw new Error(cur().textOf ? 'Ungültige Eingabe (Beispiel: Di 19:00, 2015) oder JSON-Block fehlt' : 'Ungültige URL oder JSON-Block fehlt');
     return nb;
   }
   const nb = replaceWorkshops(body, value, !!opts.replace); // value = Array der angehakten Typen; replace = bestehende Workshops ersetzen/entfernen
@@ -652,8 +663,8 @@ function fillEdit(p) {
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
   } else {
-    $('edit-input').type = 'url';
-    $('edit-input').value = cur().urlOf(p);
+    $('edit-input').type = cur().textOf ? 'text' : 'url';
+    $('edit-input').value = (cur().textOf ?? cur().urlOf)(p);
   }
   $('edit-replace').checked = false;
   $('edit-remove').checked = false;
@@ -670,7 +681,7 @@ function editValue() {
 
 function editChanged(p) {
   const v = editValue();
-  return cur().edit === 'workshops' ? !(v.length === p.workshops.length && v.every(w => p.workshops.includes(w))) : v !== cur().urlOf(p);
+  return cur().edit === 'workshops' ? !(v.length === p.workshops.length && v.every(w => p.workshops.includes(w))) : v !== (cur().textOf ?? cur().urlOf)(p);
 }
 
 /** y / „Speichern + ok“: geänderte Eingabe in die Issue schreiben + ok, unveränderter Vorschlag nur ok */
