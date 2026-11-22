@@ -526,7 +526,9 @@ function viewUrl(view) {
 function setView(view) {
   state.view = view;
   const url = viewUrl(view);
-  $('frame').src = url && /^https?:/.test(url) ? url : 'about:blank';
+  // Smartphone (≤767px, wie das CSS): Rahmen ist ausgeblendet → nicht laden (Datenvolumen); „im Tab öffnen“ nutzt viewUrl
+  const phone = window.matchMedia?.('(max-width: 767px)').matches;
+  $('frame').src = !phone && url && /^https?:/.test(url) ? url : 'about:blank';
   $('show-site').setAttribute('aria-pressed', String(view === 'site'));
   $('show-endpoint').setAttribute('aria-pressed', String(view === 'endpoint'));
 }

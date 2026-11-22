@@ -89,8 +89,19 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
 @media (max-width: 767px) {
-  #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
-  #toasts { left: 1rem; right: 1rem; max-width: none; }
+  /* Smartphone: Review wie eine normale Seite (scrollt mit), Aktionen als feste Leiste unten, Vorschau-Rahmen aus */
+  #review { display: block; padding: .5rem; }
+  #left { display: flex; flex-direction: column; overflow: visible; padding: .75rem; }
+  #extra { order: 1; }                       /* Evidenz/Textstelle vor den Aktionen */
+  #actions { order: 2; position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
+  #actions button { min-height: 44px; }
+  #bar { position: static; }                 /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
+  #actions kbd, #keys, #frame { display: none; }           /* Tastenhinweis irrelevant; Website per „im Tab öffnen“ */
+  #right { margin-top: .5rem; }
+  #tabs button, #logout, #refresh, #viewbar button, #open-tab { min-height: 44px; }
+  input, textarea { font-size: 16px; }       /* verhindert den iOS-Zoom beim Fokussieren */
+  #edit-input, #edit button { min-height: 44px; }
+  #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
 /* Statusanzeige Freitext / Scan: grün = ausgewertet · gelb = nichts erkannt · rot = Fehler */
