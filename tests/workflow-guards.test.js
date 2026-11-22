@@ -77,3 +77,10 @@ test('Workflows der Concurrency-Gruppe data-apply holen main zum Ausführungszei
     assert.match(text, /actions\/checkout@v4\s*\n\s*with:\s*\n\s*ref:\s*main/, `${name}: actions/checkout braucht "with: ref: main"`);
   }
 });
+
+test('Update-Workflow wartet auf den PR-Check, bevor er mergt (sofortiger Merge ließ den Check ohne Jobs abbrechen)', () => {
+  const t = workflows.find(w => w.name === 'update-makerspace-pr.yml').text;
+  const wait = t.indexOf('Auf PR-Check warten'), merge = t.indexOf('gh pr merge');
+  assert.ok(wait !== -1 && merge !== -1 && wait < merge, 'Wartestep muss vor gh pr merge stehen');
+  assert.match(t, /check-runs/);
+});

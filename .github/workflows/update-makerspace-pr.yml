@@ -243,6 +243,27 @@ jobs:
             Basierend auf Issue #${{ github.event.issue.number }}
           labels: automated-pr
 
+      # Der PR-Check „Validate & Test“ startet bei Bot-PRs nur sauber, wenn der PR noch offen ist; wird er in derselben Sekunde
+      # gemergt, bricht der Lauf ohne Jobs ab (roter Haken, „workflow file issue“). Daher erst den Check abwarten.
+      # Läuft er nicht an (nach 3 Min kein Check-Run), gilt die Prüfung dieses Workflows; schlägt er fehl, wird NICHT gemergt.
+      - name: Auf PR-Check warten
+        if: steps.create_pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.create_pr.outputs.pull-request-number }}
+        run: |
+          SHA=$(gh pr view "$PR" --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
+          for i in $(seq 1 36); do
+            STATE=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" --jq '[.check_runs[] | select(.name == "validate")] | first | if . == null then "none" elif .status != "completed" then "pending" else .conclusion end')
+            echo "Check (Versuch $i): $STATE"
+            case "$STATE" in
+              success) exit 0 ;;
+              failure|cancelled|timed_out) echo "PR-Check fehlgeschlagen — nicht gemergt"; exit 1 ;;
+            esac
+            sleep 5
+          done
+          echo "Kein abgeschlossener PR-Check nach 3 Min — weiter (Prüfung erfolgte im Workflow)"
+
       - name: Auto-merge Pull Request
         if: steps.create_pr.outputs.pull-request-number != ''
         env:
