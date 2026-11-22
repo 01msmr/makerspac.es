@@ -109,6 +109,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #tabs { gap: .25rem; }
   #bar { padding: .5rem .4rem; column-gap: .4rem; }
   #logout { display: none; }                  /* Abmelden steht am Seitenende (#foot) */
+  /* Seite scrollt als normales Dokument: Body wächst mit dem Inhalt (kein feste Höhe, kein Schrumpfen der Kinder) → der Fuß steht
+     garantiert HINTER dem Inhalt (nie darüber) und bei kurzem Inhalt ganz unten */
+  html, body { height: auto; overflow: visible; }
+  body { min-height: 100vh; min-height: 100dvh; }
   #foot { display: flex; justify-content: center; margin-top: auto; padding: 1.5rem 0; }   /* ganz am Ende des scrollbaren Inhalts, je eine Zeile Abstand oben/unten */
   #foot button { min-height: 44px; }
   #edit > button, #edit small { display: none; } /* „Speichern + ok“ ist überflüssig: ok übernimmt geänderte Eingaben */
