@@ -37,6 +37,9 @@ function fetchIssues() {
 const RE_ID        = /\*\*ID:\*\*\s*(\d+)/;
 const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
 const RE_APPROVED  = /- \[x\] Freigegeben/i;
+// Explizit gewählter Modus (vom Admin geschrieben): bestehende Workshops ERSETZEN bzw. bei leerer Liste ENTFERNEN.
+// Ohne diese Zeile werden vorhandene Workshops nie überschrieben (nur Lücken füllen).
+const RE_REPLACE   = /\*\*Modus:\*\*\s*ersetzen/i;
 
 /** Freigegeben = Checkbox angehakt ODER Label "ok" (gesetzt von /admin/) */
 export function isApproved(issue) {
@@ -59,18 +62,21 @@ export function parseIssue(issue) {
     return null;
   }
 
-  if (!Array.isArray(workshops) || workshops.length === 0) return null;
+  const replace = RE_REPLACE.test(issue.body);
+  // leere Liste ist nur im Modus „ersetzen“ gültig (= Workshops entfernen)
+  if (!Array.isArray(workshops) || (workshops.length === 0 && !replace)) return null;
 
   return {
     issueNumber: issue.number,
     spaceId:     parseInt(idMatch[1], 10),
     workshops,
+    replace,
   };
 }
 
-function closeIssue(number) {
+function closeIssue(number, comment = 'Angewendet auf loc-enrichment.json') {
   execSync(
-    `gh issue close ${number} --comment "Angewendet auf loc-enrichment.json"`,
+    `gh issue close ${number} --comment "${comment}"`,
     { cwd: root, stdio: 'pipe' }
   );
 }
@@ -109,9 +115,24 @@ async function main() {
   const stats = { total: parsed.length, applied: 0, skipped: 0, errors: 0 };
   const toApply = [];
 
-  for (const { issueNumber, spaceId, workshops } of parsed) {
+  for (const { issueNumber, spaceId, workshops, replace } of parsed) {
     const id = String(spaceId);
     const existing = enrichment[id]?.workshops;
+
+    // Modus „ersetzen“ (explizit im Admin gewählt): bestehende Workshops ersetzen bzw. entfernen
+    if (replace) {
+      if (!existing?.length && workshops.length === 0) {
+        if (applyMode) {
+          try { closeIssue(issueNumber, 'Keine Workshops vorhanden — nichts zu entfernen'); } catch (err) { console.error(`[#${issueNumber}] Fehler beim Schließen: ${err.message}`); stats.errors++; }
+        }
+        console.log(`[#${issueNumber}] ID ${spaceId}: keine Workshops vorhanden — nichts zu entfernen`);
+        stats.skipped++;
+        continue;
+      }
+      console.log(`[#${issueNumber}] ID ${spaceId}: ${workshops.length ? `ERSETZEN ${existing?.join(', ') || '–'} → ${workshops.join(', ')}` : `ENTFERNEN (${existing.join(', ')})`}`);
+      toApply.push({ issueNumber, spaceId, workshops, replace: true });
+      continue;
+    }
 
     if (existing?.length) {
       if (applyMode) {
@@ -142,6 +163,7 @@ async function main() {
   // Jeden Vorschlag isoliert prüfen BEVOR geschrieben/geschlossen wird — ungültige überspringen (Kommentar + ok-Label weg)
   const locationIds = new Set(JSON.parse(fs.readFileSync(path.join(root, 'locations.json'), 'utf8')).map(l => l.ID));
   for (const item of [...toApply]) {
+    if (item.workshops.length === 0) continue; // Entfernen: es wird nichts geschrieben, nur gelöscht
     const invalid = validateProposal(enrichment, item.spaceId, 'workshops', item.workshops, locationIds);
     if (!invalid.length) continue;
     console.log(`❌ [#${item.issueNumber}] ID ${item.spaceId}: ${invalid.join('; ')} — übersprungen`);
@@ -165,12 +187,18 @@ async function main() {
 
   for (const { issueNumber, spaceId, workshops } of toApply) {
     const id = String(spaceId);
-    if (!enrichment[id]) enrichment[id] = {};
-    enrichment[id].workshops = workshops;
+    if (workshops.length === 0) {
+      // Entfernen: Schlüssel löschen (kein leerer Marker); leeren Eintrag ganz entfernen
+      delete enrichment[id]?.workshops;
+      if (enrichment[id] && Object.keys(enrichment[id]).length === 0) delete enrichment[id];
+    } else {
+      if (!enrichment[id]) enrichment[id] = {};
+      enrichment[id].workshops = workshops;
+    }
 
     try {
-      closeIssue(issueNumber);
-      console.log(`[#${issueNumber}] ID ${spaceId}: gesetzt, Issue geschlossen`);
+      closeIssue(issueNumber, workshops.length === 0 ? 'Workshops entfernt (loc-enrichment.json)' : undefined);
+      console.log(`[#${issueNumber}] ID ${spaceId}: ${workshops.length === 0 ? 'Workshops entfernt' : 'gesetzt'}, Issue geschlossen`);
       stats.applied++;
     } catch (err) {
       console.error(`[#${issueNumber}] Fehler beim Schließen: ${err.message}`);

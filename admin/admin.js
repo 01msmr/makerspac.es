@@ -355,7 +355,7 @@ function showWorkshop(p, loc) {
   const current = state.enrichment[String(p.spaceId)]?.workshops;
   renderCompare(buildWorkshopComparison(loc, current, p.workshops));
   setView('site');
-  if (Array.isArray(current) && current.length) $('hint').textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — beim Übernehmen wird dieses Issue nur geschlossen.';
+  if (Array.isArray(current) && current.length) $('hint').textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
   // Gefundene Typen mit Confidence + Evidenz (nur textContent)
   const extra = $('extra');
   if (p.rows.length) {
@@ -418,13 +418,13 @@ function scheduleAutoApply(k) {
 const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', body: { labels: [OK_LABEL] } });
 
 /** Neuer Body für „anpassen“ — wirft bei ungültiger Eingabe. */
-function adjustedBody(body, value) {
+function adjustedBody(body, value, opts = {}) {
   if (cur().edit === 'url') {
     const nb = cur().replaceUrl(body, value);
     if (!nb) throw new Error('Ungültige URL oder JSON-Block fehlt');
     return nb;
   }
-  const nb = replaceWorkshops(body, value); // value = Array der angehakten Typen
+  const nb = replaceWorkshops(body, value, !!opts.replace); // value = Array der angehakten Typen; replace = bestehende Workshops ersetzen/entfernen
   if (!nb) throw new Error('Mindestens ein Typ nötig oder JSON-Block fehlt');
   return nb;
 }
@@ -441,12 +441,12 @@ async function act(action, value, opts = {}) {
       setStatus('Passe Issue an …');
       const issue = await gh(`/repos/${REPO}/issues/${p.number}`);
       entry.prevBody = issue.body || '';
-      const body = adjustedBody(entry.prevBody, value);
+      const body = adjustedBody(entry.prevBody, value, opts);
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { body } });
       await addOk(p.number);
       k.okCount++;
       k.lastOkAt = Date.now();
-      toast(`✎ #${p.number} angepasst + ok`, 'warn', { withUndo: true });
+      toast(opts.replace ? (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`) : `✎ #${p.number} angepasst + ok`, opts.replace ? 'no' : 'warn', { withUndo: true });
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
@@ -531,6 +531,10 @@ function fillEdit(p) {
     $('edit-input').type = 'url';
     $('edit-input').value = cur().urlOf(p);
   }
+  const existing = cur().edit === 'workshops' ? existingWorkshops(p) : [];
+  $('edit-replace').checked = false;
+  $('replace-wrap').hidden = existing.length === 0;
+  $('replace-text').textContent = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
   updateEmptyHint();
 }
 
@@ -549,7 +553,12 @@ function confirmOk() {
   const p = state.current;
   if (!p) return;
   // Workshops: kein Typ angehakt = Space hat (noch) keine Werkstatt → Issue schließen, nichts übernehmen (wie Spaces ohne Infos)
-  if (cur().edit === 'workshops' && editValue().length === 0) { act('n', null, { noWorkshops: true }); return; }
+  if (cur().edit === 'workshops') {
+    const v = editValue();
+    const replace = $('edit-replace').checked && existingWorkshops(p).length > 0;
+    if (replace) { act('a', v, { replace: true }); return; }  // bestehende ersetzen/entfernen (ausdrücklich gewählt)
+    if (v.length === 0) { act('n', null, { noWorkshops: true }); return; }
+  }
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
 
@@ -562,15 +571,25 @@ function setIndicator(stateName, text, types = []) {
   if (stateName !== 'idle') box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // Ergebnis in den sichtbaren Bereich holen
 }
 
+const existingWorkshops = p => state.enrichment[String(p?.spaceId)]?.workshops || [];
+
 /** Hinweis, wenn kein Workshop-Typ angehakt ist: y schließt das Issue ohne Übernahme */
 function updateEmptyHint() {
   const box = $('empty-hint');
-  box.hidden = !(cur().edit === 'workshops' && state.current && checks().every(b => !b.checked));
+  const p = state.current;
+  const isWs = cur().edit === 'workshops' && p;
+  const existing = isWs ? existingWorkshops(p) : [];
+  const replace = isWs && existing.length > 0 && $('edit-replace').checked;
+  const zero = isWs && checks().every(b => !b.checked);
+  box.hidden = !(isWs && (zero || replace));
   if (box.hidden) return;
-  const existing = state.enrichment[String(state.current.spaceId)]?.workshops;
-  box.replaceChildren(existing?.length
-    ? `Kein Typ angehakt: y schließt das Issue ohne Übernahme. Die bereits gesetzten Workshops (${existing.join(', ')}) bleiben bestehen — sie werden dadurch NICHT entfernt.`
-    : 'Kein Typ angehakt: y schließt das Issue ohne Übernahme (der Space hat — wie bisher — keine Werkstatt-Angaben). Mit z wieder öffnen.');
+  box.dataset.tone = replace ? 'danger' : 'warn';
+  let text;
+  if (replace && zero) text = `Alle bestehenden Workshops (${existing.join(', ')}) werden beim Übernehmen ENTFERNT. Mit z rückgängig, solange noch nicht übernommen.`;
+  else if (replace) text = `Die bestehenden Workshops (${existing.join(', ')}) werden beim Übernehmen durch deine Auswahl ERSETZT.`;
+  else if (existing.length) text = `Kein Typ angehakt: y schließt das Issue ohne Übernahme. Die bestehenden Workshops (${existing.join(', ')}) bleiben bestehen. Zum Entfernen oben „ersetzen bzw. entfernen“ ankreuzen.`;
+  else text = 'Kein Typ angehakt: y schließt das Issue ohne Übernahme (der Space hat — wie bisher — keine Werkstatt-Angaben). Mit z wieder öffnen.';
+  box.replaceChildren(text);
 }
 
 /** Automatisch angehakte Typen in der Checkbox-Liste hervorheben (grün + „✓ erkannt“) */
@@ -654,6 +673,7 @@ $('edit-scan').addEventListener('click', async () => {
 });
 
 $('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
+$('edit-replace').addEventListener('change', updateEmptyHint);
 $('act-y').addEventListener('click', confirmOk);
 $('act-n').addEventListener('click', () => act('n'));
 $('act-l').addEventListener('click', skip);
