@@ -79,13 +79,14 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'tabs', 'refresh']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
 $('logout').addEventListener('click', logout);
+$('logout2').addEventListener('click', logout);   // Touch: Abmelden steht am Seitenende (spart Platz oben)
 $('save-token').addEventListener('click', () => {
   token = $('token').value.trim();
   $('token').value = '';
@@ -188,7 +189,7 @@ async function loadKind(k) {
 
 async function start() {
   $('login').hidden = true;
-  for (const id of ['logout', 'tabs', 'refresh']) $(id).hidden = false;
+  for (const id of ['logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = false;
   try {
     await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
@@ -527,6 +528,7 @@ function renderCompare(rows) {
   for (const r of rows) {
     const tr = table.insertRow();
     tr.className = r.warn ? 'warn' : r.differs ? 'differs' : '';
+    tr.dataset.row = r.label;
     const th = document.createElement('th'); th.textContent = r.label;
     const a = tr.insertCell(); a.textContent = r.ours;
     const b = tr.insertCell(); b.textContent = r.proposed;
