@@ -333,11 +333,20 @@ function showProblemReason(p) {
 // ─── Anzeige ─────────────────────────────────────────────────────────────
 const openCount = k => Math.max(0, k.queue.length - k.idx);
 
+/** Reiter-Beschriftung: Name + kleines Zählerabzeichen (0 = ausgegraut, ohne Zahl); Warnabzeichen rot. Spart Platz gegenüber „Name (n)“. */
+function setTab(b, label, n, warn = 0) {
+  b.replaceChildren(label);
+  if (n) b.append(Object.assign(document.createElement('span'), { className: 'badge', textContent: String(n) }));
+  if (warn) b.append(Object.assign(document.createElement('span'), { className: 'badge warn', textContent: `⚠${warn}` }));
+  b.dataset.empty = n ? '' : 'true';
+  b.setAttribute('aria-label', `${label}, ${n} offen${warn ? `, ${warn} mit Problem` : ''}`);
+}
+
 function updateBar() {
   for (const [name, k] of Object.entries(KINDS)) {
     const b = $(`tab-${name}`);
     const pc = k.queue.slice(k.idx).filter(q => q.problem).length;
-    b.textContent = `${k.label} (${openCount(k)})${pc ? ` ⚠${pc}` : ''}`;
+    setTab(b, k.label, openCount(k), pc);
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
@@ -346,12 +355,12 @@ function updateBar() {
     const n = groups[key]?.length || 0;
     const b = $(`tab-list-${key}`);
     b.hidden = n === 0 && state.list !== key; // leere Listen-Reiter ausblenden
-    b.textContent = `${label} (${n})`;
+    setTab(b, label, n);
     b.setAttribute('aria-pressed', String(state.list === key));
   }
   const np = problemCount();
   $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
-  $('tab-problems').textContent = `Probleme (${np})`;
+  setTab($('tab-problems'), 'Probleme', np);
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   updateUndoButton();
   const k = cur();

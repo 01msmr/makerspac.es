@@ -14,6 +14,10 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 #counter { color: var(--hover-text-color); }
 #tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
 #tabs button { border-radius: 999px; }
+/* Zählerabzeichen am Reiter (statt „Name (n)“): schmaler; leere Reiter blass */
+.badge { display: inline-block; margin-left: .3em; padding: 0 .4em; border-radius: 999px; background: var(--focus-color); color: var(--bg-color); font-size: .75em; font-weight: 700; line-height: 1.55; vertical-align: .1em; }
+.badge.warn { background: var(--space-closed); }
+#tabs button[data-empty="true"], #tab-problems[data-empty="true"] { opacity: .6; }
 #tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; box-shadow: inset 0 0 0 1px var(--focus-color); }
 
 button, input { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .75rem; }
