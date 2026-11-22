@@ -109,7 +109,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #tabs { gap: .25rem; }
   #bar { padding: .5rem .4rem; column-gap: .4rem; }
   #logout { display: none; }                  /* Abmelden steht am Seitenende (#foot) */
-  #foot { display: flex; justify-content: center; margin-top: auto; padding: .5rem 0 1rem; }   /* ganz unten im Inhaltsbereich (auch bei kurzem Inhalt) */
+  #foot { display: flex; justify-content: center; margin-top: auto; padding: 1.5rem 0; }   /* ganz am Ende des scrollbaren Inhalts, je eine Zeile Abstand oben/unten */
   #foot button { min-height: 44px; }
   #edit > button, #edit small { display: none; } /* „Speichern + ok“ ist überflüssig: ok übernimmt geänderte Eingaben */
   #counter, #data-stand { display: none; }   /* Detailzeile („1 / 2 · offen“, „Daten: …“) entfällt; Stand steht im Tooltip von ↻ */
@@ -129,7 +129,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 
 @media (max-width: 767px) {
   /* Smartphone: Review wie eine normale Seite (scrollt mit), Aktionen als feste Leiste unten, Vorschau-Rahmen aus */
-  #review { display: block; padding: .5rem; }
+  #review { display: block; padding: .5rem; flex: 0 0 auto; min-height: auto; }   /* wächst mit dem Inhalt (sonst schrumpft er auf Viewport-Höhe und der Fuß liegt über dem Inhalt) */
   #left { display: flex; flex-direction: column; overflow: visible; padding: .75rem; }
   #extra { order: 1; }                         /* Evidenz/Textstelle vor den Aktionen */
   #actions { order: 2; position: sticky; bottom: 0; z-index: 5; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
@@ -138,7 +138,6 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #open-links { display: flex; margin: 0 0 .25rem; }
   #left h2 { margin: 0 0 .4rem; font-size: 1.05rem; }
   #compare tr[data-row="Name"], #compare tr[data-row="Website"] { display: none; }   /* Name steht im Titel, Website als Link */
-  #review:not([hidden]) ~ #foot { padding-bottom: 4.5rem; }   /* Platz für die feste Aktionsleiste (nur im Review) */
   #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
