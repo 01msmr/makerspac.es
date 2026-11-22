@@ -13,6 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -112,6 +113,15 @@ async function main() {
         }
         continue;
       }
+    }
+    // Vorschlag isoliert prüfen — ungültig: nicht übernehmen, kommentieren, ok-Label entfernen (taucht im Admin wieder auf)
+    const invalid = validateProposal(enrichment, p.spaceId, 'spaceapi', { endpoint: p.endpoint }, knownIds);
+    if (invalid.length) {
+      console.log(`❌ #${p.issueNumber}: ${invalid.join('; ')} — uebersprungen`);
+      if (applyMode) {
+        try { gh('issue', 'comment', String(p.issueNumber), '--body', rejectionComment(invalid)); gh('issue', 'edit', String(p.issueNumber), '--remove-label', OK_LABEL); } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
+      }
+      continue;
     }
     console.log(`#${p.issueNumber}  ID ${p.spaceId}: ${enrichment[String(p.spaceId)]?.spaceapi?.endpoint || '–'} → ${p.endpoint}`);
     applyProposal(enrichment, p.spaceId, p.endpoint);

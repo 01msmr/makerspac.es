@@ -11,6 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { execFileSync } from 'child_process';
+import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -136,6 +138,22 @@ async function main() {
   console.log(`Zu ändern:       ${toApply.length}`);
   console.log(`Bereits gesetzt: ${stats.skipped}`);
   console.log('='.repeat(50));
+
+  // Jeden Vorschlag isoliert prüfen BEVOR geschrieben/geschlossen wird — ungültige überspringen (Kommentar + ok-Label weg)
+  const locationIds = new Set(JSON.parse(fs.readFileSync(path.join(root, 'locations.json'), 'utf8')).map(l => l.ID));
+  for (const item of [...toApply]) {
+    const invalid = validateProposal(enrichment, item.spaceId, 'workshops', item.workshops, locationIds);
+    if (!invalid.length) continue;
+    console.log(`❌ [#${item.issueNumber}] ID ${item.spaceId}: ${invalid.join('; ')} — übersprungen`);
+    toApply.splice(toApply.indexOf(item), 1);
+    stats.errors++;
+    if (applyMode) {
+      try {
+        execFileSync('gh', ['issue', 'comment', String(item.issueNumber), '--body', rejectionComment(invalid)], { cwd: root, stdio: 'pipe' });
+        execFileSync('gh', ['issue', 'edit', String(item.issueNumber), '--remove-label', 'ok'], { cwd: root, stdio: 'pipe' });
+      } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
+    }
+  }
 
   if (toApply.length === 0 || !applyMode) {
     if (!applyMode) console.log('\nDry-Run — keine Änderungen. Mit --apply ausführen.');

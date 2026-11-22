@@ -272,7 +272,14 @@ jobs:
 
             console.log(`✅ Space "${name}" mit ID ${nextId} an Position ${insertIndex + 1} in locations.json eingefügt.`);
 
+      - name: Daten validieren (vor PR und Merge)
+        id: validate
+        uses: ./.github/actions/validate-data
+        with:
+          fail-on-error: 'false'
+
       - name: Create Pull Request
+        if: steps.validate.outputs.ok == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -289,6 +296,7 @@ jobs:
           labels: automated-pr
 
       - name: Feedback Comment
+        if: steps.validate.outputs.ok == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.issue.number }}
@@ -297,3 +305,21 @@ jobs:
 
             **Space:** ${{ steps.update_script.outputs.space_name }}
             **ID:** ${{ steps.update_script.outputs.next_id }}
+
+      - name: Validierungsfehler melden
+        if: steps.validate.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "❌ Die Änderung wurde **nicht** übernommen: die Daten bestehen die automatische Prüfung nicht."
+            echo
+            echo '```'
+            tail -n 40 "${{ steps.validate.outputs.log }}"
+            echo '```'
+          } > "$RUNNER_TEMP/feedback.md"
+          gh issue comment ${{ github.event.issue.number }} --body-file "$RUNNER_TEMP/feedback.md" --repo ${{ github.repository }}
+
+      - name: Job als fehlgeschlagen markieren
+        if: steps.validate.outputs.ok != 'true'
+        run: exit 1

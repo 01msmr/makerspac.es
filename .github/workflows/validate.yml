@@ -8,6 +8,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -15,13 +16,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Validate locations.json schema
-        run: node tests/validate-locations.js
-
-      - name: Run unit tests
-        run: node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js tests/spaceapi-directory-sync.test.js
+      - name: Daten + Tests prüfen (npm run validate:ci)
+        uses: ./.github/actions/validate-data
