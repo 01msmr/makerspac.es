@@ -66,6 +66,16 @@ export async function crawlSpace(baseUrl, fetchImpl = fetchText) {
   return { weekly: pickWeekly(candidates), init: initFound, pages };
 }
 
+/** Log-Hinweis: sicherer Fund bei vorhandenem Wert heißt „vorhanden, nicht überschrieben“, nicht „unsicher“ (pure) */
+export function weeklyHint(space, w) {
+  if (w.confidence === 'high' && !isWeeklyPlaceholder(space.weekly)) return `Weekly gefunden (${w.confidence}), bei uns vorhanden — nicht überschrieben (--force)`;
+  return `Weekly ${w.confidence}${w.reason ? ` (${w.reason})` : ''}`;
+}
+export function initHint(space, i) {
+  if (i.confidence === 'high' && !isInitPlaceholder(space.dates?.['space.init'])) return `Gründung gefunden (${i.confidence}), bei uns vorhanden — nicht überschrieben (--force)`;
+  return `Gründung ${i.confidence}`;
+}
+
 const fmtTime = t => String(t).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2');
 
 /** Issue-Text (pure): enthält den JSON-Block, den Admin + Apply-Skript lesen */
@@ -116,7 +126,7 @@ async function main() {
     const delta = weeklyDelta(space, found, { force });
     const key = deltaKey(delta);
     if (!key) {
-      const hint = [found.weekly && `Weekly ${found.weekly.confidence}${found.weekly.reason ? ` (${found.weekly.reason})` : ''}`, found.init && `Gründung ${found.init.confidence}`].filter(Boolean).join(', ');
+      const hint = [found.weekly && weeklyHint(space, found.weekly), found.init && initHint(space, found.init)].filter(Boolean).join(', ');
       if (hint) { stats.weak++; console.log(`   kein Vorschlag — nur unsicher: ${hint}`); } else { stats.none++; console.log('   nichts gefunden'); }
       continue;
     }
