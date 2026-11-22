@@ -115,7 +115,7 @@ node -e "
 
 **Sortierung:** nach Land → PLZ → Name
 
-`dates` kennt nur `space.init` und `space.edited.latest` (YYYYMMDD; Platzhalter `20010000` für unbekannt). `spaceapi`, `weekly`, `workshops` und `events` gehören **nicht** in `locations.json` — sie liegen in `loc-enrichment.json`.
+`dates` kennt nur `space.init` (Gründung des **Vereins bzw. Trägers**, nicht eines Standorts) und `space.edited.latest` (YYYYMMDD; Platzhalter `20010000` für unbekannt). `spaceapi`, `weekly`, `workshops` und `events` gehören **nicht** in `locations.json` — sie liegen in `loc-enrichment.json`.
 
 ---
 

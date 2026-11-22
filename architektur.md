@@ -142,7 +142,7 @@
 **Merge-Regel:** `generate-map-splits.js` kombiniert beide JSON-Dateien zur Build-Zeit.
 Die Felder überschneiden sich nicht: `locations.json` enthält nur Grunddaten, `loc-enrichment.json` nur Ergänzungen (Validator lehnt Enrichment-Felder in `locations.json` ab, siehe ADR-008).
 
-**Datumsfelder:** `dates.space.init` (Platzhalter 20010000 = unbekannt) und `dates.space.edited.latest` (letzte Bearbeitung, Berliner Datum, kein Zeitanteil). Setzen: Update-/Add-Workflow beim PR, bestätigte Admin-Änderungen beim Übernehmen. `/admin/` zeigt den alten Stand als „Zuletzt bearbeitet“.
+**Datumsfelder:** `dates.space.init` (**Gründung des Vereins bzw. Trägers**, nicht die Eröffnung eines Standorts; Platzhalter 20010000 = unbekannt) und `dates.space.edited.latest` (letzte Bearbeitung, Berliner Datum, kein Zeitanteil). Setzen: Update-/Add-Workflow beim PR, bestätigte Admin-Änderungen beim Übernehmen. `/admin/` zeigt den alten Stand als „Zuletzt bearbeitet“.
 
 **Platzhalter-Erkennung:**
 - `weekly.weekday === 9 && weekly.time === 0` → kein echter Wert
