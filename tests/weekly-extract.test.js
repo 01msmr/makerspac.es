@@ -96,3 +96,21 @@ test('stampLocationsFile mit inits: space.init + space.edited.latest in einem Sc
   assert.deepEqual(out[0].dates, { 'space.init': 20150501, 'space.edited.latest': 20261122 });
   assert.deepEqual(out[1].dates, {});
 });
+
+test('Reale Fehlfunde: monatlich / „jeden dritten“ / Endzeit / Teilgruppe werden nicht als Weekly vorgeschlagen', () => {
+  const none = t => assert.equal(pickWeekly(extractWeeklyCandidates(t))?.confidence === 'high', false, t);
+  none('Jeden dritten Donnerstag um 19 Uhr findet unser Monatstreffen statt.');
+  none('Open Treffen jeden 2. Mittwoch im Monat 19 Uhr');
+  none('Offenes Treffen alle zwei Wochen dienstags 19:00');
+  none('now Sunday Electronics Workshop 035 weekly until 20:00');
+  none('in der Regel jeden Samstag ab 14Uhr trifft sich im OTELO das BLITZGNEIßER-Node, ein Team aus elektronikinteressierten Menschen');
+});
+
+test('Gute Funde bleiben: Bereich „18 bis 22 Uhr“ → Beginn, „weekly open friday starting from 19h“', () => {
+  assert.equal(pickWeekly(extractWeeklyCandidates('Jeden Dienstag, 18:00 bis 22:00 Uhr')).time, 1800);
+  assert.equal(pickWeekly(extractWeeklyCandidates('Offener Abend jeden Dienstag 18 bis 22 Uhr')).time, 1800);
+  assert.deepEqual(parseTime('bis 20:00'), null);
+  const f = pickWeekly(extractWeeklyCandidates('Weekly open friday starting from 19h at:'));
+  assert.deepEqual([f.weekday, f.time, f.confidence], [5, 1900, 'high']);
+  assert.equal(pickWeekly(extractWeeklyCandidates('Jeden Mittwoch (ausgenommen Feiertage): Open Lab mit einer kostenlosen Führung um 19 Uhr')).time, 1900);
+});
