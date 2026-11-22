@@ -542,15 +542,59 @@
       "weekday": 3,
       "time": 1530
     }
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics",
+      "laser",
+      "metal",
+      "screenprint",
+      "textile",
+      "wood"
+    ]
   },
   "104": {
-    "events": "https://www.vereinonline.org/Makerspace_Bocholt_gUG/?action=events_kalender"
+    "events": "https://www.vereinonline.org/Makerspace_Bocholt_gUG/?action=events_kalender",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "wood",
+      "metal",
+      "textile",
+      "ceramics"
+    ]
+  },
+  "105": {
+    "workshops": [
+      "cnc",
+      "electronics",
+      "metal",
+      "textile",
+      "wood"
+    ]
+  },
+  "107": {
+    "workshops": [
+      "3d",
+      "laser"
+    ]
   },
   "108": {
-    "events": "https://www.hs-niederrhein.de/makerspace/aktuelles-veranstaltungen/"
+    "events": "https://www.hs-niederrhein.de/makerspace/aktuelles-veranstaltungen/",
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics"
+    ]
   },
   "109": {
-    "events": "https://www.digitalhub.ms/events"
+    "events": "https://www.digitalhub.ms/events",
+    "workshops": [
+      "3d",
+      "vr"
+    ]
   },
   "110": {
     "events": "https://artandtech.space/events"
@@ -569,13 +613,35 @@
     }
   },
   "117": {
-    "events": "https://www.th-koeln.de/forschung/seminare_2946.php"
+    "events": "https://www.th-koeln.de/forschung/seminare_2946.php",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "vr",
+      "wood",
+      "metal",
+      "textile"
+    ]
   },
   "118": {
     "events": "https://klugev.de/kalender/"
   },
   "119": {
-    "events": "https://dingfabrik.de/veranstaltungen"
+    "events": "https://dingfabrik.de/veranstaltungen",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "wood",
+      "metal",
+      "bike",
+      "textile",
+      "screenprint",
+      "ceramics"
+    ]
   },
   "120": {
     "events": "https://koeln.ccc.de/c4/veranstaltungen.xml",
@@ -587,14 +653,25 @@
     "events": "https://probierwerk.com/events/"
   },
   "122": {
-    "events": "https://werkraum47.de/veranstaltungen"
+    "events": "https://werkraum47.de/veranstaltungen",
+    "workshops": [
+      "3d",
+      "electronics",
+      "laser",
+      "textile"
+    ]
   },
   "123": {},
   "124": {
     "events": "https://aachen.ccc.de",
     "spaceapi": {
       "endpoint": "https://status.aachen.ccc.de/spaceapi"
-    }
+    },
+    "workshops": [
+      "electronics",
+      "coding",
+      "music"
+    ]
   },
   "125": {
     "events": "https://digitac.cc/veranstaltungen/"

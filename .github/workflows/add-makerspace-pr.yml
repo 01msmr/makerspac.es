@@ -7,6 +7,11 @@ on:
   issues:
     types: [labeled]
 
+# Gleiche Datei-Schreiber nie parallel (Apply-Workflows, Update-/Add-PRs)
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
+
 jobs:
   create-pr:
     if: github.event.label.name == 'add-space'
@@ -19,6 +24,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: main   # neuester Stand zum AUSFÜHRUNGSZEITPUNKT — ohne ref gilt der Stand beim Auslösen (nach Wartezeit in der Concurrency-Gruppe veraltet)
 
       - name: Process Issue and Update JSON
         id: update_script
