@@ -302,9 +302,9 @@ git push main
      └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi / apply-calendar (apply-ok) bzw. apply-workshop (apply) starten)
 
 .github/workflows/update-makerspace-pr.yml / add-makerspace-pr.yml  (Label update-space / add-space am Formular-Issue)
-     ├── Daten ändern → validate-data (npm run validate:ci) → erst dann PR
-     ├── ungültig: kein PR, Kommentar mit Fehlern am Issue, Job rot
-     └── update: Auto-Merge + `gh workflow run deploy.yml` (Bot-Merges lösen KEINEN Deploy/CI aus); add: PR bleibt offen (Merge durch Mensch → Push → Deploy)
+     ├── Daten ändern → validate-data (npm run validate:ci) → erst dann schreiben
+     ├── ungültig: nichts geschrieben, Kommentar mit Fehlern am Issue, Job rot
+     └── update: direkter Commit nach main (kein PR) + `gh workflow run deploy.yml` (Bot-Pushes lösen KEINEN Deploy/CI aus); add: PR bleibt offen (Merge durch Mensch → stamp-edit-date.yml → Deploy)
 
 .github/workflows/scan-workshop-url.yml  (workflow_dispatch aus /admin/: url + issue + scan_id)
      └── node tools/scan-workshop-url.js  → Kommentar `<!-- scan:ID -->` + JSON am Issue (Admin pollt, liest, löscht ihn)
