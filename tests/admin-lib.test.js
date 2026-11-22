@@ -341,3 +341,22 @@ test('Apply-Skript Kalender: Modus „ersetzen“ erlaubt leere URL (entfernen),
   assert.deepEqual([rep.eventsUrl, rep.replace], ['https://neu.de/k', true]);
   assert.equal(parseCalendarForApply(cissue('https://x.de/e')).replace, false);            // normaler Vorschlag: Lücken füllen
 });
+
+import { mergeQueue } from '../admin/admin-lib.js';
+
+test('mergeQueue: Geschlossenes fällt raus, Aktuelles bleibt vorn, „später“ kommt ans Ende', () => {
+  const q = n => ({ number: n });
+  const old = [q(1), q(2), q(3), q(4)];           // 1 erledigt, 2 übersprungen, 3 angezeigt, 4 offen
+  const fresh = [q(2), q(3), q(4), q(5)];         // 1 ist weg (übernommen), 5 ist neu
+  const r = mergeQueue(old, 2, fresh, 3);
+  assert.deepEqual(r.queue.map(p => p.number), [3, 4, 5, 2]);
+  assert.equal(r.gone, false);
+});
+
+test('mergeQueue: angezeigtes Issue inzwischen geschlossen → gone, Rest nachrücken', () => {
+  const q = n => ({ number: n });
+  const r = mergeQueue([q(10), q(11), q(12)], 0, [q(11), q(12)], 10);
+  assert.deepEqual(r.queue.map(p => p.number), [11, 12]);
+  assert.equal(r.gone, true);
+  assert.equal(mergeQueue([], 0, [q(1)], null).gone, false);   // nichts angezeigt → nichts „weg“
+});

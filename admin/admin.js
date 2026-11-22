@@ -5,7 +5,7 @@ import {
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
   parseCalendarIssue, replaceEvents, buildCalendarComparison, INBOX_GROUPS, groupInbox,
-  PROBLEM_LABEL, failedRuns, stuckOk, problemReason,
+  PROBLEM_LABEL, failedRuns, stuckOk, problemReason, mergeQueue,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyCssColours } from '../colours.js';
@@ -122,14 +122,38 @@ const effective = p => applyEnrichment(state.locations.get(p.spaceId) ?? {}, sta
 /** Workshops stehen fest in locations.json (haben Vorrang) → Änderung per loc-enrichment.json bliebe wirkungslos */
 const lockedWorkshops = p => (state.locations.get(p.spaceId)?.workshops?.length ?? 0) > 0;
 
+/**
+ * Warteschlangen mit GitHub abgleichen (der Tab kann stundenlang offen sein): inzwischen geschlossene/übernommene Issues
+ * fallen heraus, „ok“-Zähler stimmen wieder. Ist das gerade angezeigte Issue weg, geht es mit Hinweis zum nächsten weiter.
+ */
+async function refreshQueues() {
+  if (state.busy) return;
+  let goneCurrent = null;
+  for (const k of Object.values(KINDS)) {
+    const parsed = await fetchKind(k);
+    const showing = k === cur() && !state.list && state.current ? state.current.number : null;
+    const { queue, gone } = mergeQueue(k.queue, k.idx, parsed.filter(p => !p.ok), showing);
+    const okItems = parsed.filter(p => p.ok);
+    k.queue = queue; k.idx = 0;
+    k.okCount = okItems.length;
+    k.lastOkAt = Math.max(k.lastOkAt, ...okItems.map(p => p.updated));
+    if (gone) goneCurrent = showing;
+  }
+  await loadInbox().catch(() => {});
+  await loadProblems().catch(() => {});
+  if (goneCurrent != null) { toast(`#${goneCurrent} wurde inzwischen übernommen oder geschlossen — weiter mit dem nächsten`, 'warn'); show(); }
+  else updateBar();
+}
+
 let refreshing = false;
 async function refreshData(manual = false) {
   if (refreshing || !token || !state.dataAt) return;
   refreshing = true;
   try {
     const changed = await loadData();
+    await refreshQueues();
     if (changed) { toast(`Daten aktualisiert (${state.dataSha})`, 'info'); refreshCompare(); }
-    else if (manual) toast('Daten sind aktuell', 'ok');
+    else if (manual) toast('Daten und Liste sind aktuell', 'ok');
   } catch (err) {
     if (manual) toast(`Aktualisieren fehlgeschlagen: ${err.message}`, 'no');
   } finally { refreshing = false; }
@@ -141,14 +165,19 @@ setInterval(() => { if (!document.hidden && staleMs() > 110000) refreshData(); }
 $('refresh').addEventListener('click', () => refreshData(true));
 
 // ─── Laden ───────────────────────────────────────────────────────────────
-async function loadKind(k) {
+/** Frische Liste der offenen, parsebaren Issues einer Art */
+async function fetchKind(k) {
   const issues = [];
   for (let page = 1; page <= 5; page++) {
     const batch = await gh(`/repos/${REPO}/issues?labels=${k.query}&state=open&per_page=100&page=${page}`);
     issues.push(...batch);
     if (batch.length < 100) break;
   }
-  const parsed = issues.map(k.parse).filter(Boolean);
+  return issues.map(k.parse).filter(Boolean);
+}
+
+async function loadKind(k) {
+  const parsed = await fetchKind(k);
   k.queue = parsed.filter(p => !p.ok);
   k.okCount = parsed.filter(p => p.ok).length;
   k.lastOkAt = Math.max(0, ...parsed.filter(p => p.ok).map(p => p.updated));
@@ -523,12 +552,21 @@ async function act(action, value, opts = {}) {
   if (!p || state.busy) return;
   state.busy = true;
   try {
+    // Frischer Blick auf das Issue, bevor geschrieben wird (Tab kann veraltet sein: längst geschlossen/freigegeben)
+    const live = await gh(`/repos/${REPO}/issues/${p.number}`);
+    const staleReason = live.state !== 'open' ? 'inzwischen geschlossen' : (action !== 'n' && (live.labels || []).some(l => l.name === OK_LABEL)) ? 'schon freigegeben (ok)' : '';
+    if (staleReason) {
+      toast(`#${p.number} ist ${staleReason} — übersprungen`, 'warn');
+      k.queue.splice(k.idx, 1);
+      state.busy = false;
+      show();
+      return;
+    }
     const entry = { kind: k.name, idx: k.idx, p, type: action };
     if (action === 'y') { setStatus('Setze Label …'); await addOk(p.number); k.okCount++; k.lastOkAt = Date.now(); toast(`✓ #${p.number} ok`, 'ok', { withUndo: true }); }
     else if (action === 'a') {
       setStatus('Passe Issue an …');
-      const issue = await gh(`/repos/${REPO}/issues/${p.number}`);
-      entry.prevBody = issue.body || '';
+      entry.prevBody = live.body || '';
       const body = adjustedBody(entry.prevBody, value, opts);
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { body } });
       await addOk(p.number);
@@ -578,7 +616,9 @@ async function undo() {
     } else if (e.type === 'n') {
       await gh(`/repos/${REPO}/issues/${e.p.number}`, { method: 'PATCH', body: { state: 'open' } });
     }
-    k.idx = e.idx;
+    k.queue = k.queue.filter(q => q.number !== e.p.number);
+    k.queue.unshift(e.p); // wieder vorn einreihen (Positionen können sich durch Aktualisierungen verschoben haben)
+    k.idx = 0;
     state.tab = e.kind;
     state.busy = false;
     toast(`↶ Rückgängig: #${e.p.number}`, 'info');
