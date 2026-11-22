@@ -93,7 +93,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
-#foot { display: none; }
+#foot, #foot-in { display: none; }
 /* Touch (Smartphone + Tablet): keine Tastenbezeichnungen, ok / später / ablehnen in EINER Zeile, Rückgängig nur kurz nach einer Aktion */
 @media (pointer: coarse), (max-width: 767px) {
   #actions kbd, #keys, .keyhint { display: none; }
@@ -109,8 +109,12 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #tabs { gap: .25rem; }
   #bar { padding: .5rem .4rem; column-gap: .4rem; }
   #logout { display: none; }                  /* Abmelden steht am Seitenende (#foot) */
-  #foot { display: flex; justify-content: center; margin-top: auto; padding: 1.5rem 0; }   /* ganz am Ende des scrollbaren Inhalts, je eine Zeile Abstand oben/unten */
-  #foot button { min-height: 44px; }
+  /* Abmelden: im Review als LETZTES Element IM scrollbaren Inhalt (#foot-in, über der festen Aktionsleiste, je eine Zeile Abstand);
+     außerhalb des Reviews (Listen, Abschluss) am Seitenende (#foot) */
+  #foot-in { display: flex; justify-content: center; margin-top: auto; padding: 1.5rem 0; }
+  #foot { display: flex; justify-content: center; margin-top: auto; padding: 1.5rem 0; }
+  #review:not([hidden]) ~ #foot { display: none; }
+  #foot button, #foot-in button { min-height: 44px; }
   #edit > button, #edit small { display: none; } /* „Speichern + ok“ ist überflüssig: ok übernimmt geänderte Eingaben */
   #counter, #data-stand { display: none; }   /* Detailzeile („1 / 2 · offen“, „Daten: …“) entfällt; Stand steht im Tooltip von ↻ */
   #tabs { order: 1; flex: 1 1 calc(100% - 44px - .4rem); min-width: 0; }
@@ -131,7 +135,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   /* Smartphone: Review wie eine normale Seite (scrollt mit), Aktionen als feste Leiste unten, Vorschau-Rahmen aus */
   #review { display: block; padding: .5rem; flex: 0 0 auto; min-height: auto; }   /* wächst mit dem Inhalt (sonst schrumpft er auf Viewport-Höhe und der Fuß liegt über dem Inhalt) */
   #left { display: flex; flex-direction: column; overflow: visible; padding: .75rem; }
-  #extra { order: 1; }                         /* Evidenz/Textstelle vor den Aktionen */
+  #extra, #foot-in { order: 1; }               /* Evidenz/Textstelle und Abmelden vor den Aktionen (Abmelden zuletzt im Inhalt) */
   #actions { order: 2; position: sticky; bottom: 0; z-index: 5; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
   #bar { position: static; }                   /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
   #frame, #right { display: none; }            /* Vorschau-Rahmen aus; Website/Endpoint über #open-links (neuer Tab) */

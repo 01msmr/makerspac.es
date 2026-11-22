@@ -79,14 +79,15 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
 $('logout').addEventListener('click', logout);
-$('logout2').addEventListener('click', logout);   // Touch: Abmelden steht am Seitenende (spart Platz oben)
+$('logout2').addEventListener('click', logout);
+$('logout3').addEventListener('click', logout);   // Touch im Review: Abmelden als letztes Element IM scrollbaren Inhalt, über der festen Aktionsleiste   // Touch: Abmelden steht am Seitenende (spart Platz oben)
 $('save-token').addEventListener('click', () => {
   token = $('token').value.trim();
   $('token').value = '';
@@ -189,7 +190,7 @@ async function loadKind(k) {
 
 async function start() {
   $('login').hidden = true;
-  for (const id of ['logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = false;
+  for (const id of ['logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = false;
   try {
     await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
