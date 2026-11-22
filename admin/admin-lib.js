@@ -75,7 +75,7 @@ export function distanceMeters(lat1, lon1, lat2, lon2) {
 const host = u => { try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
 
 /**
- * Vergleichszeilen „bei uns“ vs. „Vorschlag“.
+ * Vergleichszeilen „Aktuell“ vs. „Vorschlag“.
  * @param {object|undefined} loc      Eintrag aus locations.json
  * @param {object|undefined} current  loc-enrichment[ID].spaceapi
  * @param {object|null} data          live geladenes SpaceAPI-JSON (null = nicht ladbar)

@@ -19,8 +19,8 @@
     </nav>
     <button id="tab-problems" data-problems hidden title="Fehlgeschlagene Läufe und hängende Vorschläge">Probleme</button>
     <span id="counter"></span>
-    <span id="data-stand" title="Zeitpunkt und Commit des angezeigten „bei uns“-Stands"></span>
-    <button id="refresh" hidden title="„bei uns“ neu von GitHub laden">↻</button>
+    <span id="data-stand" title="Zeitpunkt und Commit des angezeigten Stands („Aktuell“)"></span>
+    <button id="refresh" hidden title="Aktuellen Stand neu von GitHub laden">↻</button>
     <span class="grow"></span>
     <button id="apply" hidden></button>
     <button id="logout" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button>
@@ -35,6 +35,7 @@
   <main id="review" hidden>
     <section id="left">
       <h2 id="title"></h2>
+      <p id="open-links"><a id="open-site" target="_blank" rel="noopener noreferrer" hidden>Website ↗</a> <a id="open-endpoint" target="_blank" rel="noopener noreferrer" hidden>Endpoint ↗</a></p>
       <div id="problem" hidden></div>
       <table id="compare"></table>
       <p id="hint"></p>
@@ -53,13 +54,13 @@
         <label id="remove-wrap" hidden><input type="checkbox" id="edit-remove"> <span id="remove-text"></span></label>
         <p id="empty-hint" hidden></p>
         <button>Speichern + ok</button>
-        <small>Änderungen werden erst mit <kbd>y</kbd> / „Speichern + ok“ ins Issue geschrieben; das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
+        <small>Änderungen werden erst mit „ok“<span class="keyhint"> (<kbd>y</kbd>)</span> / „Speichern + ok“ ins Issue geschrieben; das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
       </form>
       <div id="actions">
         <button type="button" id="act-y" data-tone="ok"><kbd>y</kbd> ok</button>
-        <button type="button" id="act-n" data-tone="no"><kbd>n</kbd> ablehnen</button>
         <button type="button" id="act-l" data-tone="warn"><kbd>ä</kbd> später</button>
-        <button type="button" id="act-z" data-tone="neutral" disabled><kbd>z</kbd> rückgängig</button>
+        <button type="button" id="act-n" data-tone="no"><kbd>n</kbd> ablehnen</button>
+        <button type="button" id="act-z" data-tone="neutral" hidden><kbd>z</kbd> rückgängig</button>
       </div>
       <p id="keys"><kbd>Esc</kbd> Änderungen verwerfen · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint/Kalender</p>
       <p id="status" role="status"></p>

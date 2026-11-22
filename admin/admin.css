@@ -88,19 +88,29 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
+/* Touch (Smartphone + Tablet): keine Tastenbezeichnungen, ok / später / ablehnen in EINER Zeile, Rückgängig nur kurz nach einer Aktion */
+@media (pointer: coarse), (max-width: 767px) {
+  #actions kbd, #keys, .keyhint { display: none; }
+  #actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+  #actions button { flex: 1 1 0; min-height: 44px; }
+  #act-z { flex-basis: 100%; }                 /* erscheint (9 s) in einer zweiten Zeile */
+  #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
+  #edit-input { min-height: 44px; }
+  input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
+}
+#open-links { display: none; margin: 0 0 .5rem; gap: .5rem; flex-wrap: wrap; }
+#open-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem; border: 1px solid var(--dropdown-border); border-radius: 6px; background: var(--dropdown-bg); color: var(--text-color); text-decoration: none; font-weight: 600; }
+#open-links a[hidden] { display: none; }
+
 @media (max-width: 767px) {
   /* Smartphone: Review wie eine normale Seite (scrollt mit), Aktionen als feste Leiste unten, Vorschau-Rahmen aus */
   #review { display: block; padding: .5rem; }
   #left { display: flex; flex-direction: column; overflow: visible; padding: .75rem; }
-  #extra { order: 1; }                       /* Evidenz/Textstelle vor den Aktionen */
-  #actions { order: 2; position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
-  #actions button { min-height: 44px; }
-  #bar { position: static; }                 /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
-  #actions kbd, #keys, #frame { display: none; }           /* Tastenhinweis irrelevant; Website per „im Tab öffnen“ */
-  #right { margin-top: .5rem; }
-  #tabs button, #logout, #refresh, #viewbar button, #open-tab { min-height: 44px; }
-  input, textarea { font-size: 16px; }       /* verhindert den iOS-Zoom beim Fokussieren */
-  #edit-input, #edit button { min-height: 44px; }
+  #extra { order: 1; }                         /* Evidenz/Textstelle vor den Aktionen */
+  #actions { order: 2; position: sticky; bottom: 0; z-index: 5; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
+  #bar { position: static; }                   /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
+  #frame, #right { display: none; }            /* Vorschau-Rahmen aus; Website/Endpoint über #open-links (neuer Tab) */
+  #open-links { display: flex; }
   #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
