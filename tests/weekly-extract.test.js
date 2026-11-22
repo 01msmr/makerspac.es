@@ -114,3 +114,13 @@ test('Gute Funde bleiben: Bereich „18 bis 22 Uhr“ → Beginn, „weekly open
   assert.deepEqual([f.weekday, f.time, f.confidence], [5, 1900, 'high']);
   assert.equal(pickWeekly(extractWeeklyCandidates('Jeden Mittwoch (ausgenommen Feiertage): Open Lab mit einer kostenlosen Führung um 19 Uhr')).time, 1900);
 });
+
+import { weeklyHint, initHint } from '../tools/weekly-crawler.js';
+
+test('Log-Hinweis: sicherer Fund bei vorhandenem Wert = „vorhanden, nicht überschrieben“', () => {
+  const have = { weekly: { weekday: 3, time: 1700 }, dates: { 'space.init': 20120101 } };
+  assert.match(weeklyHint(have, { confidence: 'high' }), /nicht überschrieben/);
+  assert.match(initHint(have, { confidence: 'high' }), /nicht überschrieben/);
+  assert.equal(weeklyHint(have, { confidence: 'medium' }), 'Weekly medium');
+  assert.equal(weeklyHint({ weekly: { weekday: 9, time: 0 } }, { confidence: 'low', reason: 'mehrere verschiedene Termine' }), 'Weekly low (mehrere verschiedene Termine)');
+});
