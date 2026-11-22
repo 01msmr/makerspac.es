@@ -329,3 +329,22 @@ export function problemReason(comments) {
   const hit = [...bot].reverse().find(c => /^(Nicht übernommen|Endpoint nicht erreichbar)/.test(c.body || ''));
   return hit ? hit.body.trim().slice(0, 600) : '';
 }
+
+// ─── Warteschlange aktuell halten (Tab lange offen) ──────────────────────────
+
+/**
+ * Warteschlange mit der frischen Issue-Liste abgleichen: Was inzwischen geschlossen/freigegeben wurde, fällt heraus;
+ * bereits durchgegangene, noch offene Einträge („später“) kommen ans Ende; das aktuell angezeigte bleibt vorn.
+ * @param {{number:number}[]} oldQueue
+ * @param {number} idx            Position des aktuellen Eintrags in oldQueue
+ * @param {{number:number}[]} fresh frische, noch nicht freigegebene Issues
+ * @param {number|null} currentNumber angezeigtes Issue (null = keins angezeigt)
+ * @returns {{queue: object[], gone: boolean}} gone = das angezeigte Issue ist nicht mehr offen/unfreigegeben
+ */
+export function mergeQueue(oldQueue, idx, fresh, currentNumber = null) {
+  const seen = new Set(oldQueue.slice(0, idx).map(p => p.number));
+  const cur = currentNumber == null ? undefined : fresh.find(p => p.number === currentNumber);
+  const unseen = fresh.filter(p => !seen.has(p.number) && p.number !== currentNumber);
+  const later = fresh.filter(p => seen.has(p.number));
+  return { queue: [...(cur ? [cur] : []), ...unseen, ...later], gone: currentNumber != null && !cur };
+}
