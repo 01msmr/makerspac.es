@@ -44,8 +44,8 @@ test('doppelte IDs werden gefunden; Nicht-Array ist ungültig', () => {
   assert.deepEqual(validateLocations('x'), ['locations.json ist kein Array']);
 });
 
-test('echte locations.json: nur der bekannte Altfehler (ID 126, space.init) wird beanstandet', () => {
+test('echte locations.json ist vollständig valide', () => {
   const locations = JSON.parse(readFileSync(new URL('../locations.json', import.meta.url), 'utf8'));
   const errors = validateLocations(locations);
-  assert.deepEqual(errors.filter(e => !/ID: 126\)/.test(e)), []);
+  assert.deepEqual(errors, []);
 });
