@@ -5,6 +5,7 @@ import {
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
   parseCalendarIssue, replaceEvents, buildCalendarComparison, INBOX_GROUPS, groupInbox,
+  PROBLEM_LABEL, failedRuns, stuckOk, problemReason,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyCssColours } from '../colours.js';
@@ -33,7 +34,7 @@ for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
 
-const state = { undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
+const state = { problems: { runs: [], stuck: [] }, undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
 const cur = () => KINDS[state.tab];
 
 async function gh(path, { method = 'GET', body } = {}) {
@@ -114,6 +115,7 @@ async function start() {
     ]);
     state.locations = new Map(locs.map(l => [l.ID, l]));
     state.enrichment = enr;
+    await loadProblems().catch(() => { /* Probleme-Reiter bleibt leer */ });
   } catch (err) {
     $('done').hidden = false;
     $('done').textContent = `Fehler: ${err.message}`;
@@ -138,6 +140,8 @@ for (const btn of document.querySelectorAll('#tabs button')) {
     show();
   });
 }
+
+$('tab-problems').addEventListener('click', () => { if (!state.busy) showProblems(); });
 
 // ─── Listen-Reiter: offene PRs/Issues ohne eigenen Review-Ablauf (nur Anzeige + Link zu GitHub) ───
 async function loadInbox() {
@@ -186,13 +190,74 @@ async function showList(key) {
   updateBar();
 }
 
+// ─── Probleme-Reiter: fehlgeschlagene Läufe + hängende ok-Issues (Anzeige + Links) ───
+const problemCount = () => state.problems.runs.length + state.problems.stuck.length;
+
+async function loadProblems() {
+  const since = new Date(Date.now() - 24 * 3600e3).toISOString();
+  const data = await gh(`/repos/${REPO}/actions/runs?per_page=100&created=%3E${encodeURIComponent(since)}`);
+  state.problems.runs = failedRuns(data.workflow_runs || [], Date.now());
+  state.problems.stuck = stuckOk(state.inboxItems, Date.now());
+}
+
+function renderProblems() {
+  const box = $('inbox');
+  box.replaceChildren();
+  const { runs, stuck } = state.problems;
+  box.append(Object.assign(document.createElement('h2'), { textContent: `Probleme (${runs.length + stuck.length})` }));
+  if (!runs.length && !stuck.length) { box.append('Alles in Ordnung — keine fehlgeschlagenen Läufe, keine hängenden Vorschläge.'); return; }
+  const section = (title, hint, items, label) => {
+    if (!items.length) return;
+    box.append(Object.assign(document.createElement('h3'), { textContent: `${title} (${items.length})` }), Object.assign(document.createElement('p'), { className: 'hint', textContent: hint }));
+    const ul = document.createElement('ul');
+    for (const it of items) {
+      const li = document.createElement('li');
+      const a = Object.assign(document.createElement('a'), { href: it.url, target: '_blank', rel: 'noopener', textContent: label(it) });
+      li.append(a);
+      ul.append(li);
+    }
+    box.append(ul);
+  };
+  section('Fehlgeschlagene Läufe (24 h)', 'Der jeweils neueste Lauf des Workflows ist fehlgeschlagen; ein späterer grüner Lauf löst den Eintrag auf.', runs,
+    r => `${r.name}${r.title && r.title !== r.name ? ` — ${r.title}` : r.branch ? ` — ${r.branch}` : ''} · ${r.at.replace('T', ' ').slice(0, 16)} UTC`);
+  section('Seit über 2 h mit „ok“, aber noch offen', 'Wird normalerweise vom Auto-Apply-Cron (alle 15 Min) übernommen — hängt der Workflow? Unter „Übernehmen“ manuell starten oder Fehler im Actions-Log prüfen.', stuck,
+    s => `#${s.number} ${s.title} · seit ${s.hours} h`);
+}
+
+async function showProblems() {
+  state.list = 'problems';
+  $('review').hidden = true;
+  $('done').hidden = true;
+  $('inbox').hidden = false;
+  $('inbox').textContent = 'Lade …';
+  updateBar();
+  try { await loadInbox(); await loadProblems(); } catch (err) { $('inbox').textContent = `Fehler: ${err.message}`; return; }
+  renderProblems();
+  updateBar();
+}
+
+/** Grund anzeigen, warum ein Vorschlag zurückkam (letzter Bot-Kommentar) */
+function showProblemReason(p) {
+  const box = $('problem');
+  box.hidden = !p.problem;
+  box.replaceChildren();
+  if (!p.problem) return;
+  box.textContent = '⚠ Zuvor nicht übernommen — Grund wird geladen …';
+  gh(`/repos/${REPO}/issues/${p.number}/comments?per_page=100`).then(cs => {
+    if (state.current !== p) return;
+    box.replaceChildren(Object.assign(document.createElement('strong'), { textContent: '⚠ Zuvor nicht übernommen' }), document.createElement('br'),
+      problemReason(cs) || 'Kein Kommentar des Bots gefunden — siehe Issue auf GitHub.');
+  }).catch(() => { if (state.current === p) box.textContent = '⚠ Zuvor nicht übernommen (Grund konnte nicht geladen werden).'; });
+}
+
 // ─── Anzeige ─────────────────────────────────────────────────────────────
 const openCount = k => Math.max(0, k.queue.length - k.idx);
 
 function updateBar() {
   for (const [name, k] of Object.entries(KINDS)) {
     const b = $(`tab-${name}`);
-    b.textContent = `${k.label} (${openCount(k)})`;
+    const pc = k.queue.slice(k.idx).filter(q => q.problem).length;
+    b.textContent = `${k.label} (${openCount(k)})${pc ? ` ⚠${pc}` : ''}`;
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
@@ -204,6 +269,10 @@ function updateBar() {
     b.textContent = `${label} (${n})`;
     b.setAttribute('aria-pressed', String(state.list === key));
   }
+  const np = problemCount();
+  $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
+  $('tab-problems').textContent = `Probleme (${np})`;
+  $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   $('act-z').disabled = state.undo.length === 0;
   const k = cur();
   $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
@@ -246,6 +315,7 @@ async function show() {
   $('done').hidden = true;
   $('review').hidden = false;
   state.current = p;
+  showProblemReason(p);
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
   $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
@@ -382,6 +452,7 @@ async function act(action, value) {
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
       toast(`✗ #${p.number} abgelehnt (geschlossen)`, 'no', { withUndo: true });
     }
+    if (p.problem && action !== 'n') gh(`/repos/${REPO}/issues/${p.number}/labels/${PROBLEM_LABEL}`, { method: 'DELETE' }).catch(() => { /* Label schon weg */ });
     state.undo.push(entry);
     k.idx++;
     state.busy = false;

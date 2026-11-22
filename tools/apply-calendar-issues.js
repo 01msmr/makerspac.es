@@ -245,6 +245,7 @@ async function main() {
         const cwd = path.join(__dirname, '..');
         execFileSync('gh', ['issue', 'comment', String(item.issueNumber), '--body', rejectionComment(invalid)], { cwd, stdio: 'pipe' });
         execFileSync('gh', ['issue', 'edit', String(item.issueNumber), '--remove-label', 'ok'], { cwd, stdio: 'pipe' });
+        execFileSync('gh', ['api', 'repos/{owner}/{repo}/issues/' + item.issueNumber + '/labels', '-X', 'POST', '-f', 'labels[]=problem'], { cwd, stdio: 'pipe' });
       } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
     }
   }

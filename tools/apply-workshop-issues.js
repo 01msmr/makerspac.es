@@ -151,6 +151,7 @@ async function main() {
       try {
         execFileSync('gh', ['issue', 'comment', String(item.issueNumber), '--body', rejectionComment(invalid)], { cwd: root, stdio: 'pipe' });
         execFileSync('gh', ['issue', 'edit', String(item.issueNumber), '--remove-label', 'ok'], { cwd: root, stdio: 'pipe' });
+        execFileSync('gh', ['api', 'repos/{owner}/{repo}/issues/' + item.issueNumber + '/labels', '-X', 'POST', '-f', 'labels[]=problem'], { cwd: root, stdio: 'pipe' });
       } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
     }
   }

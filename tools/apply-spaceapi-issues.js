@@ -66,6 +66,9 @@ export async function checkEndpoint(url, fetchImpl = fetch) {
   }
 }
 
+/** Label „problem“ setzen (REST legt es beim ersten Mal an) — /admin/ zeigt zurückgegebene Vorschläge damit markiert + mit Grund */
+const markProblem = n => gh('api', 'repos/{owner}/{repo}/issues/' + n + '/labels', '-X', 'POST', '-f', 'labels[]=problem');
+
 const gh = (...args) => execFileSync('gh', args, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
 
 // === Main ===
@@ -110,6 +113,7 @@ async function main() {
           gh('issue', 'comment', String(p.issueNumber), '--body',
             `Endpoint nicht erreichbar / kein gueltiges SpaceAPI-JSON (${check.reason}). Nicht uebernommen, Label "${OK_LABEL}" entfernt.`);
           gh('issue', 'edit', String(p.issueNumber), '--remove-label', OK_LABEL);
+          markProblem(p.issueNumber);
         }
         continue;
       }
@@ -119,7 +123,7 @@ async function main() {
     if (invalid.length) {
       console.log(`❌ #${p.issueNumber}: ${invalid.join('; ')} — uebersprungen`);
       if (applyMode) {
-        try { gh('issue', 'comment', String(p.issueNumber), '--body', rejectionComment(invalid)); gh('issue', 'edit', String(p.issueNumber), '--remove-label', OK_LABEL); } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
+        try { gh('issue', 'comment', String(p.issueNumber), '--body', rejectionComment(invalid)); gh('issue', 'edit', String(p.issueNumber), '--remove-label', OK_LABEL); markProblem(p.issueNumber); } catch (err) { console.error(`   Kommentar/Label fehlgeschlagen: ${err.message}`); }
       }
       continue;
     }
