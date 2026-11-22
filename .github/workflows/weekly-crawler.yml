@@ -1,6 +1,6 @@
 # Zweck:  Findet Weekly-Treffen + Gründungsdatum auf Space-Websites (regelbasiert, ohne KI) → Issues „Treffen-Daten: <Name>“ (Label weekly-data).
 # Wann: Spaces mit Platzhalter bei weekly bzw. space.init.
-# Ablauf: dry-run (Vorschau) → create-issues → Prüfen im /admin/ (Reiter „Treffen“) → Apply Weekly Issues.
+# Monatlich (Cron) läuft er im Modus create-issues; manuell wählbar. Ablauf: dry-run (Vorschau) → create-issues → Prüfen im /admin/ (Reiter „Treffen“) → Apply Weekly Issues.
 
 name: "🔍 Weekly Crawler"
 
@@ -8,6 +8,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
+  schedule:
+    - cron: "17 3 1 * *"   # monatlich am 1., legt nur NEUE Vorschläge an (Inhaltsprüfung, keine Doppelten)
   workflow_dispatch:
     inputs:
       mode:
@@ -53,7 +55,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ARGS=""
-          if [ "${{ inputs.mode }}" = "create-issues" ]; then ARGS="$ARGS --create-issues"; fi
+          # Cron-Läufe haben keine Eingaben (leer) → create-issues; nur ein ausdrückliches dry-run legt nichts an
+          if [ "${{ inputs.mode }}" != "dry-run" ]; then ARGS="$ARGS --create-issues"; fi
           if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
           if [ -n "${{ inputs.id }}" ]; then ARGS="$ARGS --id ${{ inputs.id }}"; fi
           echo "Running: node tools/weekly-crawler.js $ARGS"
