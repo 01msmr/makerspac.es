@@ -178,7 +178,7 @@ embed-overlay.js    → Embed-Overlay UI
 demo-mode.js        → Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode)
 error-monitor.js    → Dev-Tool, Fehler-Overlay
 add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
-sw.js               → Service Worker (Cache-First / SWR; `/admin/` ausgenommen)
+sw.js               → Service Worker (Cache-First / SWR; Daten-JSON Netz zuerst; `/admin/` ausgenommen)
 admin/              → Review-Seite für SpaceAPI-Issues (index.html, admin.js, admin-lib.js, admin.css; ADR-006)
 generate-map-splits.js → Dev-Tool: erzeugt Karten-Splits (`npm run generate`)
 ```

@@ -49,6 +49,11 @@
         Header set Cache-Control "max-age=600, must-revalidate"
     </FilesMatch>
 
+    # Daten-Splits der Karte: immer revalidieren (ETag/304 ist billig) — sonst sind Änderungen nach einem Deploy bis zu 10 Min. unsichtbar
+    <FilesMatch "^(markers|spaces-[a-z]+|splits-manifest)\.json$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
     # status.json: IMMER beim Server nachfragen — Live-Öffnungsstatus,
     # muss jederzeit aktuell sein (304 wenn unverändert, dank ETag billig)
     <FilesMatch "^status\.json$">

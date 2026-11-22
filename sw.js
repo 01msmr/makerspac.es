@@ -1,11 +1,11 @@
 // Service Worker – makerspac.es
 // Strategie:
 //   Cache-First  → Libs, Fonts, Icons, CSS (statische Assets)
-//   SWR          → locations.json, status.json (Daten zeigen, im Hintergrund aktualisieren)
+//   Netz zuerst  → Daten-JSON (markers/spaces-*/splits-manifest/locations): nach einem Deploy sofort frisch, Cache nur offline / bei Netz > 4 s
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v120'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v121'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -161,10 +161,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // JSON-Daten → Stale-While-Revalidate
-  // DATA_URLS: exakte Pfad-Matches; zusätzlich /data/spaces-*.json per Regex
+  // JSON-Daten → Netz zuerst (Stale-While-Revalidate zeigte nach einem Deploy erst beim 2. Laden die neuen Daten);
+  // Cache nur als Rückfall (offline / Netz zu langsam). DATA_URLS: exakte Pfad-Matches; zusätzlich /data/spaces-*.json per Regex
   if (DATA_URLS.some(u => path.endsWith(u)) || /^\/data\/spaces-[a-z]+\.json$/.test(path)) {
-    event.respondWith(staleWhileRevalidate(request, CACHE_DATA));
+    event.respondWith(networkFirstFresh(request, CACHE_DATA));
     return;
   }
 
@@ -195,6 +195,27 @@ async function networkFirst(request, cacheName) {
     return response;
   } catch {
     return caches.match(request);
+  }
+}
+
+/**
+ * Daten: immer beim Server nachfragen (cache: 'no-cache' umgeht auch den HTTP-Cache, ETag/304 hält es billig).
+ * Gibt es schon eine Kopie, gilt das Netz höchstens `timeoutMs`; danach (oder offline/Fehler) kommt die Kopie, und die
+ * frische Antwort aktualisiert den Cache trotzdem noch.
+ */
+async function networkFirstFresh(request, cacheName, timeoutMs = 4000) {
+  const cache = await caches.open(cacheName);
+  const fresh = fetch(request, { cache: 'no-cache' }).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  });
+  fresh.catch(() => {}); // Fehler nach einem Timeout nicht als unbehandelt melden
+  const cached = await cache.match(request);
+  if (!cached) return fresh;
+  try {
+    return await Promise.race([fresh, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))]);
+  } catch {
+    return cached;
   }
 }
 
