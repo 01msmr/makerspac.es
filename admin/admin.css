@@ -93,7 +93,8 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #actions kbd, #keys, .keyhint { display: none; }
   #actions { display: flex; flex-wrap: wrap; gap: .4rem; }
   #actions button { flex: 1 1 0; min-height: 44px; }
-  #act-z { flex-basis: 100%; }                 /* erscheint (9 s) in einer zweiten Zeile */
+  #actions #act-n { flex: .6 1 0; margin-left: 1rem; }  /* schmaler + Abstand zu „später“ (Fehltipp vermeiden: ablehnen schließt das Issue) */
+  #actions #act-z { flex-basis: 100%; }                 /* erscheint (9 s) in einer zweiten Zeile */
   #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
   #edit-input { min-height: 44px; }
   input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
