@@ -12,6 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { loadMergedLocations, loadExistingIssueIds, selectSpaces } from './lib/crawl-selection.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -369,8 +370,9 @@ async function main() {
   if (targetId) console.log(`Ziel-ID: ${targetId}`);
   console.log('');
 
-  const locationsPath = path.join(__dirname, '..', 'locations.json');
-  const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
+  // Ist-Stand = verschmolzen (locations.json + loc-enrichment.json), wie die Karte
+  const root = path.join(__dirname, '..');
+  const locations = loadMergedLocations(root);
 
   let spaces = locations.slice(1);
 
@@ -381,8 +383,11 @@ async function main() {
       process.exit(1);
     }
   } else {
-    // Nur Spaces ohne events-Feld und mit Website
-    spaces = spaces.filter(s => !s.events && s.link && s.link.url);
+    // Nur Spaces ohne events-Link (verschmolzener Stand), mit Website und ohne vorhandenes Kalenderlink-Issue
+    const existingIds = loadExistingIssueIds({ label: 'data-update', prefix: 'Kalenderlink:', required: createIssues, root });
+    const sel = selectSpaces(spaces.filter(s => s.link && s.link.url), { hasData: s => !!s.events, existingIds });
+    console.log(`Übersprungen: ${sel.skippedData} mit vorhandenem Kalenderlink (locations.json + loc-enrichment.json), ${sel.skippedIssue} mit vorhandenem Issue (offen oder geschlossen)`);
+    spaces = sel.selected;
   }
 
   if (limit && limit < spaces.length) {

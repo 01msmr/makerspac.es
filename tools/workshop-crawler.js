@@ -17,6 +17,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { WORKSHOP_KEYWORDS } from '../workshop-keywords.js';
+import { loadMergedLocations, loadExistingIssueIds, selectSpaces } from './lib/crawl-selection.js';
 
 // Enrichment-Datei
 const ENRICHMENT_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'loc-enrichment.json');
@@ -397,15 +398,19 @@ async function main() {
   if (targetId) console.log(`Ziel-ID: ${targetId}`);
   console.log('');
 
-  const locationsPath = path.join(__dirname, '..', 'locations.json');
-  const locations = JSON.parse(fs.readFileSync(locationsPath, 'utf8'));
+  // Ist-Stand = verschmolzen (locations.json + loc-enrichment.json), wie die Karte
+  const root = path.join(__dirname, '..');
+  const locations = loadMergedLocations(root);
 
   let spaces = locations;
   if (targetId) {
     spaces = spaces.filter(s => s.ID === targetId);
     if (!spaces.length) { console.error(`ID ${targetId} nicht gefunden.`); process.exit(1); }
   } else if (!force) {
-    spaces = spaces.filter(s => !s.workshops || s.workshops.length === 0);
+    const existingIds = loadExistingIssueIds({ label: ISSUE_LABEL, prefix: '[Workshop-Daten]', required: createIssues, root });
+    const sel = selectSpaces(spaces, { hasData: s => s.workshops?.length > 0, existingIds });
+    console.log(`Übersprungen: ${sel.skippedData} mit vorhandenen Workshops (locations.json + loc-enrichment.json), ${sel.skippedIssue} mit vorhandenem Issue (offen oder geschlossen)`);
+    spaces = sel.selected;
   }
   if (limit && limit < spaces.length) spaces = spaces.slice(0, limit);
 
