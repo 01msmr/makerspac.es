@@ -19,11 +19,14 @@ export function stampEntries(locations, ids, today = berlinToday()) {
   return n;
 }
 
-/** Liest/schreibt locations.json im vorhandenen Format (2 Spaces, Zeilenende wie vorher). */
-export function stampLocationsFile(file, ids, today = berlinToday()) {
+/** Liest/schreibt locations.json im vorhandenen Format (2 Spaces, Zeilenende wie vorher). Optional `inits`: Map id → space.init. */
+export function stampLocationsFile(file, ids, today = berlinToday(), { inits } = {}) {
   const raw = fs.readFileSync(file, 'utf8');
   const locations = JSON.parse(raw);
-  const n = stampEntries(locations, ids, today);
+  // optional: space.init je ID setzen (Map id → YYYYMMDD) — gleiche Datei, ein Schreibvorgang
+  for (const loc of locations) if (inits?.has(loc.ID)) loc.dates = { ...loc.dates, 'space.init': inits.get(loc.ID) };
+  let n = stampEntries(locations, [...ids, ...(inits?.keys() ?? [])], today);
+  if (inits?.size && !n) n = inits.size;
   if (n) fs.writeFileSync(file, JSON.stringify(locations, null, 2) + (raw.endsWith('\n') ? '\n' : ''), 'utf8');
   return n;
 }

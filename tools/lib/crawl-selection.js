@@ -12,11 +12,13 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { applyEnrichment, normalizeUrl } from '../../enrichment-merge.js';
+import { deltaKey } from './weekly-extract.js';
 export { normalizeUrl }; // Re-Export: Single Source of Truth liegt in enrichment-merge.js
 
 const RE_BODY_ID = /\*\*ID:\*\*\s*(\d+)/;
 const RE_TITLE_ID = /\(#(\d+)\)\s*$|\(ID:?\s*(\d+)\)/;
 const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
+const RE_WEEKLY = /```json\s*(\{[\s\S]*?\})\s*```/;
 const RE_EVENTS = /```json\s*\{\s*"events":\s*"([^"]+)"\s*\}\s*```/s;
 
 /** locations.json mit angewendetem Enrichment (== Karten-Daten) */
@@ -43,7 +45,7 @@ export function sameWorkshops(a, b) {
 
 /**
  * Inhalt, den ein vorhandenes Crawler-Issue vorschlägt.
- * workshops → string[] | null · events → normalisierte URL | null (null = kein Fund / kein Block)
+ * workshops → string[] | null · events → normalisierte URL | null · weekly → deltaKey (String) | null (null = kein Fund / kein Block)
  */
 export function proposalFromIssue(issue, kind) {
   const body = issue.body || '';
@@ -51,6 +53,11 @@ export function proposalFromIssue(issue, kind) {
     const m = body.match(RE_WORKSHOPS);
     if (!m) return null;
     try { const v = JSON.parse(m[1]); return Array.isArray(v) ? v : null; } catch { return null; }
+  }
+  if (kind === 'weekly') {
+    const m = body.match(RE_WEEKLY);
+    if (!m) return null;
+    try { return deltaKey(JSON.parse(m[1])); } catch { return null; }
   }
   const m = body.match(RE_EVENTS);
   return m ? normalizeUrl(m[1]) : null;
@@ -64,7 +71,7 @@ const sameProposal = (kind, a, b) => (kind === 'workshops'
  * Entscheidet über einen Crawler-Fund anhand der INHALTE.
  *  - skip: Fund == integrierter Stand, oder == jüngster früherer Vorschlag (Website seit dem letzten Crawl unverändert)
  *  - propose: jede andere Abweichung = neuere Änderung; offene ältere Vorschläge mit anderem Inhalt werden ersetzt
- * @param {{kind:'workshops'|'events', found:string[]|string|null, integrated?:string[]|string|null, issues:{number:number,state:string,createdAt:string,body:string}[]}} a
+ * @param {{kind:'workshops'|'events'|'weekly', found:string[]|string|null, integrated?:string[]|string|null, issues:{number:number,state:string,createdAt:string,body:string}[]}} a
  * @returns {{action:'skip'|'propose', reason:string, supersede:number[]}}
  */
 export function decideProposal({ kind, found, integrated, issues }) {

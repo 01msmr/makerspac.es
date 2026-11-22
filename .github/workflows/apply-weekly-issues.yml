@@ -1,0 +1,84 @@
+# Zweck:  Übernimmt „Treffen-Daten:“-Issues: weekly → loc-enrichment.json, space.init → locations.json (+ space.edited.latest), schließt sie, deployt.
+# apply-ok: nur Issues mit Label „ok“ (gesetzt von /admin/) — 1 Commit, 1 Deploy. Ablehnen = Issue schließen.
+
+name: "✅ Apply Weekly Issues"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus — dry-run = Vorschau · apply = alle offenen · apply-ok = nur Label ok (Admin-Review)"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "apply"
+          - "apply-ok"
+        default: "dry-run"
+      id:
+        description: "Einzelne Space-ID (0 = alle)"
+        required: false
+        type: number
+        default: 0
+
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Apply Script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
+          if [ "${{ inputs.mode }}" = "apply-ok" ]; then ARGS="$ARGS --apply --only-ok"; fi
+          if [ "${{ inputs.id }}" != "0" ]; then ARGS="$ARGS --id ${{ inputs.id }}"; fi
+          echo "Running: node tools/apply-weekly-issues.js $ARGS"
+          node tools/apply-weekly-issues.js $ARGS
+
+      - name: Validate
+        if: ${{ inputs.mode == 'apply' || inputs.mode == 'apply-ok' }}
+        uses: ./.github/actions/validate-data
+
+      - name: Commit data
+        id: commit
+        if: ${{ inputs.mode == 'apply' || inputs.mode == 'apply-ok' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add loc-enrichment.json locations.json
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: apply weekly meeting / founding date from issues"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Deploy
+        if: ${{ steps.commit.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy.yml --repo ${{ github.repository }}

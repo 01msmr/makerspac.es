@@ -1,6 +1,7 @@
 // admin/admin-lib.js — pure Funktionen der Review-Seite (kein DOM, kein fetch → testbar)
 
 import { WORKSHOP_TYPES } from '../workshop-types.js';
+import { WEEKDAY_NAMES } from '../date-utils.js';
 import { detectTypesLoose } from '../workshop-keywords.js';
 
 export const REPO = '01msmr/makerspac.es';
@@ -256,6 +257,93 @@ export function buildCalendarComparison(loc, currentEvents, proposed, confidence
   ];
 }
 
+// ─── Treffen (Weekly + Gründung) ─────────────────────────────────────────
+
+const WEEKDAY_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];   // Index = Wochentag (0 = Sonntag, wie date-utils.js)
+const RE_WEEKLY_BLOCK = /```json\s*(\{[\s\S]*?\})\s*```/;
+
+/** 1900 → "19:00" */
+export const formatTime = t => String(t).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2');
+
+/** 20150501 → "2015-05-01"; Platzhalter/leer → "–" (wie formatEditDate) */
+export const formatInit = n => (n && n !== 20010000 ? formatEditDate(n) : '–');
+
+/** Weekly als Text: "Di 19:00" (kein Wert / Platzhalter → "–") */
+export function formatWeekly(w) {
+  return w && w.weekday >= 0 && w.weekday <= 6 && w.time ? `${WEEKDAY_SHORT[w.weekday]} ${formatTime(w.time)}` : '–';
+}
+
+/** @returns {{number,title,spaceId,weekly?,init?,ok,problem,url,updated,website}|null} */
+export function parseWeeklyIssue(issue) {
+  if (!issue?.title?.startsWith('Treffen-Daten:') || issue.pull_request) return null;
+  const body = issue.body || '';
+  const id = body.match(RE_ID), js = body.match(RE_WEEKLY_BLOCK);
+  if (!id || !js) return null;
+  let v;
+  try { v = JSON.parse(js[1]); } catch { return null; }
+  const weekly = v.weekly && Number.isInteger(v.weekly.weekday) ? { weekday: v.weekly.weekday, time: v.weekly.time } : undefined;
+  const init = Number.isInteger(v['space.init']) ? v['space.init'] : undefined;
+  if (!weekly && init === undefined) return null;
+  return {
+    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), weekly, init,
+    ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
+    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0, website: body.match(RE_WEBSITE)?.[1] ?? '',
+  };
+}
+
+/** Eingabefeld-Text des Vorschlags: "Di 19:00, 2015-05-01" */
+export const weeklyText = p => [p.weekly ? formatWeekly(p.weekly) : '', p.init !== undefined ? formatInit(p.init) : ''].filter(x => x && x !== '–').join(', ');
+
+/**
+ * "Di 19:00, 2015" → {weekly?, init?}; null bei Unlesbarem. Wochentag: So/Mo/…/Sa bzw. ausgeschrieben;
+ * Gründung: YYYY (→ YYYY0101), YYYY-MM (→ YYYYMM01), YYYY-MM-DD oder YYYYMMDD.
+ */
+export function parseWeeklyInput(text) {
+  const out = {};
+  for (const part of String(text).split(/[,;|]/).map(x => x.trim()).filter(Boolean)) {
+    let m;
+    if ((m = part.match(/^([A-Za-zäöü]{2,10})\.?\s+(\d{1,2})[:.](\d{2})$/))) {
+      const w = WEEKDAY_SHORT.findIndex(d => d.toLowerCase() === m[1].toLowerCase().slice(0, 2)) ;
+      const long = WEEKDAY_NAMES.findIndex(d => d.toLowerCase() === m[1].toLowerCase());
+      const de = ['sonntag', 'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag'].indexOf(m[1].toLowerCase());
+      const weekday = de >= 0 ? de : long >= 0 ? long : (m[1].length === 2 ? w : -1);
+      const h = parseInt(m[2], 10), min = parseInt(m[3], 10);
+      if (weekday < 0 || h > 23 || min > 59) return null;
+      out.weekly = { weekday, time: h * 100 + min };
+    } else if ((m = part.match(/^((?:19|20)\d{2})(?:-?(\d{2}))?(?:-?(\d{2}))?$/))) {
+      const mo = m[2] ? parseInt(m[2], 10) : 1, d = m[3] ? parseInt(m[3], 10) : 1;
+      if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+      out.init = parseInt(m[1], 10) * 10000 + mo * 100 + d;
+    } else return null;
+  }
+  return out.weekly || out.init !== undefined ? out : null;
+}
+
+/** Ersetzt den JSON-Block durch den geparsten Text; null bei ungültiger Eingabe / fehlendem Block. */
+export function replaceWeekly(body, text) {
+  const v = parseWeeklyInput(text);
+  if (!v || !RE_WEEKLY_BLOCK.test(body)) return null;
+  const block = {};
+  if (v.weekly) block.weekly = v.weekly;
+  if (v.init !== undefined) block['space.init'] = v.init;
+  return body.replace(RE_WEEKLY_BLOCK, () => '```json\n' + JSON.stringify(block, null, 2) + '\n```');
+}
+
+export function buildWeeklyComparison(loc, current, p) {
+  const dash = '–';
+  const curW = formatWeekly(current?.weekly), curI = formatInit(current?.dates?.['space.init']);
+  const propW = p.weekly ? formatWeekly(p.weekly) : dash, propI = p.init !== undefined ? formatInit(p.init) : dash;
+  return [
+    { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
+    { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
+    { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
+    editedRow(loc),
+    { label: 'Treffen', ours: curW, proposed: propW, differs: !!p.weekly && curW !== propW },
+    { label: 'Gründung', ours: curI, proposed: propI, differs: p.init !== undefined && curI !== propI },
+  ];
+}
+
 // ─── Listen-Reiter (alles ohne eigenen Review-Ablauf; nur Anzeige + Link zu GitHub) ─
 
 /** [Schlüssel, Reiter-Name, Überschrift] */
@@ -276,6 +364,7 @@ export function classifyItem(item) {
   if (item.pull_request) return 'pr';
   if (title.startsWith('SpaceAPI:') || title.startsWith('[Workshop-Daten]')) return null;
   if (title.startsWith('Kalenderlink:')) return parseCalendarIssue(item) ? null : 'calendar0';
+  if (title.startsWith('Treffen-Daten:')) return parseWeeklyIssue(item) ? null : 'data';
   if (title.startsWith('Datenvorschlag:')) return 'data';
   if (hasLabel(item, 'add-space')) return 'add';
   if (hasLabel(item, 'update-space')) return 'update';
