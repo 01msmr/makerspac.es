@@ -109,7 +109,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #tabs { gap: .25rem; }
   #bar { padding: .5rem .4rem; column-gap: .4rem; }
   #logout { display: none; }                  /* Abmelden steht am Seitenende (#foot) */
-  #foot { display: flex; justify-content: center; padding: .5rem 0 1rem; }
+  #foot { display: flex; justify-content: center; margin-top: auto; padding: .5rem 0 1rem; }   /* ganz unten im Inhaltsbereich (auch bei kurzem Inhalt) */
   #foot button { min-height: 44px; }
   #edit > button, #edit small { display: none; } /* „Speichern + ok“ ist überflüssig: ok übernimmt geänderte Eingaben */
   #counter, #data-stand { display: none; }   /* Detailzeile („1 / 2 · offen“, „Daten: …“) entfällt; Stand steht im Tooltip von ↻ */
@@ -138,7 +138,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #open-links { display: flex; margin: 0 0 .25rem; }
   #left h2 { margin: 0 0 .4rem; font-size: 1.05rem; }
   #compare tr[data-row="Name"], #compare tr[data-row="Website"] { display: none; }   /* Name steht im Titel, Website als Link */
-  #foot { padding-bottom: 4.5rem; }            /* Platz für die Aktionsleiste */
+  #review:not([hidden]) ~ #foot { padding-bottom: 4.5rem; }   /* Platz für die feste Aktionsleiste (nur im Review) */
   #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
