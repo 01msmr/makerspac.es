@@ -99,7 +99,7 @@
 | `error-monitor.js` | Dev-Tool, Fehler-Overlay, globales Error-Logging | `errorMonitor` (export), `window.AppErrorMonitor` |
 | `spaceapi-static.js` | SpaceAPI-Status-Verarbeitung | `StaticSpaceAPI` (export) |
 | `add-space-form.js` | Add-Space-Formular (GitHub-Issue-Submit, Geocoding, Autocomplete) | `handleSubmit`, `initStreetAutocomplete` u.a. (export) |
-| `sw.js` | Service Worker (Cache-First / SWR / Network-First) | — |
+| `sw.js` | Service Worker: Cache-First (Libs/CSS/JS), SWR (HTML), **Netz zuerst mit Cache-Rückfall `networkFirstFresh`** für Daten-JSON (`markers`, `spaces-*`, `splits-manifest`, `locations`; Timeout 4 s, `cache: 'no-cache'`) und `status.json`. `.htaccess`: Daten-Splits `no-cache` (ETag/304) statt 10 Min. | `networkFirstFresh` |
 | `fetch-spaceapi-status.js` | **Node.js** Cron-Script — SpaceAPI-Endpunkte abfragen → status.json | — |
 | `generate-map-splits.js` | **Node.js** Build-Script — locations.json + loc-enrichment.json → data/*.json | — |
 | `tools/spaceapi-directory-sync.js` | **Node.js** Cron-Script (wöchentlich) — directory.spaceapi.io mit loc-enrichment.json abgleichen → Issues `SpaceAPI: <Name>` (Label `data-update`) | `normalizeUrl`, `matchSpace`, `buildProposals`, `isAlreadyProposed`, `buildIssueBody` (export) |
