@@ -279,3 +279,31 @@ test('Parser setzen das problem-Flag aus dem Label', () => {
   assert.equal(parseIssue({ ...base, labels: [{ name: PROBLEM_LABEL }] }).problem, true);
   assert.equal(parseIssue({ ...base, labels: [] }).problem, false);
 });
+
+test('replaceWorkshops: Modus „ersetzen“ — leere Liste (entfernen) nur mit Modus, Marker idempotent und rücknehmbar', () => {
+  const body = WBODY(['3d']);
+  assert.equal(replaceWorkshops(body, []), null);                      // leer ohne Modus: ungültig
+  const rm = replaceWorkshops(body, [], true);
+  assert.match(rm, /\*\*ID:\*\* 122\n\*\*Modus:\*\* ersetzen/);
+  assert.match(rm, /"workshops": \[\]/);
+  const p = parseWorkshopIssue({ ...wissue(['3d']), body: rm });
+  assert.deepEqual(p.workshops, []); assert.equal(p.replace, true);   // Admin liest „entfernen“ wieder ein
+  assert.equal(replaceWorkshops(rm, ['wood'], true).match(/Modus/g).length, 1);          // kein Doppel-Marker
+  assert.doesNotMatch(replaceWorkshops(rm, ['wood'], false), /Modus/);                   // zurück auf „nur Lücken füllen“
+  assert.equal(parseWorkshopIssue({ ...wissue(['3d']), body: WBODY([]) }), null);        // leer ohne Modus bleibt ungültig
+});
+
+test('buildWorkshopComparison: Entfernen wird als solches angezeigt und gelb markiert', () => {
+  const row = buildWorkshopComparison({ name: 'X' }, ['wood'], []).find(r => r.label === 'Workshops');
+  assert.equal(row.proposed, '(entfernen)'); assert.equal(row.differs, true); assert.equal(row.warn, true);
+});
+
+test('Apply-Skript: Modus „ersetzen“ erlaubt leere Liste (entfernen), sonst nicht', () => {
+  const body = WBODY([]);
+  assert.equal(parseWorkshopForApply({ ...wissue([], ['ok']), body }), null);
+  const rm = parseWorkshopForApply({ ...wissue([], ['ok']), body: replaceWorkshops(WBODY(['3d']), [], true) });
+  assert.deepEqual([rm.workshops, rm.replace, rm.spaceId], [[], true, 122]);
+  const rep = parseWorkshopForApply({ ...wissue(['3d'], ['ok']), body: replaceWorkshops(WBODY(['3d']), ['wood', 'metal'], true) });
+  assert.deepEqual([rep.workshops, rep.replace], [['wood', 'metal'], true]);
+  assert.equal(parseWorkshopForApply({ ...wissue(['3d'], ['ok']) }).replace, false); // normaler Vorschlag: Lücken füllen
+});

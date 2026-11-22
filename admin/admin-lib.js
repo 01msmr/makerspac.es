@@ -102,6 +102,7 @@ export function buildComparison(loc, current, data, endpoint) {
 
 const RE_WORKSHOPS = /```json\s*"workshops":\s*(\[[^\]]*\])\s*```/s;
 const RE_APPROVED = /- \[x\] Freigegeben/i;
+const RE_REPLACE = /\*\*Modus:\*\*\s*ersetzen/i; // vom Admin geschrieben: bestehende Workshops ersetzen/entfernen (siehe tools/apply-workshop-issues.js)
 const RE_WEBSITE = /\*\*Website:\*\*\s*(\S+)/;
 const RE_ROW = /^\|\s*`([^`]+)`\s*\|\s*(.*?)\s*\|\s*\*\*(\w+)\*\*\s*\|\s*(.*?)\s*\|\s*$/;
 
@@ -114,12 +115,13 @@ export function parseWorkshopIssue(issue) {
   if (!id || !js) return null;
   let workshops;
   try { workshops = JSON.parse(js[1]); } catch { return null; }
-  if (!Array.isArray(workshops) || workshops.length === 0 || workshops.some(w => typeof w !== 'string')) return null;
+  const replace = RE_REPLACE.test(body);
+  if (!Array.isArray(workshops) || (workshops.length === 0 && !replace) || workshops.some(w => typeof w !== 'string')) return null;
   const rows = body.split('\n').map(l => l.match(RE_ROW)).filter(Boolean)
     .map(m => ({ type: m[1], keywords: m[2], confidence: m[3], sources: m[4] }));
   const ev = body.match(/### Evidenz\s*([\s\S]*?)(?=\n### |\n```|$)/);
   return {
-    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), workshops,
+    number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), workshops, replace,
     ok: RE_APPROVED.test(body) || (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
@@ -142,11 +144,18 @@ export function detectFromText(text) {
   return Object.keys(WORKSHOP_TYPES).filter(t => found.has(t));
 }
 
-/** Ersetzt die Workshop-Liste im JSON-Block; null wenn Liste leer/ungültig oder Block fehlt. */
-export function replaceWorkshops(body, list) {
-  if (!Array.isArray(list) || list.length === 0 || list.some(w => !(w in WORKSHOP_TYPES))) return null;
+/**
+ * Ersetzt die Workshop-Liste im JSON-Block; null wenn Liste ungültig oder Block fehlt.
+ * replace=true: schreibt zusätzlich „**Modus:** ersetzen“ (bestehende Workshops ersetzen; leere Liste = entfernen),
+ * replace=false entfernt die Zeile wieder. Eine leere Liste ist nur mit replace=true erlaubt.
+ */
+export function replaceWorkshops(body, list, replace = false) {
+  if (!Array.isArray(list) || (list.length === 0 && !replace) || list.some(w => !(w in WORKSHOP_TYPES))) return null;
   if (!RE_WORKSHOPS.test(body)) return null;
-  return body.replace(RE_WORKSHOPS, () => '```json\n"workshops": ' + JSON.stringify(list) + '\n```');
+  let out = body.replace(RE_WORKSHOPS, () => '```json\n"workshops": ' + JSON.stringify(list) + '\n```');
+  out = out.replace(/\n\*\*Modus:\*\*[^\n]*/gi, '');                       // alte Zeile entfernen (idempotent)
+  if (replace) out = out.replace(RE_ID, m => `${m}\n**Modus:** ersetzen`);   // direkt unter die ID-Zeile
+  return out;
 }
 
 /** Vergleichszeilen für Workshop-Vorschläge. */
@@ -158,7 +167,7 @@ export function buildWorkshopComparison(loc, currentWorkshops, proposed) {
     { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
     { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
-    { label: 'Workshops', ours: cur.length ? cur.join(', ') : dash, proposed: proposed.join(', '), differs: !same },
+    { label: 'Workshops', ours: cur.length ? cur.join(', ') : dash, proposed: proposed.length ? proposed.join(', ') : '(entfernen)', differs: !same, warn: proposed.length === 0 && cur.length > 0 },
   ];
 }
 
