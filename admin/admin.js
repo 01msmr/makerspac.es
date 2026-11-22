@@ -9,13 +9,13 @@ import {
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyCssColours } from '../colours.js';
+import { applyEnrichment } from '../enrichment-merge.js';
 
 // Status-Farben (--space-open/-closed/-unknown) aus colours.js (SSOT), reagiert auf Dark Mode
 applyCssColours();
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', applyCssColours);
 
 const API = 'https://api.github.com';
-const RAW = `https://raw.githubusercontent.com/${REPO}/main`;
 const $ = id => document.getElementById(id);
 
 /**
@@ -34,12 +34,13 @@ for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
 
-const state = { problems: { runs: [], stuck: [] }, undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
+const state = { live: null, dataSha: '', dataAt: 0, problems: { runs: [], stuck: [] }, undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
 const cur = () => KINDS[state.tab];
 
 async function gh(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${API}${path}`, {
     method,
+    cache: 'no-store',
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -75,7 +76,9 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'finish', 'tabs']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'finish', 'tabs', 'refresh']) $(id).hidden = true;
+  $('data-stand').textContent = '';
+  state.dataAt = 0;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
@@ -87,6 +90,55 @@ $('save-token').addEventListener('click', () => {
   try { localStorage.setItem('admin-pat', token); } catch { /* ignore */ }
   start();
 });
+
+// ─── Aktueller Datenstand („bei uns“) ───────────────────────────────────
+// Direkt über die GitHub-API (nicht raw.githubusercontent.com: dort bis zu ~5 min CDN-Cache) und dieselbe Verschmelzung
+// wie die Karte (enrichment-merge.js: locations.json gewinnt, loc-enrichment.json füllt Lücken).
+async function ghFile(file) {
+  const res = await fetch(`${API}/repos/${REPO}/contents/${file}?ref=main`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.raw+json' },
+  });
+  if (res.status === 401) { logout(); throw new Error('Token ungültig oder abgelaufen'); }
+  if (!res.ok) throw new Error(`GitHub ${res.status} (${file})`);
+  return JSON.parse(await res.text());
+}
+
+/** @returns {Promise<boolean>} true, wenn sich der Stand (Commit) geändert hat */
+async function loadData() {
+  const [branch, locs, enr] = await Promise.all([gh(`/repos/${REPO}/branches/main`), ghFile('locations.json'), ghFile('loc-enrichment.json')]);
+  const sha = branch.commit.sha.slice(0, 7);
+  const changed = sha !== state.dataSha;
+  state.locations = new Map(locs.map(l => [l.ID, l]));
+  state.enrichment = enr;
+  state.dataSha = sha;
+  state.dataAt = Date.now();
+  $('data-stand').textContent = `Daten: ${new Date().toTimeString().slice(0, 8)} · ${sha}`;
+  return changed;
+}
+
+/** Aktueller (verschmolzener) Stand eines Space — genau das, was die Karte zeigt */
+const effective = p => applyEnrichment(state.locations.get(p.spaceId) ?? {}, state.enrichment[String(p.spaceId)]);
+/** Workshops stehen fest in locations.json (haben Vorrang) → Änderung per loc-enrichment.json bliebe wirkungslos */
+const lockedWorkshops = p => (state.locations.get(p.spaceId)?.workshops?.length ?? 0) > 0;
+
+let refreshing = false;
+async function refreshData(manual = false) {
+  if (refreshing || !token || !state.dataAt) return;
+  refreshing = true;
+  try {
+    const changed = await loadData();
+    if (changed) { toast(`Daten aktualisiert (${state.dataSha})`, 'info'); refreshCompare(); }
+    else if (manual) toast('Daten sind aktuell', 'ok');
+  } catch (err) {
+    if (manual) toast(`Aktualisieren fehlgeschlagen: ${err.message}`, 'no');
+  } finally { refreshing = false; }
+}
+const staleMs = () => Date.now() - state.dataAt;
+document.addEventListener('visibilitychange', () => { if (!document.hidden && staleMs() > 20000) refreshData(); });
+window.addEventListener('focus', () => { if (staleMs() > 20000) refreshData(); });
+setInterval(() => { if (!document.hidden && staleMs() > 110000) refreshData(); }, 120000);
+$('refresh').addEventListener('click', () => refreshData(true));
 
 // ─── Laden ───────────────────────────────────────────────────────────────
 async function loadKind(k) {
@@ -105,16 +157,13 @@ async function loadKind(k) {
 
 async function start() {
   $('login').hidden = true;
-  for (const id of ['logout', 'finish', 'tabs']) $(id).hidden = false;
+  for (const id of ['logout', 'finish', 'tabs', 'refresh']) $(id).hidden = false;
   try {
-    const [, , , , locs, enr] = await Promise.all([
+    await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar),
       loadInbox().catch(() => {}),
-      fetch(`${RAW}/locations.json`).then(r => r.json()),
-      fetch(`${RAW}/loc-enrichment.json`).then(r => r.json()),
+      loadData(),
     ]);
-    state.locations = new Map(locs.map(l => [l.ID, l]));
-    state.enrichment = enr;
     await loadProblems().catch(() => { /* Probleme-Reiter bleibt leer */ });
   } catch (err) {
     $('done').hidden = false;
@@ -315,6 +364,8 @@ async function show() {
   $('done').hidden = true;
   $('review').hidden = false;
   state.current = p;
+  state.live = null;
+  if (staleMs() > 60000) refreshData(); // „bei uns“ soll immer der letzte Stand sein
   showProblemReason(p);
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
@@ -328,7 +379,7 @@ async function show() {
 }
 
 async function showSpaceApi(p, loc) {
-  const cur0 = state.enrichment[String(p.spaceId)]?.spaceapi;
+  const cur0 = effective(p).spaceapi;
   renderCompare(buildComparison(loc, cur0, null, p.endpoint));
   $('hint').textContent = 'Endpoint wird geladen …';
   setView(loc?.link?.url ? 'site' : 'endpoint');
@@ -337,6 +388,7 @@ async function showSpaceApi(p, loc) {
     const res = await fetch(p.endpoint, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (state.current !== p) return;
+    state.live = data;
     renderCompare(buildComparison(loc, cur0, data, p.endpoint));
     $('hint').textContent = typeof data.space === 'string' ? '' : '⚠️ Kein gültiges SpaceAPI-JSON (space fehlt)';
   } catch {
@@ -345,17 +397,25 @@ async function showSpaceApi(p, loc) {
 }
 
 function showCalendar(p, loc) {
-  const current = state.enrichment[String(p.spaceId)]?.events;
+  const current = effective(p).events;
   renderCompare(buildCalendarComparison(loc, current, p.events, p.confidence));
   setView('endpoint');
   if (current) $('hint').textContent = 'Hinweis: bei uns ist schon ein Kalender gesetzt — beim Übernehmen wird dieses Issue nur geschlossen.';
 }
 
+/** Hinweis zu bereits vorhandenen Workshops (aus dem aktuellen, verschmolzenen Stand) */
+function setWorkshopHint(p, current) {
+  const hint = $('hint');
+  if (lockedWorkshops(p)) hint.textContent = 'Hinweis: die Workshops stehen fest in locations.json und haben Vorrang — loc-enrichment.json (diese Übernahme) bliebe wirkungslos. Änderung nur manuell in locations.json.';
+  else if (Array.isArray(current) && current.length) hint.textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
+  else hint.textContent = '';
+}
+
 function showWorkshop(p, loc) {
-  const current = state.enrichment[String(p.spaceId)]?.workshops;
+  const current = effective(p).workshops;
   renderCompare(buildWorkshopComparison(loc, current, p.workshops));
   setView('site');
-  if (Array.isArray(current) && current.length) $('hint').textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
+  setWorkshopHint(p, current);
   // Gefundene Typen mit Confidence + Evidenz (nur textContent)
   const extra = $('extra');
   if (p.rows.length) {
@@ -371,6 +431,21 @@ function showWorkshop(p, loc) {
     q.textContent = p.evidence;
     extra.append(q);
   }
+}
+
+/** Nach einer Daten-Aktualisierung: Vergleich + Hinweise der aktuellen Issue neu berechnen (Eingaben bleiben unberührt) */
+function refreshCompare() {
+  const p = state.current;
+  if (!p || state.list || $('review').hidden) return;
+  const loc = state.locations.get(p.spaceId);
+  const eff = effective(p);
+  if (state.tab === 'spaceapi') renderCompare(buildComparison(loc, eff.spaceapi, state.live, p.endpoint));
+  else if (state.tab === 'workshops') {
+    renderCompare(buildWorkshopComparison(loc, eff.workshops, p.workshops));
+    setWorkshopHint(p, eff.workshops);
+    updateReplaceOption(p);
+    updateEmptyHint();
+  } else renderCompare(buildCalendarComparison(loc, eff.events, p.events, p.confidence));
 }
 
 function renderCompare(rows) {
@@ -531,10 +606,8 @@ function fillEdit(p) {
     $('edit-input').type = 'url';
     $('edit-input').value = cur().urlOf(p);
   }
-  const existing = cur().edit === 'workshops' ? existingWorkshops(p) : [];
   $('edit-replace').checked = false;
-  $('replace-wrap').hidden = existing.length === 0;
-  $('replace-text').textContent = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
+  updateReplaceOption(p);
   updateEmptyHint();
 }
 
@@ -571,7 +644,16 @@ function setIndicator(stateName, text, types = []) {
   if (stateName !== 'idle') box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); // Ergebnis in den sichtbaren Bereich holen
 }
 
-const existingWorkshops = p => state.enrichment[String(p?.spaceId)]?.workshops || [];
+/** „Bestehende ersetzen/entfernen“ nur anbieten, wenn Workshops da sind UND per loc-enrichment.json änderbar */
+function updateReplaceOption(p) {
+  const existing = cur().edit === 'workshops' ? existingWorkshops(p) : [];
+  const locked = lockedWorkshops(p);
+  $('replace-wrap').hidden = existing.length === 0 || locked;
+  $('replace-text').textContent = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
+  if (locked) $('edit-replace').checked = false;
+}
+
+const existingWorkshops = p => (p ? effective(p).workshops : null) || [];
 
 /** Hinweis, wenn kein Workshop-Typ angehakt ist: y schließt das Issue ohne Übernahme */
 function updateEmptyHint() {
@@ -708,6 +790,7 @@ async function applyNow(k, auto = false) {
     k.okCount = 0;
     state.undo = state.undo.filter(e => !(e.kind === k.name && (e.type === 'y' || e.type === 'a'))); // bereits übernommen → nicht mehr rückgängig
     state.busy = false;
+    setTimeout(() => refreshData(), 45000); setTimeout(() => refreshData(), 120000); // Apply + Deploy brauchen ~1 min
     toast(`${auto ? 'Automatisch: ' : ''}${k.label} — ${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
     const link = document.createElement('a');
     link.href = `https://github.com/${REPO}/actions/workflows/${k.workflow}`;

@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { applyEnrichment } from './enrichment-merge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,41 +43,11 @@ const enrichment = existsSync(enrichmentPath)
   ? JSON.parse(readFileSync(enrichmentPath, 'utf8'))
   : {};
 
-/**
- * Reichert einen Location-Eintrag mit Daten aus loc-enrichment.json an.
- * Regel: Echte Werte in locations.json gewinnen immer — enrichment füllt nur fehlende Felder.
- * @param {object} loc
- * @returns {object}
- */
-function applyEnrichment(loc) {
-  const e = enrichment[String(loc.ID)];
-  if (!e) return loc;
-
-  const out = { ...loc };
-
-  if (e.workshops?.length && (!loc.workshops || loc.workshops.length === 0)) {
-    out.workshops = e.workshops;
-  }
-  if (e.events && !loc.events) {
-    out.events = e.events;
-  }
-  if (e.spaceapi?.endpoint && !loc.spaceapi?.endpoint) {
-    out.spaceapi = e.spaceapi;
-  }
-  if (e.weekly && !loc.weekly) {
-    out.weekly = e.weekly;
-  }
-  if (e.dates?.['space.init'] && !loc.dates?.['space.init']) {
-    out.dates = { ...loc.dates, 'space.init': e.dates['space.init'] };
-  }
-
-  return out;
-}
 
 // Locations laden + anreichern
 const locationsPath = path.join(__dirname, 'locations.json');
 const rawLocations  = JSON.parse(readFileSync(locationsPath, 'utf8'));
-const locations     = rawLocations.map(applyEnrichment);
+const locations     = rawLocations.map(loc => applyEnrichment(loc, enrichment[String(loc.ID)]));
 
 const enrichedCount = locations.filter((loc, i) => loc !== rawLocations[i]).length;
 if (enrichedCount > 0) {
