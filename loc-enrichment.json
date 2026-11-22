@@ -1507,7 +1507,11 @@
     }
   },
   "235": {
-    "events": "https://www.happylab.at/de_vie/workshops"
+    "events": "https://www.happylab.at/de_vie/workshops",
+    "weekly": {
+      "weekday": 3,
+      "time": 1900
+    }
   },
   "236": {
     "events": "https://www.makeraustria.at/events"
@@ -1525,12 +1529,20 @@
     "events": "https://segvault.space/veranstaltungen/",
     "spaceapi": {
       "endpoint": "https://segvault.space/internal/spacecore/opendata/spaceapi"
+    },
+    "weekly": {
+      "weekday": 2,
+      "time": 1800
     }
   },
   "240": {
     "events": "https://devlol.org/wiki/TitleKalendar",
     "spaceapi": {
       "endpoint": "https://devlol.org/status/hackerspaceapi"
+    },
+    "weekly": {
+      "weekday": 4,
+      "time": 1900
     }
   },
   "241": {
@@ -1567,12 +1579,20 @@
     "events": "https://hsbxl.be/events/",
     "spaceapi": {
       "endpoint": "https://api.hsbxl.be/index.php/0.1/spaceapi/"
+    },
+    "weekly": {
+      "weekday": 2,
+      "time": 1900
     }
   },
   "249": {
     "events": "https://ko-lab.space/events/",
     "spaceapi": {
       "endpoint": "https://status.ko-lab.space"
+    },
+    "weekly": {
+      "weekday": 5,
+      "time": 2000
     }
   },
   "250": {
