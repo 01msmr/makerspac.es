@@ -99,6 +99,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
     border: 2px solid var(--focus-color); background: var(--dropdown-bg); box-shadow: 0 8px 28px rgba(0, 0, 0, .35); }
   #actions #act-z:not([hidden])::after { content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--focus-color); animation: undo-countdown 9s linear forwards; }
   #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
+  /* Review-Reiter (SpaceAPI · Workshops · Kalender · Weekly) in EINER Zeile; Listen-Reiter (PRs, Neu …) umbrechen darunter */
+  #tabs { gap: .25rem; }
+  #bar { padding: .5rem; }
+  #tabs button[data-kind] { flex: 1 1 auto; padding: .3rem .2rem; font-size: 13px; white-space: nowrap; }
   #edit-input { min-height: 44px; }
   input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
 }

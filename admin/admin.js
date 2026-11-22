@@ -29,7 +29,7 @@ const KINDS = {
   calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue, workflow: 'apply-calendar-issues.yml', mode: 'apply-ok',
     edit: 'url', urlOf: p => p.events, replaceUrl: replaceEvents, viewLabel: 'Kalender' },
   // Treffen: ein Textfeld „Di 19:00, 2015“ (Weekly + Gründung); kein Endpoint-Frame (kein urlOf)
-  weekly: { label: 'Treffen', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
+  weekly: { label: 'Weekly', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
     edit: 'url', textOf: weeklyText, replaceUrl: replaceWeekly },
 };
 for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
