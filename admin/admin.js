@@ -117,6 +117,7 @@ async function loadData() {
   state.dataSha = sha;
   state.dataAt = Date.now();
   $('data-stand').textContent = `Daten: ${new Date().toTimeString().slice(0, 8)} · ${sha}`;
+  $('refresh').title = `Aktuellen Stand neu von GitHub laden — ${$('data-stand').textContent}`;
   return changed;
 }
 

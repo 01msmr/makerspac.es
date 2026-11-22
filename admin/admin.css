@@ -101,8 +101,12 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
   /* Review-Reiter (SpaceAPI · Workshops · Kalender · Weekly) in EINER Zeile; Listen-Reiter (PRs, Neu …) umbrechen darunter */
   #tabs { gap: .25rem; }
-  #bar { padding: .5rem; }
-  #tabs button[data-kind] { flex: 1 1 auto; padding: .3rem .2rem; font-size: 13px; white-space: nowrap; }
+  #bar { padding: .5rem .4rem; column-gap: .4rem; }
+  #counter, #data-stand { display: none; }   /* Detailzeile („1 / 2 · offen“, „Daten: …“) entfällt; Stand steht im Tooltip von ↻ */
+  #tabs { order: 1; flex: 1 1 calc(100% - 44px - .4rem); min-width: 0; }
+  #refresh { order: 2; flex: 0 0 44px; padding: 0; }          /* ↻ in der Reiter-Zeile */
+  #apply, #logout, .grow { order: 3; }
+  #tabs button[data-kind] { flex: 1 1 auto; padding: .3rem .1rem; font-size: 12px; white-space: nowrap; }
   #edit-input { min-height: 44px; }
   input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
 }
