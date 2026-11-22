@@ -14,6 +14,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
+import { stampLocationsFile } from './lib/edit-stamp.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -306,6 +307,8 @@ async function main() {
   if (stats.applied > 0) {
     fs.writeFileSync(enrichmentPath, JSON.stringify(enrichment, null, 2) + '\n', 'utf8');
     console.log(`\nloc-enrichment.json aktualisiert (${stats.applied} Eintraege geaendert)`);
+    const stamped = stampLocationsFile(locationsPath, toApply.map(i => i.spaceId));
+    console.log(`locations.json: space.edited.latest bei ${stamped} Eintraegen gesetzt`);
   }
 
   // 8. Abschlussbericht

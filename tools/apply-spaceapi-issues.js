@@ -14,6 +14,7 @@ import path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
+import { stampLocationsFile } from './lib/edit-stamp.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -135,6 +136,7 @@ async function main() {
   if (!applyMode) { console.log(`\nDry-Run: ${applied.length} wuerden angewendet.`); return; }
 
   fs.writeFileSync(enrichmentPath, JSON.stringify(enrichment, null, 2) + '\n');
+  stampLocationsFile(path.join(ROOT, 'locations.json'), applied.map(p => p.spaceId));
   for (const p of applied) {
     gh('issue', 'close', String(p.issueNumber), '--comment', 'Angewendet auf loc-enrichment.json');
   }
