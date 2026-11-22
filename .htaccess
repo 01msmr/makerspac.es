@@ -52,6 +52,10 @@
     # Daten-Splits der Karte: immer revalidieren (ETag/304 ist billig) — sonst sind Änderungen nach einem Deploy bis zu 10 Min. unsichtbar
     <FilesMatch "^(markers|spaces-[a-z]+|splits-manifest)\.json$">
         Header set Cache-Control "no-cache, must-revalidate"
+        # Der vorgeschaltete nginx-Cache (x-cache-status) hielt für manche Clients (z. B. Accept-Encoding „gzip, deflate, br, zstd“)
+        # dauerhaft eine ALTE Kopie als STALE vor: „no-cache“ macht die Antwort für nginx unspeicherbar, also ersetzt sie den alten
+        # Eintrag nie. X-Accel-Expires (nur nginx, wird nicht an Browser weitergegeben) lässt ihn 1 s speichern → Eintrag wird ersetzt.
+        Header set X-Accel-Expires "1"
     </FilesMatch>
 
     # status.json: IMMER beim Server nachfragen — Live-Öffnungsstatus,

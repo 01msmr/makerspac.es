@@ -42,11 +42,12 @@ test('Erster Besuch (kein Cache) → wartet auf das Netz', async () => {
   assert.equal((await nf('r', 'c')).body, 'neu');
 });
 
-test('sw.js: Daten-URLs laufen über networkFirstFresh; .htaccess: Daten-Splits no-cache', () => {
+test('sw.js: Daten-URLs laufen über networkFirstFresh; .htaccess: Daten-Splits no-cache + X-Accel-Expires (nginx-Stale-Eintrag ersetzen)', () => {
   const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   assert.match(sw, /DATA_URLS\.some[\s\S]{0,200}networkFirstFresh\(request, CACHE_DATA\)/);
   const ht = readFileSync(new URL('../.htaccess', import.meta.url), 'utf8');
   assert.match(ht, /spaces-\[a-z\]\+\|splits-manifest\)\\\.json\$"\>\s*\n\s*Header set Cache-Control "no-cache, must-revalidate"/);
+  assert.match(ht, /Header set X-Accel-Expires "1"/);
 });
 
 // Navigation (Accept: text/html) auf eine Daten-URL = Aufruf im Browser-Tab → muss frisch kommen, nicht als „HTML“ per SWR
