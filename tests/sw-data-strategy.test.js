@@ -48,3 +48,25 @@ test('sw.js: Daten-URLs laufen über networkFirstFresh; .htaccess: Daten-Splits 
   const ht = readFileSync(new URL('../.htaccess', import.meta.url), 'utf8');
   assert.match(ht, /spaces-\[a-z\]\+\|splits-manifest\)\\\.json\$"\>\s*\n\s*Header set Cache-Control "no-cache, must-revalidate"/);
 });
+
+// Navigation (Accept: text/html) auf eine Daten-URL = Aufruf im Browser-Tab → muss frisch kommen, nicht als „HTML“ per SWR
+test('Fetch-Handler: Daten-URL als Navigation (Accept text/html) → networkFirstFresh, nicht HTML-SWR', async () => {
+  let handler;
+  const cacheStore = { match: async () => 'ALT', put() {} };
+  const ctx = {
+    self: { addEventListener: (type, fn) => { if (type === 'fetch') handler = fn; }, location: { origin: 'https://x' } },
+    caches: { open: async () => cacheStore, match: async () => 'ALT' },
+    fetch: async () => ({ ok: true, body: 'NEU', clone() { return this; } }), URL, Promise, setTimeout,
+  };
+  vm.createContext(ctx);
+  vm.runInContext(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), ctx);
+  const respond = async url => {
+    let result;
+    handler({ request: { url, headers: { get: () => 'text/html,application/xhtml+xml,*/*' } }, respondWith: p => { result = p; } });
+    return result;
+  };
+  for (const path of ['/data/spaces-all.json', '/data/markers.json', '/data/splits-manifest.json', '/locations.json']) {
+    assert.equal((await respond('https://x' + path)).body, 'NEU', path);
+  }
+  assert.equal(await respond('https://x/'), 'ALT', 'echte HTML-Seiten bleiben SWR (Cache zuerst)');
+});
