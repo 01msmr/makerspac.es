@@ -1,5 +1,5 @@
 // tools/weekly-crawler.js — Weekly-Treffen + Gründungsdatum auf Space-Websites finden (regelbasiert, ohne KI/API-Key).
-// Ergebnis: GitHub Issues „Treffen-Daten: <Name>“ (Label weekly-data) mit JSON-Block, geprüft im /admin/ (Reiter „Treffen“).
+// Ergebnis: GitHub Issues „Treffen-Daten: <Name>“ (Label weekly-data) mit JSON-Block, geprüft im /admin/ (Reiter „Weekly“).
 // Entscheidung (neuer Fund ja/nein) wie bei den anderen Crawlern: tools/lib/crawl-selection.js (decideProposal, kind 'weekly').
 //
 // Usage:

@@ -15,7 +15,7 @@
       <button id="tab-spaceapi" data-kind="spaceapi">SpaceAPI</button>
       <button id="tab-workshops" data-kind="workshops">Workshops</button>
       <button id="tab-calendar" data-kind="calendar">Kalender</button>
-      <button id="tab-weekly" data-kind="weekly">Treffen</button>
+      <button id="tab-weekly" data-kind="weekly">Weekly</button>
     </nav>
     <button id="tab-problems" data-problems hidden title="Fehlgeschlagene Läufe und hängende Vorschläge">Probleme</button>
     <span id="counter"></span>
@@ -34,13 +34,18 @@
 
   <main id="review" hidden>
     <section id="left">
-      <h2 id="title"></h2>
-      <p id="open-links"><a id="open-site" target="_blank" rel="noopener noreferrer" hidden>Website ↗</a> <a id="open-endpoint" target="_blank" rel="noopener noreferrer" hidden>Endpoint ↗</a></p>
+      <h2 id="title"><a id="open-site" target="_blank" rel="noopener noreferrer"></a></h2>
+      <p id="open-links"><a id="open-endpoint" target="_blank" rel="noopener noreferrer" hidden>Endpoint ↗</a></p>
       <div id="problem" hidden></div>
       <table id="compare"></table>
       <p id="hint"></p>
       <form id="edit">
         <input id="edit-input" required>
+        <div id="edit-weekly" hidden>
+          <label>Wochentag <select id="wk-day"><option value="">–</option><option value="1">Montag</option><option value="2">Dienstag</option><option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option><option value="6">Samstag</option><option value="0">Sonntag</option></select></label>
+          <label>Uhrzeit <input id="wk-time" type="time"></label>
+          <label>Gegründet <input id="wk-init" type="date" min="1900-01-01"></label>
+        </div>
         <fieldset id="edit-ws">
           <legend>Workshops</legend>
           <div id="edit-checks"></div>
@@ -79,6 +84,7 @@
   <section id="inbox" hidden></section>
 
   <p id="done" hidden></p>
+  <footer id="foot"><button id="logout2" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></footer>
   <div id="toasts" aria-live="polite"></div>
   <script type="module" src="admin.js"></script>
 </body>

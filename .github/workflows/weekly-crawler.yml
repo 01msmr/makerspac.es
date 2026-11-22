@@ -1,6 +1,6 @@
 # Zweck:  Findet Weekly-Treffen + Gründungsdatum auf Space-Websites (regelbasiert, ohne KI) → Issues „Treffen-Daten: <Name>“ (Label weekly-data).
 # Wann: Spaces mit Platzhalter bei weekly bzw. space.init.
-# Monatlich (Cron) läuft er im Modus create-issues; manuell wählbar. Ablauf: dry-run (Vorschau) → create-issues → Prüfen im /admin/ (Reiter „Treffen“) → Apply Weekly Issues.
+# Monatlich (Cron) läuft er im Modus create-issues; manuell wählbar. Ablauf: dry-run (Vorschau) → create-issues → Prüfen im /admin/ (Reiter „Weekly“) → Apply Weekly Issues.
 
 name: "🔍 Weekly Crawler"
 

@@ -14,6 +14,11 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 #counter { color: var(--hover-text-color); }
 #tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
 #tabs button { border-radius: 999px; }
+/* Zählerabzeichen am Reiter (statt „Name (n)“): schmaler; leere Reiter blass */
+.badge { display: inline-block; margin-left: .3em; padding: 0 .4em; border-radius: 999px; background: var(--focus-color); color: var(--bg-color); font-size: .75em; font-weight: 700; line-height: 1.55; vertical-align: .1em; }
+.badge.warn { background: var(--space-closed); }
+.badge.dot { width: .6em; height: .6em; padding: 0; margin-left: .35em; vertical-align: .05em; }
+#tabs button[data-empty="true"], #tab-problems[data-empty="true"] { opacity: .6; }
 #tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; box-shadow: inset 0 0 0 1px var(--focus-color); }
 
 button, input { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .75rem; }
@@ -88,6 +93,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
+#foot { display: none; }
 /* Touch (Smartphone + Tablet): keine Tastenbezeichnungen, ok / später / ablehnen in EINER Zeile, Rückgängig nur kurz nach einer Aktion */
 @media (pointer: coarse), (max-width: 767px) {
   #actions kbd, #keys, .keyhint { display: none; }
@@ -99,9 +105,24 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
     border: 2px solid var(--focus-color); background: var(--dropdown-bg); box-shadow: 0 8px 28px rgba(0, 0, 0, .35); }
   #actions #act-z:not([hidden])::after { content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--focus-color); animation: undo-countdown 9s linear forwards; }
   #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
+  /* Review-Reiter (SpaceAPI · Workshops · Kalender · Weekly) in EINER Zeile; Listen-Reiter (PRs, Neu …) umbrechen darunter */
+  #tabs { gap: .25rem; }
+  #bar { padding: .5rem .4rem; column-gap: .4rem; }
+  #logout { display: none; }                  /* Abmelden steht am Seitenende (#foot) */
+  #foot { display: flex; justify-content: center; padding: .5rem 0 1rem; }
+  #foot button { min-height: 44px; }
+  #edit > button, #edit small { display: none; } /* „Speichern + ok“ ist überflüssig: ok übernimmt geänderte Eingaben */
+  #counter, #data-stand { display: none; }   /* Detailzeile („1 / 2 · offen“, „Daten: …“) entfällt; Stand steht im Tooltip von ↻ */
+  #tabs { order: 1; flex: 1 1 calc(100% - 44px - .4rem); min-width: 0; }
+  #refresh { order: 2; flex: 0 0 44px; padding: 0; }          /* ↻ in der Reiter-Zeile */
+  #apply, #logout, .grow { order: 3; }
+  #tabs button[data-kind] { flex: 1 1 auto; padding: .3rem .1rem; font-size: 12px; white-space: nowrap; }
   #edit-input { min-height: 44px; }
   input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
 }
+#title a { color: inherit; text-decoration: none; }
+#title a[href]:hover { text-decoration: underline; }
+#title a[href] { text-decoration: underline dotted; text-underline-offset: 3px; }
 #open-links { display: none; margin: 0 0 .5rem; gap: .5rem; flex-wrap: wrap; }
 #open-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem; border: 1px solid var(--dropdown-border); border-radius: 6px; background: var(--dropdown-bg); color: var(--text-color); text-decoration: none; font-weight: 600; }
 #open-links a[hidden] { display: none; }
@@ -114,7 +135,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #actions { order: 2; position: sticky; bottom: 0; z-index: 5; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
   #bar { position: static; }                   /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
   #frame, #right { display: none; }            /* Vorschau-Rahmen aus; Website/Endpoint über #open-links (neuer Tab) */
-  #open-links { display: flex; }
+  #open-links { display: flex; margin: 0 0 .25rem; }
+  #left h2 { margin: 0 0 .4rem; font-size: 1.05rem; }
+  #compare tr[data-row="Name"], #compare tr[data-row="Website"] { display: none; }   /* Name steht im Titel, Website als Link */
+  #foot { padding-bottom: 4.5rem; }            /* Platz für die Aktionsleiste */
   #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
@@ -128,6 +152,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes undo-countdown { to { width: 0; } }
 @keyframes pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
+
+#edit-weekly { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+#edit-weekly label { display: flex; flex: 1 1 8rem; min-width: 0; flex-direction: column; gap: .15rem; font-size: .85em; color: var(--hover-text-color); }
+#edit-weekly select, #edit-weekly input { width: 100%; box-sizing: border-box; font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .5rem; min-height: 2.2rem; }
 
 #edit-free-label { display: block; margin-bottom: .25rem; font-weight: 600; }
 

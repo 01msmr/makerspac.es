@@ -4,7 +4,7 @@ import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
-  parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, INBOX_GROUPS, groupInbox,
+  parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, formatWeekly, formatTime, formatEditDate, INBOX_GROUPS, groupInbox,
   PROBLEM_LABEL, failedRuns, stuckOk, problemReason, mergeQueue,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
@@ -29,7 +29,7 @@ const KINDS = {
   calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue, workflow: 'apply-calendar-issues.yml', mode: 'apply-ok',
     edit: 'url', urlOf: p => p.events, replaceUrl: replaceEvents, viewLabel: 'Kalender' },
   // Treffen: ein Textfeld „Di 19:00, 2015“ (Weekly + Gründung); kein Endpoint-Frame (kein urlOf)
-  weekly: { label: 'Treffen', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
+  weekly: { label: 'Weekly', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
     edit: 'url', textOf: weeklyText, replaceUrl: replaceWeekly },
 };
 for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
@@ -79,13 +79,14 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'tabs', 'refresh']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
   $('counter').textContent = '';
   $('login').hidden = false;
 }
 $('logout').addEventListener('click', logout);
+$('logout2').addEventListener('click', logout);   // Touch: Abmelden steht am Seitenende (spart Platz oben)
 $('save-token').addEventListener('click', () => {
   token = $('token').value.trim();
   $('token').value = '';
@@ -117,6 +118,7 @@ async function loadData() {
   state.dataSha = sha;
   state.dataAt = Date.now();
   $('data-stand').textContent = `Daten: ${new Date().toTimeString().slice(0, 8)} · ${sha}`;
+  $('refresh').title = `Aktuellen Stand neu von GitHub laden — ${$('data-stand').textContent}`;
   return changed;
 }
 
@@ -187,7 +189,7 @@ async function loadKind(k) {
 
 async function start() {
   $('login').hidden = true;
-  for (const id of ['logout', 'tabs', 'refresh']) $(id).hidden = false;
+  for (const id of ['logout', 'logout2', 'tabs', 'refresh']) $(id).hidden = false;
   try {
     await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
@@ -332,11 +334,21 @@ function showProblemReason(p) {
 // ─── Anzeige ─────────────────────────────────────────────────────────────
 const openCount = k => Math.max(0, k.queue.length - k.idx);
 
+/** Reiter-Beschriftung: Name + kleines Zählerabzeichen (0 = ausgegraut, ohne Zahl); Warnabzeichen rot. Spart Platz gegenüber „Name (n)“. */
+function setTab(b, label, n, warn = 0, showNumber = true) {
+  b.replaceChildren(label);
+  // Zahl nur am aktiven Reiter; bei den anderen genügt ein Punkt („hier ist etwas offen“); Probleme = roter Punkt (Zahl in der Liste)
+  if (n) b.append(Object.assign(document.createElement('span'), { className: showNumber ? 'badge' : 'badge dot', textContent: showNumber ? String(n) : '' }));
+  if (warn) b.append(Object.assign(document.createElement('span'), { className: 'badge warn dot', title: `${warn} mit Problem` }));
+  b.dataset.empty = n ? '' : 'true';
+  b.setAttribute('aria-label', `${label}, ${n} offen${warn ? `, ${warn} mit Problem` : ''}`);
+}
+
 function updateBar() {
   for (const [name, k] of Object.entries(KINDS)) {
     const b = $(`tab-${name}`);
     const pc = k.queue.slice(k.idx).filter(q => q.problem).length;
-    b.textContent = `${k.label} (${openCount(k)})${pc ? ` ⚠${pc}` : ''}`;
+    setTab(b, k.label, openCount(k), pc, !state.list && name === state.tab);
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
@@ -345,12 +357,12 @@ function updateBar() {
     const n = groups[key]?.length || 0;
     const b = $(`tab-list-${key}`);
     b.hidden = n === 0 && state.list !== key; // leere Listen-Reiter ausblenden
-    b.textContent = `${label} (${n})`;
+    setTab(b, label, n, 0, state.list === key);
     b.setAttribute('aria-pressed', String(state.list === key));
   }
   const np = problemCount();
   $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
-  $('tab-problems').textContent = `Probleme (${np})`;
+  setTab($('tab-problems'), 'Probleme', np, 0, true);
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   updateUndoButton();
   const k = cur();
@@ -399,10 +411,14 @@ async function show() {
   showProblemReason(p);
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
-  $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
+  // Titel = Link zur Website (neuer Tab, mit ↗); ohne gültige URL bleibt es reiner Text
+  const titleText = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
+  const site = websiteOf(p), siteOk = /^https?:/.test(site);
+  $('open-site').textContent = siteOk ? `${titleText} ↗` : titleText;
+  if (siteOk) $('open-site').href = site; else $('open-site').removeAttribute('href');
   $('show-endpoint').hidden = !k.urlOf;
-  // Smartphone: Website/Endpoint als echte Links in neuem Tab (auf Antippen — Browser blocken automatisch geöffnete Tabs)
-  for (const [id, url, label] of [['open-site', websiteOf(p), 'Website ↗'], ['open-endpoint', k.urlOf?.(p), `${k.viewLabel ?? 'Endpoint'} ↗`]]) {
+  // Smartphone: Endpoint/Kalender als echter Link in neuem Tab (die Website ist der Titel) (auf Antippen — Browser blocken automatisch geöffnete Tabs)
+  for (const [id, url, label] of [['open-endpoint', k.urlOf?.(p), `${k.viewLabel ?? 'Endpoint'} ↗`]]) {
     const a = $(id);
     a.hidden = !(url && /^https?:/.test(url));
     if (!a.hidden) { a.href = url; a.textContent = label; }
@@ -449,7 +465,7 @@ function showWeekly(p, loc) {
     q.textContent = `${e.what} ${e.value} (${e.confidence}): „${e.source}“`;
     $('extra').append(q);
   }
-  $('hint').textContent = 'Eingabe: „Di 19:00, 2015“ — Wochentag + Uhrzeit und/oder Gründung (Jahr, Jahr-Monat oder Datum).';
+  $('hint').textContent = '';
 }
 
 function showCalendar(p, loc) {
@@ -517,6 +533,7 @@ function renderCompare(rows) {
   for (const r of rows) {
     const tr = table.insertRow();
     tr.className = r.warn ? 'warn' : r.differs ? 'differs' : '';
+    tr.dataset.row = r.label;
     const th = document.createElement('th'); th.textContent = r.label;
     const a = tr.insertCell(); a.textContent = r.ours;
     const b = tr.insertCell(); b.textContent = r.proposed;
@@ -679,8 +696,10 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
 function fillEdit(p) {
   if ($('edit').contains(document.activeElement)) document.activeElement.blur(); // sonst schlucken Textfelder die Tasten y/n/l der nächsten Issue
   const isWs = cur().edit === 'workshops';
-  $('edit-input').hidden = isWs;
-  $('edit-input').disabled = isWs;
+  const isWk = cur().name === 'weekly';   // native Eingabe (Auswahl/Uhrzeit/Datum) statt Textfeld
+  $('edit-input').hidden = isWs || isWk;
+  $('edit-input').disabled = isWs || isWk;
+  $('edit-weekly').hidden = !isWk;
   $('edit-ws').hidden = !isWs;
   $('edit-free').value = '';
   setIndicator('idle', '');
@@ -688,6 +707,11 @@ function fillEdit(p) {
   updateScanTarget();
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
+  } else if (isWk) {
+    $('wk-day').value = p.weekly ? String(p.weekly.weekday) : '';
+    $('wk-time').value = p.weekly?.time ? formatTime(p.weekly.time) : '';
+    $('wk-init').max = new Date().toISOString().slice(0, 10);
+    $('wk-init').value = p.init && p.init !== 20010000 ? formatEditDate(p.init) : '';
   } else {
     $('edit-input').type = cur().textOf ? 'text' : 'url';
     $('edit-input').value = (cur().textOf ?? cur().urlOf)(p);
@@ -695,13 +719,17 @@ function fillEdit(p) {
   $('edit-replace').checked = false;
   $('edit-remove').checked = false;
   $('replace-wrap').hidden = true; // frisch starten, damit der Standard („übernehmen“ vorangehakt) für jede Issue neu gesetzt wird
-  $('edit-input').disabled = cur().edit === 'workshops';
+  $('edit-input').disabled = cur().edit === 'workshops' || isWk;
   updateReplaceOption(p);
   updateEmptyHint();
 }
 
 /** Aktuelle Eingabe: Endpoint (String) bzw. angehakte Workshop-Typen (Array) */
 function editValue() {
+  if (cur().name === 'weekly') {   // Text im selben Format wie weeklyText(p): „Di 19:00, 2015-05-01“ — so bleibt die übrige Kette unverändert
+    const day = $('wk-day').value, time = $('wk-time').value, init = $('wk-init').value;
+    return [day !== '' && time ? formatWeekly({ weekday: Number(day), time: Number(time.replace(':', '')) }) : '', init].filter(Boolean).join(', ');
+  }
   return cur().edit === 'workshops' ? checks().filter(b => b.checked).map(b => b.value) : $('edit-input').value.trim();
 }
 
@@ -902,7 +930,7 @@ $('act-z').addEventListener('click', undo);
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
   // Tasten nur ignorieren, solange in ein Textfeld getippt wird (Checkboxen/Buttons lassen sie durch)
-  if (e.target instanceof HTMLTextAreaElement || (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')) {
+  if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement || (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')) {
     if (e.key === 'Escape') { fillEdit(state.current); e.target.blur(); } // Esc: Änderungen verwerfen
     return;
   }
