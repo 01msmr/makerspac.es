@@ -9,7 +9,7 @@ import {
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyCssColours } from '../colours.js';
-import { applyEnrichment } from '../enrichment-merge.js';
+import { applyEnrichment, normalizeUrl } from '../enrichment-merge.js';
 
 // Status-Farben (--space-open/-closed/-unknown) aus colours.js (SSOT), reagiert auf Dark Mode
 applyCssColours();
@@ -400,7 +400,7 @@ async function showSpaceApi(p, loc) {
 function setCalendarHint(p, current) {
   const hint = $('hint');
   if (state.locations.get(p.spaceId)?.events) hint.textContent = 'Hinweis: der Kalenderlink steht fest in locations.json und hat Vorrang — loc-enrichment.json (diese Übernahme) bliebe wirkungslos. Änderung nur manuell in locations.json.';
-  else if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl wird der bestehende Link durch die URL unten ersetzt (oder entfernt).';
+  else if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
   else hint.textContent = '';
 }
 
@@ -534,7 +534,7 @@ async function act(action, value, opts = {}) {
       await addOk(p.number);
       k.okCount++;
       k.lastOkAt = Date.now();
-      toast(opts.replace ? (k.name === 'calendar' ? (value.length ? `⇄ #${p.number}: bestehender Kalenderlink wird beim Übernehmen ersetzt` : `🗑 #${p.number}: Kalenderlink wird beim Übernehmen ENTFERNT`) : (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`)) : `✎ #${p.number} angepasst + ok`, opts.replace ? 'no' : 'warn', { withUndo: true });
+      toast(opts.replace ? (k.name === 'calendar' ? (value.length ? `⇄ #${p.number}: bestehender Kalenderlink wird beim Übernehmen ersetzt` : `🗑 #${p.number}: Kalenderlink wird beim Übernehmen ENTFERNT`) : (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`)) : `✎ #${p.number} angepasst + ok`, (k.name === 'calendar' ? !value : opts.replace) ? 'no' : 'warn', { withUndo: true });
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
@@ -620,6 +620,9 @@ function fillEdit(p) {
     $('edit-input').value = cur().urlOf(p);
   }
   $('edit-replace').checked = false;
+  $('edit-remove').checked = false;
+  $('replace-wrap').hidden = true; // frisch starten, damit der Standard („übernehmen“ vorangehakt) für jede Issue neu gesetzt wird
+  $('edit-input').disabled = cur().edit === 'workshops';
   updateReplaceOption(p);
   updateEmptyHint();
 }
@@ -635,6 +638,8 @@ function editChanged(p) {
 }
 
 /** y / „Speichern + ok“: geänderte Eingabe in die Issue schreiben + ok, unveränderter Vorschlag nur ok */
+const existingCalendar = p => !!effective(p).events;
+
 function confirmOk() {
   const p = state.current;
   if (!p) return;
@@ -645,9 +650,10 @@ function confirmOk() {
     if (replace) { act('a', v, { replace: true }); return; }  // bestehende ersetzen/entfernen (ausdrücklich gewählt)
     if (v.length === 0) { act('n', null, { noWorkshops: true }); return; }
   }
-  if (cur().name === 'calendar' && !$('replace-wrap').hidden && $('edit-replace').checked) {
-    act('a', $('edit-input').value.trim(), { replace: true }); // bestehenden Kalenderlink ersetzen/entfernen (ausdrücklich gewählt)
-    return;
+  if (cur().name === 'calendar') {
+    if (!$('remove-wrap').hidden && $('edit-remove').checked) { act('a', '', { replace: true }); return; }            // ausdrücklich: entfernen
+    if (!$('replace-wrap').hidden && $('edit-replace').checked) { act('a', $('edit-input').value.trim(), { replace: true }); return; } // Standard: neuen Link übernehmen
+    if (existingCalendar(p)) { act('y'); return; }  // bestehenden behalten: nur freigeben (Apply schließt das Issue ohne Änderung)
   }
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
@@ -670,11 +676,25 @@ function updateReplaceOption(p) {
     locked = lockedWorkshops(p);
     text = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
   } else if (k.name === 'calendar') {
+    // Kalender: ein ANDERER Link ist eine relevante Änderung → „übernehmen“ ist Standard; nur ENTFERNEN braucht eine eigene, ausdrückliche Wahl
     const e = effective(p).events;
     existing = e ? [e] : [];
     locked = !!state.locations.get(p.spaceId)?.events; // fest in locations.json → Vorrang, per Enrichment nicht änderbar
-    text = `Bestehenden Kalenderlink ersetzen bzw. entfernen (bei uns: ${e || '–'}) — URL leer lassen = entfernen`;
+    const url = $('edit-input').value.trim();
+    const differs = !!url && normalizeUrl(url) !== normalizeUrl(e || '');
+    const showReplace = existing.length > 0 && !locked && differs;
+    const wasHidden = $('replace-wrap').hidden;
+    $('replace-wrap').hidden = !showReplace;
+    if (showReplace && wasHidden) $('edit-replace').checked = true; // Standard: neuen Link übernehmen
+    $('replace-text').textContent = `Neuen Kalenderlink übernehmen — ersetzt den bestehenden (${e}). Haken entfernen = bestehenden behalten.`;
+    const showRemove = existing.length > 0 && !locked;
+    $('remove-wrap').hidden = !showRemove;
+    $('remove-text').textContent = `Bestehenden Kalenderlink entfernen (${e || '–'}) — es bleibt dann keiner stehen`;
+    if (!showReplace) $('edit-replace').checked = false;
+    if (!showRemove) $('edit-remove').checked = false;
+    return;
   }
+  $('remove-wrap').hidden = true;
   $('replace-wrap').hidden = existing.length === 0 || locked;
   $('replace-text').textContent = text;
   if ($('replace-wrap').hidden) $('edit-replace').checked = false;
@@ -687,16 +707,20 @@ const existingWorkshops = p => (p ? effective(p).workshops : null) || [];
 function updateEmptyHint() {
   const box = $('empty-hint');
   const p = state.current;
-  if (p && cur().name === 'calendar') { // Kalender: Hinweis nur, wenn „ersetzen bzw. entfernen“ gewählt ist
+  if (p && cur().name === 'calendar') {
+    const old = effective(p).events;
+    const url = $('edit-input').value.trim();
+    const remove = !$('remove-wrap').hidden && $('edit-remove').checked;
     const replace = !$('replace-wrap').hidden && $('edit-replace').checked;
-    $('edit-input').required = !replace; // URL darf leer sein = entfernen
-    box.hidden = !replace;
-    if (replace) {
-      const old = effective(p).events;
-      const url = $('edit-input').value.trim();
-      box.dataset.tone = 'danger';
-      box.replaceChildren(url ? `Der bestehende Kalenderlink (${old}) wird beim Übernehmen durch ${url} ERSETZT.` : `Der bestehende Kalenderlink (${old}) wird beim Übernehmen ENTFERNT. Mit z rückgängig, solange noch nicht übernommen.`);
-    }
+    const keep = !!old && !remove && !replace && !!url && normalizeUrl(url) !== normalizeUrl(old); // anderer Vorschlag, aber Haken entfernt
+    $('edit-input').disabled = remove;          // beim Entfernen wird keine URL geschrieben
+    $('edit-input').required = !remove;
+    box.hidden = !(remove || replace || keep);
+    if (box.hidden) return;
+    box.dataset.tone = remove ? 'danger' : 'warn';
+    box.replaceChildren(remove ? `Der bestehende Kalenderlink (${old}) wird beim Übernehmen ENTFERNT. Mit z rückgängig, solange noch nicht übernommen.`
+      : replace ? `Der bestehende Kalenderlink (${old}) wird beim Übernehmen durch ${url} ersetzt. Haken entfernen = bestehenden behalten.`
+      : `Der bestehende Kalenderlink (${old}) bleibt; der Vorschlag (${url}) wird verworfen — das Issue wird nur geschlossen.`);
     return;
   }
   $('edit-input').required = true;
@@ -796,8 +820,9 @@ $('edit-scan').addEventListener('click', async () => {
 });
 
 $('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
-$('edit-replace').addEventListener('change', updateEmptyHint);
-$('edit-input').addEventListener('input', updateEmptyHint);
+$('edit-replace').addEventListener('change', () => { if ($('edit-replace').checked) $('edit-remove').checked = false; updateEmptyHint(); });
+$('edit-remove').addEventListener('change', () => { if ($('edit-remove').checked) $('edit-replace').checked = false; updateEmptyHint(); });
+$('edit-input').addEventListener('input', () => { if (state.current && cur().name === 'calendar') updateReplaceOption(state.current); updateEmptyHint(); });
 $('act-y').addEventListener('click', confirmOk);
 $('act-n').addEventListener('click', () => act('n'));
 $('act-l').addEventListener('click', skip);

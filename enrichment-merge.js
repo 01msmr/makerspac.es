@@ -1,6 +1,6 @@
 // enrichment-merge.js — Single Source of Truth für die Verschmelzung von locations.json und loc-enrichment.json
 // Genutzt von generate-map-splits.js (Karte), /admin/ („bei uns“) und den Crawler-/Apply-Tools — damit alle denselben
-// „aktuellen Stand“ sehen. Pure, ohne Abhängigkeiten.
+// „aktuellen Stand“ sehen (+ normalizeUrl für URL-Vergleiche). Pure, ohne Abhängigkeiten.
 
 /**
  * Reichert einen Location-Eintrag mit Daten aus loc-enrichment.json an.
@@ -31,4 +31,9 @@ export function applyEnrichment(loc, e) {
   }
 
   return out;
+}
+
+/** URL vergleichbar machen: Schema, „www.“, Fragment und Schluss-Slash ignorieren, Groß-/Kleinschreibung egal */
+export function normalizeUrl(u) {
+  return String(u).trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/#.*$/, '').replace(/\/+$/, '');
 }

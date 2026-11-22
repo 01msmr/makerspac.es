@@ -11,7 +11,8 @@
 import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
-import { applyEnrichment } from '../../enrichment-merge.js';
+import { applyEnrichment, normalizeUrl } from '../../enrichment-merge.js';
+export { normalizeUrl }; // Re-Export: Single Source of Truth liegt in enrichment-merge.js
 
 const RE_BODY_ID = /\*\*ID:\*\*\s*(\d+)/;
 const RE_TITLE_ID = /\(#(\d+)\)\s*$|\(ID:?\s*(\d+)\)/;
@@ -33,10 +34,6 @@ export function issueSpaceId(issue) {
   return id ? parseInt(id, 10) : null;
 }
 
-/** URL vergleichbar machen: Schema, „www.“, Fragment und Schluss-Slash ignorieren, Groß-/Kleinschreibung egal */
-export function normalizeUrl(u) {
-  return String(u).trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/#.*$/, '').replace(/\/+$/, '');
-}
 
 /** Gleicher Workshop-Inhalt (Reihenfolge egal) */
 export function sameWorkshops(a, b) {
