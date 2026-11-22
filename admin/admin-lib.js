@@ -289,7 +289,14 @@ export function parseWeeklyIssue(issue) {
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url, updated: Date.parse(issue.updated_at) || 0, website: body.match(RE_WEBSITE)?.[1] ?? '',
+    evidence: weeklyEvidence(body),
   };
+}
+
+/** Zeilen der „Gefunden“-Tabelle (| Was | Wert | Confidence | Quelle |) → [{what, value, confidence, source}] */
+export function weeklyEvidence(body) {
+  return String(body).split('\n').map(l => l.match(/^\|\s*(Weekly|Gründung)\s*\|\s*(.*?)\s*\|\s*(high|medium|low)\s*\|\s*(.*?)\s*\|\s*$/))
+    .filter(Boolean).map(m => ({ what: m[1], value: m[2], confidence: m[3], source: m[4] }));
 }
 
 /** Eingabefeld-Text des Vorschlags: "Di 19:00, 2015-05-01" */

@@ -437,6 +437,12 @@ function setCalendarHint(p, current) {
 function showWeekly(p, loc) {
   renderCompare(buildWeeklyComparison(loc, effective(p), p));
   setView('site');
+  // Textstelle der Website, auf der der Fund beruht (nur textContent)
+  for (const e of p.evidence ?? []) {
+    const q = document.createElement('blockquote');
+    q.textContent = `${e.what} ${e.value} (${e.confidence}): „${e.source}“`;
+    $('extra').append(q);
+  }
   $('hint').textContent = 'Eingabe: „Di 19:00, 2015“ — Wochentag + Uhrzeit und/oder Gründung (Jahr, Jahr-Monat oder Datum).';
 }
 
