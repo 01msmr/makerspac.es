@@ -17,6 +17,7 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 /* Zählerabzeichen am Reiter (statt „Name (n)“): schmaler; leere Reiter blass */
 .badge { display: inline-block; margin-left: .3em; padding: 0 .4em; border-radius: 999px; background: var(--focus-color); color: var(--bg-color); font-size: .75em; font-weight: 700; line-height: 1.55; vertical-align: .1em; }
 .badge.warn { background: var(--space-closed); }
+.badge.dot { width: .6em; height: .6em; padding: 0; margin-left: .35em; vertical-align: .05em; }
 #tabs button[data-empty="true"], #tab-problems[data-empty="true"] { opacity: .6; }
 #tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; box-shadow: inset 0 0 0 1px var(--focus-color); }
 
@@ -148,6 +149,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes undo-countdown { to { width: 0; } }
 @keyframes pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
+
+#edit-weekly { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+#edit-weekly label { display: flex; flex: 1 1 8rem; min-width: 0; flex-direction: column; gap: .15rem; font-size: .85em; color: var(--hover-text-color); }
+#edit-weekly select, #edit-weekly input { width: 100%; box-sizing: border-box; font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .5rem; min-height: 2.2rem; }
 
 #edit-free-label { display: block; margin-bottom: .25rem; font-weight: 600; }
 

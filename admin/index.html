@@ -41,6 +41,11 @@
       <p id="hint"></p>
       <form id="edit">
         <input id="edit-input" required>
+        <div id="edit-weekly" hidden>
+          <label>Wochentag <select id="wk-day"><option value="">–</option><option value="1">Montag</option><option value="2">Dienstag</option><option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option><option value="6">Samstag</option><option value="0">Sonntag</option></select></label>
+          <label>Uhrzeit <input id="wk-time" type="time"></label>
+          <label>Gegründet <input id="wk-init" type="date" min="1900-01-01"></label>
+        </div>
         <fieldset id="edit-ws">
           <legend>Workshops</legend>
           <div id="edit-checks"></div>

@@ -4,7 +4,7 @@ import {
   REPO, OK_LABEL, AUTO_APPLY_COUNT, autoApplyDelay,
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
-  parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, INBOX_GROUPS, groupInbox,
+  parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, formatWeekly, formatTime, formatEditDate, INBOX_GROUPS, groupInbox,
   PROBLEM_LABEL, failedRuns, stuckOk, problemReason, mergeQueue,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
@@ -335,10 +335,11 @@ function showProblemReason(p) {
 const openCount = k => Math.max(0, k.queue.length - k.idx);
 
 /** Reiter-Beschriftung: Name + kleines Zählerabzeichen (0 = ausgegraut, ohne Zahl); Warnabzeichen rot. Spart Platz gegenüber „Name (n)“. */
-function setTab(b, label, n, warn = 0) {
+function setTab(b, label, n, warn = 0, showNumber = true) {
   b.replaceChildren(label);
-  if (n) b.append(Object.assign(document.createElement('span'), { className: 'badge', textContent: String(n) }));
-  if (warn) b.append(Object.assign(document.createElement('span'), { className: 'badge warn', textContent: `⚠${warn}` }));
+  // Zahl nur am aktiven Reiter; bei den anderen genügt ein Punkt („hier ist etwas offen“); Probleme = roter Punkt (Zahl in der Liste)
+  if (n) b.append(Object.assign(document.createElement('span'), { className: showNumber ? 'badge' : 'badge dot', textContent: showNumber ? String(n) : '' }));
+  if (warn) b.append(Object.assign(document.createElement('span'), { className: 'badge warn dot', title: `${warn} mit Problem` }));
   b.dataset.empty = n ? '' : 'true';
   b.setAttribute('aria-label', `${label}, ${n} offen${warn ? `, ${warn} mit Problem` : ''}`);
 }
@@ -347,7 +348,7 @@ function updateBar() {
   for (const [name, k] of Object.entries(KINDS)) {
     const b = $(`tab-${name}`);
     const pc = k.queue.slice(k.idx).filter(q => q.problem).length;
-    setTab(b, k.label, openCount(k), pc);
+    setTab(b, k.label, openCount(k), pc, !state.list && name === state.tab);
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
@@ -356,12 +357,12 @@ function updateBar() {
     const n = groups[key]?.length || 0;
     const b = $(`tab-list-${key}`);
     b.hidden = n === 0 && state.list !== key; // leere Listen-Reiter ausblenden
-    setTab(b, label, n);
+    setTab(b, label, n, 0, state.list === key);
     b.setAttribute('aria-pressed', String(state.list === key));
   }
   const np = problemCount();
   $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
-  setTab($('tab-problems'), 'Probleme', np);
+  setTab($('tab-problems'), 'Probleme', np, 0, true);
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   updateUndoButton();
   const k = cur();
@@ -460,7 +461,7 @@ function showWeekly(p, loc) {
     q.textContent = `${e.what} ${e.value} (${e.confidence}): „${e.source}“`;
     $('extra').append(q);
   }
-  $('hint').textContent = 'Eingabe: „Di 19:00, 2015“ — Wochentag + Uhrzeit und/oder Gründung (Jahr, Jahr-Monat oder Datum).';
+  $('hint').textContent = '';
 }
 
 function showCalendar(p, loc) {
@@ -691,8 +692,10 @@ for (const key of Object.keys(WORKSHOP_TYPES)) {
 function fillEdit(p) {
   if ($('edit').contains(document.activeElement)) document.activeElement.blur(); // sonst schlucken Textfelder die Tasten y/n/l der nächsten Issue
   const isWs = cur().edit === 'workshops';
-  $('edit-input').hidden = isWs;
-  $('edit-input').disabled = isWs;
+  const isWk = cur().name === 'weekly';   // native Eingabe (Auswahl/Uhrzeit/Datum) statt Textfeld
+  $('edit-input').hidden = isWs || isWk;
+  $('edit-input').disabled = isWs || isWk;
+  $('edit-weekly').hidden = !isWk;
   $('edit-ws').hidden = !isWs;
   $('edit-free').value = '';
   setIndicator('idle', '');
@@ -700,6 +703,11 @@ function fillEdit(p) {
   updateScanTarget();
   if (isWs) {
     for (const box of checks()) box.checked = p.workshops.includes(box.value);
+  } else if (isWk) {
+    $('wk-day').value = p.weekly ? String(p.weekly.weekday) : '';
+    $('wk-time').value = p.weekly?.time ? formatTime(p.weekly.time) : '';
+    $('wk-init').max = new Date().toISOString().slice(0, 10);
+    $('wk-init').value = p.init && p.init !== 20010000 ? formatEditDate(p.init) : '';
   } else {
     $('edit-input').type = cur().textOf ? 'text' : 'url';
     $('edit-input').value = (cur().textOf ?? cur().urlOf)(p);
@@ -707,13 +715,17 @@ function fillEdit(p) {
   $('edit-replace').checked = false;
   $('edit-remove').checked = false;
   $('replace-wrap').hidden = true; // frisch starten, damit der Standard („übernehmen“ vorangehakt) für jede Issue neu gesetzt wird
-  $('edit-input').disabled = cur().edit === 'workshops';
+  $('edit-input').disabled = cur().edit === 'workshops' || isWk;
   updateReplaceOption(p);
   updateEmptyHint();
 }
 
 /** Aktuelle Eingabe: Endpoint (String) bzw. angehakte Workshop-Typen (Array) */
 function editValue() {
+  if (cur().name === 'weekly') {   // Text im selben Format wie weeklyText(p): „Di 19:00, 2015-05-01“ — so bleibt die übrige Kette unverändert
+    const day = $('wk-day').value, time = $('wk-time').value, init = $('wk-init').value;
+    return [day !== '' && time ? formatWeekly({ weekday: Number(day), time: Number(time.replace(':', '')) }) : '', init].filter(Boolean).join(', ');
+  }
   return cur().edit === 'workshops' ? checks().filter(b => b.checked).map(b => b.value) : $('edit-input').value.trim();
 }
 
@@ -914,7 +926,7 @@ $('act-z').addEventListener('click', undo);
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || $('review').hidden) return;
   // Tasten nur ignorieren, solange in ein Textfeld getippt wird (Checkboxen/Buttons lassen sie durch)
-  if (e.target instanceof HTMLTextAreaElement || (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')) {
+  if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement || (e.target instanceof HTMLInputElement && e.target.type !== 'checkbox')) {
     if (e.key === 'Escape') { fillEdit(state.current); e.target.blur(); } // Esc: Änderungen verwerfen
     return;
   }
