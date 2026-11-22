@@ -889,7 +889,7 @@ document.addEventListener('keydown', e => {
   switch (e.key.toLowerCase()) {
     case 'y': confirmOk(); break;
     case 'n': act('n'); break;
-    case 'l': skip(); break;
+    case 'ä': skip(); break;   // später (l/w/a/s/d sind durch die Vivaldi-Navigation belegt)
     case 'z': undo(); break;
     case 'escape': if (state.current) fillEdit(state.current); break; // Änderungen verwerfen (auch mit Fokus auf einer Checkbox)
     case 'j': setView('site'); break;
