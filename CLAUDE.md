@@ -195,6 +195,7 @@ Vollständige Referenz: **`architektur.md`** · Designentscheidungen: **`adr/`**
 node --test 'tests/*.test.js'   # Unit-Tests (vor jedem Push)
 node tests/validate-locations.js # Locations-Validierung
 npm run generate                 # Karten-Splits neu erzeugen
+npm run validate                 # locations.json + loc-enrichment.json prüfen
 ```
 
 ## Deployment
@@ -202,3 +203,5 @@ npm run generate                 # Karten-Splits neu erzeugen
 - Push auf `main` → GitHub Actions → FTPS → Netcup
 - `status.json` wird per Cron aktualisiert, nicht per git
 - Nächste freie Makerspace-ID: **278**
+- **Bot-Änderungen (GITHUB_TOKEN) lösen weder CI noch Deploy aus.** Workflows, die nach `main` pushen/mergen, validieren vorher (`./.github/actions/validate-data`) und starten `deploy.yml` selbst (`gh workflow run deploy.yml`, `actions: write`). Apply-Skripte prüfen jeden Vorschlag vor dem Schreiben (`validateProposal`). Wächter: `tests/workflow-guards.test.js`
+- Prüfen: `npm run validate` (locations + enrichment) · `npm run validate:ci` (wie CI: + Unit-Tests + Wächter)

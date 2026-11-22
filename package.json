@@ -3,8 +3,9 @@
   "scripts": {
     "generate": "node generate-map-splits.js",
     "test": "node --test 'tests/*.test.js'",
-    "validate": "node tests/validate-locations.js",
-    "test:all": "npm test && npm run validate"
+    "validate": "node tests/validate-locations.js && node tests/validate-enrichment.js",
+    "test:all": "npm test && npm run validate",
+    "validate:ci": "npm run validate && node --test tests/app-context.test.js tests/search-filter.test.js tests/i18n.test.js tests/routing.test.js tests/spaceapi-directory-sync.test.js tests/validate-enrichment.test.js tests/workflow-guards.test.js"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.21",

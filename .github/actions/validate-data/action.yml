@@ -1,0 +1,43 @@
+# Gemeinsame Daten-Prüfung für Workflows, die Daten ändern (npm run validate:ci).
+# Schreibt das Log nach $RUNNER_TEMP (nie in den Workspace — sonst landet es im Commit/PR).
+# fail-on-error=true (Standard): Schritt schlägt fehl. false: nur ok=true/false ausgeben, der Workflow entscheidet.
+
+name: "Validate data"
+description: "locations.json + loc-enrichment.json + Unit-Tests prüfen (npm run validate:ci)"
+
+inputs:
+  fail-on-error:
+    description: "Bei Fehlern den Schritt fehlschlagen lassen"
+    required: false
+    default: "true"
+
+outputs:
+  ok:
+    description: "true, wenn alle Prüfungen bestanden wurden"
+    value: ${{ steps.run.outputs.ok }}
+  log:
+    description: "Pfad zum Prüf-Log"
+    value: ${{ steps.run.outputs.log }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - id: run
+      shell: bash
+      env:
+        FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
+      run: |
+        LOG="$RUNNER_TEMP/validate.log"
+        set +e
+        npm run validate:ci > "$LOG" 2>&1
+        CODE=$?
+        set -e
+        cat "$LOG"
+        echo "log=$LOG" >> "$GITHUB_OUTPUT"
+        if [ "$CODE" -eq 0 ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+        if [ "$CODE" -ne 0 ] && [ "$FAIL_ON_ERROR" = "true" ]; then exit "$CODE"; fi
+        exit 0

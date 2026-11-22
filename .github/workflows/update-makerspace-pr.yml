@@ -7,6 +7,11 @@ on:
   issues:
     types: [labeled]
 
+# Gleiche Datei-Schreiber nie parallel (Apply-Workflows, Update-/Add-PRs)
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
+
 jobs:
   update-pr:
     if: github.event.label.name == 'update-space'
@@ -15,6 +20,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: write   # gh workflow run deploy.yml (Bot-Merges lösen sonst keinen Deploy aus)
 
     steps:
       - name: Checkout Repository
@@ -211,8 +217,15 @@ jobs:
             core.setOutput('space_name', space.name);
             core.setOutput('space_id',   String(existingId));
 
+      - name: Daten validieren (vor PR und Merge)
+        id: validate
+        uses: ./.github/actions/validate-data
+        with:
+          fail-on-error: 'false'
+
       - name: Create Pull Request
         id: create_pr
+        if: steps.validate.outputs.ok == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -234,11 +247,47 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --delete-branch --repo ${{ github.repository }}
 
+      # GITHUB_TOKEN-Merges lösen weder CI noch Deploy aus → Deploy hier explizit starten
+      - name: Trigger Deploy
+        if: steps.create_pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy.yml --repo ${{ github.repository }}
+
       - name: Feedback Comment + Close Issue
+        if: steps.create_pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue comment ${{ github.event.issue.number }} \
-            --body "✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID \`${{ steps.update_script.outputs.space_id }}\`) wurde in main gemergt und der Deploy läuft bereits." \
+            --body "✅ Update für **${{ steps.update_script.outputs.space_name }}** (ID \`${{ steps.update_script.outputs.space_id }}\`) wurde geprüft, in main gemergt und der Deploy wurde gestartet." \
             --repo ${{ github.repository }}
           gh issue close ${{ github.event.issue.number }} --reason completed --repo ${{ github.repository }}
+
+      - name: Keine Änderung nötig
+        if: steps.validate.outputs.ok == 'true' && steps.create_pr.outputs.pull-request-number == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "ℹ️ Die Angaben entsprechen bereits dem Stand in main — es gab nichts zu übernehmen." \
+            --repo ${{ github.repository }}
+          gh issue close ${{ github.event.issue.number }} --reason completed --repo ${{ github.repository }}
+
+      - name: Validierungsfehler melden
+        if: steps.validate.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "❌ Die Änderung wurde **nicht** übernommen: die Daten bestehen die automatische Prüfung nicht."
+            echo
+            echo '```'
+            tail -n 40 "${{ steps.validate.outputs.log }}"
+            echo '```'
+          } > "$RUNNER_TEMP/feedback.md"
+          gh issue comment ${{ github.event.issue.number }} --body-file "$RUNNER_TEMP/feedback.md" --repo ${{ github.repository }}
+
+      - name: Job als fehlgeschlagen markieren
+        if: steps.validate.outputs.ok != 'true'
+        run: exit 1

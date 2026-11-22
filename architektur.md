@@ -105,6 +105,8 @@
 | `tools/apply-spaceapi-issues.js` | **Node.js** — offene `SpaceAPI:`-Issues → `spaceapi.endpoint` in loc-enrichment.json, Issues schließen; `--only-ok` = nur Label `ok` + Live-Check des Endpoints (ungültig → Kommentar, Label entfernt) | `parseIssue`, `applyProposal`, `filterOk`, `isValidSpaceApi`, `checkEndpoint` (export) |
 | `admin/index.html` + `admin.js` + `admin.css` | Review-Seite `/admin/` mit Review-Reitern **SpaceAPI**, **Workshops**, **Kalender** und Listen-Reitern (Pull Requests, Neu, Änderung, Daten, Kalender ohne Fund, Sonstige — nur Anzeige + Link, nur sichtbar wenn etwas offen ist); am Ende einer Liste springt die Seite zum nächsten Reiter mit offenen Vorschlägen; Toasts + Rückgängig-Stapel (`z`); Farben aus `colours.js` (`applyCssColours`), Hintergrund `--dropdown-alt-bg` (statisch, `noindex`, nicht verlinkt, SW fängt sie nicht ab): PAT im localStorage → GitHub-REST; Tasten y/a/n/s (j/k = Website/Endpoint) ändern nur Issues, „Übernehmen“ = `workflow_dispatch apply-ok` (ADR-006) | — |
 | `tools/scan-workshop-url.js` | **Node.js** — liest eine URL mit dem Workshop-Crawler (`crawlSpace`, exportiert) aus und kommentiert das Issue mit den erkannten Typen (Workflow `scan-workshop-url.yml`, gestartet von `/admin/`; die Seite löscht den Kommentar wieder) | `summarize` (export) |
+| `tests/validate-enrichment.js` | Schema-Prüfung von `loc-enrichment.json` (IDs, Workshop-Typen, URLs, weekly); `validateProposal` prüft einen Vorschlag isoliert (nur Fehler der eigenen ID) — von den Apply-Skripten **vor** dem Schreiben/Schließen genutzt; Teil von `npm run validate` | `validateEnrichment`, `validateAfterPatch`, `validateProposal`, `rejectionComment`, `isHttpUrl` |
+| `.github/actions/validate-data/` | Composite-Action: `npm run validate:ci` (Daten + Unit-Tests), Log nach `$RUNNER_TEMP`; von `validate.yml`, `update-makerspace-pr.yml`, `add-makerspace-pr.yml` genutzt | — |
 | `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-spaceapi-issues.yml` (`apply-ok`) ab 10 `ok`-Issues oder 1 h nach der letzten Änderung | `decide` (export) |
 | `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters`, `autoApplyDelay`, `parseWorkshopIssue`, `parseWorkshopList`, `replaceWorkshops`, `buildWorkshopComparison`, `detectFromText`, `parseCalendarIssue`, `replaceEvents`, `buildCalendarComparison`, `classifyItem`, `groupInbox`, `parseScanComment` |
 
@@ -289,6 +291,11 @@ git push main
 
 .github/workflows/auto-apply-spaceapi.yml  (cron */15)
      └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi / apply-calendar (apply-ok) bzw. apply-workshop (apply) starten)
+
+.github/workflows/update-makerspace-pr.yml / add-makerspace-pr.yml  (Label update-space / add-space am Formular-Issue)
+     ├── Daten ändern → validate-data (npm run validate:ci) → erst dann PR
+     ├── ungültig: kein PR, Kommentar mit Fehlern am Issue, Job rot
+     └── update: Auto-Merge + `gh workflow run deploy.yml` (Bot-Merges lösen KEINEN Deploy/CI aus); add: PR bleibt offen (Merge durch Mensch → Push → Deploy)
 
 .github/workflows/scan-workshop-url.yml  (workflow_dispatch aus /admin/: url + issue + scan_id)
      └── node tools/scan-workshop-url.js  → Kommentar `<!-- scan:ID -->` + JSON am Issue (Admin pollt, liest, löscht ihn)
