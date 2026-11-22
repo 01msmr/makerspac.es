@@ -28,6 +28,7 @@ const KINDS = [
   { name: 'SpaceAPI', prefix: 'SpaceAPI:', workflow: 'apply-spaceapi-issues.yml', mode: 'apply-ok' },
   { name: 'Workshops', prefix: '[Workshop-Daten]', workflow: 'apply-workshop-issues.yml', mode: 'apply' },
   { name: 'Kalender', prefix: 'Kalenderlink:', workflow: 'apply-calendar-issues.yml', mode: 'apply-ok' },
+  { name: 'Treffen', prefix: 'Treffen-Daten:', workflow: 'apply-weekly-issues.yml', mode: 'apply-ok' },
 ];
 
 function main() {

@@ -1,0 +1,60 @@
+# Zweck:  Findet Weekly-Treffen + Gründungsdatum auf Space-Websites (regelbasiert, ohne KI) → Issues „Treffen-Daten: <Name>“ (Label weekly-data).
+# Wann: Spaces mit Platzhalter bei weekly bzw. space.init.
+# Ablauf: dry-run (Vorschau) → create-issues → Prüfen im /admin/ (Reiter „Treffen“) → Apply Weekly Issues.
+
+name: "🔍 Weekly Crawler"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus — dry-run = Vorschau · create-issues = Issues anlegen"
+        required: true
+        default: "dry-run"
+        type: choice
+        options:
+          - dry-run
+          - create-issues
+      limit:
+        description: "Nur N Spaces (leer = alle)"
+        required: false
+        default: ""
+      id:
+        description: "Nur Space mit dieser ID"
+        required: false
+        default: ""
+
+permissions:
+  issues: write    # gh issue create
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Label sicherstellen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create "weekly-data" --description "Weekly meeting / founding date proposals" --color "0075ca" 2>/dev/null || true
+
+      - name: Crawler ausführen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "create-issues" ]; then ARGS="$ARGS --create-issues"; fi
+          if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          if [ -n "${{ inputs.id }}" ]; then ARGS="$ARGS --id ${{ inputs.id }}"; fi
+          echo "Running: node tools/weekly-crawler.js $ARGS"
+          node tools/weekly-crawler.js $ARGS

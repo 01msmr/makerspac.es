@@ -56,8 +56,8 @@ export function validateEnrichment(enrichment, locationIds) {
 
     if (entry.weekly !== undefined) {
       const { weekday, time } = entry.weekly ?? {};
-      // weekday 1–7, 9 = Platzhalter (siehe architektur.md); time = HHMM
-      if (!Number.isInteger(weekday) || !((weekday >= 1 && weekday <= 7) || weekday === 9)) errors.push(`${at}: "weekly.weekday" muss 1–7 (oder 9) sein`);
+      // weekday 0–6 (0 = Sonntag, wie date-utils.js/App), 9 = Platzhalter; time = HHMM
+      if (!Number.isInteger(weekday) || !((weekday >= 0 && weekday <= 6) || weekday === 9)) errors.push(`${at}: "weekly.weekday" muss 0–6 (0 = Sonntag; oder 9) sein`);
       if (!Number.isInteger(time) || time < 0 || time > 2359 || time % 100 > 59) errors.push(`${at}: "weekly.time" muss HHMM (0–2359) sein`);
     }
 
