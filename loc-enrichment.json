@@ -600,24 +600,49 @@
     "events": "https://hci.rwth-aachen.de/#news"
   },
   "128": {
-    "events": "https://www.roboscope.rwth-aachen.de/cms/roboscope/Ueber-Uns/~binzux/Veranstaltungen"
+    "events": "https://www.roboscope.rwth-aachen.de/cms/roboscope/Ueber-Uns/~binzux/Veranstaltungen",
+    "workshops": [
+      "3d",
+      "laser",
+      "metal"
+    ]
   },
   "129": {
     "weekly": {
       "weekday": 2,
       "time": 2000
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "coding"
+    ]
   },
   "130": {
     "spaceapi": {
       "endpoint": "https://datenburg.org/spaceapi.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics"
+    ]
   },
   "131": {
     "events": "https://www.meetup.com/scrumtisch-bonn/",
     "spaceapi": {
       "endpoint": "https://status.makerspacebonn.de/api/spaceapi"
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "wood",
+      "metal",
+      "textile"
+    ]
   },
   "133": {
     "events": "https://nextcloud.maschinendeck.org/index.php/apps/calendar/p/tCy8jLHHdX3oRWQG/listMonth/now",
