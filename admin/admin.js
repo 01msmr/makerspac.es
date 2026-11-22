@@ -396,11 +396,19 @@ async function showSpaceApi(p, loc) {
   }
 }
 
+/** Hinweis zu einem bereits vorhandenen Kalenderlink (aus dem aktuellen, verschmolzenen Stand) */
+function setCalendarHint(p, current) {
+  const hint = $('hint');
+  if (state.locations.get(p.spaceId)?.events) hint.textContent = 'Hinweis: der Kalenderlink steht fest in locations.json und hat Vorrang — loc-enrichment.json (diese Übernahme) bliebe wirkungslos. Änderung nur manuell in locations.json.';
+  else if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl wird der bestehende Link durch die URL unten ersetzt (oder entfernt).';
+  else hint.textContent = '';
+}
+
 function showCalendar(p, loc) {
   const current = effective(p).events;
   renderCompare(buildCalendarComparison(loc, current, p.events, p.confidence));
   setView('endpoint');
-  if (current) $('hint').textContent = 'Hinweis: bei uns ist schon ein Kalender gesetzt — beim Übernehmen wird dieses Issue nur geschlossen.';
+  setCalendarHint(p, current);
 }
 
 /** Hinweis zu bereits vorhandenen Workshops (aus dem aktuellen, verschmolzenen Stand) */
@@ -445,7 +453,12 @@ function refreshCompare() {
     setWorkshopHint(p, eff.workshops);
     updateReplaceOption(p);
     updateEmptyHint();
-  } else renderCompare(buildCalendarComparison(loc, eff.events, p.events, p.confidence));
+  } else {
+    renderCompare(buildCalendarComparison(loc, eff.events, p.events, p.confidence));
+    setCalendarHint(p, eff.events);
+    updateReplaceOption(p);
+    updateEmptyHint();
+  }
 }
 
 function renderCompare(rows) {
@@ -495,7 +508,7 @@ const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', bod
 /** Neuer Body für „anpassen“ — wirft bei ungültiger Eingabe. */
 function adjustedBody(body, value, opts = {}) {
   if (cur().edit === 'url') {
-    const nb = cur().replaceUrl(body, value);
+    const nb = cur().replaceUrl(body, value, !!opts.replace); // replace: Kalender „ersetzen bzw. entfernen“
     if (!nb) throw new Error('Ungültige URL oder JSON-Block fehlt');
     return nb;
   }
@@ -521,7 +534,7 @@ async function act(action, value, opts = {}) {
       await addOk(p.number);
       k.okCount++;
       k.lastOkAt = Date.now();
-      toast(opts.replace ? (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`) : `✎ #${p.number} angepasst + ok`, opts.replace ? 'no' : 'warn', { withUndo: true });
+      toast(opts.replace ? (k.name === 'calendar' ? (value.length ? `⇄ #${p.number}: bestehender Kalenderlink wird beim Übernehmen ersetzt` : `🗑 #${p.number}: Kalenderlink wird beim Übernehmen ENTFERNT`) : (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`)) : `✎ #${p.number} angepasst + ok`, opts.replace ? 'no' : 'warn', { withUndo: true });
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
@@ -632,6 +645,10 @@ function confirmOk() {
     if (replace) { act('a', v, { replace: true }); return; }  // bestehende ersetzen/entfernen (ausdrücklich gewählt)
     if (v.length === 0) { act('n', null, { noWorkshops: true }); return; }
   }
+  if (cur().name === 'calendar' && !$('replace-wrap').hidden && $('edit-replace').checked) {
+    act('a', $('edit-input').value.trim(), { replace: true }); // bestehenden Kalenderlink ersetzen/entfernen (ausdrücklich gewählt)
+    return;
+  }
   if (editChanged(p)) act('a', editValue()); else act('y');
 }
 
@@ -646,12 +663,23 @@ function setIndicator(stateName, text, types = []) {
 
 /** „Bestehende ersetzen/entfernen“ nur anbieten, wenn Workshops da sind UND per loc-enrichment.json änderbar */
 function updateReplaceOption(p) {
-  const existing = cur().edit === 'workshops' ? existingWorkshops(p) : [];
-  const locked = lockedWorkshops(p);
+  const k = cur();
+  let existing = [], locked = false, text = '';
+  if (k.edit === 'workshops') {
+    existing = existingWorkshops(p);
+    locked = lockedWorkshops(p);
+    text = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
+  } else if (k.name === 'calendar') {
+    const e = effective(p).events;
+    existing = e ? [e] : [];
+    locked = !!state.locations.get(p.spaceId)?.events; // fest in locations.json → Vorrang, per Enrichment nicht änderbar
+    text = `Bestehenden Kalenderlink ersetzen bzw. entfernen (bei uns: ${e || '–'}) — URL leer lassen = entfernen`;
+  }
   $('replace-wrap').hidden = existing.length === 0 || locked;
-  $('replace-text').textContent = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
-  if (locked) $('edit-replace').checked = false;
+  $('replace-text').textContent = text;
+  if ($('replace-wrap').hidden) $('edit-replace').checked = false;
 }
+
 
 const existingWorkshops = p => (p ? effective(p).workshops : null) || [];
 
@@ -659,6 +687,19 @@ const existingWorkshops = p => (p ? effective(p).workshops : null) || [];
 function updateEmptyHint() {
   const box = $('empty-hint');
   const p = state.current;
+  if (p && cur().name === 'calendar') { // Kalender: Hinweis nur, wenn „ersetzen bzw. entfernen“ gewählt ist
+    const replace = !$('replace-wrap').hidden && $('edit-replace').checked;
+    $('edit-input').required = !replace; // URL darf leer sein = entfernen
+    box.hidden = !replace;
+    if (replace) {
+      const old = effective(p).events;
+      const url = $('edit-input').value.trim();
+      box.dataset.tone = 'danger';
+      box.replaceChildren(url ? `Der bestehende Kalenderlink (${old}) wird beim Übernehmen durch ${url} ERSETZT.` : `Der bestehende Kalenderlink (${old}) wird beim Übernehmen ENTFERNT. Mit z rückgängig, solange noch nicht übernommen.`);
+    }
+    return;
+  }
+  $('edit-input').required = true;
   const isWs = cur().edit === 'workshops' && p;
   const existing = isWs ? existingWorkshops(p) : [];
   const replace = isWs && existing.length > 0 && $('edit-replace').checked;
@@ -756,6 +797,7 @@ $('edit-scan').addEventListener('click', async () => {
 
 $('edit').addEventListener('submit', e => { e.preventDefault(); confirmOk(); });
 $('edit-replace').addEventListener('change', updateEmptyHint);
+$('edit-input').addEventListener('input', updateEmptyHint);
 $('act-y').addEventListener('click', confirmOk);
 $('act-n').addEventListener('click', () => act('n'));
 $('act-l').addEventListener('click', skip);

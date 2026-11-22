@@ -307,3 +307,37 @@ test('Apply-Skript: Modus „ersetzen“ erlaubt leere Liste (entfernen), sonst 
   assert.deepEqual([rep.workshops, rep.replace], [['wood', 'metal'], true]);
   assert.equal(parseWorkshopForApply({ ...wissue(['3d'], ['ok']) }).replace, false); // normaler Vorschlag: Lücken füllen
 });
+
+import { parseIssue as parseCalendarForApply } from '../tools/apply-calendar-issues.js';
+import { setModeMarker } from '../admin/admin-lib.js';
+
+test('Kalender: Modus „ersetzen“ — gleiche Marker-Logik wie bei Workshops, leere URL = entfernen nur mit Modus', () => {
+  const body = CBODY('https://alt.de/e');
+  assert.equal(replaceEvents(body, ''), null);                                   // leer ohne Modus: ungültig
+  const rep = replaceEvents(body, 'https://neu.de/k', true);
+  assert.match(rep, /\*\*ID:\*\* 235\n\*\*Modus:\*\* ersetzen/);
+  assert.deepEqual([parseCalendarIssue({ ...cissue('x'), body: rep }).events, parseCalendarIssue({ ...cissue('x'), body: rep }).replace], ['https://neu.de/k', true]);
+  const rm = replaceEvents(body, '', true);
+  assert.match(rm, /"events": ""/);
+  const p = parseCalendarIssue({ ...cissue('x'), body: rm });
+  assert.deepEqual([p.events, p.replace], ['', true]);                           // Admin liest „entfernen“ wieder ein
+  assert.equal(rm.match(/Modus/g).length, 1);
+  assert.equal(replaceEvents(rm, 'https://neu.de/k', true).match(/Modus/g).length, 1);   // kein Doppel-Marker
+  assert.doesNotMatch(replaceEvents(rm, 'https://neu.de/k', false), /Modus/);            // zurück auf „nur Lücken füllen“
+  assert.equal(parseCalendarIssue({ ...cissue('x'), body: CBODY('') }), null);            // leer ohne Modus bleibt ungültig
+  assert.equal(setModeMarker(setModeMarker(body, true), true).match(/Modus/g).length, 1); // idempotent
+});
+
+test('buildCalendarComparison: Entfernen als solches angezeigt und gelb markiert', () => {
+  const row = buildCalendarComparison({ name: 'X' }, 'https://alt.de', '', 'high').find(r => r.label === 'Kalender');
+  assert.deepEqual([row.proposed, row.differs, row.warn], ['(entfernen)', true, true]);
+});
+
+test('Apply-Skript Kalender: Modus „ersetzen“ erlaubt leere URL (entfernen), sonst nicht', () => {
+  assert.equal(parseCalendarForApply({ ...cissue('x'), body: CBODY('') }), null);
+  const rm = parseCalendarForApply({ ...cissue('x'), body: replaceEvents(CBODY('https://alt.de'), '', true) });
+  assert.deepEqual([rm.eventsUrl, rm.replace, rm.spaceId], ['', true, 235]);
+  const rep = parseCalendarForApply({ ...cissue('x'), body: replaceEvents(CBODY('https://alt.de'), 'https://neu.de/k', true) });
+  assert.deepEqual([rep.eventsUrl, rep.replace], ['https://neu.de/k', true]);
+  assert.equal(parseCalendarForApply(cissue('https://x.de/e')).replace, false);            // normaler Vorschlag: Lücken füllen
+});

@@ -43,14 +43,14 @@
         <fieldset id="edit-ws">
           <legend>Workshops</legend>
           <div id="edit-checks"></div>
-          <label id="replace-wrap" hidden><input type="checkbox" id="edit-replace"> <span id="replace-text"></span></label>
           <label for="edit-free" id="edit-free-label">Freitext — hier Text einfügen (wird sofort ausgewertet) oder eine URL</label>
           <textarea id="edit-free" rows="3" placeholder="Text oder URL einfügen — Text: erkannte Typen werden angehakt · URL: „Website auslesen (Server)“ liest sie serverseitig aus"></textarea>
           <button type="button" id="edit-scan" title="Liest die Website des Spaces (oder die oben eingefügte URL) serverseitig per GitHub-Workflow aus, ca. 30–60 s. Der eingefügte Text wird dafür nicht verwendet.">Website auslesen (Server)</button>
-          <p id="empty-hint" hidden></p>
           <small id="scan-target"></small>
           <p id="edit-detected" data-state="idle"></p>
         </fieldset>
+        <label id="replace-wrap" hidden><input type="checkbox" id="edit-replace"> <span id="replace-text"></span></label>
+        <p id="empty-hint" hidden></p>
         <button>Speichern + ok</button>
         <small>Änderungen werden erst mit <kbd>y</kbd> / „Speichern + ok“ ins Issue geschrieben; das Issue bleibt offen, bis übernommen wird (Auto / „Übernehmen“).</small>
       </form>
