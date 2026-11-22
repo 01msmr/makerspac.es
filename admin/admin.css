@@ -88,9 +88,34 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
+/* Touch (Smartphone + Tablet): keine Tastenbezeichnungen, ok / später / ablehnen in EINER Zeile, Rückgängig nur kurz nach einer Aktion */
+@media (pointer: coarse), (max-width: 767px) {
+  #actions kbd, #keys, .keyhint { display: none; }
+  #actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+  #actions button { flex: 1 1 0; min-height: 44px; }
+  #actions #act-n { flex: .6 1 0; margin-left: 1rem; }  /* schmaler + Abstand zu „später“ (Fehltipp vermeiden: ablehnen schließt das Issue) */
+  /* Rückgängig: 9 s lang groß in der Bildschirmmitte (nicht in der Aktionsleiste), mit ablaufender Zeitleiste */
+  #actions #act-z { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; flex: none; width: min(80vw, 22rem); min-height: 72px; font-size: 1.25rem; font-weight: 700; overflow: hidden;
+    border: 2px solid var(--focus-color); background: var(--dropdown-bg); box-shadow: 0 8px 28px rgba(0, 0, 0, .35); }
+  #actions #act-z:not([hidden])::after { content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--focus-color); animation: undo-countdown 9s linear forwards; }
+  #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
+  #edit-input { min-height: 44px; }
+  input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
+}
+#open-links { display: none; margin: 0 0 .5rem; gap: .5rem; flex-wrap: wrap; }
+#open-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem; border: 1px solid var(--dropdown-border); border-radius: 6px; background: var(--dropdown-bg); color: var(--text-color); text-decoration: none; font-weight: 600; }
+#open-links a[hidden] { display: none; }
+
 @media (max-width: 767px) {
-  #review { grid-template-columns: 1fr; grid-template-rows: auto 50vh; }
-  #toasts { left: 1rem; right: 1rem; max-width: none; }
+  /* Smartphone: Review wie eine normale Seite (scrollt mit), Aktionen als feste Leiste unten, Vorschau-Rahmen aus */
+  #review { display: block; padding: .5rem; }
+  #left { display: flex; flex-direction: column; overflow: visible; padding: .75rem; }
+  #extra { order: 1; }                         /* Evidenz/Textstelle vor den Aktionen */
+  #actions { order: 2; position: sticky; bottom: 0; z-index: 5; margin: .75rem -.75rem -.75rem; padding: .5rem .75rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); }
+  #bar { position: static; }                   /* Kopfzeile scrollt mit (sonst ein Drittel des Bildschirms belegt) */
+  #frame, #right { display: none; }            /* Vorschau-Rahmen aus; Website/Endpoint über #open-links (neuer Tab) */
+  #open-links { display: flex; }
+  #toasts { left: 1rem; right: 1rem; max-width: none; bottom: 5rem; }  /* über der Aktionsleiste */
 }
 
 /* Statusanzeige Freitext / Scan: grün = ausgewertet · gelb = nichts erkannt · rot = Fehler */
@@ -100,6 +125,7 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #edit-detected[data-state="none"] { color: var(--space-unknown); font-weight: 600; }
 #edit-detected[data-state="error"] { color: var(--space-closed); font-weight: 600; }
 #edit-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes undo-countdown { to { width: 0; } }
 @keyframes pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
 

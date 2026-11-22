@@ -94,7 +94,7 @@ $('save-token').addEventListener('click', () => {
   start();
 });
 
-// ─── Aktueller Datenstand („bei uns“) ───────────────────────────────────
+// ─── Aktueller Datenstand („Aktuell“-Spalte) ───────────────────────────────────
 // Direkt über die GitHub-API (nicht raw.githubusercontent.com: dort bis zu ~5 min CDN-Cache) und dieselbe Verschmelzung
 // wie die Karte (enrichment-merge.js: Grunddaten aus locations.json, Zusatzdaten aus loc-enrichment.json).
 async function ghFile(file) {
@@ -352,7 +352,7 @@ function updateBar() {
   $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
   $('tab-problems').textContent = `Probleme (${np})`;
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
-  $('act-z').disabled = state.undo.length === 0;
+  updateUndoButton();
   const k = cur();
   $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
   const btn = $('apply');
@@ -395,12 +395,18 @@ async function show() {
   $('review').hidden = false;
   state.current = p;
   state.live = null;
-  if (staleMs() > 60000) refreshData(); // „bei uns“ soll immer der letzte Stand sein
+  if (staleMs() > 60000) refreshData(); // „Aktuell“ soll immer der letzte Stand sein
   showProblemReason(p);
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
   $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
   $('show-endpoint').hidden = !k.urlOf;
+  // Smartphone: Website/Endpoint als echte Links in neuem Tab (auf Antippen — Browser blocken automatisch geöffnete Tabs)
+  for (const [id, url, label] of [['open-site', websiteOf(p), 'Website ↗'], ['open-endpoint', k.urlOf?.(p), `${k.viewLabel ?? 'Endpoint'} ↗`]]) {
+    const a = $(id);
+    a.hidden = !(url && /^https?:/.test(url));
+    if (!a.hidden) { a.href = url; a.textContent = label; }
+  }
   if (k.viewLabel) $('show-endpoint').textContent = k.viewLabel;
   $('hint').textContent = '';
   if (state.tab === 'spaceapi') await showSpaceApi(p, loc);
@@ -430,7 +436,7 @@ async function showSpaceApi(p, loc) {
 /** Hinweis zu einem bereits vorhandenen Kalenderlink (aus dem aktuellen, verschmolzenen Stand) */
 function setCalendarHint(p, current) {
   const hint = $('hint');
-  if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
+  if (current) hint.textContent = 'Hinweis: aktuell ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
   else hint.textContent = '';
 }
 
@@ -456,7 +462,7 @@ function showCalendar(p, loc) {
 /** Hinweis zu bereits vorhandenen Workshops (aus dem aktuellen, verschmolzenen Stand) */
 function setWorkshopHint(p, current) {
   const hint = $('hint');
-  if (Array.isArray(current) && current.length) hint.textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
+  if (Array.isArray(current) && current.length) hint.textContent = 'Hinweis: aktuell sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
   else hint.textContent = '';
 }
 
@@ -507,7 +513,7 @@ function renderCompare(rows) {
   const table = $('compare');
   table.replaceChildren();
   const head = table.insertRow();
-  for (const t of ['', 'bei uns', 'Vorschlag']) { const th = document.createElement('th'); th.textContent = t; head.append(th); }
+  for (const t of ['', 'Aktuell', 'Vorschlag']) { const th = document.createElement('th'); th.textContent = t; if (t === 'Aktuell') th.title = 'Aktueller Stand auf der Karte (main)'; head.append(th); }
   for (const r of rows) {
     const tr = table.insertRow();
     tr.className = r.warn ? 'warn' : r.differs ? 'differs' : '';
@@ -526,7 +532,9 @@ function viewUrl(view) {
 function setView(view) {
   state.view = view;
   const url = viewUrl(view);
-  $('frame').src = url && /^https?:/.test(url) ? url : 'about:blank';
+  // Smartphone (≤767px, wie das CSS): Rahmen ist ausgeblendet → nicht laden (Datenvolumen); „im Tab öffnen“ nutzt viewUrl
+  const phone = window.matchMedia?.('(max-width: 767px)').matches;
+  $('frame').src = !phone && url && /^https?:/.test(url) ? url : 'about:blank';
   $('show-site').setAttribute('aria-pressed', String(view === 'site'));
   $('show-endpoint').setAttribute('aria-pressed', String(view === 'endpoint'));
 }
@@ -594,6 +602,7 @@ async function act(action, value, opts = {}) {
     }
     if (p.problem && action !== 'n') gh(`/repos/${REPO}/issues/${p.number}/labels/${PROBLEM_LABEL}`, { method: 'DELETE' }).catch(() => { /* Label schon weg */ });
     state.undo.push(entry);
+    offerUndo();
     k.idx++;
     state.busy = false;
     show();
@@ -614,11 +623,22 @@ function skip() {
   show();
 }
 
+// Rückgängig-Knopf nur 9 s nach einer ok/ablehnen/anpassen-Aktion (Taste z und Toast bleiben unabhängig davon)
+let undoTimer = null;
+function updateUndoButton() { $('act-z').hidden = !(state.undoOffer && state.undo.length); }
+function offerUndo() {
+  state.undoOffer = true;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { state.undoOffer = false; updateUndoButton(); }, 9000);
+  updateUndoButton();
+}
+
 /** Letzte Aktion rückgängig machen: y → Label weg · ä/b → Body zurück + Label weg · n → Issue wieder öffnen · l → zurück */
 async function undo() {
   if (state.busy) return;
   const e = state.undo.pop();
   if (!e) return;
+  state.undoOffer = false;
   state.busy = true;
   try {
     const k = KINDS[e.kind];
@@ -726,7 +746,7 @@ function updateReplaceOption(p) {
   let existing = [], text = '';
   if (k.edit === 'workshops') {
     existing = existingWorkshops(p);
-    text = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
+    text = `Bestehende Workshops ersetzen bzw. entfernen (aktuell: ${existing.join(', ')})`;
   } else if (k.name === 'calendar') {
     // Kalender: ein ANDERER Link ist eine relevante Änderung → „übernehmen“ ist Standard; nur ENTFERNEN braucht eine eigene, ausdrückliche Wahl
     const e = effective(p).events;
