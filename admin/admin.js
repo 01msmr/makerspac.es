@@ -411,10 +411,14 @@ async function show() {
   showProblemReason(p);
   fillEdit(p);
   const loc = state.locations.get(p.spaceId);
-  $('title').textContent = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
+  // Titel = Link zur Website (neuer Tab, mit ↗); ohne gültige URL bleibt es reiner Text
+  const titleText = `#${p.number} · ID ${p.spaceId}${loc ? ` · ${loc.name}` : ''}`;
+  const site = websiteOf(p), siteOk = /^https?:/.test(site);
+  $('open-site').textContent = siteOk ? `${titleText} ↗` : titleText;
+  if (siteOk) $('open-site').href = site; else $('open-site').removeAttribute('href');
   $('show-endpoint').hidden = !k.urlOf;
-  // Smartphone: Website/Endpoint als echte Links in neuem Tab (auf Antippen — Browser blocken automatisch geöffnete Tabs)
-  for (const [id, url, label] of [['open-site', websiteOf(p), 'Website ↗'], ['open-endpoint', k.urlOf?.(p), `${k.viewLabel ?? 'Endpoint'} ↗`]]) {
+  // Smartphone: Endpoint/Kalender als echter Link in neuem Tab (die Website ist der Titel) (auf Antippen — Browser blocken automatisch geöffnete Tabs)
+  for (const [id, url, label] of [['open-endpoint', k.urlOf?.(p), `${k.viewLabel ?? 'Endpoint'} ↗`]]) {
     const a = $(id);
     a.hidden = !(url && /^https?:/.test(url));
     if (!a.hidden) { a.href = url; a.textContent = label; }

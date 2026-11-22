@@ -120,6 +120,9 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #edit-input { min-height: 44px; }
   input, textarea { font-size: 16px; }         /* verhindert den iOS-Zoom beim Fokussieren */
 }
+#title a { color: inherit; text-decoration: none; }
+#title a[href]:hover { text-decoration: underline; }
+#title a[href] { text-decoration: underline dotted; text-underline-offset: 3px; }
 #open-links { display: none; margin: 0 0 .5rem; gap: .5rem; flex-wrap: wrap; }
 #open-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem; border: 1px solid var(--dropdown-border); border-radius: 6px; background: var(--dropdown-bg); color: var(--text-color); text-decoration: none; font-weight: 600; }
 #open-links a[hidden] { display: none; }
