@@ -79,7 +79,7 @@ function logout() {
   token = '';
   for (const k of Object.values(KINDS)) clearTimeout(k.timer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'finish', 'tabs', 'refresh']) $(id).hidden = true;
+  for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
   $('counter').textContent = '';
@@ -187,7 +187,7 @@ async function loadKind(k) {
 
 async function start() {
   $('login').hidden = true;
-  for (const id of ['logout', 'finish', 'tabs', 'refresh']) $(id).hidden = false;
+  for (const id of ['logout', 'tabs', 'refresh']) $(id).hidden = false;
   try {
     await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
@@ -925,20 +925,5 @@ async function applyNow(k, auto = false) {
   }
 }
 $('apply').addEventListener('click', () => applyNow(cur(), false));
-
-// Sitzung beenden: alle ok-Vorschläge beider Arten übernehmen, dann abmelden (Token wird gelöscht)
-$('finish').addEventListener('click', async () => {
-  if (state.busy) return;
-  const notes = [];
-  for (const k of Object.values(KINDS)) {
-    if (!k.okCount) continue;
-    const r = await applyNow(k, false);
-    if (!r.ok) return; // Start fehlgeschlagen → Fehlermeldung bleibt, Sitzung bleibt offen
-    notes.push(...[...$('status').childNodes].map(n => n.cloneNode(true)), document.createElement('br'));
-  }
-  logout();
-  $('done').hidden = false;
-  $('done').replaceChildren('Sitzung beendet. ', ...notes);
-});
 
 if (token) start(); else $('login').hidden = false;
