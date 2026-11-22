@@ -30,7 +30,7 @@ export {};
  * @property {SpaceStyle}       style
  * @property {{ url: string, text: string }} link
  * @property {{ endpoint: string }} [spaceapi]
- * @property {{ 'space.init': number, 'datacheck.latest': number }} [dates]
+ * @property {{ 'space.init'?: number, 'space.edited.latest': number }} dates  YYYYMMDD; space.init 20010000 = unbekannt
  * @property {{ weekday: number, time: number }} [weekly]
  * @property {string}           [events]        - URL zum Veranstaltungskalender
  * @property {WorkshopType[]}   [workshops]

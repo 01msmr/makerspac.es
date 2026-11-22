@@ -93,7 +93,7 @@ $('save-token').addEventListener('click', () => {
 
 // ─── Aktueller Datenstand („bei uns“) ───────────────────────────────────
 // Direkt über die GitHub-API (nicht raw.githubusercontent.com: dort bis zu ~5 min CDN-Cache) und dieselbe Verschmelzung
-// wie die Karte (enrichment-merge.js: locations.json gewinnt, loc-enrichment.json füllt Lücken).
+// wie die Karte (enrichment-merge.js: Grunddaten aus locations.json, Zusatzdaten aus loc-enrichment.json).
 async function ghFile(file) {
   const res = await fetch(`${API}/repos/${REPO}/contents/${file}?ref=main`, {
     cache: 'no-store',
@@ -119,8 +119,6 @@ async function loadData() {
 
 /** Aktueller (verschmolzener) Stand eines Space — genau das, was die Karte zeigt */
 const effective = p => applyEnrichment(state.locations.get(p.spaceId) ?? {}, state.enrichment[String(p.spaceId)]);
-/** Workshops stehen fest in locations.json (haben Vorrang) → Änderung per loc-enrichment.json bliebe wirkungslos */
-const lockedWorkshops = p => (state.locations.get(p.spaceId)?.workshops?.length ?? 0) > 0;
 
 let refreshing = false;
 async function refreshData(manual = false) {
@@ -399,8 +397,7 @@ async function showSpaceApi(p, loc) {
 /** Hinweis zu einem bereits vorhandenen Kalenderlink (aus dem aktuellen, verschmolzenen Stand) */
 function setCalendarHint(p, current) {
   const hint = $('hint');
-  if (state.locations.get(p.spaceId)?.events) hint.textContent = 'Hinweis: der Kalenderlink steht fest in locations.json und hat Vorrang — loc-enrichment.json (diese Übernahme) bliebe wirkungslos. Änderung nur manuell in locations.json.';
-  else if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
+  if (current) hint.textContent = 'Hinweis: bei uns ist schon ein Kalenderlink gesetzt. Ein anderer Vorschlag wird standardmäßig übernommen (ersetzt den bestehenden) — Haken entfernen = bestehenden behalten; „entfernen“ ist eine eigene Auswahl.';
   else hint.textContent = '';
 }
 
@@ -414,8 +411,7 @@ function showCalendar(p, loc) {
 /** Hinweis zu bereits vorhandenen Workshops (aus dem aktuellen, verschmolzenen Stand) */
 function setWorkshopHint(p, current) {
   const hint = $('hint');
-  if (lockedWorkshops(p)) hint.textContent = 'Hinweis: die Workshops stehen fest in locations.json und haben Vorrang — loc-enrichment.json (diese Übernahme) bliebe wirkungslos. Änderung nur manuell in locations.json.';
-  else if (Array.isArray(current) && current.length) hint.textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
+  if (Array.isArray(current) && current.length) hint.textContent = 'Hinweis: bei uns sind schon Workshops gesetzt — ohne „ersetzen bzw. entfernen“ wird dieses Issue beim Übernehmen nur geschlossen; mit der Auswahl werden die bestehenden durch deine Auswahl ersetzt (oder entfernt).';
   else hint.textContent = '';
 }
 
@@ -670,24 +666,22 @@ function setIndicator(stateName, text, types = []) {
 /** „Bestehende ersetzen/entfernen“ nur anbieten, wenn Workshops da sind UND per loc-enrichment.json änderbar */
 function updateReplaceOption(p) {
   const k = cur();
-  let existing = [], locked = false, text = '';
+  let existing = [], text = '';
   if (k.edit === 'workshops') {
     existing = existingWorkshops(p);
-    locked = lockedWorkshops(p);
     text = `Bestehende Workshops ersetzen bzw. entfernen (bei uns: ${existing.join(', ')})`;
   } else if (k.name === 'calendar') {
     // Kalender: ein ANDERER Link ist eine relevante Änderung → „übernehmen“ ist Standard; nur ENTFERNEN braucht eine eigene, ausdrückliche Wahl
     const e = effective(p).events;
     existing = e ? [e] : [];
-    locked = !!state.locations.get(p.spaceId)?.events; // fest in locations.json → Vorrang, per Enrichment nicht änderbar
     const url = $('edit-input').value.trim();
     const differs = !!url && normalizeUrl(url) !== normalizeUrl(e || '');
-    const showReplace = existing.length > 0 && !locked && differs;
+    const showReplace = existing.length > 0 && differs;
     const wasHidden = $('replace-wrap').hidden;
     $('replace-wrap').hidden = !showReplace;
     if (showReplace && wasHidden) $('edit-replace').checked = true; // Standard: neuen Link übernehmen
     $('replace-text').textContent = `Neuen Kalenderlink übernehmen — ersetzt den bestehenden (${e}). Haken entfernen = bestehenden behalten.`;
-    const showRemove = existing.length > 0 && !locked;
+    const showRemove = existing.length > 0;
     $('remove-wrap').hidden = !showRemove;
     $('remove-text').textContent = `Bestehenden Kalenderlink entfernen (${e || '–'}) — es bleibt dann keiner stehen`;
     if (!showReplace) $('edit-replace').checked = false;
@@ -695,7 +689,7 @@ function updateReplaceOption(p) {
     return;
   }
   $('remove-wrap').hidden = true;
-  $('replace-wrap').hidden = existing.length === 0 || locked;
+  $('replace-wrap').hidden = existing.length === 0;
   $('replace-text').textContent = text;
   if ($('replace-wrap').hidden) $('edit-replace').checked = false;
 }

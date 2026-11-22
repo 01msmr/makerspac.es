@@ -39,12 +39,12 @@ test('buildComparison markiert Abweichungen', () => {
   assert.equal(rows.Website.differs, false);
   assert.equal(rows.Koordinaten.differs, false);
   assert.equal(rows.Endpoint.differs, true);
-  const far = buildComparison(loc, undefined, { ...data, location: { lat: 55, lon: 12 } }, 'x')[3];
+  const far = buildComparison(loc, undefined, { ...data, location: { lat: 55, lon: 12 } }, 'x').find(r => r.label === 'Koordinaten');
   assert.equal(far.differs, true);
 });
 
 test('buildComparison ohne Live-Daten wirft nicht', () => {
-  assert.equal(buildComparison(undefined, undefined, null, 'https://e.de').length, 6);
+  assert.equal(buildComparison(undefined, undefined, null, 'https://e.de').length, 7);
 });
 
 test('distanceMeters ~111 km pro Breitengrad', () => {
@@ -340,4 +340,22 @@ test('Apply-Skript Kalender: Modus „ersetzen“ erlaubt leere URL (entfernen),
   const rep = parseCalendarForApply({ ...cissue('x'), body: replaceEvents(CBODY('https://alt.de'), 'https://neu.de/k', true) });
   assert.deepEqual([rep.eventsUrl, rep.replace], ['https://neu.de/k', true]);
   assert.equal(parseCalendarForApply(cissue('https://x.de/e')).replace, false);            // normaler Vorschlag: Lücken füllen
+});
+
+import { formatEditDate } from '../admin/admin-lib.js';
+
+test('formatEditDate: YYYYMMDD → YYYY-MM-DD, sonst „–“', () => {
+  assert.equal(formatEditDate(20251115), '2025-11-15');
+  assert.equal(formatEditDate('20260320'), '2026-03-20');
+  assert.equal(formatEditDate(undefined), '–');
+  assert.equal(formatEditDate(2025111), '–');
+});
+
+test('alle drei Vergleiche zeigen „Zuletzt bearbeitet“ aus dates.space.edited.latest (bei uns)', () => {
+  const loc = { name: 'X', link: { url: 'https://x.de' }, loc: { lat: 1, long: 1, city: 'Z' }, dates: { 'space.edited.latest': 20251115 } };
+  const find = rows => rows.find(r => r.label === 'Zuletzt bearbeitet');
+  for (const rows of [buildComparison(loc, undefined, null, 'https://e.de'), buildWorkshopComparison(loc, [], ['3d']), buildCalendarComparison(loc, undefined, 'https://k.de', 'high')]) {
+    assert.deepEqual([find(rows).ours, find(rows).differs], ['2025-11-15', false]);
+  }
+  assert.equal(find(buildWorkshopComparison(undefined, [], ['3d'])).ours, '–');   // Space unbekannt
 });

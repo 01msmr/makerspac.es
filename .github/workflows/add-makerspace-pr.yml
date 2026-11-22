@@ -156,10 +156,12 @@ jobs:
             };
 
             // Datum (Format: YYYYMMDD)
-            const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+            // Datum in Berlin (YYYYMMDD); space.init 20010000 = Gründungsdatum unbekannt. Beim Merge setzt stamp-edit-date.yml
+            // „space.edited.latest“ noch einmal auf das Merge-Datum.
+            const today = parseInt(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date()).replace(/-/g, ''), 10);
             newEntry.dates = {
               "space.init": 20010000,
-              "datacheck.latest": today
+              "space.edited.latest": today
             };
 
             // Debug: Neuen Eintrag ausgeben

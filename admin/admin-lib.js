@@ -5,6 +5,13 @@ import { detectTypesLoose } from '../workshop-keywords.js';
 
 export const REPO = '01msmr/makerspac.es';
 export const OK_LABEL = 'ok';
+
+/** YYYYMMDD (Zahl) → „YYYY-MM-DD“, sonst „–“ */
+export function formatEditDate(n) {
+  const s = String(n ?? '');
+  return /^\d{8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6)}` : '–';
+}
+const editedRow = loc => ({ label: 'Zuletzt bearbeitet', ours: formatEditDate(loc?.dates?.['space.edited.latest']), proposed: '–', differs: false });
 export const PROBLEM_LABEL = 'problem'; // gesetzt von den Apply-Skripten, wenn ein Vorschlag nicht übernommen werden konnte
 
 // Gleiche Regexe wie parseIssue() in tools/apply-spaceapi-issues.js
@@ -84,6 +91,7 @@ export function buildComparison(loc, current, data, endpoint) {
     { label: 'Name', ours: loc?.name ?? dash, proposed: data?.space ?? dash,
       differs: !!data && (loc?.name ?? '').toLowerCase() !== String(data.space ?? '').toLowerCase() },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: data?.location?.address ?? dash, differs: false },
+    editedRow(loc),
     { label: 'Website', ours: loc?.link?.url ?? dash, proposed: data?.url ?? dash,
       differs: !!data?.url && host(data.url) !== host(loc?.link?.url ?? '') },
     { label: 'Koordinaten', ours: loc?.loc ? `${loc.loc.lat}, ${loc.loc.long}` : dash,
@@ -170,6 +178,7 @@ export function buildWorkshopComparison(loc, currentWorkshops, proposed) {
     { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
     { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
+    editedRow(loc),
     { label: 'Workshops', ours: cur.length ? cur.join(', ') : dash, proposed: proposed.length ? proposed.join(', ') : '(entfernen)', differs: !same, warn: proposed.length === 0 && cur.length > 0 },
   ];
 }
@@ -241,6 +250,7 @@ export function buildCalendarComparison(loc, currentEvents, proposed, confidence
     { label: 'Name', ours: loc?.name ?? dash, proposed: dash, differs: false },
     { label: 'Stadt', ours: loc?.loc?.city ?? dash, proposed: dash, differs: false },
     { label: 'Website', ours: loc?.link?.url ?? dash, proposed: dash, differs: false },
+    editedRow(loc),
     { label: 'Kalender', ours: currentEvents || dash, proposed: proposed || '(entfernen)', differs: (currentEvents || '') !== (proposed || ''), warn: !proposed && !!currentEvents },
     { label: 'Confidence', ours: dash, proposed: confidence || dash, differs: confidence === 'low', warn: confidence === 'low' },
   ];

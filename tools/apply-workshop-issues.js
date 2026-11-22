@@ -114,22 +114,11 @@ async function main() {
 
   const stats = { total: parsed.length, applied: 0, skipped: 0, errors: 0 };
   const toApply = [];
-  // Fest in locations.json eingetragene Workshops haben auf der Karte Vorrang — loc-enrichment.json bliebe wirkungslos
   const locations = JSON.parse(fs.readFileSync(path.join(root, 'locations.json'), 'utf8'));
-  const fixedByLocations = new Map(locations.filter(l => l.workshops?.length).map(l => [l.ID, l.workshops]));
 
   for (const { issueNumber, spaceId, workshops, replace } of parsed) {
     const id = String(spaceId);
     const existing = enrichment[id]?.workshops;
-
-    if (fixedByLocations.has(spaceId)) {
-      console.log(`[#${issueNumber}] ID ${spaceId}: Workshops stehen fest in locations.json (${fixedByLocations.get(spaceId).join(', ')}) — loc-enrichment.json wäre wirkungslos, Issue geschlossen`);
-      if (applyMode) {
-        try { closeIssue(issueNumber, 'Workshops stehen fest in locations.json (haben Vorrang) - nichts uebernommen, Aenderung nur manuell dort moeglich'); } catch (err) { console.error(`[#${issueNumber}] Fehler beim Schließen: ${err.message}`); stats.errors++; }
-      }
-      stats.skipped++;
-      continue;
-    }
 
     // Modus „ersetzen“ (explizit im Admin gewählt): bestehende Workshops ersetzen bzw. entfernen
     if (replace) {

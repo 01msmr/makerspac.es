@@ -109,13 +109,13 @@ node -e "
   },
   "style": "for all",                   // Pflicht: "for all" | "for youth" | "for students" | "commercial"
   "link": { "url": "https://...", "text": "toolbox-bodensee.de" },
-  "dates": { "space.init": 20240101, "datacheck.latest": 20250101 }
+  "dates": { "space.init": 20240101, "space.edited.latest": 20250101 }
 }
 ```
 
 **Sortierung:** nach Land → PLZ → Name
 
-`spaceapi`, `weekly`, `workshops` und `events` gehören **nicht** in `locations.json` — sie liegen in `loc-enrichment.json`.
+`dates` kennt nur `space.init` und `space.edited.latest` (YYYYMMDD; Platzhalter `20010000` für unbekannt). `spaceapi`, `weekly`, `workshops` und `events` gehören **nicht** in `locations.json` — sie liegen in `loc-enrichment.json`.
 
 ---
 
@@ -140,7 +140,7 @@ Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-m
 
 ## Vorschläge prüfen (`/admin/`)
 
-Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Label `workshop-data`; Reiter „Workshops": Checkboxen mit dem Vorschlag, dazu Textfeld — Text einfügen hakt erkannte Typen an, „Website auslesen (Server)" liest die Website bzw. eine eingefügte URL serverseitig per GitHub-Workflow aus, ca. 30–60 s) sowie `Kalenderlink: …` (Reiter „Kalender", URL-Feld) werden auf `makerspac.es/admin/` abgearbeitet. Am Ende einer Liste springt die Seite zum nächsten Reiter. Weitere Reiter (PRs, Neu, Änderung, Daten, Sonstige) erscheinen nur, wenn etwas offen ist, und verlinken auf GitHub. Die Spalte „bei uns“ zeigt immer den aktuellen Stand von `main` (wie die Karte: `locations.json` gewinnt, `loc-enrichment.json` füllt Lücken) — oben steht „Daten: Uhrzeit · Commit"; sie aktualisiert sich bei Fokus, alle 2 Minuten, nach „Übernehmen" und per ↻. Wurde ein Vorschlag bei der Übernahme abgelehnt (ungültige Daten, toter Endpoint), kommt er in seinem Reiter zurück: rot markiert (⚠) mit dem Grund; nach `y` verschwindet die Markierung. Der Reiter „Probleme" zeigt ungelöste Workflow-Fehler (24 h) und Vorschläge, die seit über 2 h mit `ok` offen sind (nicht verlinkt, `noindex`):
+Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Label `workshop-data`; Reiter „Workshops": Checkboxen mit dem Vorschlag, dazu Textfeld — Text einfügen hakt erkannte Typen an, „Website auslesen (Server)" liest die Website bzw. eine eingefügte URL serverseitig per GitHub-Workflow aus, ca. 30–60 s) sowie `Kalenderlink: …` (Reiter „Kalender", URL-Feld) werden auf `makerspac.es/admin/` abgearbeitet. Am Ende einer Liste springt die Seite zum nächsten Reiter. Weitere Reiter (PRs, Neu, Änderung, Daten, Sonstige) erscheinen nur, wenn etwas offen ist, und verlinken auf GitHub. Die Spalte „bei uns“ zeigt immer den aktuellen Stand von `main` (wie die Karte: `locations.json` Grunddaten + `loc-enrichment.json` Ergänzungen; dazu „Zuletzt bearbeitet“ aus `dates`) — oben steht „Daten: Uhrzeit · Commit"; sie aktualisiert sich bei Fokus, alle 2 Minuten, nach „Übernehmen" und per ↻. Wurde ein Vorschlag bei der Übernahme abgelehnt (ungültige Daten, toter Endpoint), kommt er in seinem Reiter zurück: rot markiert (⚠) mit dem Grund; nach `y` verschwindet die Markierung. Der Reiter „Probleme" zeigt ungelöste Workflow-Fehler (24 h) und Vorschläge, die seit über 2 h mit `ok` offen sind (nicht verlinkt, `noindex`):
 
 1. Fine-grained PAT anlegen: nur Repo `01msmr/makerspac.es`, **Issues R/W** + **Actions R/W**, mit Ablauf; auf der Seite einfügen.
 2. Je Vorschlag (`j`/`k` = Website/Endpoint rechts): `y` = ok (Label `ok`; geänderte Eingaben direkt im Formular — Endpoint bzw. Workshop-Checkboxen — werden dabei ins Issue übernommen) · `Esc` = Änderungen verwerfen · `n` = ablehnen (Issue schließen; auch `y` ohne angehakten Workshop-Typ schließt das Issue ohne Übernahme; bestehende Workshops bleiben dabei unverändert. Zum **Ersetzen oder Entfernen** bestehender Workshops die Auswahl „Bestehende Workshops ersetzen bzw. entfernen" ankreuzen (im Reiter „Kalender" ist es anders herum: ein **anderer** Vorschlag für ein Space mit vorhandenem Link ersetzt diesen standardmäßig — „Neuen Kalenderlink übernehmen" ist vorangehakt, Haken entfernen = bestehenden behalten; nur **Entfernen** ist eine eigene, ausdrückliche Auswahl) — mit keinem Typ angehakt werden sie entfernt, erst beim Übernehmen, bis dahin mit `z` rückgängig) · `l` = später · `z` = letzte Aktion rückgängig (Label weg / Issue wieder offen / alter Text zurück; nicht mehr nach „Übernehmen"). Jede Aktion zeigt einen Toast (grün = ok, rot = abgelehnt/Fehler, gelb = angepasst/später); im Vergleich steht rot für „bei uns", grün für den Vorschlag, gelb mit ⚠ für Verdächtiges (Name/Website/Koordinaten weichen ab, Confidence low)
