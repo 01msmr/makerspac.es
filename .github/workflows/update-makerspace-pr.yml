@@ -133,9 +133,9 @@ jobs:
             const newLong = getNumber('Longitude');
             if (newLong) space.loc.long = newLong;
 
-            // Always update datacheck.latest
-            const today = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
-            space.dates = { ...space.dates, 'datacheck.latest': today };
+            // Zuletzt bearbeitet = heute (Datum in Berlin, YYYYMMDD). Der Update-PR wird sofort automatisch gemergt.
+            const today = parseInt(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date()).replace(/-/g, ''), 10);
+            space.dates = { ...space.dates, 'space.edited.latest': today };
 
             locations[idx] = space;
             fs.writeFileSync('locations.json', JSON.stringify(locations, null, 2));

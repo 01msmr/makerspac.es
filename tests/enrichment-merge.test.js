@@ -4,15 +4,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { applyEnrichment } from '../enrichment-merge.js';
 
-test('Enrichment füllt nur Lücken, locations.json gewinnt', () => {
-  const loc = { ID: 1, workshops: ['wood'], events: undefined };
+test('Zusatzdaten kommen aus dem Enrichment; Grunddaten bleiben unverändert', () => {
+  const loc = { ID: 1, name: 'X', style: 'for all', dates: { 'space.edited.latest': 20251115 } };
   const e = { workshops: ['3d'], events: 'https://x.de/e', spaceapi: { endpoint: 'https://x.de/s' }, weekly: { weekday: 2, time: 1900 } };
   const out = applyEnrichment(loc, e);
-  assert.deepEqual(out.workshops, ['wood']);               // locations.json gewinnt
-  assert.equal(out.events, 'https://x.de/e');              // Lücke gefüllt
+  assert.deepEqual(out.workshops, ['3d']);
+  assert.equal(out.events, 'https://x.de/e');
   assert.equal(out.spaceapi.endpoint, 'https://x.de/s');
   assert.deepEqual(out.weekly, { weekday: 2, time: 1900 });
-  assert.deepEqual(loc.workshops, ['wood']);               // Original unverändert
+  assert.deepEqual([out.name, out.style, out.dates], ['X', 'for all', { 'space.edited.latest': 20251115 }]);
+  assert.equal(loc.workshops, undefined);                  // Original unverändert
 });
 
 test('ohne Enrichment-Eintrag oder mit leeren Workshops bleibt alles beim Alten', () => {

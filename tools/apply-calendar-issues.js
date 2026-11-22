@@ -204,17 +204,6 @@ async function main() {
     const name  = nameById.get(spaceId);
     const entry = enrichment[String(spaceId)];
 
-    // Ein fest in locations.json eingetragener events-Link hat auf der Karte Vorrang (Enrichment füllt nur Lücken)
-    const fixedEvents = locations.find(l => l.ID === spaceId)?.events;
-    if (fixedEvents) {
-      if (applyMode) {
-        try { execFileSync('gh', ['issue', 'close', String(issueNumber), '--comment', 'events steht fest in locations.json (hat Vorrang) - nichts uebernommen'], { cwd: path.join(__dirname, '..'), stdio: 'pipe' }); } catch (err) { console.error(`[#${issueNumber}] Fehler beim Schliessen: ${err.message}`); stats.errors++; }
-      }
-      console.log(`[#${issueNumber}] ${name} (ID ${spaceId}): events steht fest in locations.json ("${fixedEvents}") — ${applyMode ? 'Issue geschlossen' : 'wuerde Issue schliessen'}`);
-      stats.skipped_already_set++;
-      continue;
-    }
-
     // Modus „ersetzen“ (explizit im Admin gewählt): vorhandenen Kalenderlink ersetzen bzw. entfernen
     if (replace) {
       if (!entry?.events && !eventsUrl) {

@@ -9,7 +9,7 @@ import { WORKSHOP_TYPES } from '../workshop-types.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const ALLOWED_FIELDS = new Set(['workshops', 'events', 'spaceapi', 'weekly', 'dates']);
+const ALLOWED_FIELDS = new Set(['workshops', 'events', 'spaceapi', 'weekly']); // dates gehören in locations.json
 
 /** true bei einer http(s)-URL ohne Leerzeichen (z. B. „https: //x“ ist ungültig) */
 export function isHttpUrl(value) {
@@ -33,7 +33,7 @@ export function validateEnrichment(enrichment, locationIds) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) { errors.push(`${at}: Eintrag muss ein Objekt sein`); continue; }
 
     for (const field of Object.keys(entry)) {
-      if (!ALLOWED_FIELDS.has(field)) errors.push(`${at}: unbekanntes Feld "${field}"`);
+      if (!ALLOWED_FIELDS.has(field)) errors.push(field === 'dates' ? `${at}: "dates" gehört in locations.json (dort: space.init, space.edited.latest)` : `${at}: unbekanntes Feld "${field}"`);
     }
 
     if (entry.workshops !== undefined) {
@@ -61,9 +61,6 @@ export function validateEnrichment(enrichment, locationIds) {
       if (!Number.isInteger(time) || time < 0 || time > 2359 || time % 100 > 59) errors.push(`${at}: "weekly.time" muss HHMM (0–2359) sein`);
     }
 
-    if (entry.dates !== undefined && (typeof entry.dates !== 'object' || entry.dates === null || Array.isArray(entry.dates))) {
-      errors.push(`${at}: "dates" muss ein Objekt sein`);
-    }
   }
   return errors;
 }

@@ -71,7 +71,7 @@
 | `config.js` | ICONS, COLOURS, SETTINGS, WORKSHOP_TYPES, COUNTRY_CODES, Helper | `AppConfig`, `window.AppConfig` |
 | `colours.js` | Farbdefinitionen, `isDarkMode()`, `applyCssColours()`, Dark-Mode-Helpers | `COLOURS`, `isDarkMode`, `applyCssColours` (export) |
 | `types.js` | JSDoc-Typdefinitionen (MakerSpace, Pill, AppPhase, …) — kein Runtime-Export | `export {}` |
-| `enrichment-merge.js` | SSOT der Verschmelzung `locations.json` + `loc-enrichment.json` (locations.json gewinnt, Enrichment füllt Lücken) — von `generate-map-splits.js` (Karte), `/admin/` („bei uns“) genutzt; Crawler/Apply-Tools sollen denselben Stand sehen | `applyEnrichment` |
+| `enrichment-merge.js` | SSOT der Verschmelzung `locations.json` + `loc-enrichment.json` (`locations.json` = Grunddaten, `loc-enrichment.json` ergänzt Workshops/Events/SpaceAPI/Weekly — keine Überschneidung, daher keine Vorrang-Regel) — von `generate-map-splits.js` (Karte), `/admin/` („bei uns“) genutzt; Crawler/Apply-Tools sollen denselben Stand sehen | `applyEnrichment` |
 | `workshop-keywords.js` | Stichwörter je Workshop-Typ (SSOT, pure) — vom Crawler (`tools/workshop-crawler.js`) und von `/admin/` (Freitext → Typen) genutzt | `WORKSHOP_KEYWORDS`, `detectTypes` |
 | `workshop-types.js` | Workshop-Typen, `getSortedWorkshops()`, Icons, Tooltip | `WORKSHOP_TYPES`, `getSortedWorkshops`, `getWorkshopIcon` (export) |
 | `filter-config.js` | Filter-Kategorien, `IGNORED_STYLES_SET`, `FILTER_ORDER_SET`, `getStyleIcon` | exports |
@@ -132,16 +132,18 @@
 
 | Datei | Inhalt | Gepflegt durch | Im Git |
 |-------|--------|---------------|--------|
-| `locations.json` | Manuell kuratierte Kerndaten (Name, Adresse, Coords, Style, Link) | Mensch | ✅ |
-| `loc-enrichment.json` | Crawler-pflegbare Felder (workshops, events, spaceapi, weekly, dates.space.init) | Crawler-Tools | ✅ |
+| `locations.json` | **Nur Grunddaten**: `name, ID, loc, style, link, dates` (`dates`: `space.init`, `space.edited.latest`, je YYYYMMDD; strikt validiert) | Mensch | ✅ |
+| `loc-enrichment.json` | Crawler-pflegbare Felder (workshops, events, spaceapi, weekly) — keine Datumsfelder | Crawler-Tools | ✅ |
 | `status.json` | Live Open/Closed-Status | Cron (alle 15 Min) | ❌ |
 
 **Merge-Regel:** `generate-map-splits.js` kombiniert beide JSON-Dateien zur Build-Zeit.
-Echter Wert in `locations.json` gewinnt immer — `loc-enrichment.json` füllt nur Lücken/Platzhalter.
+Die Felder überschneiden sich nicht: `locations.json` enthält nur Grunddaten, `loc-enrichment.json` nur Ergänzungen (Validator lehnt Enrichment-Felder in `locations.json` ab, siehe ADR-008).
+
+**Datumsfelder:** `dates.space.init` (Platzhalter 20010000 = unbekannt) und `dates.space.edited.latest` (letzte Bearbeitung, Berliner Datum, kein Zeitanteil). Setzen: Update-/Add-Workflow beim PR, bestätigte Admin-Änderungen beim Übernehmen. `/admin/` zeigt den alten Stand als „Zuletzt bearbeitet“.
 
 **Platzhalter-Erkennung:**
 - `weekly.weekday === 9 && weekly.time === 0` → kein echter Wert
-- `dates.space.init === 20010000` → kein echter Wert
+- `dates['space.init'] === 20010000` → kein echter Wert
 
 **Workflow für neue Crawler-Daten:**
 ```
