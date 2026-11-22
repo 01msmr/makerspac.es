@@ -379,7 +379,7 @@ test('mergeQueue: angezeigtes Issue inzwischen geschlossen → gone, Rest nachr�
   assert.equal(mergeQueue([], 0, [q(1)], null).gone, false);   // nichts angezeigt → nichts „weg“
 });
 
-import { parseWeeklyIssue, parseWeeklyInput, replaceWeekly, weeklyText, formatWeekly, buildWeeklyComparison } from '../admin/admin-lib.js';
+import { parseWeeklyIssue, parseWeeklyInput, weeklyEvidence, replaceWeekly, weeklyText, formatWeekly, buildWeeklyComparison } from '../admin/admin-lib.js';
 
 const WKBODY = d => `## Treffen-Vorschlag: X\n\n**ID:** 7\n**Website:** https://x.de\n\n\`\`\`json\n${JSON.stringify(d, null, 2)}\n\`\`\``;
 const wkissue = (d, labels = []) => ({ number: 4, title: 'Treffen-Daten: X', body: WKBODY(d), labels: labels.map(name => ({ name })), html_url: 'u', updated_at: '2026-01-01T00:00:00Z' });
@@ -419,4 +419,10 @@ test('Treffen: Vergleich zeigt Treffen + Gründung (bei uns / Vorschlag) und Zul
 test('classifyItem: Treffen-Daten hat eigenen Reiter (parsebar), sonst Liste „data“', () => {
   assert.equal(classifyItem(wkissue({ weekly: { weekday: 2, time: 1900 } })), null);
   assert.equal(classifyItem(wkissue({})), 'data');
+});
+
+test('Treffen: Evidenz (Textstelle der Website) wird aus der Gefunden-Tabelle gelesen', () => {
+  const body = '**ID:** 7\n\n### Gefunden\n| Was | Wert | Confidence | Quelle |\n|-----|------|------------|--------|\n| Weekly | Dienstag 19:00 | high | Offener Abend: jeden Dienstag ab 19 Uhr. |\n| Gründung | 20150501 | high | Gegründet: Mai 2015 |\n\n```json\n{"weekly":{"weekday":2,"time":1900}}\n```';
+  assert.deepEqual(weeklyEvidence(body).map(e => [e.what, e.source]), [['Weekly', 'Offener Abend: jeden Dienstag ab 19 Uhr.'], ['Gründung', 'Gegründet: Mai 2015']]);
+  assert.equal(parseWeeklyIssue({ number: 1, title: 'Treffen-Daten: X', body }).evidence.length, 2);
 });
