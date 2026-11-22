@@ -68,3 +68,12 @@ test('Feedback-Texte versprechen keinen Deploy, den der Workflow nicht startet',
     if (/Deploy (läuft|wurde gestartet)/.test(text)) assert.match(text, /workflow run deploy\.yml/, `${name}: Rückmeldung nennt Deploy, startet aber keinen`);
   }
 });
+
+test('Workflows der Concurrency-Gruppe data-apply holen main zum Ausführungszeitpunkt (Vorfall: veralteter Checkout → Merge-Konflikt)', () => {
+  // Ohne `ref: main` gilt der Commit beim AUSLÖSEN. Wartet der Lauf in der Gruppe, schreibt er sonst auf Basis eines
+  // älteren Stands und der PR/Push kollidiert mit dem Lauf davor (update-space-id-103, 2026-11-22).
+  for (const { name, text } of workflows) {
+    if (!/group:\s*data-apply/.test(text)) continue;
+    assert.match(text, /actions\/checkout@v4\s*\n\s*with:\s*\n\s*ref:\s*main/, `${name}: actions/checkout braucht "with: ref: main"`);
+  }
+});
