@@ -115,3 +115,9 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #edit-detected .chip { display: inline-block; margin: .35rem .4rem 0 0; padding: .15rem .8rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-size: 1.1rem; font-weight: 700; }
 #edit-checks label.auto { padding: 0 .4rem; border-radius: 6px; font-weight: 700; background: color-mix(in srgb, var(--space-open) 24%, transparent); box-shadow: inset 3px 0 0 var(--space-open); }
 #edit-checks label.auto::after { content: "✓"; margin-left: auto; color: var(--space-open); }
+
+/* Probleme: rot, nur sichtbar wenn etwas offen ist */
+#tab-problems { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); font-weight: 700; }
+#problem { margin: 0 0 .75rem; padding: .6rem .75rem; border-radius: 8px; border: 1px solid var(--space-closed); background: color-mix(in srgb, var(--space-closed) 12%, var(--dropdown-bg)); white-space: pre-wrap; }
+#inbox h3 { margin: 1rem 0 .3rem; }
+#inbox .hint { color: var(--hover-text-color); margin: 0 0 .4rem; }

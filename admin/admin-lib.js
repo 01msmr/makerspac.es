@@ -5,6 +5,7 @@ import { detectTypesLoose } from '../workshop-keywords.js';
 
 export const REPO = '01msmr/makerspac.es';
 export const OK_LABEL = 'ok';
+export const PROBLEM_LABEL = 'problem'; // gesetzt von den Apply-Skripten, wenn ein Vorschlag nicht übernommen werden konnte
 
 // Gleiche Regexe wie parseIssue() in tools/apply-spaceapi-issues.js
 const RE_ID = /\*\*ID:\*\*\s*(\d+)/;
@@ -23,6 +24,7 @@ export function parseIssue(issue) {
   return {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), endpoint,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url,
     updated: Date.parse(issue.updated_at) || 0,
   };
@@ -119,6 +121,7 @@ export function parseWorkshopIssue(issue) {
   return {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), workshops,
     ok: RE_APPROVED.test(body) || (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
     website: body.match(RE_WEBSITE)?.[1] ?? '', rows, evidence: ev ? ev[1].trim() : '',
   };
@@ -201,6 +204,7 @@ export function parseCalendarIssue(issue) {
   return {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), events: ev[1],
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
+    problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
     url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
     website: body.match(RE_WEBSITE)?.[1] ?? '', confidence: body.match(RE_CONFIDENCE)?.[1]?.toLowerCase() ?? '',
   };
@@ -259,4 +263,41 @@ export function groupInbox(items) {
     (out[g] ??= []).push(item);
   }
   return out;
+}
+
+// ─── Probleme (nicht lösbar durch y/n: fehlgeschlagene Läufe, hängende ok-Issues, Grund zurückgekehrter Vorschläge) ───
+
+const BAD_CONCLUSIONS = new Set(['failure', 'timed_out', 'startup_failure']);
+
+/**
+ * Ungelöste Workflow-Fehler: je Workflow zählt nur der NEUESTE abgeschlossene Lauf der letzten `hours` Stunden —
+ * ein späterer grüner Lauf löst den Fehler auf. Bekanntes Rauschen (Bot-PR-Check, ADR-007) wird ausgeblendet.
+ * @returns {{name:string,url:string,at:string,title:string,branch:string}[]}
+ */
+export function failedRuns(runs, now, hours = 24) {
+  const since = now - hours * 3600e3;
+  const latest = new Map();
+  for (const r of runs) {
+    if (r.status !== 'completed' || Date.parse(r.created_at) < since) continue;
+    if (r.event === 'pull_request' && /^(update|add)-space-id-/.test(r.head_branch || '')) continue;
+    const key = r.path || r.name;
+    const cur = latest.get(key);
+    if (!cur || Date.parse(r.created_at) > Date.parse(cur.created_at)) latest.set(key, r);
+  }
+  return [...latest.values()].filter(r => BAD_CONCLUSIONS.has(r.conclusion))
+    .map(r => ({ name: r.name, url: r.html_url, at: r.created_at, title: r.display_title || '', branch: r.head_branch || '' }))
+    .sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Offene Issues mit Label ok, die seit über `hours` Stunden nicht übernommen wurden (Cron/Workflow hängt?) */
+export function stuckOk(items, now, hours = 2) {
+  return items.filter(i => !i.pull_request && hasLabel(i, OK_LABEL) && now - Date.parse(i.updated_at) > hours * 3600e3)
+    .map(i => ({ number: i.number, title: i.title, url: i.html_url, hours: Math.floor((now - Date.parse(i.updated_at)) / 3600e3) }));
+}
+
+/** Grund, warum ein Vorschlag zurückkam: letzter Bot-Kommentar („Nicht übernommen …“ / „Endpoint nicht erreichbar …“) */
+export function problemReason(comments) {
+  const bot = (comments || []).filter(c => c.user?.type === 'Bot' || /\[bot\]$/.test(c.user?.login || ''));
+  const hit = [...bot].reverse().find(c => /^(Nicht übernommen|Endpoint nicht erreichbar)/.test(c.body || ''));
+  return hit ? hit.body.trim().slice(0, 600) : '';
 }

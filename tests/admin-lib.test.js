@@ -225,3 +225,57 @@ test('detectFromText: "Code"-Liste (Jabberoid, Time Machine for Android …) →
   assert.deepEqual(detectFromText('Unicode und Barcode-Leser'), []); // Teilstring ≠ Wort
   assert.deepEqual(detectFromText('QR-Code lesen'), ['coding']);       // Wort mit Bindestrich zählt (locker, bitte prüfen)
 });
+
+import { failedRuns, stuckOk, problemReason, PROBLEM_LABEL } from '../admin/admin-lib.js';
+
+const NOW = Date.parse('2026-11-22T14:00:00Z');
+const run = (o) => ({ status: 'completed', event: 'workflow_dispatch', head_branch: 'main', display_title: 't', html_url: 'https://github.com/o/r/actions/runs/1', created_at: '2026-11-22T12:00:00Z', path: '.github/workflows/a.yml', name: 'A', conclusion: 'success', ...o });
+
+test('failedRuns: nur der neueste Lauf je Workflow zählt, späterer grüner Lauf löst auf', () => {
+  const runs = [
+    run({ name: 'Apply', path: 'apply.yml', conclusion: 'failure', created_at: '2026-11-22T10:00:00Z' }),
+    run({ name: 'Apply', path: 'apply.yml', conclusion: 'success', created_at: '2026-11-22T11:00:00Z' }),   // gelöst
+    run({ name: 'Deploy', path: 'deploy.yml', conclusion: 'failure', created_at: '2026-11-22T12:00:00Z' }), // offen
+    run({ name: 'Scan', path: 'scan.yml', conclusion: 'failure', created_at: '2026-11-20T12:00:00Z' }),     // zu alt
+    run({ name: 'Run', path: 'run.yml', status: 'in_progress', conclusion: null }),                          // läuft noch
+  ];
+  assert.deepEqual(failedRuns(runs, NOW).map(r => r.name), ['Deploy']);
+});
+
+test('failedRuns: Bot-PR-Check (bekanntes Rauschen) wird ausgeblendet, normale PR-Checks nicht', () => {
+  const runs = [
+    run({ name: 'Validate', path: 'v.yml', event: 'pull_request', head_branch: 'update-space-id-133', conclusion: 'failure' }),
+    run({ name: 'Validate2', path: 'v2.yml', event: 'pull_request', head_branch: 'feat/x', conclusion: 'failure' }),
+  ];
+  assert.deepEqual(failedRuns(runs, NOW).map(r => r.name), ['Validate2']);
+});
+
+test('stuckOk: ok-Label, offen, älter als 2 h; keine PRs, keine frischen', () => {
+  const issue = (n, labels, updated, extra = {}) => ({ number: n, title: 'T' + n, html_url: 'https://github.com/o/r/issues/' + n, labels: labels.map(name => ({ name })), updated_at: updated, ...extra });
+  const items = [
+    issue(1, ['ok'], '2026-11-22T10:00:00Z'),            // 4 h → hängt
+    issue(2, ['ok'], '2026-11-22T13:30:00Z'),            // frisch
+    issue(3, ['data-update'], '2026-11-22T09:00:00Z'),   // kein ok
+    issue(4, ['ok'], '2026-11-22T09:00:00Z', { pull_request: {} }),
+  ];
+  assert.deepEqual(stuckOk(items, NOW).map(s => [s.number, s.hours]), [[1, 4]]);
+});
+
+test('problemReason: letzter Bot-Kommentar mit bekanntem Anfang; Menschen-Kommentare zählen nicht', () => {
+  const c = (body, login, type = 'User') => ({ body, user: { login, type } });
+  const comments = [
+    c('Endpoint nicht erreichbar / kein gueltiges SpaceAPI-JSON (HTTP 404).', 'github-actions[bot]', 'Bot'),
+    c('Nicht übernommen — die Daten wären ungültig:\n\n- ID 5: "events" ist keine gültige http(s)-URL', 'github-actions[bot]', 'Bot'),
+    c('Nicht übernommen — ich bin ein Mensch', '01msmr'),
+  ];
+  assert.match(problemReason(comments), /ID 5/);
+  assert.equal(problemReason([c('hallo', 'github-actions[bot]', 'Bot')]), '');
+  assert.equal(problemReason(undefined), '');
+});
+
+test('Parser setzen das problem-Flag aus dem Label', () => {
+  const body = '**ID:** 7\n\n```json\n{"spaceapi":{"endpoint":"https://x.de/s"}}\n```';
+  const base = { number: 1, title: 'SpaceAPI: X', body };
+  assert.equal(parseIssue({ ...base, labels: [{ name: PROBLEM_LABEL }] }).problem, true);
+  assert.equal(parseIssue({ ...base, labels: [] }).problem, false);
+});

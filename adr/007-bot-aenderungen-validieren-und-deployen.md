@@ -15,7 +15,7 @@ Vorfall: Der Workflow `update-makerspace-pr.yml` (Formular-Issue → PR) mergte 
 
 ## Entscheidung
 
-1. **Validierung dort, wo geschrieben wird**, nicht in einem nachgelagerten CI-Lauf: Composite-Action `.github/actions/validate-data` (`npm run validate:ci`) vor PR/Merge in den Update-/Add-Workflows; die Apply-Skripte prüfen **jeden Vorschlag isoliert** (`validateProposal`, nur Fehler der eigenen ID) vor dem Schreiben und Schließen. Ungültige Vorschläge werden übersprungen: Kommentar am Issue, Label `ok` entfernt — sie tauchen im Admin-Review wieder auf, der Rest läuft durch.
+1. **Validierung dort, wo geschrieben wird**, nicht in einem nachgelagerten CI-Lauf: Composite-Action `.github/actions/validate-data` (`npm run validate:ci`) vor PR/Merge in den Update-/Add-Workflows; die Apply-Skripte prüfen **jeden Vorschlag isoliert** (`validateProposal`, nur Fehler der eigenen ID) vor dem Schreiben und Schließen. Ungültige Vorschläge werden übersprungen: Kommentar am Issue, Label `ok` entfernt, Label `problem` gesetzt — sie tauchen im Admin-Review in ihrem Reiter wieder auf (rot, mit dem Grund aus dem Kommentar), der Rest läuft durch. Der Admin-Reiter „Probleme" zeigt zusätzlich ungelöste Workflow-Fehler und hängende `ok`-Issues (Dinge ohne Ja/Nein-Entscheidung zu einem einzelnen Issue).
 2. **Neuer Validator** `tests/validate-enrichment.js` (Teil von `npm run validate` und CI).
 3. **Deploy explizit:** Jeder Workflow, der nach `main` schreibt/mergt, startet `deploy.yml` selbst (`actions: write`); Rückmeldungen dürfen nur Zugesagtes nennen.
 4. **Wächter-Test** `tests/workflow-guards.test.js` erzwingt 1–3 für bestehende und neue Workflows (mit begründeter Ausnahmeliste).
