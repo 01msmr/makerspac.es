@@ -81,10 +81,10 @@ export function monthLabel(ym, lang) {
   catch { return ym; }
 }
 
-/** Tag „22. Nov.“ */
+/** Tag mit vollem Monatsnamen: „22. November“ */
 export function dayLabel(d, lang) {
   const [y, m, day] = d.split('-').map(Number);
-  try { return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, day))); }
+  try { return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, day))); }
   catch { return d; }
 }
 
@@ -130,7 +130,12 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
   for (const month of groupChanges(shown)) {
     container.append(Object.assign(document.createElement('h3'), { className: 'embed-h3 changes-month-title', textContent: monthLabel(month.ym, lang) }));
     for (const day of month.days) {
-      container.append(Object.assign(document.createElement('time'), { className: 'changes-day', dateTime: day.d, textContent: dayLabel(day.d, lang) }));
+      // Je Tag eine Gruppe: nur das Tagesdatum bleibt (sticky) unter der Reiterleiste stehen, bis die Gruppe endet — dann
+      // übernimmt das nächste Datum. „22. Nov.“ nennt den Monat mit, die Monatsüberschrift scrollt normal weg.
+      const group = document.createElement('div');
+      group.className = 'changes-day-group';
+      container.append(group);
+      group.append(Object.assign(document.createElement('time'), { className: 'changes-day', dateTime: day.d, textContent: dayLabel(day.d, lang) }));
       const ol = document.createElement('ol');
       ol.className = 'changes-list-day';
       for (const row of day.rows) {
@@ -142,7 +147,7 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
         li.append(btn, what);
         ol.append(li);
       }
-      container.append(ol);
+      group.append(ol);
     }
   }
 }
