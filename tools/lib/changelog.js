@@ -1,11 +1,21 @@
 // tools/lib/changelog.js — „new“-Reiter: Änderungsprotokoll aus der Git-Historie (pure Funktionen; Git-Zugriff in tools/build-changelog.js).
 // Ein Eintrag = { d: 'YYYY-MM-DD', id, k, o }:
-//   k: 'added' (neuer Space) | 'info' (Name/Adresse/Link/Style) | 'weekly' | 'workshops' | 'events' | 'spaceapi'
+//   k: 'added' (neuer Space) | 'name' | 'address' (Straße/Nr./PLZ/Ort/Land) | 'position' (Koordinaten) | 'link' (Website) | 'style' (Zielgruppe)
+//      | 'weekly' | 'workshops' | 'events' | 'spaceapi'
+//   n: nur bei 'workshops' — Anzahl der ergänzten (o: 'add') bzw. entfernten (o: 'remove') Werkstatt-Typen
+//   more: nur bei workshops/add — 1, wenn es schon Werkstätten gab (weitere ergänzt); fehlt, wenn erstmals Werkstätten erfasst wurden
 //   o: 'add' | 'change' | 'remove' (bei k = 'added' nicht gesetzt)
 // Reine Datumsstempel (`dates`) zählen nicht. Massenänderungen (Migrationen/Aufräumen) werden ausgelassen.
 
 export const ENRICHMENT_KINDS = ['weekly', 'workshops', 'events', 'spaceapi'];
-export const INFO_FIELDS = ['name', 'loc', 'style', 'link'];
+/** Grundangaben: Art → Auszug, der verglichen wird (genauer als „Angaben“: der Eintrag nennt, WAS sich geändert hat) */
+export const INFO_KINDS = {
+  name: l => l.name,
+  address: l => [l.loc?.street?.name, l.loc?.street?.number, l.loc?.street?.ext, l.loc?.plz, l.loc?.city, l.loc?.country],
+  position: l => [l.loc?.lat, l.loc?.long],
+  link: l => l.link,
+  style: l => l.style,
+};
 export const BULK_LIMIT = 25;   // mehr betroffene Spaces in EINEM Commit → Wartung, kein Eintrag
 export const MAX_ENTRIES = 400;
 
@@ -24,10 +34,17 @@ export function diffSpaces(prev, next) {
   for (const loc of next.locations) {
     const old = before.get(loc.ID);
     if (!old) { out.push({ id: loc.ID, k: 'added' }); continue; }
-    if (INFO_FIELDS.some(f => !same(old[f], loc[f]))) out.push({ id: loc.ID, k: 'info', o: 'change' });
+    for (const [kind, pick] of Object.entries(INFO_KINDS)) if (!same(pick(old), pick(loc))) out.push({ id: loc.ID, k: kind, o: 'change' });
     for (const kind of ENRICHMENT_KINDS) {
       const a = norm(kind, prev.enrichment?.[String(loc.ID)]?.[kind]);
       const b = norm(kind, next.enrichment?.[String(loc.ID)]?.[kind]);
+      if (kind === 'workshops') {   // „3 Werkstätten ergänzt“: Anzahl der neu hinzugekommenen bzw. entfernten Typen
+        const was = new Set(a ?? []), now = new Set(b ?? []);
+        const added = [...now].filter(w => !was.has(w)).length, removed = [...was].filter(w => !now.has(w)).length;
+        if (added) out.push({ id: loc.ID, k: kind, o: 'add', n: added, ...(was.size ? { more: 1 } : {}) });
+        if (removed) out.push({ id: loc.ID, k: kind, o: 'remove', n: removed });
+        continue;
+      }
       const hasA = a != null && !(Array.isArray(a) && a.length === 0), hasB = b != null && !(Array.isArray(b) && b.length === 0);
       if (!hasA && hasB) out.push({ id: loc.ID, k: kind, o: 'add' });
       else if (hasA && !hasB) out.push({ id: loc.ID, k: kind, o: 'remove' });
@@ -49,9 +66,11 @@ export function buildEntries(steps, knownIds) {
     const diff = diffSpaces(prev, next);
     if (new Set(diff.filter(e => e.k !== 'added').map(e => e.id)).size > BULK_LIMIT) continue;   // Massenänderung
     for (const e of diff) {
-      const key = `${date}|${e.id}|${e.k}`;
+      // Werkstätten: Ergänzen und Entfernen am selben Tag sind getrennte Angaben; Anzahlen am selben Tag addieren sich
+      const key = `${date}|${e.id}|${e.k}${e.k === 'workshops' ? `|${e.o}` : ''}`;
       const old = byKey.get(key);
-      byKey.set(key, old && e.o !== 'remove' ? old : { d: date, ...e });   // erste Art gewinnt, außer Entfernen
+      if (old && e.k === 'workshops') byKey.set(key, { ...old, n: old.n + e.n });
+      else byKey.set(key, old && e.o !== 'remove' ? old : { d: date, ...e });   // erste Art gewinnt, außer Entfernen
     }
   }
   let entries = [...byKey.values()];

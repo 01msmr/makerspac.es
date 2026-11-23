@@ -2468,16 +2468,24 @@ body.consent-active #map { pointer-events: none; }
    =================================== */
 
 .changes-month-title { margin-top: 1.6em; }
-.changes-month { list-style: none; margin: .6em 0 0; padding: 0; }
-.changes-month li {
+.changes-day { display: block; margin: 1.1em 0 .15em; font-weight: 700; color: var(--hover-text-color); }
+.changes-list-day { list-style: none; counter-reset: change; margin: 0; padding: 0; }
+.changes-list-day li {
+  counter-increment: change;
   display: grid;
-  grid-template-columns: 5.2em 1fr;
-  column-gap: .75em;
+  grid-template-columns: 2em 1fr;
+  column-gap: .5em;
   align-items: baseline;
   padding: .45em 0;
   border-bottom: 1px solid var(--dropdown-border);
 }
-.changes-month time { color: var(--hover-text-color); font-variant-numeric: tabular-nums; }
+.changes-list-day li::before {
+  content: counter(change) ".";
+  grid-row: 1 / span 2;
+  text-align: right;
+  color: var(--hover-text-color);
+  font-variant-numeric: tabular-nums;
+}
 .changes-space {
   justify-self: start;
   background: none;
