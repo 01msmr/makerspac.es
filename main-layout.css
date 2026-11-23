@@ -29,6 +29,13 @@
   --search-opacity: 0.5;
   --search-focus-opacity: 0.9;
   --hover-text-color: #666;
+  /* Overlay (add / embed / about): Kopfzeile + Reiter — Dark-Werte in main-responsive.css */
+  --overlay-header-bg: #eeeeee;
+  --overlay-tab-bg: silver;
+  --overlay-tab-text: gray;
+  --overlay-tab-border: white;
+  --overlay-intro-text: #444;
+  --overlay-sep: #d0d0d0;
   --hover-text-color-active: #ccc;
 
   --focus-color: #0066ff; /* focus outlines, active pills, autocomplete highlights */

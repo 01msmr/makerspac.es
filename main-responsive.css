@@ -24,6 +24,12 @@
     --search-focus-opacity: 1;
     --hover-text-color: #aaa;
     --hover-text-color-active: #ddd;
+    --overlay-header-bg: #2a2a2a;
+    --overlay-tab-bg: #3a3a3a;
+    --overlay-tab-text: #aaa;
+    --overlay-tab-border: #555;
+    --overlay-intro-text: #bbb;
+    --overlay-sep: #555;
 
     /* Space-Farben werden von config.js gesetzt */
   }
@@ -50,6 +56,12 @@
   --search-focus-opacity: 1;
   --hover-text-color: #aaa;
   --hover-text-color-active: #ddd;
+  --overlay-header-bg: #2a2a2a;
+  --overlay-tab-bg: #3a3a3a;
+  --overlay-tab-text: #aaa;
+  --overlay-tab-border: #555;
+  --overlay-intro-text: #bbb;
+  --overlay-sep: #555;
 }
 
 [data-color-scheme="light"] {
@@ -67,6 +79,12 @@
   --search-focus-opacity: 0.9;
   --hover-text-color: #666;
   --hover-text-color-active: #ccc;
+  --overlay-header-bg: #eeeeee;
+  --overlay-tab-bg: silver;
+  --overlay-tab-text: gray;
+  --overlay-tab-border: white;
+  --overlay-intro-text: #444;
+  --overlay-sep: #d0d0d0;
 }
 
 

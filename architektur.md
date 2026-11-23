@@ -121,7 +121,7 @@
 
 | Datei | Verantwortung | Definiert CSS-Vars? |
 |-------|--------------|---------------------|
-| `main-layout.css` | Basis-Layout, `#map`, `.title-bar`, `.search-container` | **Ja — zentrale Vars** (`--space-hover`, `--dropdown-bg`, etc.) |
+| `main-layout.css` | Basis-Layout, `#map`, `.title-bar`, `.search-container` | **Ja — zentrale Vars** (`--space-hover`, `--dropdown-bg`, etc.; Overlay add/embed/about: `--overlay-header-bg`, `--overlay-tab-bg`, `--overlay-tab-text`, `--overlay-tab-border`, `--overlay-intro-text`, `--overlay-sep` — Dark-Werte in `main-responsive.css`, drei Stellen: Media-Query + `[data-color-scheme]`) |
 | `main-components.css` | Shared Components (Buttons, Badges, Microtip) | Nein |
 | `main-responsive.css` | Responsive Overrides (`@media`) | Nein |
 | `search.css` | Suchleiste, Dropdown, Filter-Pills, Counter | Nein |
