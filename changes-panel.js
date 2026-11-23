@@ -1,38 +1,64 @@
 // changes-panel.js — Reiter „new“ im Overlay: letzte Änderungen/Ergänzungen, nach Monaten gebündelt (wie ein Blog).
+// Je Tag steht das Datum einmal, darunter eine fortlaufend nummerierte Liste (Nummern je Tag); mehrere Änderungen am selben Tag
+// an einem Space stehen unter EINER Nummer, durch Komma getrennt („Wöchentliches Treffen ergänzt, Werkstätten ergänzt“).
 // Daten: data/changes.json (tools/build-changelog.js, bei jedem Deploy aus der Git-Historie). Leaf-Modul ohne Abhängigkeiten.
 
-/** Texte je Sprache (Sprachen wie ABOUT in embed-overlay.js); Fallback en */
+/**
+ * Texte je Sprache (Sprachen wie ABOUT in embed-overlay.js); Fallback en.
+ * `ops` = Verb-Formen; bei Sprachen mit Genus/Numerus (fr, it) nach Form `m | f | mp` getrennt, `gender` ordnet die Art zu.
+ */
 export const CHANGES_TEXT = {
   en: { tab: 'new', intro: 'Latest additions and changes to the map.', empty: 'No changes recorded yet.',
-    kinds: { added: 'New space', info: 'Details', weekly: 'Weekly meeting', workshops: 'Workshops', events: 'Event calendar', spaceapi: 'Live status' },
+    workshopForms: { one: 'workshop', other: 'workshops' },
+    kinds: { added: 'New space', name: 'Name', address: 'Address', position: 'Position', link: 'Website', style: 'Audience', weekly: 'Weekly meeting', workshops: 'Workshops', events: 'Event calendar', spaceapi: 'Live status' },
     ops: { add: 'added', change: 'updated', remove: 'removed' } },
   de: { tab: 'neu', intro: 'Letzte Ergänzungen und Änderungen an der Karte.', empty: 'Noch keine Änderungen verzeichnet.',
-    kinds: { added: 'Neuer Space', info: 'Angaben', weekly: 'Wöchentliches Treffen', workshops: 'Werkstätten', events: 'Kalender', spaceapi: 'Live-Status' },
+    workshopForms: { one: 'Werkstatt', other: 'Werkstätten' },
+    kinds: { added: 'Neuer Space', name: 'Name', address: 'Adresse', position: 'Position', link: 'Website', style: 'Zielgruppe', weekly: 'Wöchentliches Treffen', workshops: 'Werkstätten', events: 'Kalender', spaceapi: 'Live-Status' },
     ops: { add: 'ergänzt', change: 'geändert', remove: 'entfernt' } },
   fr: { tab: 'nouveau', intro: 'Derniers ajouts et modifications de la carte.', empty: 'Aucune modification enregistrée.',
-    kinds: { added: 'Nouvel espace', info: 'Informations', weekly: 'Réunion hebdomadaire', workshops: 'Ateliers', events: 'Calendrier', spaceapi: 'Statut en direct' },
-    ops: { add: 'ajouté', change: 'modifié', remove: 'supprimé' } },
+    workshopForms: { one: 'atelier', other: 'ateliers' },
+    kinds: { added: 'Nouvel espace', name: 'Nom', address: 'Adresse', position: 'Position', link: 'Site web', style: 'Public', weekly: 'Réunion hebdomadaire', workshops: 'Ateliers', events: 'Calendrier', spaceapi: 'Statut en direct' },
+    gender: { address: 'f', position: 'f', weekly: 'f', workshops: 'mp' },
+    ops: { m: { add: 'ajouté', change: 'modifié', remove: 'supprimé' }, f: { add: 'ajoutée', change: 'modifiée', remove: 'supprimée' }, mp: { add: 'ajoutés', change: 'modifiés', remove: 'supprimés' } } },
   nl: { tab: 'nieuw', intro: 'Laatste toevoegingen en wijzigingen op de kaart.', empty: 'Nog geen wijzigingen vastgelegd.',
-    kinds: { added: 'Nieuwe space', info: 'Gegevens', weekly: 'Wekelijkse bijeenkomst', workshops: 'Werkplaatsen', events: 'Agenda', spaceapi: 'Live status' },
+    workshopForms: { one: 'werkplaats', other: 'werkplaatsen' },
+    kinds: { added: 'Nieuwe space', name: 'Naam', address: 'Adres', position: 'Positie', link: 'Website', style: 'Doelgroep', weekly: 'Wekelijkse bijeenkomst', workshops: 'Werkplaatsen', events: 'Agenda', spaceapi: 'Live status' },
     ops: { add: 'toegevoegd', change: 'gewijzigd', remove: 'verwijderd' } },
   it: { tab: 'novità', intro: 'Ultime aggiunte e modifiche alla mappa.', empty: 'Nessuna modifica registrata.',
-    kinds: { added: 'Nuovo spazio', info: 'Dati', weekly: 'Incontro settimanale', workshops: 'Laboratori', events: 'Calendario', spaceapi: 'Stato live' },
-    ops: { add: 'aggiunto', change: 'modificato', remove: 'rimosso' } },
+    workshopForms: { one: 'laboratorio', other: 'laboratori' },
+    kinds: { added: 'Nuovo spazio', name: 'Nome', address: 'Indirizzo', position: 'Posizione', link: 'Sito web', style: 'Pubblico', weekly: 'Incontro settimanale', workshops: 'Laboratori', events: 'Calendario', spaceapi: 'Stato live' },
+    gender: { workshops: 'mp' },
+    ops: { m: { add: 'aggiunto', change: 'modificato', remove: 'rimosso' }, f: { add: 'aggiunta', change: 'modificata', remove: 'rimossa' }, mp: { add: 'aggiunti', change: 'modificati', remove: 'rimossi' } } },
   da: { tab: 'nyt', intro: 'Seneste tilføjelser og ændringer på kortet.', empty: 'Ingen ændringer registreret endnu.',
-    kinds: { added: 'Nyt space', info: 'Oplysninger', weekly: 'Ugentligt møde', workshops: 'Værksteder', events: 'Kalender', spaceapi: 'Live-status' },
+    workshopForms: { one: 'værksted', other: 'værksteder' },
+    kinds: { added: 'Nyt space', name: 'Navn', address: 'Adresse', position: 'Position', link: 'Hjemmeside', style: 'Målgruppe', weekly: 'Ugentligt møde', workshops: 'Værksteder', events: 'Kalender', spaceapi: 'Live-status' },
     ops: { add: 'tilføjet', change: 'ændret', remove: 'fjernet' } },
   uk: { tab: 'нове', intro: 'Останні додавання та зміни на карті.', empty: 'Змін ще не зафіксовано.',
-    kinds: { added: 'Новий простір', info: 'Дані', weekly: 'Щотижнева зустріч', workshops: 'Майстерні', events: 'Календар', spaceapi: 'Статус наживо' },
+    workshopForms: { one: 'майстерня', few: 'майстерні', many: 'майстерень', other: 'майстерні' },
+    kinds: { added: 'Новий простір', name: 'Назва', address: 'Адреса', position: 'Позиція', link: 'Вебсайт', style: 'Аудиторія', weekly: 'Щотижнева зустріч', workshops: 'Майстерні', events: 'Календар', spaceapi: 'Статус наживо' },
     ops: { add: 'додано', change: 'змінено', remove: 'видалено' } },
 };
 
+/** Reihenfolge der Änderungen an einem Space innerhalb einer Zeile */
+export const KIND_ORDER = ['added', 'name', 'address', 'position', 'link', 'style', 'weekly', 'workshops', 'events', 'spaceapi'];
+
 export const changesText = lang => CHANGES_TEXT[lang] || CHANGES_TEXT.en;
 
-/** „Weekly meeting · added“; bei „added“ (neuer Space) nur der Name der Art */
+/** „Werkstätten ergänzt“ (ohne Trennpunkt); neuer Space nur „Neuer Space“ */
 export function changeLabel(entry, lang) {
   const tx = changesText(lang);
-  const kind = tx.kinds[entry.k] ?? entry.k;
-  return entry.o ? `${kind} · ${tx.ops[entry.o] ?? entry.o}` : kind;
+  let kind = tx.kinds[entry.k] ?? entry.k;
+  let gender = tx.gender?.[entry.k] ?? 'm';
+  if (entry.k === 'workshops' && entry.n) {   // „3 Werkstätten ergänzt“ / „1 Werkstatt entfernt“
+    let cat = 'other';
+    try { cat = new Intl.PluralRules(lang).select(entry.n); } catch { /* unbekannte Sprache */ }
+    kind = `${entry.n} ${tx.workshopForms[cat] ?? tx.workshopForms.other}`;
+    gender = cat === 'one' ? 'm' : 'mp';
+  }
+  if (!entry.o) return kind;
+  const ops = tx.ops.add ? tx.ops : tx.ops[gender];
+  return `${kind} ${ops[entry.o] ?? entry.o}`;
 }
 
 /** Monatsüberschrift „November 2026“ (Sprache des Nutzers) */
@@ -49,22 +75,36 @@ export function dayLabel(d, lang) {
   catch { return d; }
 }
 
-/** Einträge (neueste zuerst) → [{ ym:'2026-11', entries:[…] }] in derselben Reihenfolge */
-export function groupByMonth(entries) {
-  const groups = [];
+/**
+ * Einträge (neueste zuerst) → Monate → Tage → Zeilen. Mehrere Einträge desselben Spaces am selben Tag werden EINE Zeile
+ * (`items` nach KIND_ORDER); die Zeilen eines Tages behalten die Reihenfolge der Einträge (nach Space-ID).
+ * @returns {{ ym:string, days:{ d:string, rows:{ id:number, items:any[] }[] }[] }[]}
+ */
+export function groupChanges(entries) {
+  const months = [];
   for (const e of entries) {
     const ym = e.d.slice(0, 7);
-    let g = groups[groups.length - 1];
-    if (!g || g.ym !== ym) { g = { ym, entries: [] }; groups.push(g); }
-    g.entries.push(e);
+    let m = months[months.length - 1];
+    if (!m || m.ym !== ym) { m = { ym, days: [] }; months.push(m); }
+    let day = m.days[m.days.length - 1];
+    if (!day || day.d !== e.d) { day = { d: e.d, rows: [] }; m.days.push(day); }
+    let row = day.rows.find(r => r.id === e.id);
+    if (!row) { row = { id: e.id, items: [] }; day.rows.push(row); }
+    row.items.push(e);
   }
-  return groups;
+  for (const m of months) for (const day of m.days) for (const row of day.rows) {
+    row.items.sort((a, b) => KIND_ORDER.indexOf(a.k) - KIND_ORDER.indexOf(b.k));
+  }
+  return months;
 }
+
+/** Alle Änderungen einer Zeile, durch Komma getrennt */
+export const rowLabel = (row, lang) => row.items.map(e => changeLabel(e, lang)).join(', ');
 
 /**
  * Zeichnet die Liste in `container` (nur textContent/DOM-API, kein innerHTML).
  * @param {HTMLElement} container
- * @param {{d:string,id:number,k:string,o?:string}[]} entries
+ * @param {{d:string,id:number,k:string,o?:string,n?:number}[]} entries
  * @param {{ lang:string, locationById: Map<number, any>, onOpen: (loc:any)=>void }} opts
  */
 export function renderChanges(container, entries, { lang, locationById, onOpen }) {
@@ -74,20 +114,22 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
     container.append(Object.assign(document.createElement('p'), { className: 'changes-empty', textContent: changesText(lang).empty }));
     return;
   }
-  for (const g of groupByMonth(shown)) {
-    container.append(Object.assign(document.createElement('h3'), { className: 'embed-h3 changes-month-title', textContent: monthLabel(g.ym, lang) }));
-    const ul = document.createElement('ul');
-    ul.className = 'changes-month';
-    for (const e of g.entries) {
-      const loc = locationById.get(e.id);
-      const li = document.createElement('li');
-      const time = Object.assign(document.createElement('time'), { dateTime: e.d, textContent: dayLabel(e.d, lang) });
-      const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space', textContent: loc.name });
-      btn.addEventListener('click', () => onOpen(loc));
-      const what = Object.assign(document.createElement('span'), { className: 'changes-what', textContent: changeLabel(e, lang) });
-      li.append(time, btn, what);
-      ul.append(li);
+  for (const month of groupChanges(shown)) {
+    container.append(Object.assign(document.createElement('h3'), { className: 'embed-h3 changes-month-title', textContent: monthLabel(month.ym, lang) }));
+    for (const day of month.days) {
+      container.append(Object.assign(document.createElement('time'), { className: 'changes-day', dateTime: day.d, textContent: dayLabel(day.d, lang) }));
+      const ol = document.createElement('ol');
+      ol.className = 'changes-list-day';
+      for (const row of day.rows) {
+        const loc = locationById.get(row.id);
+        const li = document.createElement('li');
+        const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space', textContent: loc.name });
+        btn.addEventListener('click', () => onOpen(loc));
+        const what = Object.assign(document.createElement('span'), { className: 'changes-what', textContent: rowLabel(row, lang) });
+        li.append(btn, what);
+        ol.append(li);
+      }
+      container.append(ol);
     }
-    container.append(ul);
   }
 }

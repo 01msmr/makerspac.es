@@ -1,33 +1,68 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHANGES_TEXT, changesText, changeLabel, groupByMonth, monthLabel, dayLabel } from '../changes-panel.js';
+import { CHANGES_TEXT, KIND_ORDER, changesText, changeLabel, groupChanges, rowLabel, monthLabel, dayLabel } from '../changes-panel.js';
 
-test('alle Sprachen haben dieselben Schlüssel wie Englisch (Reiter „new“ = en)', () => {
+test('alle Sprachen: Arten wie Englisch, Verb-Formen vollständig, Reiter „new“ = en', () => {
   const ref = CHANGES_TEXT.en;
   assert.equal(ref.tab, 'new');
+  assert.deepEqual(Object.keys(ref.kinds).sort(), [...KIND_ORDER].sort(), 'KIND_ORDER = alle Arten');
   for (const [lang, tx] of Object.entries(CHANGES_TEXT)) {
-    assert.deepEqual(Object.keys(tx).sort(), Object.keys(ref).sort(), lang);
     assert.deepEqual(Object.keys(tx.kinds).sort(), Object.keys(ref.kinds).sort(), `${lang}.kinds`);
-    assert.deepEqual(Object.keys(tx.ops).sort(), Object.keys(ref.ops).sort(), `${lang}.ops`);
-    for (const v of [tx.tab, tx.intro, tx.empty, ...Object.values(tx.kinds), ...Object.values(tx.ops)]) assert.ok(v && v.length > 0, lang);
+    const forms = tx.ops.add ? [tx.ops] : Object.values(tx.ops);
+    for (const f of forms) assert.deepEqual(Object.keys(f).sort(), ['add', 'change', 'remove'], `${lang}.ops`);
+    for (const g of Object.values(tx.gender ?? {})) assert.ok(tx.ops[g], `${lang}: Genus ${g}`);
+    if (!tx.ops.add) for (const g of ['m', 'mp']) assert.ok(tx.ops[g], `${lang}: Formen m/mp für Werkstatt-Zahlen`);
+    assert.ok(tx.workshopForms.one && tx.workshopForms.other, `${lang}: workshopForms`);
+    for (const v of [tx.tab, tx.intro, tx.empty, ...Object.values(tx.kinds)]) assert.ok(v && v.length > 0, lang);
   }
   assert.equal(changesText('xx'), CHANGES_TEXT.en, 'unbekannte Sprache → Englisch');
 });
 
-test('changeLabel: Art · Vorgang; neuer Space ohne Vorgang', () => {
-  assert.equal(changeLabel({ k: 'weekly', o: 'add' }, 'de'), 'Wöchentliches Treffen · ergänzt');
-  assert.equal(changeLabel({ k: 'workshops', o: 'change' }, 'en'), 'Workshops · updated');
+test('changeLabel: Art + Verb ohne Trennpunkt; neuer Space nur der Name der Art; Genus-Anpassung (fr/it)', () => {
+  assert.equal(changeLabel({ k: 'workshops', o: 'add' }, 'de'), 'Werkstätten ergänzt');
+  assert.equal(changeLabel({ k: 'address', o: 'change' }, 'de'), 'Adresse geändert');
+  assert.equal(changeLabel({ k: 'workshops', o: 'change' }, 'en'), 'Workshops updated');
   assert.equal(changeLabel({ k: 'added' }, 'fr'), 'Nouvel espace');
+  assert.equal(changeLabel({ k: 'weekly', o: 'add' }, 'fr'), 'Réunion hebdomadaire ajoutée');
+  assert.equal(changeLabel({ k: 'workshops', o: 'add' }, 'fr'), 'Ateliers ajoutés');
+  assert.equal(changeLabel({ k: 'events', o: 'add' }, 'fr'), 'Calendrier ajouté');
+  assert.equal(changeLabel({ k: 'address', o: 'change' }, 'it'), 'Indirizzo modificato');
+  assert.ok(!/·/.test(changeLabel({ k: 'weekly', o: 'add' }, 'de')));
 });
 
-test('groupByMonth: Monate in Reihenfolge der Einträge (neueste zuerst), Einträge bleiben zusammen', () => {
-  const g = groupByMonth([{ d: '2026-11-23' }, { d: '2026-11-02' }, { d: '2026-10-30' }, { d: '2026-10-01' }, { d: '2026-09-15' }]);
-  assert.deepEqual(g.map(x => [x.ym, x.entries.length]), [['2026-11', 2], ['2026-10', 2], ['2026-09', 1]]);
+test('groupChanges: Monat → Tag → Zeile; mehrere Änderungen am selben Tag je Space = eine Zeile in fester Reihenfolge', () => {
+  const m = groupChanges([
+    { d: '2026-11-23', id: 126, k: 'workshops', o: 'add' },
+    { d: '2026-11-23', id: 126, k: 'weekly', o: 'add' },
+    { d: '2026-11-23', id: 130, k: 'address', o: 'change' },
+    { d: '2026-11-02', id: 5, k: 'added' },
+    { d: '2026-10-30', id: 7, k: 'name', o: 'change' },
+  ]);
+  assert.deepEqual(m.map(x => [x.ym, x.days.map(d => [d.d, d.rows.length])]), [['2026-11', [['2026-11-23', 2], ['2026-11-02', 1]]], ['2026-10', [['2026-10-30', 1]]]]);
+  const row = m[0].days[0].rows[0];
+  assert.equal(row.id, 126);
+  assert.equal(rowLabel(row, 'de'), 'Wöchentliches Treffen ergänzt, Werkstätten ergänzt');
+  assert.equal(rowLabel(m[0].days[0].rows[1], 'de'), 'Adresse geändert');
 });
 
 test('Monats- und Tagesbezeichnung folgen der Sprache', () => {
   assert.match(monthLabel('2026-11', 'de'), /November 2026/);
-  assert.match(monthLabel('2026-11', 'en'), /November 2026/);
   assert.match(dayLabel('2026-11-22', 'de'), /22\./);
   assert.equal(monthLabel('2026-11', 'zz-invalid-lang-tag-xxxxxxxxx'), '2026-11');
+});
+
+test('Werkstätten mit Anzahl: „3 Werkstätten ergänzt“, „1 Werkstatt entfernt“, Plural je Sprache, Genus fr/it', () => {
+  const w = (n, o = 'add') => ({ k: 'workshops', o, n });
+  assert.equal(changeLabel(w(3), 'de'), '3 Werkstätten ergänzt');
+  assert.equal(changeLabel(w(1), 'de'), '1 Werkstatt ergänzt');
+  assert.equal(changeLabel(w(1, 'remove'), 'de'), '1 Werkstatt entfernt');
+  assert.equal(changeLabel(w(2), 'en'), '2 workshops added');
+  assert.equal(changeLabel(w(1), 'fr'), '1 atelier ajouté');
+  assert.equal(changeLabel(w(3), 'fr'), '3 ateliers ajoutés');
+  assert.equal(changeLabel(w(1), 'it'), '1 laboratorio aggiunto');
+  assert.equal(changeLabel(w(2), 'it'), '2 laboratori aggiunti');
+  assert.equal(changeLabel(w(1), 'uk'), '1 майстерня додано');
+  assert.equal(changeLabel(w(2), 'uk'), '2 майстерні додано');
+  assert.equal(changeLabel(w(5), 'uk'), '5 майстерень додано');
+  assert.equal(changeLabel({ k: 'workshops', o: 'add' }, 'de'), 'Werkstätten ergänzt', 'ohne Zahl (ältere Einträge) wie bisher');
 });

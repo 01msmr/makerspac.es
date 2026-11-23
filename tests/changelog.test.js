@@ -14,11 +14,12 @@ test('diffSpaces: neuer Space, geänderte Angaben, Enrichment hinzu/ändern/entf
   const d = diffSpaces(prev, next);
   const has = (id, k, o) => d.some(e => e.id === id && e.k === k && e.o === o);
   assert.ok(has(3, 'added', undefined));
-  assert.ok(has(2, 'info', 'change'));
+  assert.ok(has(2, 'name', 'change'));
+  assert.ok(!d.some(e => e.id === 2 && ['address', 'position', 'link', 'style'].includes(e.k)), 'nur der Name hat sich geändert');
   assert.ok(has(2, 'weekly', 'change'));
   assert.ok(has(1, 'events', 'change'));
   assert.ok(has(1, 'spaceapi', 'add'));
-  assert.ok(!d.some(e => e.id === 1 && (e.k === 'workshops' || e.k === 'info')), 'gleiche Workshops (andere Reihenfolge) und nur Datum → kein Eintrag');
+  assert.ok(!d.some(e => e.id === 1 && (e.k === 'workshops' || e.k === 'name')), 'gleiche Workshops (andere Reihenfolge) und nur Datum → kein Eintrag');
 });
 
 test('diffSpaces: Entfernen und leere Workshop-Liste', () => {
@@ -41,4 +42,26 @@ test('buildEntries: Massenänderung (mehr als BULK_LIMIT Spaces in einem Commit)
   const many = Array.from({ length: BULK_LIMIT + 1 }, (_, i) => loc(i + 1));
   const prev = snap(many), next = snap(many, Object.fromEntries(many.map(l => [l.ID, { workshops: ['3d'] }])));
   assert.deepEqual(buildEntries([{ date: '2026-11-22', prev, next }]), []);
+});
+
+test('diffSpaces: Adresse, Position, Website und Zielgruppe einzeln benannt', () => {
+  const base = loc(1, { loc: { lat: 50, long: 6, plz: 52070, city: 'Aachen', street: { name: 'Alt', number: 1, ext: '' }, country: 'Germany' } });
+  const kinds = next => diffSpaces(snap([base]), snap([next])).map(e => e.k).sort();
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, street: { name: 'Neu', number: 1, ext: '' } } }), ['address']);
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln' } }), ['address']);
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, lat: 50.5 } }), ['position']);
+  assert.deepEqual(kinds({ ...base, link: { url: 'https://neu.de' } }), ['link']);
+  assert.deepEqual(kinds({ ...base, style: 'for youth' }), ['style']);
+  assert.deepEqual(kinds({ ...base, name: 'Neu', style: 'for youth' }), ['name', 'style']);
+});
+
+test('Werkstätten: Anzahl der ergänzten/entfernten Typen (n), Reihenfolge egal; am selben Tag addiert', () => {
+  const a = snap([loc(1)], { 1: { workshops: ['3d'] } });
+  const b = snap([loc(1)], { 1: { workshops: ['laser', '3d', 'wood'] } });
+  assert.deepEqual(diffSpaces(a, b).filter(e => e.k === 'workshops'), [{ id: 1, k: 'workshops', o: 'add', n: 2 }]);
+  assert.deepEqual(diffSpaces(snap([loc(1)]), b).filter(e => e.k === 'workshops'), [{ id: 1, k: 'workshops', o: 'add', n: 3 }]);
+  const c = snap([loc(1)], { 1: { workshops: ['wood', 'cnc'] } });
+  assert.deepEqual(diffSpaces(b, c).filter(e => e.k === 'workshops').map(e => `${e.o}:${e.n}`).sort(), ['add:1', 'remove:2']);
+  const two = buildEntries([{ date: '2026-11-22', prev: snap([loc(1)]), next: a }, { date: '2026-11-22', prev: a, next: b }], new Set([1]));
+  assert.deepEqual(two.filter(e => e.k === 'workshops').map(e => `${e.o}:${e.n}`), ['add:3']);
 });
