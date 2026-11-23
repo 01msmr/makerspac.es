@@ -76,6 +76,10 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 /* ── Workshop-Details + Listen-Reiter ─────────────────────────────── */
 #extra { margin-top: 1rem; font-size: .9rem; }
 #extra table td, #extra table th { font-weight: 400; color: var(--text-color); }
+#extra table { width: 100%; border-collapse: collapse; }
+/* Typ („electronics“) und Confidence („high“, „medium“ …) nie mitten im Wort umbrechen; nur die Stichwörter dürfen umbrechen */
+#extra table td:nth-child(1), #extra table td:nth-child(2) { white-space: nowrap; }
+#extra table td:nth-child(3) { width: 100%; }
 #extra blockquote { margin: .3rem 0 .8rem; padding-left: .6rem; border-left: 3px solid var(--dropdown-border); color: var(--hover-text-color); }
 #inbox { margin: .75rem; padding: 1rem; overflow: auto; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #inbox ul { margin: 0; padding-left: 1.2rem; }
