@@ -12,44 +12,44 @@ export const CHANGES_TEXT = {
   en: { tab: 'new', intro: 'Latest additions and changes to the map.', empty: 'No changes recorded yet.',
     workshopForms: { one: 'workshop', other: 'workshops' },
     more: { other: '{n} more {w}' },
-    kinds: { added: 'New space', name: 'Name', address: 'Address', position: 'Position', link: 'Website', style: 'Audience', weekly: 'Weekly meeting', workshops: 'Workshops', events: 'Event calendar', spaceapi: 'Live status' },
+    kinds: { added: 'New space', name: 'Name', address: 'Address', link: 'Website', style: 'Audience', weekly: 'Weekly meeting', workshops: 'Workshops', events: 'Event calendar', spaceapi: 'Live status' },
     ops: { add: 'added', change: 'updated', remove: 'removed' } },
   de: { tab: 'neu', intro: 'Letzte Ergänzungen und Änderungen an der Karte.', empty: 'Noch keine Änderungen verzeichnet.',
     workshopForms: { one: 'Werkstatt', other: 'Werkstätten' },
     more: { other: '{n} weitere {w}' },
-    kinds: { added: 'Neuer Space', name: 'Name', address: 'Adresse', position: 'Position', link: 'Website', style: 'Zielgruppe', weekly: 'Wöchentliches Treffen', workshops: 'Werkstätten', events: 'Kalender', spaceapi: 'Live-Status' },
+    kinds: { added: 'Neuer Space', name: 'Name', address: 'Adresse', link: 'Website', style: 'Zielgruppe', weekly: 'Wöchentliches Treffen', workshops: 'Werkstätten', events: 'Kalender', spaceapi: 'Live-Status' },
     ops: { add: 'ergänzt', change: 'geändert', remove: 'entfernt' } },
   fr: { tab: 'nouveau', intro: 'Derniers ajouts et modifications de la carte.', empty: 'Aucune modification enregistrée.',
     workshopForms: { one: 'atelier', other: 'ateliers' },
     more: { one: '{n} {w} supplémentaire', other: '{n} {w} supplémentaires' },
-    kinds: { added: 'Nouvel espace', name: 'Nom', address: 'Adresse', position: 'Position', link: 'Site web', style: 'Public', weekly: 'Réunion hebdomadaire', workshops: 'Ateliers', events: 'Calendrier', spaceapi: 'Statut en direct' },
-    gender: { address: 'f', position: 'f', weekly: 'f', workshops: 'mp' },
+    kinds: { added: 'Nouvel espace', name: 'Nom', address: 'Adresse', link: 'Site web', style: 'Public', weekly: 'Réunion hebdomadaire', workshops: 'Ateliers', events: 'Calendrier', spaceapi: 'Statut en direct' },
+    gender: { address: 'f', weekly: 'f', workshops: 'mp' },
     ops: { m: { add: 'ajouté', change: 'modifié', remove: 'supprimé' }, f: { add: 'ajoutée', change: 'modifiée', remove: 'supprimée' }, mp: { add: 'ajoutés', change: 'modifiés', remove: 'supprimés' } } },
   nl: { tab: 'nieuw', intro: 'Laatste toevoegingen en wijzigingen op de kaart.', empty: 'Nog geen wijzigingen vastgelegd.',
     workshopForms: { one: 'werkplaats', other: 'werkplaatsen' },
     more: { other: '{n} extra {w}' },
-    kinds: { added: 'Nieuwe space', name: 'Naam', address: 'Adres', position: 'Positie', link: 'Website', style: 'Doelgroep', weekly: 'Wekelijkse bijeenkomst', workshops: 'Werkplaatsen', events: 'Agenda', spaceapi: 'Live status' },
+    kinds: { added: 'Nieuwe space', name: 'Naam', address: 'Adres', link: 'Website', style: 'Doelgroep', weekly: 'Wekelijkse bijeenkomst', workshops: 'Werkplaatsen', events: 'Agenda', spaceapi: 'Live status' },
     ops: { add: 'toegevoegd', change: 'gewijzigd', remove: 'verwijderd' } },
   it: { tab: 'novità', intro: 'Ultime aggiunte e modifiche alla mappa.', empty: 'Nessuna modifica registrata.',
     workshopForms: { one: 'laboratorio', other: 'laboratori' },
     more: { other: '{n} {w} in più' },
-    kinds: { added: 'Nuovo spazio', name: 'Nome', address: 'Indirizzo', position: 'Posizione', link: 'Sito web', style: 'Pubblico', weekly: 'Incontro settimanale', workshops: 'Laboratori', events: 'Calendario', spaceapi: 'Stato live' },
+    kinds: { added: 'Nuovo spazio', name: 'Nome', address: 'Indirizzo', link: 'Sito web', style: 'Pubblico', weekly: 'Incontro settimanale', workshops: 'Laboratori', events: 'Calendario', spaceapi: 'Stato live' },
     gender: { workshops: 'mp' },
     ops: { m: { add: 'aggiunto', change: 'modificato', remove: 'rimosso' }, f: { add: 'aggiunta', change: 'modificata', remove: 'rimossa' }, mp: { add: 'aggiunti', change: 'modificati', remove: 'rimossi' } } },
   da: { tab: 'nyt', intro: 'Seneste tilføjelser og ændringer på kortet.', empty: 'Ingen ændringer registreret endnu.',
     workshopForms: { one: 'værksted', other: 'værksteder' },
     more: { other: '{n} ekstra {w}' },
-    kinds: { added: 'Nyt space', name: 'Navn', address: 'Adresse', position: 'Position', link: 'Hjemmeside', style: 'Målgruppe', weekly: 'Ugentligt møde', workshops: 'Værksteder', events: 'Kalender', spaceapi: 'Live-status' },
+    kinds: { added: 'Nyt space', name: 'Navn', address: 'Adresse', link: 'Hjemmeside', style: 'Målgruppe', weekly: 'Ugentligt møde', workshops: 'Værksteder', events: 'Kalender', spaceapi: 'Live-status' },
     ops: { add: 'tilføjet', change: 'ændret', remove: 'fjernet' } },
   uk: { tab: 'нове', intro: 'Останні додавання та зміни на карті.', empty: 'Змін ще не зафіксовано.',
     workshopForms: { one: 'майстерня', few: 'майстерні', many: 'майстерень', other: 'майстерні' },
     more: { one: 'ще {n} {w}', other: 'ще {n} {w}', forms: { one: 'майстерню' } },
-    kinds: { added: 'Новий простір', name: 'Назва', address: 'Адреса', position: 'Позиція', link: 'Вебсайт', style: 'Аудиторія', weekly: 'Щотижнева зустріч', workshops: 'Майстерні', events: 'Календар', spaceapi: 'Статус наживо' },
+    kinds: { added: 'Новий простір', name: 'Назва', address: 'Адреса', link: 'Вебсайт', style: 'Аудиторія', weekly: 'Щотижнева зустріч', workshops: 'Майстерні', events: 'Календар', spaceapi: 'Статус наживо' },
     ops: { add: 'додано', change: 'змінено', remove: 'видалено' } },
 };
 
 /** Reihenfolge der Änderungen an einem Space innerhalb einer Zeile */
-export const KIND_ORDER = ['added', 'name', 'address', 'position', 'link', 'style', 'weekly', 'workshops', 'events', 'spaceapi'];
+export const KIND_ORDER = ['added', 'name', 'address', 'link', 'style', 'weekly', 'workshops', 'events', 'spaceapi'];
 
 export const changesText = lang => CHANGES_TEXT[lang] || CHANGES_TEXT.en;
 
@@ -95,7 +95,8 @@ export function dayLabel(d, lang) {
  */
 export function groupChanges(entries) {
   const months = [];
-  for (const e of entries) {
+  for (const raw of entries) {
+    const e = raw.k === 'position' ? { ...raw, k: 'address' } : raw;   // ältere changes.json: Position = Adresse
     const ym = e.d.slice(0, 7);
     let m = months[months.length - 1];
     if (!m || m.ym !== ym) { m = { ym, days: [] }; months.push(m); }
@@ -103,7 +104,7 @@ export function groupChanges(entries) {
     if (!day || day.d !== e.d) { day = { d: e.d, rows: [] }; m.days.push(day); }
     let row = day.rows.find(r => r.id === e.id);
     if (!row) { row = { id: e.id, items: [] }; day.rows.push(row); }
-    row.items.push(e);
+    if (!row.items.some(i => i.k === e.k && i.o === e.o)) row.items.push(e);   // „Adresse geändert“ nicht doppelt
   }
   for (const m of months) for (const day of m.days) for (const row of day.rows) {
     row.items.sort((a, b) => KIND_ORDER.indexOf(a.k) - KIND_ORDER.indexOf(b.k));

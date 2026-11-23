@@ -85,3 +85,9 @@ test('Werkstätten zu bestehenden ergänzt: „2 weitere Werkstätten ergänzt�
   assert.equal(changeLabel(more(3), 'uk'), 'ще 3 майстерні додано');
   assert.equal(changeLabel({ k: 'workshops', o: 'remove', n: 2, more: 1 }, 'de'), '2 Werkstätten entfernt', 'Entfernen bleibt unverändert');
 });
+
+test('Position = Adresse: ältere Einträge mit k „position“ erscheinen als „Adresse geändert“, nicht doppelt', () => {
+  const m = groupChanges([{ d: '2026-11-22', id: 118, k: 'address', o: 'change' }, { d: '2026-11-22', id: 118, k: 'position', o: 'change' }]);
+  assert.equal(rowLabel(m[0].days[0].rows[0], 'de'), 'Adresse geändert');
+  assert.ok(!Object.values(CHANGES_TEXT).some(tx => 'position' in tx.kinds), 'keine Sprache nennt „Position“ als Art');
+});

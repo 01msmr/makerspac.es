@@ -1,6 +1,6 @@
 // tools/lib/changelog.js — „new“-Reiter: Änderungsprotokoll aus der Git-Historie (pure Funktionen; Git-Zugriff in tools/build-changelog.js).
 // Ein Eintrag = { d: 'YYYY-MM-DD', id, k, o }:
-//   k: 'added' (neuer Space) | 'name' | 'address' (Straße/Nr./PLZ/Ort/Land) | 'position' (Koordinaten) | 'link' (Website) | 'style' (Zielgruppe)
+//   k: 'added' (neuer Space) | 'name' | 'address' (Straße/Nr./PLZ/Ort/Land; Koordinaten werden nicht genannt) | 'link' (Website) | 'style' (Zielgruppe)
 //      | 'weekly' | 'workshops' | 'events' | 'spaceapi'
 //   n: nur bei 'workshops' — Anzahl der ergänzten (o: 'add') bzw. entfernten (o: 'remove') Werkstatt-Typen
 //   more: nur bei workshops/add — 1, wenn es schon Werkstätten gab (weitere ergänzt); fehlt, wenn erstmals Werkstätten erfasst wurden
@@ -11,8 +11,8 @@ export const ENRICHMENT_KINDS = ['weekly', 'workshops', 'events', 'spaceapi'];
 /** Grundangaben: Art → Auszug, der verglichen wird (genauer als „Angaben“: der Eintrag nennt, WAS sich geändert hat) */
 export const INFO_KINDS = {
   name: l => l.name,
+  // Nur die Adressfelder. Koordinaten werden nie genannt (Position = Adresse); eine reine Pin-Korrektur ist keine Adressänderung
   address: l => [l.loc?.street?.name, l.loc?.street?.number, l.loc?.street?.ext, l.loc?.plz, l.loc?.city, l.loc?.country],
-  position: l => [l.loc?.lat, l.loc?.long],
   link: l => l.link,
   style: l => l.style,
 };

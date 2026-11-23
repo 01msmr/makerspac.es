@@ -15,7 +15,7 @@ test('diffSpaces: neuer Space, geänderte Angaben, Enrichment hinzu/ändern/entf
   const has = (id, k, o) => d.some(e => e.id === id && e.k === k && e.o === o);
   assert.ok(has(3, 'added', undefined));
   assert.ok(has(2, 'name', 'change'));
-  assert.ok(!d.some(e => e.id === 2 && ['address', 'position', 'link', 'style'].includes(e.k)), 'nur der Name hat sich geändert');
+  assert.ok(!d.some(e => e.id === 2 && ['address', 'link', 'style'].includes(e.k)), 'nur der Name hat sich geändert');
   assert.ok(has(2, 'weekly', 'change'));
   assert.ok(has(1, 'events', 'change'));
   assert.ok(has(1, 'spaceapi', 'add'));
@@ -44,12 +44,13 @@ test('buildEntries: Massenänderung (mehr als BULK_LIMIT Spaces in einem Commit)
   assert.deepEqual(buildEntries([{ date: '2026-11-22', prev, next }]), []);
 });
 
-test('diffSpaces: Adresse, Position, Website und Zielgruppe einzeln benannt', () => {
+test('diffSpaces: Adresse (inkl. Position), Website und Zielgruppe einzeln benannt', () => {
   const base = loc(1, { loc: { lat: 50, long: 6, plz: 52070, city: 'Aachen', street: { name: 'Alt', number: 1, ext: '' }, country: 'Germany' } });
   const kinds = next => diffSpaces(snap([base]), snap([next])).map(e => e.k).sort();
   assert.deepEqual(kinds({ ...base, loc: { ...base.loc, street: { name: 'Neu', number: 1, ext: '' } } }), ['address']);
   assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln' } }), ['address']);
-  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, lat: 50.5 } }), ['position']);
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, lat: 50.5, long: 6.2 } }), [], 'nur der Pin verschoben → kein Eintrag (Position wird nicht genannt)');
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln', lat: 50.9, long: 7 } }), ['address'], 'Adresse + Position → nur EINE Angabe (Adresse)');
   assert.deepEqual(kinds({ ...base, link: { url: 'https://neu.de' } }), ['link']);
   assert.deepEqual(kinds({ ...base, style: 'for youth' }), ['style']);
   assert.deepEqual(kinds({ ...base, name: 'Neu', style: 'for youth' }), ['name', 'style']);
