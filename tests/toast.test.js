@@ -72,13 +72,14 @@ test('3: blendet nach 3 s aus und wird nach der Animation entfernt', () => {
 test('4: center + sticky + action — mittig (keine Logo-Position), bleibt stehen, Knopf ruft die Aktion auf', () => {
   mock.timers.enable({ apis: ['setTimeout'] });
   let clicked = 0;
-  showToast('<b>Veraltet</b>', { center: true, sticky: true, action: { label: 'Neu laden', onClick: () => clicked++ } });
+  showToast('<b>Veraltet</b>', { center: true, sticky: true, action: { label: 'Neu laden', icon: 'fas fa-rotate', onClick: () => clicked++ } });
   const t = body.children[0];
   assert.ok(t.className.includes('settings-hash-toast--center'));
   assert.equal(t.style.top, undefined);
   assert.ok(t.classList.contains('show') && t.classList.contains('settings-hash-toast--active'));
   const btn = t.children[0];
-  assert.deepEqual([btn.className, btn.textContent], ['settings-confirm-yes', 'Neu laden']);
+  assert.equal(btn.className, 'settings-confirm-yes');
+  assert.equal(btn.innerHTML, '<i class="fas fa-rotate" aria-hidden="true"></i> Neu laden', 'führendes Symbol + Text');
   btn.listeners.click();
   assert.equal(clicked, 1);
   mock.timers.tick(10_000);

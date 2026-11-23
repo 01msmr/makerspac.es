@@ -12,9 +12,9 @@ let centerToast = null;
 
 /**
  * Zeigt einen Toast. Standard: unter dem Logo, linksbündig, blendet nach 3 s aus; ein laufender Toast wird wiederverwendet.
- * Optionen: `center` (mittig auf der Seite), `sticky` (kein Ausblenden), `action` (Knopf, Optik wie .settings-confirm-yes).
+ * Optionen: `center` (mittig auf der Seite), `sticky` (kein Ausblenden), `action` (Knopf, invertiert, optional mit führendem Symbol `icon`).
  * @param {string} html feste, eigene Texte (kein Nutzerinhalt)
- * @param {{ center?: boolean, sticky?: boolean, action?: { label: string, onClick: () => void } }} [opts]
+ * @param {{ center?: boolean, sticky?: boolean, action?: { label: string, icon?: string, onClick: () => void } }} [opts]
  */
 export function showToast(html, opts = {}) {
   const { center = false, sticky = false, action = null } = opts;
@@ -42,7 +42,8 @@ export function showToast(html, opts = {}) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'settings-confirm-yes';
-    btn.textContent = action.label;
+    if (action.icon) btn.innerHTML = `<i class="${action.icon}" aria-hidden="true"></i> ${action.label}`;   // feste Texte/Klassen, kein Nutzerinhalt
+    else btn.textContent = action.label;
     btn.addEventListener('click', action.onClick);
     toast.appendChild(btn);
     toast.classList.add(`${TOAST_CLASS}--active`);   // Knopf muss klickbar sein (sonst pointer-events: none)

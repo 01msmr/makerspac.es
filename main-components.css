@@ -1943,9 +1943,16 @@ a#titleurl:hover h3.space-unknown .fas {
   z-index: 100001;
 }
 .settings-hash-toast--active { pointer-events: auto; }
-@media (pointer: coarse) {
-  .settings-hash-toast--active .settings-confirm-yes { min-height: 40px; padding: 0 20px; }
+/* Knopf im Toast invertiert (Schrift = Toast-Hintergrund, Fläche = Toast-Schrift); Größen wie am Desktop, auch auf Touch */
+.settings-hash-toast--active .settings-confirm-yes {
+  background: var(--microtip-color);
+  color: var(--microtip-background-color);
 }
+.settings-hash-toast--active .settings-confirm-yes:hover {
+  background: transparent;
+  color: var(--microtip-color);
+}
+.settings-hash-toast--active .settings-confirm-yes i { margin-right: .35em; }
 
 /* Settings Confirm Tooltip (Microtip-Stil) */
 .settings-confirm-tooltip {

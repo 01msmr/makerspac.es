@@ -55,7 +55,7 @@ export function initUpdateNotice(reg) {
     const lang = window.i18n?.currentLang || (navigator.language || 'en').slice(0, 2);
     const tx = updateText(lang);
     showToast(`<strong>${tx.outdated}</strong><span>${toastSubtitle(Date.now() - openedAt, lang)}</span>`, {
-      center: true, sticky: true, action: { label: tx.reload, onClick: () => location.reload() },
+      center: true, sticky: true, action: { label: tx.reload, icon: 'fas fa-rotate', onClick: () => location.reload() },
     });
   };
 
