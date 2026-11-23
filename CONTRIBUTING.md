@@ -147,6 +147,10 @@ Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Lab
 3. Übernommen wird automatisch ab 10 `ok`-Vorschlägen oder 1 h nach dem letzten (Cron `auto-apply-spaceapi.yml`, auch bei geschlossenem Tab); „Übernehmen (N)" startet es sofort; „abmelden" löscht den Token aus dem Browser: → Workflow `apply-spaceapi-issues.yml` (`apply-ok`) prüft die Endpoints live, schreibt `loc-enrichment.json`, 1 Commit + 1 Deploy.
 4. Das Label `ok` wird beim ersten Setzen automatisch angelegt (sonst einmalig manuell).
 
+## App zurücksetzen (Cache/Service Worker)
+
+Zeigt ein Gerät nach einem Deploy noch den alten Stand: `https://makerspac.es/admin/reset.html` öffnen (auch als Lesezeichen/Homescreen-Icon; im Admin: „App zurücksetzen"). Die Seite meldet den Service Worker ab, leert alle Caches und die Daten-Zwischenspeicher und lädt neu — Admin-Token, Lesezeichen und Einstellungen bleiben erhalten (anders als „Websitedaten löschen" im System). Der „Veraltet"-Toast ruft sie über „Neu laden" auf.
+
 ## Deployment
 
 Push auf `main` → GitHub Actions deployed automatisch auf www via FTPS.
