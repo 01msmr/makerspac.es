@@ -1927,6 +1927,41 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: scale(2);
 }
 
+/* Mittiger, bleibender Toast (showToast(html, { center, sticky, action }) — z. B. „Veraltet“) */
+.settings-hash-toast--center {
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  transform-origin: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(80vw, 22rem);
+  white-space: normal;
+  text-align: center;
+  z-index: 100001;
+}
+.settings-hash-toast--active { pointer-events: auto; }
+/* Knopf im Toast invertiert (Schrift = Toast-Hintergrund, Fläche = Toast-Schrift); Größen wie am Desktop, auch auf Touch */
+.settings-hash-toast--active .settings-confirm-yes {
+  background: var(--microtip-color);
+  color: var(--microtip-background-color);
+}
+.settings-hash-toast--active .settings-confirm-yes:hover {
+  background: transparent;
+  color: var(--microtip-color);
+}
+.settings-hash-toast--active .settings-confirm-yes i {
+  display: inline-block;
+  margin-right: .35em;
+  transition: transform 0.3s ease;
+}
+.settings-hash-toast--active .settings-confirm-yes:hover i { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .settings-hash-toast--active .settings-confirm-yes i { transition: none; }
+}
+
 /* Settings Confirm Tooltip (Microtip-Stil) */
 .settings-confirm-tooltip {
   position: fixed;
