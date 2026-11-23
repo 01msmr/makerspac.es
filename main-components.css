@@ -2467,8 +2467,20 @@ body.consent-active #map { pointer-events: none; }
    OVERLAY – Reiter „new“ (letzte Änderungen, nach Monaten wie ein Blog)
    =================================== */
 
+/* Nur das Tagesdatum bleibt beim Scrollen unter der Reiterleiste stehen (sticky im Scroll-Bereich des Overlays);
+   die Monatsüberschrift scrollt normal. Nicht beide gleichzeitig. */
 .changes-month-title { margin-top: 1.6em; }
-.changes-day { display: block; margin: 1.1em 0 .15em; font-weight: 700; color: var(--hover-text-color); }
+.changes-day {
+  position: sticky;
+  top: -20px;   /* = padding-top von .embed-modal-scroll: bündig unter der Reiterleiste statt 20 px tiefer */
+  z-index: 2;
+  display: block;
+  margin: 0;
+  padding: .55em 0 .3em;
+  font-weight: 700;
+  color: var(--hover-text-color);
+  background: var(--bg-color);   /* deckt die darunter scrollenden Einträge ab */
+}
 .changes-list-day { list-style: none; counter-reset: change; margin: 0; padding: 0; }
 .changes-list-day li {
   counter-increment: change;
