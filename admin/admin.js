@@ -68,7 +68,7 @@ function toast(message, tone = 'info', { withUndo = false } = {}) {
   }
   box.append(t);
   while (box.children.length > 4) box.firstElementChild.remove();
-  setTimeout(() => t.remove(), withUndo ? 8000 : 5000);
+  setTimeout(() => t.remove(), withUndo ? 9000 : 5000);   // mit Rückgängig 9 s (wie das frühere Zeitfenster des Knopfs)
 }
 
 const setStatus = msg => { $('status').textContent = msg || ''; };
