@@ -96,9 +96,11 @@ function logout() {
 $('logout').addEventListener('click', logout);
 $('logout2').addEventListener('click', logout);
 $('logout3').addEventListener('click', logout);   // Touch im Review: Abmelden als letztes Element IM scrollbaren Inhalt, über der festen Aktionsleiste   // Touch: Abmelden steht am Seitenende (spart Platz oben)
-$('save-token').addEventListener('click', () => {
+$('login-form').addEventListener('submit', e => {
+  e.preventDefault();
   token = $('token').value.trim();
-  $('token').value = '';
+  // Feld erst später leeren: Der Passwort-Manager liest den Wert beim Absenden/Ausblenden des Formulars
+  setTimeout(() => { $('token').value = ''; }, 2000);
   if (!token) return;
   try { localStorage.setItem('admin-pat', token); } catch { /* ignore */ }
   start();
