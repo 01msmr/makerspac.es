@@ -79,7 +79,7 @@
 | `date-utils.js` | Weekday-SSOT: `WEEKDAY_NAMES`, `todayWeekday`, `isWeeklyToday` (pure, keine Browser-Deps) | exports |
 | `search-filter.js` | Filter-Logik (kein DOM) | `SearchFilter` class |
 | `search-header.js` | Such-UI, Dropdown, Item-Clicks, Orchestrierung | `SearchHeader` (export) |
-| `admin-shortcut.js` | Leaf: „/admin“ (auch „/admin/“) im Suchfeld + **Enter** öffnet das Admin-Review in einem neuen Tab (Anker-Klick; Enter = Nutzeraktion, `window.open` aus `input` würde geblockt); `search-header.js` leert das Suchfeld danach. Steht im `modulepreload` und im SW-Precache | `isAdminCommand`, `openAdminTab` |
+| `admin-shortcut.js` | Leaf: „/admin“ (auch „/admin/“) im Suchfeld öffnet das Admin-Review **sofort beim Tippen** in einem neuen Tab (wie `/demo`, ohne Enter; `window.open`, `opener` wird gekappt); `search-header.js` leert das Suchfeld danach. Blockt der Pop-up-Schutz den Tab, bleibt der Text stehen und **Enter** öffnet ihn (Tastendruck = Nutzeraktion). Steht im `modulepreload` und im SW-Precache | `isAdminCommand`, `openAdminTab` |
 | `search-pills.js` | Filter-Pills in der Suchleiste (Stadt, Land, Style) | `SearchPillsManager` (export) |
 | `autocomplete-manager.js` | Autocomplete-Dropdown, Städte/PLZ-Vorschläge | `AutocompleteManager` (export) |
 | `listing-core.js` | Item-Rendering, Hover-Effekte, Connection Line, SVG-Schweif | `ListingCore` class |

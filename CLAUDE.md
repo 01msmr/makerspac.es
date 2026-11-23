@@ -156,7 +156,7 @@ date-utils.js       → Weekday-SSOT: WEEKDAY_NAMES, todayWeekday, isWeeklyToday
 
 search-filter.js    → Filter-Logik (kein DOM), updateMarkers(), lastFilteredLocations
 search-header.js    → Such-UI, Dropdown, Item-Clicks, reZoom(), Orchestrierung
-admin-shortcut.js   → „/admin“ + Enter im Suchfeld öffnet das Admin-Review in neuem Tab (Leaf)
+admin-shortcut.js   → „/admin“ im Suchfeld öffnet das Admin-Review sofort in neuem Tab (wie /demo; Leaf)
 search-pills.js     → Filter-Pills in der Suchleiste (SearchPillsManager)
 autocomplete-manager.js → Autocomplete-Dropdown, Städte/PLZ-Vorschläge
 listing-core.js     → Item-Rendering, Hover, Connection Line, i18n-Cache

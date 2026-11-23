@@ -7,11 +7,14 @@ test('isAdminCommand: „/admin“ (auch /admin/, Groß-/Kleinschreibung, Leerra
   for (const no of ['admin', '/administration', '/admin/x', 'x/admin', '/adm', '', '  ', null, undefined, 'Aachen']) assert.equal(isAdminCommand(no), false, String(no));
 });
 
-test('openAdminTab: Anker auf /admin/ mit target=_blank und noopener, wird geklickt', () => {
-  let a, attached = false;
-  openAdminTab({
-    createElement: () => (a = { click() { this.clickedWhileAttached = attached; }, remove() { attached = false; } }),
-    body: { appendChild: () => { attached = true; } },
-  });
-  assert.deepEqual([a.href, a.target, a.rel, a.clickedWhileAttached, attached], [ADMIN_URL, '_blank', 'noopener noreferrer', true, false], 'angehängt geklickt, danach entfernt');
+test('openAdminTab: window.open(/admin/, _blank), opener wird gekappt, true bei Erfolg', () => {
+  const calls = [];
+  const tab = { opener: 'main' };
+  assert.equal(openAdminTab({ open: (...a) => { calls.push(a); return tab; } }), true);
+  assert.deepEqual(calls, [[ADMIN_URL, '_blank']]);
+  assert.equal(tab.opener, null);
+});
+
+test('openAdminTab: vom Browser geblockt (open liefert null) → false', () => {
+  assert.equal(openAdminTab({ open: () => null }), false);
 });
