@@ -506,7 +506,13 @@
   "94": {
     "events": "https://www.ideenwerk.me/termine/"
   },
-  "95": {},
+  "95": {
+    "workshops": [
+      "3d",
+      "ceramics",
+      "screenprint"
+    ]
+  },
   "96": {
     "events": "https://www.chaostreff-dortmund.de/veranstaltungen",
     "spaceapi": {
@@ -517,16 +523,30 @@
     "events": "https://wiki.das-labor.org/w/Kalender",
     "spaceapi": {
       "endpoint": "https://das-labor.org/status/api"
-    }
+    },
+    "workshops": [
+      "3d",
+      "cnc",
+      "laser"
+    ]
   },
   "98": {
-    "events": "https://makerspace.ruhr-uni-bochum.de/kalender"
+    "events": "https://makerspace.ruhr-uni-bochum.de/kalender",
+    "workshops": [
+      "wood",
+      "metal"
+    ]
   },
   "99": {
     "events": "https://chaospott.de/calendar.html",
     "spaceapi": {
       "endpoint": "https://status.chaospott.de/status.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "wood"
+    ]
   },
   "101": {
     "spaceapi": {
