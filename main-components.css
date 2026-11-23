@@ -2499,22 +2499,26 @@ body.consent-active #map { pointer-events: none; }
   font-variant-numeric: tabular-nums;
 }
 .changes-space {
+  /* Optik wie der Name im Space-Popover (`a h3`): Pille in Statusfarbe — hier „open“ (grün) —, weiße Schrift, beim Hover
+     Farben vertauscht; Tür-Symbol (geöffnet) davor, aber ohne den Extra-Leerraum des Popovers (dort Platz für die ID) */
+  --status-color: var(--space-open);
   justify-self: start;
-  background: none;
-  border: none;
-  padding: 0;
+  padding: .2em .3em;
   font: inherit;
   font-weight: 700;
-  color: var(--text-color);
+  color: white;
   text-align: left;
+  border-radius: .36em;
+  background-color: white;
+  background-image: linear-gradient(to bottom, var(--status-color) 50%, transparent 50%);
+  background-size: 100% 400%;
+  background-position: 0 0;
+  border: .12em solid var(--status-color);
   cursor: pointer;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
+  transition: background-position 130ms ease-in-out, color 130ms ease-in-out;
 }
-.changes-space:hover { color: blue; text-decoration: underline; }
+.changes-space:hover { color: var(--status-color); background-position: 0 100%; }
+.changes-space .changes-space-icon { margin-right: .35em; }   /* Symbol erbt die Farbe (weiß → beim Hover Statusfarbe) */
 .changes-what .nowrap { white-space: nowrap; }   /* „8 Werkstätten“ nicht trennen (statt des veralteten <nobr>) */
 .changes-what { grid-column: 2; color: var(--hover-text-color); font-size: .92em; }
 .changes-empty { color: var(--hover-text-color); font-style: italic; }
-@media (prefers-color-scheme: dark) {
-  .changes-space:hover { color: #66b3ff; }
-}

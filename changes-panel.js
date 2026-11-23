@@ -151,7 +151,11 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
       for (const row of day.rows) {
         const loc = locationById.get(row.id);
         const li = document.createElement('li');
-        const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space', textContent: loc.name });
+        const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space' });
+        // Tür-Symbol (geöffnet) wie im Space-Popover, dann der Name
+        const door = Object.assign(document.createElement('i'), { className: 'fas fa-door-open changes-space-icon' });
+        door.setAttribute('aria-hidden', 'true');
+        btn.append(door, loc.name);
         btn.addEventListener('click', () => onOpen(loc));
         const what = Object.assign(document.createElement('span'), { className: 'changes-what' });
         row.items.forEach((item, i) => {
