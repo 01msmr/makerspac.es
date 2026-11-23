@@ -192,5 +192,4 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 /* „App zurücksetzen“ (reset.html): Kopfzeile am Desktop, Fuß auf Touch */
 #reset-app, #reset-app-foot, #reset-app-in, .aux-link { color: var(--hover-text-color); font-size: .9em; text-decoration: underline dotted; text-underline-offset: 3px; }
 #reset-app-foot, #reset-app-in, #foot .aux-link, #foot-in .aux-link { margin-right: 1rem; align-self: center; }
-.aux-header { margin-left: .25rem; }
 @media (pointer: coarse), (max-width: 767px) { #reset-app, .aux-header { display: none; } }
