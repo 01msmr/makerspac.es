@@ -28,10 +28,13 @@
 
   <section id="login" hidden>
     <p>Fine-grained PAT (nur <code>01msmr/makerspac.es</code>, Issues R/W + Actions R/W):</p>
-    <!-- Echtes Formular mit (unsichtbarem) Benutzernamen: Der Passwort-Manager (iCloud-Schlüsselbund, 1Password …) kann den Token
-         speichern und füllt ihn automatisch ein — auch nach „Websitedaten löschen“ (der Schlüsselbund liegt außerhalb der Websitedaten). -->
+    <!-- Echtes Formular mit sichtbarem, festem Benutzernamen: Der Passwort-Manager (iCloud-Schlüsselbund, 1Password …) kann den Token
+         unter makerspac.es / admin speichern und füllt ihn automatisch ein — auch nach „Websitedaten löschen“ (der Schlüsselbund
+         liegt außerhalb der Websitedaten). Der Benutzername ist nur eine Bezeichnung und wird nirgends hin gesendet. -->
     <form id="login-form" autocomplete="on">
-      <input id="login-user" class="visually-hidden" type="text" name="username" autocomplete="username" value="makerspac.es admin" tabindex="-1" aria-hidden="true">
+      <label for="login-user">Benutzername</label>
+      <input id="login-user" type="text" name="username" autocomplete="username" value="admin" readonly>
+      <label for="token">Token</label>
       <input id="token" name="password" type="password" autocomplete="current-password" placeholder="github_pat_…">
       <button id="save-token" type="submit">Speichern</button>
     </form>
