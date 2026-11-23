@@ -92,7 +92,7 @@ test('Position = Adresse: ältere Einträge mit k „position“ erscheinen als 
   assert.ok(!Object.values(CHANGES_TEXT).some(tx => 'position' in tx.kinds), 'keine Sprache nennt „Position“ als Art');
 });
 
-test('changeSegments: „8 Werkstätten“ als ein nicht umbrechbares Stück (nobr), der Rest darf umbrechen', () => {
+test('changeSegments: „8 Werkstätten“ als ein nicht umbrechbares Stück (nowrap-Span), der Rest darf umbrechen', () => {
   const seg = (e, l = 'de') => changeSegments(e, l);
   assert.deepEqual(seg({ k: 'workshops', o: 'add', n: 8 }), [{ text: '8 Werkstätten', nowrap: true }, { text: ' ergänzt' }]);
   assert.deepEqual(seg({ k: 'workshops', o: 'add', n: 2, more: 1 }), [{ text: '2 weitere Werkstätten', nowrap: true }, { text: ' ergänzt' }]);
