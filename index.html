@@ -147,6 +147,8 @@
         // einen Reload-Loop auf aktiven Clients auslösen. skipWaiting() im SW selbst
         // sorgt dafür dass der neue SW beim nächsten Seitenaufruf aktiv wird.
         setInterval(() => reg.update(), 5 * 60_000);
+        // „Veraltet“-Hinweis mittig, wenn eine neue Version bereitsteht (Modul erst jetzt laden, nicht im Ladepfad der Karte)
+        import('/update-notice.js').then(m => m.initUpdateNotice(reg)).catch(() => {});
       }));
     }
   </script>

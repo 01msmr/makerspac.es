@@ -1927,6 +1927,26 @@ a#titleurl:hover h3.space-unknown .fas {
   transform: scale(2);
 }
 
+/* Mittiger, bleibender Toast (showToast(html, { center, sticky, action }) — z. B. „Veraltet“) */
+.settings-hash-toast--center {
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  transform-origin: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(80vw, 22rem);
+  white-space: normal;
+  text-align: center;
+  z-index: 100001;
+}
+.settings-hash-toast--active { pointer-events: auto; }
+@media (pointer: coarse) {
+  .settings-hash-toast--active .settings-confirm-yes { min-height: 40px; padding: 0 20px; }
+}
+
 /* Settings Confirm Tooltip (Microtip-Stil) */
 .settings-confirm-tooltip {
   position: fixed;

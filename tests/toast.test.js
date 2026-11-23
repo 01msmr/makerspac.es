@@ -8,7 +8,10 @@ import assert from 'node:assert/strict';
 const makeEl = (tag) => {
   const classes = new Set();
   return {
-    tag, style: {}, innerHTML: '', className: '', removed: false,
+    tag, style: {}, innerHTML: '', className: '', removed: false, children: [], listeners: {},
+    get isConnected() { return body.children.includes(this); },
+    appendChild(c) { this.children.push(c); },
+    addEventListener(type, fn) { this.listeners[type] = fn; },
     classList: {
       add: (...c) => c.forEach(x => classes.add(x)),
       remove: (...c) => c.forEach(x => classes.delete(x)),
@@ -25,7 +28,7 @@ global.document = {
   createElement: makeEl,
   querySelector(sel) {
     if (sel === '.title-bar .title') return logo;
-    if (sel === '.settings-hash-toast') return body.children.find(e => e.className.includes('settings-hash-toast')) ?? null;
+    if (sel === '.settings-hash-toast:not(.settings-hash-toast--center)') return body.children.find(e => e.className.includes('settings-hash-toast') && !e.className.includes('--center')) ?? null;
     return null;
   },
 };
@@ -63,5 +66,32 @@ test('3: blendet nach 3 s aus und wird nach der Animation entfernt', () => {
   assert.equal(t.classList.contains('show'), false);
   mock.timers.tick(300);
   assert.equal(t.removed, true);
+  mock.timers.reset();
+});
+
+test('4: center + sticky + action — mittig (keine Logo-Position), bleibt stehen, Knopf ruft die Aktion auf', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  let clicked = 0;
+  showToast('<b>Veraltet</b>', { center: true, sticky: true, action: { label: 'Neu laden', onClick: () => clicked++ } });
+  const t = body.children[0];
+  assert.ok(t.className.includes('settings-hash-toast--center'));
+  assert.equal(t.style.top, undefined);
+  assert.ok(t.classList.contains('show') && t.classList.contains('settings-hash-toast--active'));
+  const btn = t.children[0];
+  assert.deepEqual([btn.className, btn.textContent], ['settings-confirm-yes', 'Neu laden']);
+  btn.listeners.click();
+  assert.equal(clicked, 1);
+  mock.timers.tick(10_000);
+  assert.equal(t.removed, false, 'sticky: nach 10 s noch da');
+  mock.timers.reset();
+});
+
+test('5: ein kurzer Toast überschreibt den mittigen nicht (eigene Instanz)', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  showToast('<b>Veraltet</b>', { center: true, sticky: true });
+  showToast('✓ URL kopiert');
+  assert.equal(body.children.length, 2);
+  assert.equal(body.children[0].innerHTML, '<b>Veraltet</b>');
+  assert.equal(body.children[1].innerHTML, '✓ URL kopiert');
   mock.timers.reset();
 });

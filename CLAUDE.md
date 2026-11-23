@@ -142,7 +142,8 @@ main.js             → Orchestrierung, Module verknüpfen
 app-context.js      → Shared State, Phase-Barrieren
 tile-loader.js      → Tile-Mode-Erkennung, lazy MapLibre-Loader (map.js + embed.js)
 data-preload.js     → Länder-Erkennung aus Hash, früher Preload der Startdaten (Leaf, aus index.html)
-toast.js            → Info-Toast unter dem Logo (Leaf; Schweregrad-Meldungen: datasync.showNotification)
+toast.js            → Info-Toast unter dem Logo (Leaf; Optionen center/sticky/action; Schweregrad-Meldungen: datasync.showNotification)
+update-notice.js    → „Veraltet“-Hinweis (neue SW-Version) als mittiger, bleibender Toast mit „Neu laden“ (lazy aus index.html)
 marker-manager.js   → Marker/Popup/Sticky/Connection-Line-Logik
 
 config.js           → Zentrale Config (assembliert aus Sub-Modulen)
