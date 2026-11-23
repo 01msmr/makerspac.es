@@ -3,6 +3,7 @@
 //   k: 'added' (neuer Space) | 'name' | 'address' (Straße/Nr./PLZ/Ort/Land) | 'position' (Koordinaten) | 'link' (Website) | 'style' (Zielgruppe)
 //      | 'weekly' | 'workshops' | 'events' | 'spaceapi'
 //   n: nur bei 'workshops' — Anzahl der ergänzten (o: 'add') bzw. entfernten (o: 'remove') Werkstatt-Typen
+//   more: nur bei workshops/add — 1, wenn es schon Werkstätten gab (weitere ergänzt); fehlt, wenn erstmals Werkstätten erfasst wurden
 //   o: 'add' | 'change' | 'remove' (bei k = 'added' nicht gesetzt)
 // Reine Datumsstempel (`dates`) zählen nicht. Massenänderungen (Migrationen/Aufräumen) werden ausgelassen.
 
@@ -40,7 +41,7 @@ export function diffSpaces(prev, next) {
       if (kind === 'workshops') {   // „3 Werkstätten ergänzt“: Anzahl der neu hinzugekommenen bzw. entfernten Typen
         const was = new Set(a ?? []), now = new Set(b ?? []);
         const added = [...now].filter(w => !was.has(w)).length, removed = [...was].filter(w => !now.has(w)).length;
-        if (added) out.push({ id: loc.ID, k: kind, o: 'add', n: added });
+        if (added) out.push({ id: loc.ID, k: kind, o: 'add', n: added, ...(was.size ? { more: 1 } : {}) });
         if (removed) out.push({ id: loc.ID, k: kind, o: 'remove', n: removed });
         continue;
       }

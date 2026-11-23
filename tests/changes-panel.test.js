@@ -13,6 +13,7 @@ test('alle Sprachen: Arten wie Englisch, Verb-Formen vollständig, Reiter „new
     for (const g of Object.values(tx.gender ?? {})) assert.ok(tx.ops[g], `${lang}: Genus ${g}`);
     if (!tx.ops.add) for (const g of ['m', 'mp']) assert.ok(tx.ops[g], `${lang}: Formen m/mp für Werkstatt-Zahlen`);
     assert.ok(tx.workshopForms.one && tx.workshopForms.other, `${lang}: workshopForms`);
+    assert.ok(tx.more.other && tx.more.other.includes('{n}') && tx.more.other.includes('{w}'), `${lang}: more-Muster`);
     for (const v of [tx.tab, tx.intro, tx.empty, ...Object.values(tx.kinds)]) assert.ok(v && v.length > 0, lang);
   }
   assert.equal(changesText('xx'), CHANGES_TEXT.en, 'unbekannte Sprache → Englisch');
@@ -65,4 +66,20 @@ test('Werkstätten mit Anzahl: „3 Werkstätten ergänzt“, „1 Werkstatt ent
   assert.equal(changeLabel(w(2), 'uk'), '2 майстерні додано');
   assert.equal(changeLabel(w(5), 'uk'), '5 майстерень додано');
   assert.equal(changeLabel({ k: 'workshops', o: 'add' }, 'de'), 'Werkstätten ergänzt', 'ohne Zahl (ältere Einträge) wie bisher');
+});
+
+test('Werkstätten zu bestehenden ergänzt: „2 weitere Werkstätten ergänzt“ (erstmals: „8 Werkstätten ergänzt“)', () => {
+  const more = n => ({ k: 'workshops', o: 'add', n, more: 1 });
+  assert.equal(changeLabel({ k: 'workshops', o: 'add', n: 8 }, 'de'), '8 Werkstätten ergänzt');
+  assert.equal(changeLabel(more(2), 'de'), '2 weitere Werkstätten ergänzt');
+  assert.equal(changeLabel(more(1), 'de'), '1 weitere Werkstatt ergänzt');
+  assert.equal(changeLabel(more(2), 'en'), '2 more workshops added');
+  assert.equal(changeLabel(more(1), 'fr'), '1 atelier supplémentaire ajouté');
+  assert.equal(changeLabel(more(3), 'fr'), '3 ateliers supplémentaires ajoutés');
+  assert.equal(changeLabel(more(2), 'nl'), '2 extra werkplaatsen toegevoegd');
+  assert.equal(changeLabel(more(2), 'it'), '2 laboratori in più aggiunti');
+  assert.equal(changeLabel(more(2), 'da'), '2 ekstra værksteder tilføjet');
+  assert.equal(changeLabel(more(1), 'uk'), 'ще 1 майстерню додано');
+  assert.equal(changeLabel(more(3), 'uk'), 'ще 3 майстерні додано');
+  assert.equal(changeLabel({ k: 'workshops', o: 'remove', n: 2, more: 1 }, 'de'), '2 Werkstätten entfernt', 'Entfernen bleibt unverändert');
 });

@@ -5,37 +5,45 @@
 
 /**
  * Texte je Sprache (Sprachen wie ABOUT in embed-overlay.js); Fallback en.
+ * `more` = Muster „2 weitere Werkstätten“ (zu schon vorhandenen Werkstätten ergänzt; optional `forms` für andere Wortform).
  * `ops` = Verb-Formen; bei Sprachen mit Genus/Numerus (fr, it) nach Form `m | f | mp` getrennt, `gender` ordnet die Art zu.
  */
 export const CHANGES_TEXT = {
   en: { tab: 'new', intro: 'Latest additions and changes to the map.', empty: 'No changes recorded yet.',
     workshopForms: { one: 'workshop', other: 'workshops' },
+    more: { other: '{n} more {w}' },
     kinds: { added: 'New space', name: 'Name', address: 'Address', position: 'Position', link: 'Website', style: 'Audience', weekly: 'Weekly meeting', workshops: 'Workshops', events: 'Event calendar', spaceapi: 'Live status' },
     ops: { add: 'added', change: 'updated', remove: 'removed' } },
   de: { tab: 'neu', intro: 'Letzte Ergänzungen und Änderungen an der Karte.', empty: 'Noch keine Änderungen verzeichnet.',
     workshopForms: { one: 'Werkstatt', other: 'Werkstätten' },
+    more: { other: '{n} weitere {w}' },
     kinds: { added: 'Neuer Space', name: 'Name', address: 'Adresse', position: 'Position', link: 'Website', style: 'Zielgruppe', weekly: 'Wöchentliches Treffen', workshops: 'Werkstätten', events: 'Kalender', spaceapi: 'Live-Status' },
     ops: { add: 'ergänzt', change: 'geändert', remove: 'entfernt' } },
   fr: { tab: 'nouveau', intro: 'Derniers ajouts et modifications de la carte.', empty: 'Aucune modification enregistrée.',
     workshopForms: { one: 'atelier', other: 'ateliers' },
+    more: { one: '{n} {w} supplémentaire', other: '{n} {w} supplémentaires' },
     kinds: { added: 'Nouvel espace', name: 'Nom', address: 'Adresse', position: 'Position', link: 'Site web', style: 'Public', weekly: 'Réunion hebdomadaire', workshops: 'Ateliers', events: 'Calendrier', spaceapi: 'Statut en direct' },
     gender: { address: 'f', position: 'f', weekly: 'f', workshops: 'mp' },
     ops: { m: { add: 'ajouté', change: 'modifié', remove: 'supprimé' }, f: { add: 'ajoutée', change: 'modifiée', remove: 'supprimée' }, mp: { add: 'ajoutés', change: 'modifiés', remove: 'supprimés' } } },
   nl: { tab: 'nieuw', intro: 'Laatste toevoegingen en wijzigingen op de kaart.', empty: 'Nog geen wijzigingen vastgelegd.',
     workshopForms: { one: 'werkplaats', other: 'werkplaatsen' },
+    more: { other: '{n} extra {w}' },
     kinds: { added: 'Nieuwe space', name: 'Naam', address: 'Adres', position: 'Positie', link: 'Website', style: 'Doelgroep', weekly: 'Wekelijkse bijeenkomst', workshops: 'Werkplaatsen', events: 'Agenda', spaceapi: 'Live status' },
     ops: { add: 'toegevoegd', change: 'gewijzigd', remove: 'verwijderd' } },
   it: { tab: 'novità', intro: 'Ultime aggiunte e modifiche alla mappa.', empty: 'Nessuna modifica registrata.',
     workshopForms: { one: 'laboratorio', other: 'laboratori' },
+    more: { other: '{n} {w} in più' },
     kinds: { added: 'Nuovo spazio', name: 'Nome', address: 'Indirizzo', position: 'Posizione', link: 'Sito web', style: 'Pubblico', weekly: 'Incontro settimanale', workshops: 'Laboratori', events: 'Calendario', spaceapi: 'Stato live' },
     gender: { workshops: 'mp' },
     ops: { m: { add: 'aggiunto', change: 'modificato', remove: 'rimosso' }, f: { add: 'aggiunta', change: 'modificata', remove: 'rimossa' }, mp: { add: 'aggiunti', change: 'modificati', remove: 'rimossi' } } },
   da: { tab: 'nyt', intro: 'Seneste tilføjelser og ændringer på kortet.', empty: 'Ingen ændringer registreret endnu.',
     workshopForms: { one: 'værksted', other: 'værksteder' },
+    more: { other: '{n} ekstra {w}' },
     kinds: { added: 'Nyt space', name: 'Navn', address: 'Adresse', position: 'Position', link: 'Hjemmeside', style: 'Målgruppe', weekly: 'Ugentligt møde', workshops: 'Værksteder', events: 'Kalender', spaceapi: 'Live-status' },
     ops: { add: 'tilføjet', change: 'ændret', remove: 'fjernet' } },
   uk: { tab: 'нове', intro: 'Останні додавання та зміни на карті.', empty: 'Змін ще не зафіксовано.',
     workshopForms: { one: 'майстерня', few: 'майстерні', many: 'майстерень', other: 'майстерні' },
+    more: { one: 'ще {n} {w}', other: 'ще {n} {w}', forms: { one: 'майстерню' } },
     kinds: { added: 'Новий простір', name: 'Назва', address: 'Адреса', position: 'Позиція', link: 'Вебсайт', style: 'Аудиторія', weekly: 'Щотижнева зустріч', workshops: 'Майстерні', events: 'Календар', spaceapi: 'Статус наживо' },
     ops: { add: 'додано', change: 'змінено', remove: 'видалено' } },
 };
@@ -53,7 +61,12 @@ export function changeLabel(entry, lang) {
   if (entry.k === 'workshops' && entry.n) {   // „3 Werkstätten ergänzt“ / „1 Werkstatt entfernt“
     let cat = 'other';
     try { cat = new Intl.PluralRules(lang).select(entry.n); } catch { /* unbekannte Sprache */ }
-    kind = `${entry.n} ${tx.workshopForms[cat] ?? tx.workshopForms.other}`;
+    const noun = tx.workshopForms[cat] ?? tx.workshopForms.other;
+    kind = `${entry.n} ${noun}`;
+    if (entry.more && entry.o === 'add') {   // zu schon vorhandenen Werkstätten: „2 weitere Werkstätten“
+      const tpl = tx.more[cat] ?? tx.more.other;
+      kind = tpl.replace('{n}', entry.n).replace('{w}', tx.more.forms?.[cat] ?? noun);
+    }
     gender = cat === 'one' ? 'm' : 'mp';
   }
   if (!entry.o) return kind;
@@ -104,7 +117,7 @@ export const rowLabel = (row, lang) => row.items.map(e => changeLabel(e, lang)).
 /**
  * Zeichnet die Liste in `container` (nur textContent/DOM-API, kein innerHTML).
  * @param {HTMLElement} container
- * @param {{d:string,id:number,k:string,o?:string,n?:number}[]} entries
+ * @param {{d:string,id:number,k:string,o?:string,n?:number,more?:number}[]} entries
  * @param {{ lang:string, locationById: Map<number, any>, onOpen: (loc:any)=>void }} opts
  */
 export function renderChanges(container, entries, { lang, locationById, onOpen }) {
