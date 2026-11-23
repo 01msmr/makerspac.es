@@ -49,8 +49,8 @@ test('diffSpaces: Adresse (inkl. Position), Website und Zielgruppe einzeln benan
   const kinds = next => diffSpaces(snap([base]), snap([next])).map(e => e.k).sort();
   assert.deepEqual(kinds({ ...base, loc: { ...base.loc, street: { name: 'Neu', number: 1, ext: '' } } }), ['address']);
   assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln' } }), ['address']);
-  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, lat: 50.5 } }), ['address'], 'Position = Adresse');
-  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln', lat: 50.9, long: 7 } }), ['address'], 'Adresse + Position → nur EINE Angabe');
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, lat: 50.5, long: 6.2 } }), [], 'nur der Pin verschoben → kein Eintrag (Position wird nicht genannt)');
+  assert.deepEqual(kinds({ ...base, loc: { ...base.loc, city: 'Köln', lat: 50.9, long: 7 } }), ['address'], 'Adresse + Position → nur EINE Angabe (Adresse)');
   assert.deepEqual(kinds({ ...base, link: { url: 'https://neu.de' } }), ['link']);
   assert.deepEqual(kinds({ ...base, style: 'for youth' }), ['style']);
   assert.deepEqual(kinds({ ...base, name: 'Neu', style: 'for youth' }), ['name', 'style']);
