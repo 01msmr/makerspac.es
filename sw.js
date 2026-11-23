@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v124'; // bei Deployment erhöhen → alle Caches werden erneuert
+const VERSION = 'v125'; // bei Deployment erhöhen → alle Caches werden erneuert
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
 const CACHE_TILES = `ms-tiles-${VERSION}`;
@@ -92,13 +92,17 @@ const DATA_URLS = [
 ];
 
 // ─── Install: alle statischen Assets precachen ────────────────────────────────
-// Einzelne cache.add() mit Catch statt cache.addAll() — ein 404 bricht nicht alles ab.
+// Einzelne Requests mit Catch statt cache.addAll() — ein 404 bricht nicht alles ab.
+// cache: 'reload' umgeht den HTTP-Cache: JS/CSS haben dort 48 h max-age (.htaccess); mit cache.add() holte ein neuer Service Worker
+// sonst die ALTEN Dateien aus dem Browser-Cache in seinen frischen Cache → Änderungen blieben nach einem Deploy unsichtbar.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_STATIC)
       .then(cache => Promise.all(
         STATIC_ASSETS.map(url =>
-          cache.add(url).catch(() => console.warn(`SW: Precache miss – ${url}`))
+          fetch(new Request(url, { cache: 'reload' }))
+            .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return cache.put(url, res); })
+            .catch(() => console.warn(`SW: Precache miss – ${url}`))
         )
       ))
       .then(() => self.skipWaiting())

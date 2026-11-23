@@ -71,3 +71,24 @@ test('Fetch-Handler: Daten-URL als Navigation (Accept text/html) → networkFirs
   }
   assert.equal(await respond('https://x/'), 'ALT', 'echte HTML-Seiten bleiben SWR (Cache zuerst)');
 });
+
+test('Install: Precache holt die Assets am HTTP-Cache vorbei (cache: reload) — sonst landen nach einem Deploy die alten Dateien im neuen Cache', async () => {
+  let onInstall;
+  const stored = [], requests = [];
+  const ctx = {
+    self: { addEventListener: (type, fn) => { if (type === 'install') onInstall = fn; }, skipWaiting: async () => {}, location: { origin: 'https://x' } },
+    caches: { open: async () => ({ put: async (url, res) => stored.push(url) }) },
+    Request: class { constructor(url, init) { this.url = url; this.cache = init?.cache; } },
+    fetch: async req => { requests.push(req); return { ok: !String(req.url).includes('fehlt') }; },
+    console: { warn() {} }, URL, Promise, setTimeout,
+  };
+  vm.createContext(ctx);
+  vm.runInContext(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), ctx);
+  let waited;
+  onInstall({ waitUntil: p => { waited = p; } });
+  await waited;
+  assert.ok(requests.length > 40, 'alle STATIC_ASSETS angefragt');
+  assert.ok(requests.every(r => r.cache === 'reload'), 'jede Anfrage mit cache: reload');
+  assert.equal(stored.length, requests.length, 'alle erfolgreichen Antworten gespeichert');
+  assert.ok(stored.includes('/changes-panel.js') && stored.includes('/main-components.css'));
+});
