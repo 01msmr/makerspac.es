@@ -81,10 +81,10 @@ export function monthLabel(ym, lang) {
   catch { return ym; }
 }
 
-/** Tag „22. Nov.“ */
+/** Tag mit vollem Monatsnamen: „22. November“ */
 export function dayLabel(d, lang) {
   const [y, m, day] = d.split('-').map(Number);
-  try { return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, day))); }
+  try { return new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, day))); }
   catch { return d; }
 }
 

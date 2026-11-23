@@ -48,7 +48,9 @@ test('groupChanges: Monat → Tag → Zeile; mehrere Änderungen am selben Tag j
 
 test('Monats- und Tagesbezeichnung folgen der Sprache', () => {
   assert.match(monthLabel('2026-11', 'de'), /November 2026/);
-  assert.match(dayLabel('2026-11-22', 'de'), /22\./);
+  assert.equal(dayLabel('2026-11-22', 'de'), '22. November');
+  assert.match(dayLabel('2026-11-22', 'en'), /November/);
+  assert.doesNotMatch(dayLabel('2026-11-22', 'de'), /Nov\.$/);
   assert.equal(monthLabel('2026-11', 'zz-invalid-lang-tag-xxxxxxxxx'), '2026-11');
 });
 
