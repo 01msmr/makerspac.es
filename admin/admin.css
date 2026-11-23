@@ -34,8 +34,11 @@ kbd { border: 1px solid var(--dropdown-border); border-radius: 6px; padding: 0 .
 #apply { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
 
 #login, #done { margin: 1rem; padding: 1rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
-#login input[type="password"] { width: min(32rem, 100%); }
-.visually-hidden { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }   /* nicht display:none — Passwort-Manager brauchen das Benutzernamen-Feld */
+#login input[type="password"], #login input[type="text"] { width: min(32rem, 100%); box-sizing: border-box; }
+#login-form { display: grid; gap: .35rem; max-width: 32rem; }
+#login-form label { font-size: .85em; color: var(--hover-text-color); }
+#login-user { opacity: .7; }   /* fest, nur zur Anzeige */
+#login-form button { justify-self: start; margin-top: .4rem; }
 #login-hint { color: var(--hover-text-color); font-size: .9em; max-width: 36rem; }
 
 /* ── Review-Layout ────────────────────────────────────────────────── */
