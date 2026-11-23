@@ -1952,7 +1952,15 @@ a#titleurl:hover h3.space-unknown .fas {
   background: transparent;
   color: var(--microtip-color);
 }
-.settings-hash-toast--active .settings-confirm-yes i { margin-right: .35em; }
+.settings-hash-toast--active .settings-confirm-yes i {
+  display: inline-block;
+  margin-right: .35em;
+  transition: transform 0.3s ease;
+}
+.settings-hash-toast--active .settings-confirm-yes:hover i { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .settings-hash-toast--active .settings-confirm-yes i { transition: none; }
+}
 
 /* Settings Confirm Tooltip (Microtip-Stil) */
 .settings-confirm-tooltip {
