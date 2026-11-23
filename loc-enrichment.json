@@ -534,7 +534,17 @@
     }
   },
   "102": {
-    "events": "https://halle1wh.de/workshops-events/"
+    "events": "https://halle1wh.de/workshops-events/",
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics",
+      "laser",
+      "metal",
+      "textile",
+      "vr",
+      "wood"
+    ]
   },
   "103": {
     "events": "https://hrw-fablab.de/termine/",
@@ -626,7 +636,12 @@
     ]
   },
   "118": {
-    "events": "https://klugev.de/kalender/"
+    "events": "https://klugev.de/kalender/",
+    "workshops": [
+      "bike",
+      "music",
+      "textile"
+    ]
   },
   "119": {
     "events": "https://dingfabrik.de/veranstaltungen",
@@ -650,7 +665,10 @@
     }
   },
   "121": {
-    "events": "https://probierwerk.com/events/"
+    "events": "https://probierwerk.com/events/",
+    "workshops": [
+      "3d"
+    ]
   },
   "122": {
     "events": "https://werkraum47.de/veranstaltungen",
@@ -680,7 +698,12 @@
     "weekly": {
       "weekday": 4,
       "time": 1900
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics"
+    ]
   },
   "127": {
     "events": "https://hci.rwth-aachen.de/#news"
