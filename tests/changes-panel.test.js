@@ -110,3 +110,9 @@ test('statusOf: aktueller Status wie im Popover (offen/geschlossen/unbekannt/ohn
   assert.deepEqual(statusOf({}), { cls: '', icon: '' });
   assert.deepEqual(statusOf(undefined), { cls: '', icon: '' });
 });
+
+test('Überschrift des Reiters: kurz („Neueste Änderungen“), in allen Sprachen vorhanden und ohne Schlusspunkt', () => {
+  assert.equal(changesText('de').intro, 'Neueste Änderungen');
+  assert.equal(changesText('en').intro, 'Latest changes');
+  for (const [lang, tx] of Object.entries(CHANGES_TEXT)) assert.ok(tx.intro && !tx.intro.endsWith('.') && tx.intro.length < 30, lang);
+});
