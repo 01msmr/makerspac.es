@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHANGES_TEXT, KIND_ORDER, changesText, changeLabel, groupChanges, rowLabel, monthLabel, dayLabel } from '../changes-panel.js';
+import { CHANGES_TEXT, KIND_ORDER, changesText, changeLabel, changeSegments, groupChanges, rowLabel, monthLabel, dayLabel } from '../changes-panel.js';
 
 test('alle Sprachen: Arten wie Englisch, Verb-Formen vollständig, Reiter „new“ = en', () => {
   const ref = CHANGES_TEXT.en;
@@ -90,4 +90,14 @@ test('Position = Adresse: ältere Einträge mit k „position“ erscheinen als 
   const m = groupChanges([{ d: '2026-11-22', id: 118, k: 'address', o: 'change' }, { d: '2026-11-22', id: 118, k: 'position', o: 'change' }]);
   assert.equal(rowLabel(m[0].days[0].rows[0], 'de'), 'Adresse geändert');
   assert.ok(!Object.values(CHANGES_TEXT).some(tx => 'position' in tx.kinds), 'keine Sprache nennt „Position“ als Art');
+});
+
+test('changeSegments: „8 Werkstätten“ als ein nicht umbrechbares Stück (nobr), der Rest darf umbrechen', () => {
+  const seg = (e, l = 'de') => changeSegments(e, l);
+  assert.deepEqual(seg({ k: 'workshops', o: 'add', n: 8 }), [{ text: '8 Werkstätten', nowrap: true }, { text: ' ergänzt' }]);
+  assert.deepEqual(seg({ k: 'workshops', o: 'add', n: 2, more: 1 }), [{ text: '2 weitere Werkstätten', nowrap: true }, { text: ' ergänzt' }]);
+  assert.deepEqual(seg({ k: 'workshops', o: 'remove', n: 1 }), [{ text: '1 Werkstatt', nowrap: true }, { text: ' entfernt' }]);
+  assert.deepEqual(seg({ k: 'weekly', o: 'add' }), [{ text: 'Wöchentliches Treffen', nowrap: false }, { text: ' ergänzt' }]);
+  assert.deepEqual(seg({ k: 'added' }), [{ text: 'Neuer Space' }]);
+  assert.equal(changeLabel({ k: 'workshops', o: 'add', n: 8 }, 'de'), '8 Werkstätten ergänzt', 'Label unverändert');
 });

@@ -53,11 +53,16 @@ export const KIND_ORDER = ['added', 'name', 'address', 'link', 'style', 'weekly'
 
 export const changesText = lang => CHANGES_TEXT[lang] || CHANGES_TEXT.en;
 
-/** „Werkstätten ergänzt“ (ohne Trennpunkt); neuer Space nur „Neuer Space“ */
-export function changeLabel(entry, lang) {
+/**
+ * Eine Angabe als Textstücke: Bei Werkstatt-Zahlen steht „8 Werkstätten“ in einem Stück (`nowrap` → <nobr>, kein Umbruch
+ * zwischen Zahl und Wort); der Rest („ergänzt“) darf umbrechen.
+ * @returns {{ text: string, nowrap?: boolean }[]}
+ */
+export function changeSegments(entry, lang) {
   const tx = changesText(lang);
   let kind = tx.kinds[entry.k] ?? entry.k;
   let gender = tx.gender?.[entry.k] ?? 'm';
+  let counted = false;
   if (entry.k === 'workshops' && entry.n) {   // „3 Werkstätten ergänzt“ / „1 Werkstatt entfernt“
     let cat = 'other';
     try { cat = new Intl.PluralRules(lang).select(entry.n); } catch { /* unbekannte Sprache */ }
@@ -68,11 +73,15 @@ export function changeLabel(entry, lang) {
       kind = tpl.replace('{n}', entry.n).replace('{w}', tx.more.forms?.[cat] ?? noun);
     }
     gender = cat === 'one' ? 'm' : 'mp';
+    counted = true;
   }
-  if (!entry.o) return kind;
+  if (!entry.o) return [{ text: kind }];
   const ops = tx.ops.add ? tx.ops : tx.ops[gender];
-  return `${kind} ${ops[entry.o] ?? entry.o}`;
+  return [{ text: kind, nowrap: counted }, { text: ` ${ops[entry.o] ?? entry.o}` }];
 }
+
+/** „Werkstätten ergänzt“ (ohne Trennpunkt); neuer Space nur „Neuer Space“ */
+export const changeLabel = (entry, lang) => changeSegments(entry, lang).map(s => s.text).join('');
 
 /** Monatsüberschrift „November 2026“ (Sprache des Nutzers) */
 export function monthLabel(ym, lang) {
@@ -144,7 +153,14 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
         const li = document.createElement('li');
         const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space', textContent: loc.name });
         btn.addEventListener('click', () => onOpen(loc));
-        const what = Object.assign(document.createElement('span'), { className: 'changes-what', textContent: rowLabel(row, lang) });
+        const what = Object.assign(document.createElement('span'), { className: 'changes-what' });
+        row.items.forEach((item, i) => {
+          if (i) what.append(', ');
+          for (const seg of changeSegments(item, lang)) {
+            if (seg.nowrap) what.append(Object.assign(document.createElement('nobr'), { textContent: seg.text }));   // „8 Werkstätten“ nicht trennen
+            else what.append(seg.text);
+          }
+        });
         li.append(btn, what);
         ol.append(li);
       }
