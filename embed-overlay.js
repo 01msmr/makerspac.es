@@ -176,7 +176,7 @@ function showOverlay(initialTab = 'addspace') {
             <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add</span></button>
             <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed</span></button>
             <button class="embed-tab" data-tab="about"><i class="fas fa-circle-info"></i> <span class="tab-label-full">${ti('about.tabTitle', 'about makerspac.es')}</span><span class="tab-label-short">about</span></button>
-            <button class="embed-tab" data-tab="changes" aria-label="${changesText(window.i18n?.currentLang).tab}"><i class="fas fa-wand-magic-sparkles"></i> <span class="tab-label-full">${changesText(window.i18n?.currentLang).tab}</span><span class="tab-label-short"><span class="new-plus" aria-hidden="true">+</span></span></button>
+            <button class="embed-tab" data-tab="changes" aria-label="${changesText(window.i18n?.currentLang).tab}"><i class="fas fa-wand-magic-sparkles"></i> <span class="tab-label-full">${changesText(window.i18n?.currentLang).tab}</span><span class="tab-label-short">${changesText(window.i18n?.currentLang).tab}</span></button>
           </div>
         </div>
         <button class="embed-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>

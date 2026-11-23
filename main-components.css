@@ -1108,22 +1108,10 @@ a#titleurl:hover h3.space-unknown .fas {
 @media (max-width: 767px) {
   .tab-label-full { display: none; }
   .tab-label-short { display: inline; }
-  /* Reiter „new“: am Smartphone nur das blaue [+] wie im Logo (ohne Symbol davor) */
-  .embed-tab[data-tab="changes"] > i { display: none; }
+  /* vier Reiter (add · embed · about · new) müssen in die Breite passen, auch bei 360 px */
+  .embed-tab { padding-left: 6px; padding-right: 6px; gap: 4px; min-width: 0; }
 }
 
-/* Blaues Quadrat mit weißem „+“ wie im Logo (.tool-add) */
-.new-plus {
-  display: inline-block;
-  width: 1.5em;
-  height: 1.5em;
-  line-height: 1.5em;
-  text-align: center;
-  border-radius: .25em;
-  background: blue;
-  color: white;
-  font-weight: 700;
-}
 
 .embed-tab:not(.active) {
   color: var(--overlay-tab-text);
