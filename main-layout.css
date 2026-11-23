@@ -146,23 +146,30 @@ body {
   text-decoration: none;
 }
 
+/* „+“: Quadrat in Höhe und Farbe des „spac“-Bereichs — gleiche Schrift, gleicher Rahmen (.1em), gleiche Rundung (.25em), Hover wie .spac.
+   Höhe = Zeilenhöhe der Schrift (= Höhe der Hintergrundfläche eines Inline-Spans wie .spac), Breite = Höhe (1lh; Fallback 1.17em = Roboto-Metrik). */
 .tool-add {
   display: inline-block;
   align-self: center;
   cursor: pointer;
-  color: blue;
-  background-color: transparent;
+  color: white;
+  background-color: blue;
   border-radius: .25em;
-  padding: 0 .4em;
+  padding: 0;
   margin: 0 0 0 .1em;
   border: .1em solid transparent;
+  line-height: normal;
+  width: 1.17em;
+  width: 1lh;
+  text-align: center;
+  box-sizing: content-box;
   transition: background-color 0.08s ease-in, color 0.08s ease-in;
 }
 
 .tool-add:hover {
-  background-color: blue;
-  color: white;
-  border: .1em solid transparent;
+  background-color: white;
+  color: blue;
+  border: .1em solid blue;
 }
 
 
