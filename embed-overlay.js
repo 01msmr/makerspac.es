@@ -88,6 +88,26 @@ function aboutPanel() {
     </div>`;
 }
 
+/**
+ * Space aus dem Reiter „new“ auf der Karte öffnen: Overlay zu, Space wie bei einem Listen-Klick wählen und das Popup öffnen.
+ * Auf Touch öffnet handleItemClick das Popup selbst; am Desktop (Hover-Popups) nicht → hier ergänzt und „sticky“ gesetzt.
+ */
+function openSpaceOnMap(location) {
+  _closeEmbed();
+  appContext.searchHeader?.handleItemClick(location);
+  const marker = appContext.markerById.get(location.ID);
+  if (!marker) return;
+  const open = () => {
+    if (!marker.isPopupOpen()) { marker._openedByItemClick = true; marker.openPopup(); }
+    window.mapUtils?.setStickyPopup?.(marker);
+  };
+  setTimeout(() => {
+    const clusters = window.clusterGroup;
+    if (marker._map || marker._icon || !clusters?.zoomToShowLayer) open();
+    else clusters.zoomToShowLayer(marker, open);   // Marker steckt in einem Cluster → erst aufdecken
+  }, 500);
+}
+
 export function openOverlayTab(tab) {
   const existing = document.querySelector('.embed-overlay');
   if (existing) {
@@ -470,7 +490,7 @@ function showOverlay(initialTab = 'addspace') {
     renderChanges(list, entries, {
       lang: window.i18n?.currentLang || 'en',
       locationById: appContext.locationById,
-      onOpen: (location) => { _closeEmbed(); appContext.searchHeader?.handleItemClick(location); },
+      onOpen: openSpaceOnMap,
     });
   }
 
