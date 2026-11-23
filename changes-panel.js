@@ -54,7 +54,7 @@ export const KIND_ORDER = ['added', 'name', 'address', 'link', 'style', 'weekly'
 export const changesText = lang => CHANGES_TEXT[lang] || CHANGES_TEXT.en;
 
 /**
- * Eine Angabe als Textstücke: Bei Werkstatt-Zahlen steht „8 Werkstätten“ in einem Stück (`nowrap` → <nobr>, kein Umbruch
+ * Eine Angabe als Textstücke: Bei Werkstatt-Zahlen steht „8 Werkstätten“ in einem Stück (`nowrap` → <span class="nowrap">, kein Umbruch
  * zwischen Zahl und Wort); der Rest („ergänzt“) darf umbrechen.
  * @returns {{ text: string, nowrap?: boolean }[]}
  */
@@ -157,7 +157,7 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
         row.items.forEach((item, i) => {
           if (i) what.append(', ');
           for (const seg of changeSegments(item, lang)) {
-            if (seg.nowrap) what.append(Object.assign(document.createElement('nobr'), { textContent: seg.text }));   // „8 Werkstätten“ nicht trennen
+            if (seg.nowrap) what.append(Object.assign(document.createElement('span'), { className: 'nowrap', textContent: seg.text }));   // „8 Werkstätten“ nicht trennen
             else what.append(seg.text);
           }
         });
