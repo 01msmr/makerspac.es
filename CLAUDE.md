@@ -175,6 +175,7 @@ i18n.js             → Internationalisierung
 embed.js            → Embed-Modus (iframe)
 embed-loader.js     → Lädt Embed-Modus (tile-loader.js-Pendant für embed.js)
 embed-overlay.js    → Embed-Overlay UI
+changes-panel.js    → Overlay-Reiter „new“: letzte Änderungen nach Monaten (Daten: data/changes.json aus tools/build-changelog.js)
 demo-mode.js        → Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode)
 error-monitor.js    → Dev-Tool, Fehler-Overlay
 add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)

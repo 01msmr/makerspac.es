@@ -46,7 +46,7 @@ test('sw.js: Daten-URLs laufen über networkFirstFresh; .htaccess: Daten-Splits 
   const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   assert.match(sw, /DATA_URLS\.some[\s\S]{0,200}networkFirstFresh\(request, CACHE_DATA\)/);
   const ht = readFileSync(new URL('../.htaccess', import.meta.url), 'utf8');
-  assert.match(ht, /spaces-\[a-z\]\+\|splits-manifest\)\\\.json\$"\>\s*\n\s*Header set Cache-Control "no-cache, must-revalidate"/);
+  assert.match(ht, /spaces-\[a-z\]\+\|splits-manifest\|changes\)\\\.json\$"\>\s*\n\s*Header set Cache-Control "no-cache, must-revalidate"/);
   assert.match(ht, /Header set X-Accel-Expires "1"/);
 });
 

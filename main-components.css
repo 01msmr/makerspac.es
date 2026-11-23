@@ -1108,6 +1108,21 @@ a#titleurl:hover h3.space-unknown .fas {
 @media (max-width: 767px) {
   .tab-label-full { display: none; }
   .tab-label-short { display: inline; }
+  /* Reiter „new“: am Smartphone nur das blaue [+] wie im Logo (ohne Symbol davor) */
+  .embed-tab[data-tab="changes"] > i { display: none; }
+}
+
+/* Blaues Quadrat mit weißem „+“ wie im Logo (.tool-add) */
+.new-plus {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  line-height: 1.5em;
+  text-align: center;
+  border-radius: .25em;
+  background: blue;
+  color: white;
+  font-weight: 700;
 }
 
 .embed-tab:not(.active) {
@@ -2421,4 +2436,40 @@ body.consent-active #map { pointer-events: none; }
 .settings-embed-link:hover,
 .settings-about-link:hover {
   text-decoration: underline;
+}
+
+
+/* ===================================
+   OVERLAY – Reiter „new“ (letzte Änderungen, nach Monaten wie ein Blog)
+   =================================== */
+
+.changes-month-title { margin-top: 1.6em; }
+.changes-month { list-style: none; margin: .6em 0 0; padding: 0; }
+.changes-month li {
+  display: grid;
+  grid-template-columns: 5.2em 1fr;
+  column-gap: .75em;
+  align-items: baseline;
+  padding: .45em 0;
+  border-bottom: 1px solid var(--dropdown-border);
+}
+.changes-month time { color: var(--hover-text-color); font-variant-numeric: tabular-nums; }
+.changes-space {
+  justify-self: start;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.changes-space:hover { color: blue; text-decoration: underline; }
+.changes-what { grid-column: 2; color: var(--hover-text-color); font-size: .92em; }
+.changes-empty { color: var(--hover-text-color); font-style: italic; }
+@media (prefers-color-scheme: dark) {
+  .changes-space:hover { color: #66b3ff; }
 }
