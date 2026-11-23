@@ -189,3 +189,8 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 
 #replace-wrap, #remove-wrap, #empty-hint { flex: 1 1 100%; box-sizing: border-box; }
 #remove-wrap { display: flex; align-items: center; gap: .5rem; margin: .25rem 0; padding: .4rem .6rem; border-radius: 6px; border: 1px dashed var(--space-closed); cursor: pointer; }
+
+/* „App zurücksetzen“ (reset.html): Kopfzeile am Desktop, Fuß auf Touch */
+#reset-app, #reset-app-foot, #reset-app-in { color: var(--hover-text-color); font-size: .9em; text-decoration: underline dotted; text-underline-offset: 3px; }
+#reset-app-foot, #reset-app-in { margin-right: 1.5rem; align-self: center; }
+@media (pointer: coarse), (max-width: 767px) { #reset-app { display: none; } }

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>App zurücksetzen · makerspac.es</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1rem; background: #f6f6f6; color: #111; }
+    main { max-width: 26rem; text-align: center; }
+    h1 { font-size: 1.3rem; margin: 0 0 .5rem; }
+    p { margin: .4rem 0; }
+    #detail { color: #666; font-size: .9rem; min-height: 1.4em; }
+    a { color: blue; font-weight: 600; }
+    @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e0e0e0; } #detail { color: #aaa; } a { color: #66b3ff; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">App wird zurückgesetzt …</h1>
+    <p id="detail">Service Worker und Zwischenspeicher werden geleert. Token, Lesezeichen und Einstellungen bleiben erhalten.</p>
+    <p><a id="back" href="/">Weiter zur Karte</a></p>
+    <noscript><p>Ohne JavaScript nicht möglich — bitte die Websitedaten in den Browser-Einstellungen löschen.</p></noscript>
+  </main>
+  <script type="module">
+    import { resetApp, safeNext } from './reset.js';
+    const next = safeNext(new URLSearchParams(location.search).get('next'));
+    document.getElementById('back').href = next;
+    const set = (id, text) => { document.getElementById(id).textContent = text; };
+    resetApp({ serviceWorker: navigator.serviceWorker, cacheStorage: globalThis.caches, storage: localStorage })
+      .then(r => {
+        set('title', 'Fertig — lade neu …');
+        set('detail', `${r.unregistered} Service Worker abgemeldet, ${r.cachesDeleted} Caches und ${r.keysRemoved.length} Daten-Zwischenspeicher geleert.`);
+        setTimeout(() => location.replace(next), 700);
+      })
+      .catch(err => { set('title', 'Zurücksetzen fehlgeschlagen'); set('detail', String(err && err.message || err)); });
+  </script>
+</body>
+</html>
