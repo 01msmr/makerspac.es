@@ -10,6 +10,7 @@ import { todayWeekday } from './date-utils.js';
 import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
 import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
+import { isAdminCommand, openAdminTab } from './admin-shortcut.js';
 
 const CONFIG = AppConfig;
 
@@ -117,7 +118,11 @@ class SearchHeader {
   /** Eingabefeld: Tastatur, Fokus/Blur, Filter-Button, Klick außerhalb schließt das Dropdown (Desktop) */
   _bindSearchBar() {
     document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
-    this.searchBar.addEventListener('input', () => this.handleSearchInput());
+    this.searchBar.addEventListener('input', () => {
+      // „/admin“: Admin-Review sofort in neuem Tab (wie „/demo“, ohne Enter). Geblockt → Text bleibt, Enter öffnet (s. u.)
+      if (isAdminCommand(this.searchBar.value) && openAdminTab()) { this.clearSearch(); return; }
+      this.handleSearchInput();
+    });
     this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
     this.searchBar.addEventListener('blur', () => this.handleSearchBlur());
 
@@ -237,6 +242,8 @@ class SearchHeader {
 
       if (e.code === 'Enter') {
         e.preventDefault();
+        // Rückfall, falls der Pop-up-Schutz den Tab beim Tippen geblockt hat: Enter (Tastendruck) öffnet ihn
+        if (isAdminCommand(this.searchBar.value)) { openAdminTab(); this.clearSearch(); return; }
         this.handleEnterKey();
         return;
       }

@@ -59,6 +59,7 @@ const STATIC_ASSETS = [
   '/search-pills.js',
   '/autocomplete-manager.js',
   '/search-header.js',
+  '/admin-shortcut.js',
   '/nearby-header.js',
   '/embed.js',
   '/embed-loader.js',
