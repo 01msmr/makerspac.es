@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHANGES_TEXT, KIND_ORDER, changesText, changeLabel, changeSegments, groupChanges, rowLabel, monthLabel, dayLabel } from '../changes-panel.js';
+import { CHANGES_TEXT, KIND_ORDER, changesText, changeLabel, changeSegments, statusOf, groupChanges, rowLabel, monthLabel, dayLabel } from '../changes-panel.js';
 
 test('alle Sprachen: Arten wie Englisch, Verb-Formen vollständig, Reiter „new“ = en', () => {
   const ref = CHANGES_TEXT.en;
@@ -100,4 +100,13 @@ test('changeSegments: „8 Werkstätten“ als ein nicht umbrechbares Stück (no
   assert.deepEqual(seg({ k: 'weekly', o: 'add' }), [{ text: 'Wöchentliches Treffen', nowrap: false }, { text: ' ergänzt' }]);
   assert.deepEqual(seg({ k: 'added' }), [{ text: 'Neuer Space' }]);
   assert.equal(changeLabel({ k: 'workshops', o: 'add', n: 8 }, 'de'), '8 Werkstätten ergänzt', 'Label unverändert');
+});
+
+test('statusOf: aktueller Status wie im Popover (offen/geschlossen/unbekannt/ohne)', () => {
+  assert.deepEqual(statusOf({ isOpen: true }), { cls: 'space-open', icon: 'fa-door-open' });
+  assert.deepEqual(statusOf({ isOpen: false }), { cls: 'space-closed', icon: 'fa-lock' });
+  assert.deepEqual(statusOf({ spaceapi: { endpoint: 'https://x' } }), { cls: 'space-unknown', icon: 'fa-question-circle' });
+  assert.deepEqual(statusOf({ isOpen: true, spaceapi: { endpoint: 'https://x' } }), { cls: 'space-open', icon: 'fa-door-open' }, 'bekannter Status gewinnt');
+  assert.deepEqual(statusOf({}), { cls: '', icon: '' });
+  assert.deepEqual(statusOf(undefined), { cls: '', icon: '' });
 });

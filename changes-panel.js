@@ -83,6 +83,19 @@ export function changeSegments(entry, lang) {
 /** „Werkstätten ergänzt“ (ohne Trennpunkt); neuer Space nur „Neuer Space“ */
 export const changeLabel = (entry, lang) => changeSegments(entry, lang).map(s => s.text).join('');
 
+/**
+ * Aktueller Status eines Spaces für den Link — gleiche Regeln wie der Titel im Popover (popup-builder.js, dort mitpflegen):
+ * geöffnet → grün + Tür, geschlossen → rot + Schloss, SpaceAPI ohne Antwort → gelb/orange + Fragezeichen, sonst Standardblau ohne Symbol.
+ * @param {{ isOpen?: boolean, spaceapi?: { endpoint?: string } }} loc
+ * @returns {{ cls: string, icon: string }}
+ */
+export function statusOf(loc) {
+  if (loc?.isOpen === true) return { cls: 'space-open', icon: 'fa-door-open' };
+  if (loc?.isOpen === false) return { cls: 'space-closed', icon: 'fa-lock' };
+  if (loc?.spaceapi?.endpoint) return { cls: 'space-unknown', icon: 'fa-question-circle' };
+  return { cls: '', icon: '' };
+}
+
 /** Monatsüberschrift „November 2026“ (Sprache des Nutzers) */
 export function monthLabel(ym, lang) {
   const [y, m] = ym.split('-').map(Number);
@@ -151,11 +164,15 @@ export function renderChanges(container, entries, { lang, locationById, onOpen }
       for (const row of day.rows) {
         const loc = locationById.get(row.id);
         const li = document.createElement('li');
-        const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'changes-space' });
-        // Tür-Symbol (geöffnet) wie im Space-Popover, dann der Name
-        const door = Object.assign(document.createElement('i'), { className: 'fas fa-door-open changes-space-icon' });
-        door.setAttribute('aria-hidden', 'true');
-        btn.append(door, loc.name);
+        // Farbe und Symbol = aktueller Status des Spaces (wie im Popover); ohne Status Standardblau ohne Symbol
+        const status = statusOf(loc);
+        const btn = Object.assign(document.createElement('button'), { type: 'button', className: `changes-space ${status.cls}`.trim() });
+        if (status.icon) {
+          const icon = Object.assign(document.createElement('i'), { className: `fas ${status.icon} changes-space-icon` });
+          icon.setAttribute('aria-hidden', 'true');
+          btn.append(icon);
+        }
+        btn.append(loc.name);
         btn.addEventListener('click', () => onOpen(loc));
         const what = Object.assign(document.createElement('span'), { className: 'changes-what' });
         row.items.forEach((item, i) => {

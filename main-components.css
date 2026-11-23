@@ -2499,9 +2499,10 @@ body.consent-active #map { pointer-events: none; }
   font-variant-numeric: tabular-nums;
 }
 .changes-space {
-  /* Optik wie der Name im Space-Popover (`a h3`): Pille in Statusfarbe — hier „open“ (grün) —, weiße Schrift, beim Hover
-     Farben vertauscht; Tür-Symbol (geöffnet) davor, aber ohne den Extra-Leerraum des Popovers (dort Platz für die ID) */
-  --status-color: var(--space-open);
+  /* Optik wie der Name im Space-Popover (`a h3`): Pille in der Farbe des AKTUELLEN Status (offen grün + Tür, geschlossen rot +
+     Schloss, unbekannt gelb + Fragezeichen, sonst blau ohne Symbol), weiße Schrift, beim Hover Farben vertauscht —
+     aber ohne den Extra-Leerraum des Popovers (dort Platz für die ID) */
+  --status-color: var(--space-hover);   /* Standard wie im Popover; je nach Status s. u. */
   justify-self: start;
   padding: .2em .3em;
   font: inherit;
@@ -2518,6 +2519,9 @@ body.consent-active #map { pointer-events: none; }
   transition: background-position 130ms ease-in-out, color 130ms ease-in-out;
 }
 .changes-space:hover { color: var(--status-color); background-position: 0 100%; }
+.changes-space.space-open { --status-color: var(--space-open); }
+.changes-space.space-closed { --status-color: var(--space-closed); }
+.changes-space.space-unknown { --status-color: var(--space-unknown); }
 .changes-space .changes-space-icon { margin-right: .35em; }   /* Symbol erbt die Farbe (weiß → beim Hover Statusfarbe) */
 .changes-what .nowrap { white-space: nowrap; }   /* „8 Werkstätten“ nicht trennen (statt des veralteten <nobr>) */
 .changes-what { grid-column: 2; color: var(--hover-text-color); font-size: .92em; }
