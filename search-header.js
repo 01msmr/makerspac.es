@@ -10,6 +10,7 @@ import { todayWeekday } from './date-utils.js';
 import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
 import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
+import { isAdminCommand, openAdminTab } from './admin-shortcut.js';
 
 const CONFIG = AppConfig;
 
@@ -237,6 +238,8 @@ class SearchHeader {
 
       if (e.code === 'Enter') {
         e.preventDefault();
+        // „/admin“ + Enter: Admin-Review in neuem Tab (Verstecktes Kürzel; Suchfeld danach leeren)
+        if (isAdminCommand(this.searchBar.value)) { openAdminTab(); this.clearSearch(); return; }
         this.handleEnterKey();
         return;
       }
