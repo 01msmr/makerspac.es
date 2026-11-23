@@ -1958,8 +1958,9 @@ a#titleurl:hover h3.space-unknown .fas {
   transition: transform 0.3s ease;
 }
 .settings-hash-toast--active .settings-confirm-yes:hover i { transform: rotate(180deg); }
+/* Bewegung reduzieren: Das Symbol ist drehsymmetrisch (180° sieht gleich aus) — also gar nichts tun */
 @media (prefers-reduced-motion: reduce) {
-  .settings-hash-toast--active .settings-confirm-yes i { transition: none; }
+  .settings-hash-toast--active .settings-confirm-yes:hover i { transform: none; }
 }
 
 /* Settings Confirm Tooltip (Microtip-Stil) */
