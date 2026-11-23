@@ -2,6 +2,8 @@
 
 import { WEEKDAY_NAMES } from './date-utils.js';
 import AppConfig from './config.js';
+import { appContext } from './app-context.js';
+import { changesText, renderChanges } from './changes-panel.js';
 import { fetchEnrichment, searchSpaces, initLocationMap, initStreetAutocomplete, handleSubmit, WORKSHOPS } from './add-space-form.js';
 
 const COUNTRIES    = ['Germany', 'Austria', 'Switzerland', 'Netherlands', 'Belgium', 'Denmark', 'Ukraine', 'other'];
@@ -84,6 +86,26 @@ function aboutPanel() {
       <h3 class="embed-h3">${a.diffH}</h3><p>${a.diffP}</p>
       <p style="margin-top:24px;"><a href="/" class="embed-cta-link">${a.cta}</a></p>
     </div>`;
+}
+
+/**
+ * Space aus dem Reiter „new“ auf der Karte öffnen: Overlay zu, Space wie bei einem Listen-Klick wählen und das Popup öffnen.
+ * Auf Touch öffnet handleItemClick das Popup selbst; am Desktop (Hover-Popups) nicht → hier ergänzt und „sticky“ gesetzt.
+ */
+function openSpaceOnMap(location) {
+  _closeEmbed();
+  appContext.searchHeader?.handleItemClick(location);
+  const marker = appContext.markerById.get(location.ID);
+  if (!marker) return;
+  const open = () => {
+    if (!marker.isPopupOpen()) { marker._openedByItemClick = true; marker.openPopup(); }
+    window.mapUtils?.setStickyPopup?.(marker);
+  };
+  setTimeout(() => {
+    const clusters = window.clusterGroup;
+    if (marker._map || marker._icon || !clusters?.zoomToShowLayer) open();
+    else clusters.zoomToShowLayer(marker, open);   // Marker steckt in einem Cluster → erst aufdecken
+  }, 500);
 }
 
 export function openOverlayTab(tab) {
@@ -174,6 +196,7 @@ function showOverlay(initialTab = 'addspace') {
             <button class="embed-tab active" data-tab="addspace"><i class="fas fa-square-plus"></i> <span class="tab-label-full">${t('title', 'add your makerspace')}</span><span class="tab-label-short">add</span></button>
             <button class="embed-tab" data-tab="embed"><i class="fas fa-code"></i> <span class="tab-label-full">${t('embed', 'embed into your site')}</span><span class="tab-label-short">embed</span></button>
             <button class="embed-tab" data-tab="about"><i class="fas fa-circle-info"></i> <span class="tab-label-full">${ti('about.tabTitle', 'about makerspac.es')}</span><span class="tab-label-short">about</span></button>
+            <button class="embed-tab" data-tab="changes" aria-label="${changesText(window.i18n?.currentLang).tab}"><i class="fas fa-wand-magic-sparkles"></i> <span class="tab-label-full">${changesText(window.i18n?.currentLang).tab}</span><span class="tab-label-short">${changesText(window.i18n?.currentLang).tab}</span></button>
           </div>
         </div>
         <button class="embed-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
@@ -400,6 +423,12 @@ function showOverlay(initialTab = 'addspace') {
 
         ${aboutPanel()}
 
+        <!-- ── Tab: new (letzte Änderungen, nach Monaten) ── -->
+        <div class="embed-tab-panel" data-tab="changes" hidden>
+          <p class="embed-tab-intro">${changesText(window.i18n?.currentLang).intro}</p>
+          <div class="changes-list"></div>
+        </div>
+
       </div><!-- /.embed-modal-scroll -->
       <div class="embed-modal-footer"></div>
     </div>`;
@@ -447,6 +476,24 @@ function showOverlay(initialTab = 'addspace') {
   overlay.querySelector('.embed-modal-footer').addEventListener('wheel', forwardWheel, { passive: false });
 
   // ── Tab switching ──
+  // Reiter „new“: Daten beim ersten Anzeigen laden (data/changes.json, Netz zuerst über den Service Worker)
+  let changesLoaded = false;
+  async function loadChanges() {
+    if (changesLoaded) return;
+    changesLoaded = true;
+    const list = overlay.querySelector('.changes-list');
+    let entries = [];
+    try {
+      const res = await fetch('./data/changes.json');
+      if (res.ok) entries = (await res.json()).entries || [];
+    } catch { /* offline / Datei fehlt → leere Liste */ }
+    renderChanges(list, entries, {
+      lang: window.i18n?.currentLang || 'en',
+      locationById: appContext.locationById,
+      onOpen: openSpaceOnMap,
+    });
+  }
+
   function switchTab(tab) {
     overlay.querySelectorAll('.embed-tab').forEach(
       t => t.classList.toggle('active', t.dataset.tab === tab)
@@ -456,6 +503,7 @@ function showOverlay(initialTab = 'addspace') {
     );
     scrollEl.scrollTop = 0;
     header.classList.remove('scrolled');
+    if (tab === 'changes') loadChanges();
   }
 
   overlay.querySelectorAll('.embed-tab').forEach(btn => {

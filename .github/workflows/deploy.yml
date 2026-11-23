@@ -44,6 +44,9 @@ jobs:
       - name: JSON-Splits generieren
         run: node generate-map-splits.js
 
+      - name: Änderungsprotokoll erzeugen (Reiter „new“)
+        run: node tools/build-changelog.js
+
       - name: Split-Dateien zu Netcup hochladen
         env:
           FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}
@@ -59,7 +62,7 @@ jobs:
             --silent --show-error \
             -Q "CWD /data" 2>/dev/null || true
 
-          for file in data/markers.json data/spaces-*.json data/splits-manifest.json; do
+          for file in data/markers.json data/spaces-*.json data/splits-manifest.json data/changes.json; do
             [ -f "$file" ] || continue
             echo "Uploading: $file"
             curl --ipv4 -T "$file" \
