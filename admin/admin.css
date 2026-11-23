@@ -100,10 +100,8 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
   #actions { display: flex; flex-wrap: wrap; gap: .4rem; }
   #actions button { flex: 1 1 0; min-height: 44px; }
   #actions #act-n { flex: .6 1 0; margin-left: 1rem; }  /* schmaler + Abstand zu „später“ (Fehltipp vermeiden: ablehnen schließt das Issue) */
-  /* Rückgängig: 9 s lang groß in der Bildschirmmitte (nicht in der Aktionsleiste), mit ablaufender Zeitleiste */
-  #actions #act-z { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; flex: none; width: min(80vw, 22rem); min-height: 72px; font-size: 1.25rem; font-weight: 700; overflow: hidden;
-    border: 2px solid var(--focus-color); background: var(--dropdown-bg); box-shadow: 0 8px 28px rgba(0, 0, 0, .35); }
-  #actions #act-z:not([hidden])::after { content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--focus-color); animation: undo-countdown 9s linear forwards; }
+  /* Rückgängig gibt es auf Touch schon im Toast (8 s) — der zusätzliche mittige Knopf war doppelt */
+  #actions #act-z { display: none; }
   #tabs button, #logout, #refresh, #viewbar button, #open-tab, #edit button { min-height: 44px; }
   /* Review-Reiter (SpaceAPI · Workshops · Kalender · Weekly) in EINER Zeile; Listen-Reiter (PRs, Neu …) umbrechen darunter */
   #tabs { gap: .25rem; }
@@ -152,7 +150,6 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #edit-detected[data-state="none"] { color: var(--space-unknown); font-weight: 600; }
 #edit-detected[data-state="error"] { color: var(--space-closed); font-weight: 600; }
 #edit-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
-@keyframes undo-countdown { to { width: 0; } }
 @keyframes pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { #edit-detected[data-state="working"] { animation: none; } }
 
