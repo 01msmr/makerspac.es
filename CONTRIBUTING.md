@@ -149,6 +149,12 @@ Bot-Issues `SpaceAPI: …` (Label `data-update`) und `[Workshop-Daten] …` (Lab
 
 ## App zurücksetzen (Cache/Service Worker)
 
+### Weitere Prüfer einladen
+
+1. Person als **Collaborator** hinzufügen (Settings → Collaborators): Rolle **Write** (darf auch „Übernehmen“ und sieht „Probleme“) oder **Triage** (entscheidet nur; übernommen wird automatisch per Cron — falls das Korrigieren am Issue-Body nicht geht, Write vergeben).
+2. Die Person erstellt einen **Fine-grained PAT** nur für `01msmr/makerspac.es` (Issues: Read/Write; für „Übernehmen“ zusätzlich Actions: Read/Write) mit Ablauf und trägt ihn unter `/admin/` ein.
+3. Kopfzeile zeigt „@login · Admin/Reviewer“; jede Entscheidung hinterlässt einen Kommentar „… — @login (Admin-Review)“, in „Spaces“ steht „in Bearbeitung von @x“ für Spaces, die jemand anderes gerade prüft.
+
 Zeigt ein Gerät nach einem Deploy noch den alten Stand: `https://makerspac.es/admin/reset.html` öffnen (auch als Lesezeichen/Homescreen-Icon; im Admin: „App zurücksetzen"). Die Seite meldet den Service Worker ab, leert alle Caches und die Daten-Zwischenspeicher und lädt neu — Admin-Token, Lesezeichen und Einstellungen bleiben erhalten (anders als „Websitedaten löschen" im System). Der „Veraltet"-Toast ruft sie über „Neu laden" auf.
 
 ## Deployment

@@ -12,6 +12,7 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 #bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; padding: .5rem 1rem; border-bottom: 1px solid var(--dropdown-border); background: var(--dropdown-bg); }
 .grow { flex: 1; }
 #counter { color: var(--hover-text-color); }
+#me { padding: .1rem .55rem; border: 1px solid var(--dropdown-border); border-radius: 999px; font-size: .85em; color: var(--hover-text-color); white-space: nowrap; }
 #tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
 #tabs button { border-radius: 999px; }
 /* Zählerabzeichen am Reiter (statt „Name (n)“): schmaler; leere Reiter blass */

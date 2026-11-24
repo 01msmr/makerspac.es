@@ -5,7 +5,7 @@ import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } 
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
   FIELDS, currentValue, proposalValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
-  groupBySpace, buildQueue, planDecision,
+  groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock,
 } from './spaces-lib.js';
 
 const $ = id => document.getElementById(id);
@@ -14,15 +14,17 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* privater Modus */ } },
 };
 
-/** Vom Admin übergeben: { gh, toast, data: () => ({ locations: Map, enrichment }), bumpOk(delta) } */
+/** Vom Admin übergeben: { gh, toast, me: () => ({login, role, canApply})|null, audit(nr, typ), data: () => ({ locations: Map, enrichment }), bumpOk(delta), onChange } */
 let ctx = null;
 const gh = (...a) => ctx.gh(...a);
 const toast = (...a) => ctx.toast(...a);
+const me = () => ctx.me?.() ?? null;
+const audit = (n, type) => ctx.audit?.(n, type);
 
 const state = {
   rates: {}, bodies: {}, groups: new Map(), queue: [], current: null,
   mode: store.get('spaces-mode', 'all'), later: store.get('spaces-later', []),
-  undo: [], busy: false, active: false, loaded: false,
+  undo: [], busy: false, active: false, loaded: false, claimed: null,
 };
 Object.defineProperties(state, {
   locations: { get: () => ctx.data().locations },
@@ -40,6 +42,25 @@ async function listIssues(label) {
 }
 const msg = text => { $('sp-msg').textContent = text || ''; };
 
+// ─── In Bearbeitung (Zuweisung) ───────────────────────────────────────────
+// Wer einen Space öffnet, wird den offenen Vorschlägen als Bearbeiter zugewiesen; andere Prüfer sehen „in Bearbeitung von @x“
+// und der Space rutscht in ihrer Warteschlange nach hinten. Verfällt nach 30 min ohne Änderung (Tab zu), siehe admin-lib lockOf.
+function claim(id) {
+  const m = me();
+  if (!m || state.claimed?.id === id) return;
+  const g = state.groups.get(id);
+  if (!g || spaceLock(g, m.login)) return;   // andere bearbeiten ihn bereits → nicht mitzeichnen
+  const numbers = Object.values(g.proposals).filter(p => !(p.assignees || []).includes(m.login)).map(p => p.number);
+  state.claimed = { id, numbers };
+  for (const n of numbers) gh(`/repos/${REPO}/issues/${n}/assignees`, { method: 'POST', body: { assignees: [m.login] } }).catch(() => { /* nur Zusatz */ });
+}
+function release() {
+  const c = state.claimed, m = me();
+  state.claimed = null;
+  if (!c || !m) return;
+  for (const n of c.numbers) gh(`/repos/${REPO}/issues/${n}/assignees`, { method: 'DELETE', body: { assignees: [m.login] } }).catch(() => { /* nur Zusatz */ });
+}
+
 // ─── Laden ───────────────────────────────────────────────────────────────
 async function loadIssues() {
   const [upd, wsd, wkd] = await Promise.all([listIssues('data-update'), listIssues('workshop-data'), listIssues('weekly-data')]);
@@ -50,7 +71,7 @@ async function loadIssues() {
 }
 
 function rebuild(keepId = state.current) {
-  state.queue = buildQueue(state.groups, state.later, state.mode);
+  state.queue = buildQueue(state.groups, state.later, state.mode, lockedSpaces(state.groups, me()?.login));
   state.current = state.queue.includes(keepId) ? keepId : (state.queue[0] ?? null);
 }
 
@@ -246,6 +267,7 @@ function show(restore = null) {
     return;
   }
   $('sp-done').hidden = true; $('sp-card').hidden = false;
+  if (state.claimed && state.claimed.id !== id) release();
   const sp = spaceModel(id);
   const a = $('sp-id'); a.textContent = `#${id}`;
   if (isHttp(sp.website)) { a.href = sp.website; a.removeAttribute('aria-disabled'); } else a.removeAttribute('href');
@@ -256,6 +278,9 @@ function show(restore = null) {
   renderSources(sp);
   $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
   msg('');
+  const lock = spaceLock(state.groups.get(id), me()?.login);
+  if (lock) msg(`⚠ @${lock.by} bearbeitet diesen Space gerade (seit ${lock.minutes} min) — abstimmen oder „später“ nehmen.`);
+  else claim(id);
   window.scrollTo?.(0, 0);
 }
 
@@ -379,11 +404,14 @@ async function execute(a) {
   if (a.type === 'ok') {
     if (a.body) await gh(`/repos/${REPO}/issues/${n}`, { method: 'PATCH', body: { body: a.body } });
     await gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', body: { labels: ['ok'] } });
+    audit(n, a.body ? 'adjust' : 'ok');
   } else if (a.type === 'reject') {
     await gh(`/repos/${REPO}/issues/${n}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
+    audit(n, 'reject');
   } else {
     const res = await gh(`/repos/${REPO}/issues`, { method: 'POST', body: { title: a.title, body: a.body, labels: a.labels } });
     a.createdNumber = res.number;
+    audit(res.number, 'create');
   }
 }
 
@@ -407,6 +435,7 @@ async function decide(kind) {
     msg(`Fehler: ${err.message}`); toast(`Fehler: ${err.message}${done.length ? ` — ${done.length} Aktion(en) schon ausgeführt (Rückgängig möglich)` : ''}`, 'no');
     show(snap); return;
   }
+  release();
   state.undo.push({ spaceId: sp.id, form: snap, records: done, name: sp.name });
   if (state.undo.length > 12) state.undo.shift();
   const g = state.groups.get(sp.id);
@@ -423,6 +452,7 @@ async function decide(kind) {
 
 function later() {
   if (state.current == null) return;
+  release();
   state.later = [...state.later.filter(i => i !== state.current), state.current]; store.set('spaces-later', state.later);
   const next = state.queue[state.queue.indexOf(state.current) + 1];
   rebuild(next); show();
@@ -433,6 +463,7 @@ async function revert(rec) {
   const n = rec.number ?? rec.createdNumber;
   if (!n) return null;
   const issue = await gh(`/repos/${REPO}/issues/${n}`);
+  audit(n, 'undo');
   if (rec.type === 'create') {
     if (issue.state === 'open') await gh(`/repos/${REPO}/issues/${n}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
     return null;
@@ -498,7 +529,7 @@ export async function activate() {
   else { rebuild(); show(); reload({ quiet: true, rerender: false }); }   // still nachladen: Formular bleibt, Pläne nutzen frische Bodys
   ctx.onChange?.();
 }
-export function deactivate() { state.active = false; $('spaces-view').hidden = true; }
+export function deactivate() { state.active = false; release(); $('spaces-view').hidden = true; }
 /** Anzahl Spaces mit offenen Vorschlägen (Zähler am Reiter) */
 export const openCount = () => buildQueue(state.groups, [], 'all').length;
 export { reload };

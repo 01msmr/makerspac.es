@@ -5,6 +5,7 @@ import {
   parseIssue, replaceEndpoint, buildComparison,
   parseWorkshopIssue, replaceWorkshops, buildWorkshopComparison, detectFromText, looksLikeUrl, parseScanComment,
   parseCalendarIssue, replaceEvents, buildCalendarComparison, parseWeeklyIssue, replaceWeekly, buildWeeklyComparison, weeklyText, formatWeekly, formatTime, formatEditDate, INBOX_GROUPS, groupInbox,
+  roleFromPermissions, auditComment,
   PROBLEM_LABEL, failedRuns, stuckOk, problemReason, mergeQueue,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
@@ -42,7 +43,7 @@ let autoTimer = null;
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
 
-const state = { live: null, dataSha: '', dataAt: 0, problems: { runs: [], stuck: [] }, undo: [], list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
+const state = { live: null, dataSha: '', dataAt: 0, problems: { runs: [], stuck: [] }, undo: [], me: null, list: null, notice: '', inboxItems: [], tab: 'spaceapi', locations: new Map(), enrichment: {}, busy: false, view: 'site', current: null };
 const cur = () => KINDS[state.tab];
 
 async function gh(path, { method = 'GET', body } = {}) {
@@ -85,6 +86,7 @@ function logout() {
   clearTimeout(autoTimer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
   spacesDeactivate();
+  state.me = null; $('me').hidden = true;
   for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
@@ -113,6 +115,25 @@ async function ghFile(file) {
   if (res.status === 401) { logout(); throw new Error('Token ungültig oder abgelaufen'); }
   if (!res.ok) throw new Error(`GitHub ${res.status} (${file})`);
   return JSON.parse(await res.text());
+}
+
+// ─── Prüfer: Identität, Rolle, Prüfpfad ─────────────────────────────────────────
+/** Wer bin ich (GET /user) und was darf ich (Rechte am Repo)? Reviewer (Triage/Lesen) dürfen entscheiden, aber nicht „Übernehmen“ (macht der Cron). */
+async function loadMe() {
+  try {
+    const [user, repo] = await Promise.all([gh('/user'), gh(`/repos/${REPO}`)]);
+    state.me = { login: user.login, ...roleFromPermissions(repo.permissions) };
+    $('me').textContent = `@${state.me.login} · ${state.me.role === 'admin' ? 'Admin' : 'Reviewer'}`;
+    $('me').title = state.me.canApply ? 'Darf Vorschläge entscheiden und „Übernehmen“ starten' : 'Darf Vorschläge entscheiden; übernommen wird automatisch (Cron: ab 10 ok oder 1 h Ruhe)';
+    $('me').hidden = false;
+  } catch { state.me = null; $('me').hidden = true; }   // unbekannt → bisheriges Verhalten (alles erlaubt)
+}
+const canApply = () => !state.me || state.me.canApply;
+
+/** Prüfpfad: Kommentar „✓ ok … — @login (Admin-Review)“ am Issue (best effort, bricht nie die Aktion ab) */
+function audit(number, type) {
+  if (!state.me) return;
+  gh(`/repos/${REPO}/issues/${number}/comments`, { method: 'POST', body: { body: auditComment(state.me.login, type) } }).catch(() => { /* Kommentar ist Zusatz */ });
 }
 
 /** @returns {Promise<boolean>} true, wenn sich der Stand (Commit) geändert hat */
@@ -198,6 +219,7 @@ async function loadKind(k) {
 async function start() {
   $('login').hidden = true;
   for (const id of ['logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = false;
+  await loadMe();
   try {
     await Promise.all([
       loadKind(KINDS.spaceapi), loadKind(KINDS.workshops), loadKind(KINDS.calendar), loadKind(KINDS.weekly),
@@ -387,7 +409,7 @@ function updateBar() {
     b.setAttribute('aria-pressed', String(state.list === key));
   }
   const np = problemCount();
-  $('tab-problems').hidden = np === 0 && state.list !== 'problems'; // leer → ausgeblendet
+  $('tab-problems').hidden = !canApply() || (np === 0 && state.list !== 'problems'); // leer → ausgeblendet; Reviewer sehen Läufe/Workflows nicht
   setTab($('tab-problems'), 'Probleme', np, 0, true);
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   updateUndoButton();
@@ -395,7 +417,7 @@ function updateBar() {
   if (state.list !== 'spaces') $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
   const btn = $('apply');
   const total = okTotals().count;
-  btn.hidden = total === 0 || (!!state.list && state.list !== 'spaces');
+  btn.hidden = !canApply() || total === 0 || (!!state.list && state.list !== 'spaces');
   btn.textContent = `Übernehmen (${total})`;
   btn.title = `Übernimmt alle ok-Vorschläge aller Reiter in einem Lauf. Automatisch bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
 }
@@ -592,6 +614,7 @@ $('open-tab').addEventListener('click', () => {
 // ─── Aktionen ────────────────────────────────────────────────────────────
 function scheduleAutoApply(k) {
   clearTimeout(autoTimer);
+  if (!canApply()) return;   // Reviewer: übernommen wird per Cron (ab 10 ok oder 1 h Ruhe)
   const { count, last } = okTotals();
   const delay = autoApplyDelay(count, last, Date.now());
   if (delay === null) return;
@@ -629,19 +652,21 @@ async function act(action, value, opts = {}) {
       return;
     }
     const entry = { kind: k.name, idx: k.idx, p, type: action };
-    if (action === 'y') { setStatus('Setze Label …'); await addOk(p.number); k.okCount++; k.lastOkAt = Date.now(); toast(`✓ #${p.number} ok`, 'ok', { withUndo: true }); }
+    if (action === 'y') { setStatus('Setze Label …'); await addOk(p.number); audit(p.number, 'ok'); k.okCount++; k.lastOkAt = Date.now(); toast(`✓ #${p.number} ok`, 'ok', { withUndo: true }); }
     else if (action === 'a') {
       setStatus('Passe Issue an …');
       entry.prevBody = live.body || '';
       const body = adjustedBody(entry.prevBody, value, opts);
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { body } });
       await addOk(p.number);
+      audit(p.number, 'adjust');
       k.okCount++;
       k.lastOkAt = Date.now();
       toast(opts.replace ? (k.name === 'calendar' ? (value.length ? `⇄ #${p.number}: bestehender Kalenderlink wird beim Übernehmen ersetzt` : `🗑 #${p.number}: Kalenderlink wird beim Übernehmen ENTFERNT`) : (value.length ? `⇄ #${p.number}: bestehende Workshops werden beim Übernehmen ersetzt` : `🗑 #${p.number}: Workshops werden beim Übernehmen ENTFERNT`)) : `✎ #${p.number} angepasst + ok`, (k.name === 'calendar' ? !value : opts.replace) ? 'no' : 'warn', { withUndo: true });
     } else if (action === 'n') {
       setStatus('Schließe Issue …');
       await gh(`/repos/${REPO}/issues/${p.number}`, { method: 'PATCH', body: { state: 'closed', state_reason: 'not_planned' } });
+      audit(p.number, 'reject');
       if (opts.noWorkshops) await gh(`/repos/${REPO}/issues/${p.number}/comments`, { method: 'POST', body: { body: 'Keine Werkstatt/Räume vorhanden — nichts übernommen (Admin-Review).' } });
       toast(opts.noWorkshops ? `✗ #${p.number} keine Werkstatt — geschlossen, nichts übernommen` : `✗ #${p.number} abgelehnt (geschlossen)`, 'no', { withUndo: true });
     }
@@ -687,6 +712,7 @@ async function undo() {
   state.busy = true;
   try {
     const k = KINDS[e.kind];
+    if (e.type === 'y' || e.type === 'a' || e.type === 'n') audit(e.p.number, 'undo');
     if (e.type === 'y' || e.type === 'a') {
       if (e.type === 'a') await gh(`/repos/${REPO}/issues/${e.p.number}`, { method: 'PATCH', body: { body: e.prevBody } });
       await gh(`/repos/${REPO}/issues/${e.p.number}/labels/${OK_LABEL}`, { method: 'DELETE' });
@@ -977,7 +1003,7 @@ document.addEventListener('keydown', e => {
 /** Startet den gemeinsamen Apply-Workflow (alle Arten). @returns {Promise<{ok:boolean, link?:HTMLAnchorElement}>} */
 async function applyNow(k, auto = false) {
   const n = okTotals().count;
-  if (!n || state.busy) return { ok: false };
+  if (!n || state.busy || !canApply()) return { ok: false };
   state.busy = true;
   try {
     await gh(`/repos/${REPO}/actions/workflows/${APPLY_WORKFLOW}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: 'apply' } } });
@@ -1004,6 +1030,8 @@ $('apply').addEventListener('click', () => applyNow(cur(), false));
 
 initSpaces({
   gh, toast,
+  me: () => state.me,
+  audit,
   data: () => ({ locations: state.locations, enrichment: state.enrichment }),
   /** Entscheidungen im Spaces-Reiter ändern die ok-Zahl (Übernehmen/Auto-Timer rechnen mit den Arten; refreshQueues stellt die echten Zahlen wieder her) */
   bumpOk(delta) {

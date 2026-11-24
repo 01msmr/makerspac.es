@@ -13,6 +13,9 @@ export function formatEditDate(n) {
   return /^\d{8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6)}` : '–';
 }
 const editedRow = loc => ({ label: 'Zuletzt bearbeitet', ours: formatEditDate(loc?.dates?.['space.edited.latest']), proposed: '–', differs: false });
+/** Logins der zugewiesenen Prüfer eines Issues (REST-Objekt) */
+export const assigneesOf = issue => (issue?.assignees || []).map(a => a?.login).filter(Boolean);
+
 export const PROBLEM_LABEL = 'problem'; // gesetzt von den Apply-Skripten, wenn ein Vorschlag nicht übernommen werden konnte
 
 // Gleiche Regexe wie parseIssue() in tools/apply-spaceapi-issues.js
@@ -33,7 +36,7 @@ export function parseIssue(issue) {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), endpoint,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
-    url: issue.html_url,
+    url: issue.html_url, assignees: assigneesOf(issue),
     updated: Date.parse(issue.updated_at) || 0,
   };
 }
@@ -133,7 +136,7 @@ export function parseWorkshopIssue(issue) {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), workshops, replace,
     ok: RE_APPROVED.test(body) || (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
-    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
+    url: issue.html_url, assignees: assigneesOf(issue), updated: Date.parse(issue.updated_at) || 0,
     website: body.match(RE_WEBSITE)?.[1] ?? '', rows, evidence: ev ? ev[1].trim() : '',
   };
 }
@@ -229,7 +232,7 @@ export function parseCalendarIssue(issue) {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), events: ev[1], replace,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
-    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0,
+    url: issue.html_url, assignees: assigneesOf(issue), updated: Date.parse(issue.updated_at) || 0,
     website: body.match(RE_WEBSITE)?.[1] ?? '', confidence: body.match(RE_CONFIDENCE)?.[1]?.toLowerCase() ?? '',
   };
 }
@@ -288,7 +291,7 @@ export function parseWeeklyIssue(issue) {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), weekly, init,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
     problem: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === PROBLEM_LABEL),
-    url: issue.html_url, updated: Date.parse(issue.updated_at) || 0, website: body.match(RE_WEBSITE)?.[1] ?? '',
+    url: issue.html_url, assignees: assigneesOf(issue), updated: Date.parse(issue.updated_at) || 0, website: body.match(RE_WEBSITE)?.[1] ?? '',
     evidence: weeklyEvidence(body),
   };
 }
@@ -444,3 +447,35 @@ export function mergeQueue(oldQueue, idx, fresh, currentNumber = null) {
   const later = fresh.filter(p => seen.has(p.number));
   return { queue: [...(cur ? [cur] : []), ...unseen, ...later], gone: currentNumber != null && !cur };
 }
+
+
+// ─── Prüfer (Identität, Rolle, Sperre, Prüfpfad) ─────────────────────────────────
+
+/**
+ * Rolle aus den Rechten des angemeldeten Nutzers (GET /repos/{repo} → permissions):
+ * Admin = Schreibrecht oder mehr (darf „Übernehmen“/Workflow starten); Reviewer = Triage/Lesen (ok, verwerfen, korrigieren;
+ * übernommen wird dann automatisch durch den Cron).
+ * @param {{admin?:boolean, maintain?:boolean, push?:boolean, triage?:boolean, pull?:boolean}|undefined} perms
+ * @returns {{role:'admin'|'reviewer', canApply:boolean}}
+ */
+export function roleFromPermissions(perms) {
+  const canApply = !!(perms?.admin || perms?.maintain || perms?.push);
+  return { role: canApply ? 'admin' : 'reviewer', canApply };
+}
+
+export const LOCK_TTL_MS = 30 * 60 * 1000;   // „in Bearbeitung“ verfällt nach 30 min ohne Änderung (Tab zu, Rechner aus)
+
+/**
+ * Wer bearbeitet das Issue gerade? Zuweisung an einen ANDEREN Prüfer, jünger als LOCK_TTL_MS.
+ * @param {{assignees?:string[], updated?:number}} p geparster Vorschlag
+ * @returns {{by:string, minutes:number}|null}
+ */
+export function lockOf(p, me, now = Date.now(), ttl = LOCK_TTL_MS) {
+  const other = (p?.assignees || []).find(a => a && a.toLowerCase() !== String(me || '').toLowerCase());
+  if (!other || !p.updated || now - p.updated >= ttl) return null;
+  return { by: other, minutes: Math.max(0, Math.round((now - p.updated) / 60000)) };
+}
+
+const AUDIT = { ok: '✓ ok (zur Übernahme freigegeben)', adjust: '✎ angepasst + ok', reject: '✗ verworfen', create: '➕ im Admin angelegt', undo: '↩ rückgängig gemacht', later: '' };
+/** Kommentar für den Prüfpfad: „✓ ok … — @login (Admin-Review)“ */
+export const auditComment = (login, type) => `${AUDIT[type] ?? type} — @${login} (Admin-Review)`;
