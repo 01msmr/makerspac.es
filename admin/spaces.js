@@ -1,51 +1,34 @@
-// admin/spaces.js — Space-Review: ein Space = eine Karte mit allen Eigenschaften (adr/009).
-// Schreibt NUR Issues (Label/Body/Status/neu anlegen); Daten schreibt ausschließlich der Apply-Workflow (adr/006).
-import { REPO, formatEditDate } from './admin-lib.js';
-import { applyCssColours } from '../colours.js';
+// admin/spaces.js — Reiter „Spaces“ der Review-Seite: ein Space = eine Karte mit allen Eigenschaften (adr/009).
+// Läuft IM Admin (admin.js: Login/Token, Daten, Toasts, Übernehmen). Schreibt NUR Issues (Label/Body/Status/neu anlegen);
+// Daten schreibt ausschließlich der Apply-Workflow (adr/006).
+import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
   FIELDS, currentValue, proposalValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
   groupBySpace, buildQueue, planDecision,
 } from './spaces-lib.js';
 
-applyCssColours();
-window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', applyCssColours);
-
-const API = 'https://api.github.com';
-const APPLY_WORKFLOW = 'apply-all-issues.yml';
 const $ = id => document.getElementById(id);
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* privater Modus */ } },
 };
 
-let token = '';
-try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
+/** Vom Admin übergeben: { gh, toast, data: () => ({ locations: Map, enrichment }), bumpOk(delta) } */
+let ctx = null;
+const gh = (...a) => ctx.gh(...a);
+const toast = (...a) => ctx.toast(...a);
 
 const state = {
-  locations: new Map(), enrichment: {}, rates: {}, sha: '', dataAt: 0,
-  bodies: {}, groups: new Map(), queue: [], current: null,
+  rates: {}, bodies: {}, groups: new Map(), queue: [], current: null,
   mode: store.get('spaces-mode', 'all'), later: store.get('spaces-later', []),
-  undo: [], okTotal: 0, busy: false, pending: null,
+  undo: [], busy: false, active: false, loaded: false,
 };
+Object.defineProperties(state, {
+  locations: { get: () => ctx.data().locations },
+  enrichment: { get: () => ctx.data().enrichment },
+});
 
-// ─── GitHub ──────────────────────────────────────────────────────────────
-async function gh(path, { method = 'GET', body } = {}) {
-  const res = await fetch(`${API}${path}`, {
-    method, cache: 'no-store',
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (res.status === 401) { logout(); throw new Error('Token ungültig oder abgelaufen'); }
-  if (!res.ok) { const e = new Error(`GitHub ${res.status}: ${(await res.text()).slice(0, 160)}`); e.status = res.status; throw e; }
-  return res.status === 204 ? null : res.json();
-}
-async function ghFile(file) {
-  const res = await fetch(`${API}/repos/${REPO}/contents/${file}?ref=main`, { cache: 'no-store', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.raw+json' } });
-  if (res.status === 401) { logout(); throw new Error('Token ungültig oder abgelaufen'); }
-  if (!res.ok) throw new Error(`GitHub ${res.status} (${file})`);
-  return JSON.parse(await res.text());
-}
 async function listIssues(label) {
   const all = [];
   for (let page = 1; page <= 5; page++) {
@@ -54,23 +37,6 @@ async function listIssues(label) {
     if (batch.length < 100) break;
   }
   return all;
-}
-
-// ─── Toasts ──────────────────────────────────────────────────────────────
-function toast(message, tone = 'info', { withUndo = false } = {}) {
-  const box = $('toasts');
-  const t = document.createElement('div');
-  t.className = 'toast'; t.dataset.tone = tone;
-  t.append(Object.assign(document.createElement('span'), { textContent: message }));
-  if (withUndo) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = 'Rückgängig';
-    b.addEventListener('click', () => { t.remove(); undo(); });
-    t.append(b);
-  }
-  box.append(t);
-  while (box.children.length > 4) box.firstElementChild.remove();
-  setTimeout(() => t.remove(), withUndo ? 9000 : 5000);
 }
 const msg = text => { $('sp-msg').textContent = text || ''; };
 
@@ -81,17 +47,6 @@ async function loadIssues() {
   state.bodies = {};
   for (const i of [...upd, ...wsd, ...wkd]) state.bodies[i.number] = i.body || '';
   state.groups = groupBySpace(byKind);
-  state.okTotal = [...state.groups.values()].reduce((n, g) => n + g.okCount, 0);
-}
-
-async function loadData() {
-  const [branch, locs, enr] = await Promise.all([gh(`/repos/${REPO}/branches/main`), ghFile('locations.json'), ghFile('loc-enrichment.json')]);
-  state.locations = new Map(locs.map(l => [l.ID, l]));
-  state.enrichment = enr;
-  state.rates = fillRates(locs, enr);
-  state.sha = branch.commit.sha.slice(0, 7);
-  state.dataAt = Date.now();
-  $('data-stand').textContent = `Daten: ${new Date().toTimeString().slice(0, 8)} · ${state.sha}`;
 }
 
 function rebuild(keepId = state.current) {
@@ -99,43 +54,28 @@ function rebuild(keepId = state.current) {
   state.current = state.queue.includes(keepId) ? keepId : (state.queue[0] ?? null);
 }
 
-async function refresh({ manual = false } = {}) {
-  if (state.busy || !token) return;
+/** Issues neu laden (Daten: locations/enrichment kommen vom Admin) und anzeigen */
+async function reload({ quiet = false, rerender = true } = {}) {
+  if (state.busy) return;
   state.busy = true;
   try {
-    await Promise.all([loadData(), loadIssues()]);
+    state.rates = fillRates([...state.locations.values()], state.enrichment);
+    await loadIssues();
+    state.loaded = true;
     rebuild();
-    show();
-    if (manual) toast('Daten und Liste sind aktuell', 'ok');
-  } catch (err) { toast(`Aktualisieren fehlgeschlagen: ${err.message}`, 'no'); }
+  } catch (err) { toast(`Spaces laden fehlgeschlagen: ${err.message}`, 'no'); }
   finally { state.busy = false; }
+  if (state.active && rerender) show();
+  if (!quiet) ctx.onChange?.();
 }
-
-async function start() {
-  $('login').hidden = true;
-  for (const id of ['refresh', 'sp-logout', 'sp-logout2']) $(id).hidden = false;
-  buildModeBar();
-  await refresh();
-}
-
-function logout() {
-  token = '';
-  try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
-  for (const id of ['card', 'done', 'refresh', 'sp-logout', 'sp-logout2', 'apply', 'mode']) $(id).hidden = true;
-  $('counter').textContent = ''; $('data-stand').textContent = '';
-  $('login').hidden = false;
-}
-$('sp-logout').addEventListener('click', logout);
-$('sp-logout2').addEventListener('click', logout);
-$('refresh').addEventListener('click', () => refresh({ manual: true }));
 
 // ─── Bearbeiten-Auswahl (Radio) ──────────────────────────────────────────
 function buildModeBar() {
-  const bar = $('mode');
+  const bar = $('sp-mode');
   bar.querySelectorAll('label').forEach(l => l.remove());
   [{ key: 'all', label: 'Alles' }, ...FIELDS].forEach(f => {
     const label = document.createElement('label');
-    const input = Object.assign(document.createElement('input'), { type: 'radio', name: 'mode', value: f.key, checked: state.mode === f.key });
+    const input = Object.assign(document.createElement('input'), { type: 'radio', name: 'sp-mode', value: f.key, checked: state.mode === f.key });
     input.addEventListener('change', () => setMode(f.key));
     label.append(input, ` ${f.label}`);
     label.title = 'Pfeiltasten ← →';
@@ -151,7 +91,7 @@ function stepMode(step) {
 }
 function setMode(mode) {
   state.mode = mode; store.set('spaces-mode', mode);
-  const r = document.querySelector(`#mode input[value="${mode}"]`); if (r) r.checked = true;
+  const r = document.querySelector(`#sp-mode input[value="${mode}"]`); if (r) r.checked = true;
   rebuild(); show();
 }
 
@@ -264,6 +204,7 @@ function buildRow(f, sp, restore) {
   tr.dataset.key = f.key;
   const p = sp.proposals[f.key];
   tr.dataset.proposal = p ? '1' : '0';
+  tr.dataset.number = p ? String(p.number) : '';
   const th = Object.assign(document.createElement('th'), { textContent: f.label });
   const cur = document.createElement('td'); cur.className = 'cur';
   const ct = currentText(f.key, sp.current[f.key]);
@@ -271,6 +212,7 @@ function buildRow(f, sp, restore) {
   const inp = document.createElement('td'); inp.className = 'inp';
   const initial = restore?.[f.key]?.value ?? (p ? proposalValue(f.key, p) : sp.current[f.key]);
   inp.append(buildInputs(f.key, initial));
+  if (f.key === 'workshops') inp.append(buildFreeText(tr, sp));
   if (p) {
     const hint = document.createElement('small'); hint.className = 'row-hint';
     const a = Object.assign(document.createElement('a'), { href: p.url, target: '_blank', rel: 'noopener noreferrer', textContent: `Vorschlag #${p.number} ↗` });
@@ -285,7 +227,7 @@ function buildRow(f, sp, restore) {
   tr.append(th, cur, inp, inc);
   const off = state.mode !== 'all' && state.mode !== f.key;
   tr.dataset.off = String(off);
-  tr.querySelectorAll('input, select').forEach(el => { el.disabled = off; });
+  tr.querySelectorAll('input, select, textarea, button').forEach(el => { el.disabled = off; });
   tr.addEventListener('input', () => updateRow(tr, sp));
   tr.addEventListener('change', () => updateRow(tr, sp));
   if (!p) { tr._wasDiff = restore?.[f.key] ? true : false; label.hidden = true; }
@@ -295,19 +237,15 @@ function buildRow(f, sp, restore) {
 
 function show(restore = null) {
   const id = state.current;
-  const total = state.okTotal;
-  $('apply').hidden = total === 0;
-  $('apply').textContent = `Übernehmen (${total})`;
-  $('apply').title = 'Übernimmt alle ok-Vorschläge aller Arten in einem Lauf (1 Commit, 1 Deploy). Automatisch bei 10 Vorschlägen oder 1 h ohne neuen ok-Vorschlag (Cron).';
-  $('act-z').hidden = state.undo.length === 0;
+  $('sp-act-z').hidden = state.undo.length === 0;
   const pos = state.queue.indexOf(id);
   $('counter').textContent = id == null ? '' : `${pos + 1} / ${state.queue.length}`;
   if (id == null) {
-    $('card').hidden = true; $('done').hidden = false;
-    $('done').textContent = state.mode === 'all' ? 'Alles geprüft — keine offenen Vorschläge.' : `Keine offenen Vorschläge für „${FIELDS.find(f => f.key === state.mode)?.label}“.`;
+    $('sp-card').hidden = true; $('sp-done').hidden = false;
+    $('sp-done').textContent = state.mode === 'all' ? 'Alles geprüft — keine offenen Vorschläge.' : `Keine offenen Vorschläge für „${FIELDS.find(f => f.key === state.mode)?.label}“.`;
     return;
   }
-  $('done').hidden = true; $('card').hidden = false;
+  $('sp-done').hidden = true; $('sp-card').hidden = false;
   const sp = spaceModel(id);
   const a = $('sp-id'); a.textContent = `#${id}`;
   if (isHttp(sp.website)) { a.href = sp.website; a.removeAttribute('aria-disabled'); } else a.removeAttribute('href');
@@ -318,6 +256,111 @@ function show(restore = null) {
   $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
   msg('');
   window.scrollTo?.(0, 0);
+}
+
+// ─── Freitext (Workshops) ────────────────────────────────────────────────
+// Text einfügen/eintippen → sofort ausgewertet, erkannte Typen werden angehakt (vorhandene Haken bleiben). Eine URL wird
+// stattdessen serverseitig ausgelesen (Workflow scan-workshop-url.yml; braucht ein Workshop-Issue zum Kommentieren).
+const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setIndicator(box, stateName, text, types = []) {
+  box.dataset.state = stateName;
+  box.replaceChildren(text);
+  for (const t of types) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+}
+function checkTypes(tr, types) {
+  for (const box of tr.querySelectorAll('.ws-checks input')) if (types.includes(box.value)) box.checked = true;
+  tr.dispatchEvent(new Event('change'));   // Zeile neu bewerten (geändert? Häkchen-Text)
+}
+
+function buildFreeText(tr, sp) {
+  const wrap = document.createElement('div'); wrap.className = 'ws-free';
+  const label = document.createElement('label'); label.textContent = 'Freitext — hier Text einfügen (wird sofort ausgewertet) oder eine URL';
+  const area = document.createElement('textarea');
+  area.rows = 3; area.spellcheck = false;
+  area.placeholder = 'Text oder URL einfügen — Text: erkannte Typen werden angehakt · URL: „Website auslesen (Server)“ liest sie serverseitig aus';
+  area.setAttribute('aria-label', 'Freitext für Workshop-Erkennung');
+  const detected = document.createElement('p'); detected.className = 'ws-detected'; detected.dataset.state = 'idle'; detected.setAttribute('role', 'status');
+  const row = document.createElement('div'); row.className = 'scan-row';
+  const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Website auslesen (Server)';
+  const target = document.createElement('small'); target.className = 'scan-target';
+  const issue = sp.proposals.workshops?.number;
+  if (!issue) btn.title = 'Der Server-Scan kommentiert ein Workshop-Issue — für diesen Space gibt es keins (Text einfügen geht trotzdem).';
+  row.append(btn, target);
+  wrap.append(label, area, detected, row);
+  label.htmlFor = area.id = `ws-free-${sp.id}`;
+
+  const scanUrl = () => { const v = area.value.trim(); return looksLikeUrl(v) ? v : sp.website; };
+  const refreshTarget = () => {
+    const v = area.value.trim(), url = scanUrl();
+    target.textContent = url ? `Scan-Ziel: ${url}${v && !looksLikeUrl(v) ? ' — der eingefügte Text wird dafür nicht verwendet (er wird direkt ausgewertet)' : ''}` : 'Kein Scan-Ziel: keine Website bekannt — URL einfügen.';
+    btn.disabled = !issue || !url || tr.dataset.off === 'true';
+  };
+  const evaluate = (source = '') => {
+    refreshTarget();
+    const v = area.value;
+    if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
+    if (looksLikeUrl(v)) { setIndicator(detected, 'info', `URL erkannt${source} — mit „Website auslesen (Server)“ serverseitig auslesen.`); return; }
+    const found = detectFromText(v);
+    checkTypes(tr, found);
+    setIndicator(detected, found.length ? 'ok' : 'none', found.length ? `✓ Text${source} ausgewertet (${v.length} Zeichen) — ${found.length} erkannt und angehakt:` : `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt`, found);
+  };
+  area.addEventListener('input', () => evaluate());
+  // Einfügen: erst nach dem Einsetzen auswerten (der Wert steht beim paste-Ereignis noch nicht im Feld)
+  area.addEventListener('paste', () => setTimeout(evaluate, 0));
+  queueMicrotask(refreshTarget);
+
+  // Zwischenablage automatisch lesen: wenn das Feld den Fokus bekommt (auch beim Zurückkehren ins Fenster, wenn das Feld
+  // fokussiert war) und beim Verlassen des leeren Feldes. Nur in ein leeres (bzw. zuletzt automatisch gefülltes) Feld, nie über
+  // eigene Eingaben; derselbe Inhalt wird nicht erneut übernommen. Ohne Berechtigung/Unterstützung (Safari) bleibt es still.
+  let lastClip = '', autoText = '';
+  const readClipboard = async () => {
+    if (area.disabled || !navigator.clipboard?.readText) return;
+    if (area.value.trim() && area.value !== autoText) return;
+    try {
+      const t = (await navigator.clipboard.readText()).trim();
+      if (!t || t === lastClip || t.length > 20000 || (area.value.trim() && area.value !== autoText)) return;
+      lastClip = t; autoText = area.value = t;
+      evaluate(' aus Zwischenablage');
+    } catch { /* keine Berechtigung / Fenster ohne Fokus */ }
+  };
+  area.addEventListener('focus', readClipboard);
+  area.addEventListener('blur', () => { if (area.value.trim()) evaluate(); else readClipboard(); });
+
+  btn.addEventListener('click', async () => {
+    const url = scanUrl();
+    if (!url || !issue) return;
+    const scanId = [...crypto.getRandomValues(new Uint8Array(4))].map(b => b.toString(16).padStart(2, '0')).join('');
+    btn.disabled = true; btn.textContent = 'Scan läuft …';
+    const t0 = Date.now(), forSpace = sp.id;
+    const timer = setInterval(() => setIndicator(detected, 'working', `⏳ Scan läuft für ${url} … ${Math.round((Date.now() - t0) / 1000)} s (meist 30–60 s)`), 1000);
+    const alive = () => state.current === forSpace;
+    try {
+      await gh(`/repos/${REPO}/actions/workflows/scan-workshop-url.yml/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { url, issue: String(issue), scan_id: scanId } } });
+      for (let i = 0; i < SCAN_MAX_POLLS; i++) {
+        await sleep(SCAN_POLL_MS);
+        if (!alive()) return;
+        const comments = await gh(`/repos/${REPO}/issues/${issue}/comments?per_page=100`);
+        for (const c of comments) {
+          const r = parseScanComment(c.body || '', scanId);
+          if (!r) continue;
+          gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
+          if (r.error) { setIndicator(detected, 'error', `✗ Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
+          checkTypes(tr, r.types);
+          toast(r.types.length ? `Scan: ${r.types.join(', ')} erkannt` : 'Scan: nichts erkannt', r.types.length ? 'ok' : 'warn');
+          setIndicator(detected, r.types.length ? 'ok' : 'none', r.types.length ? `✓ Scan fertig (${r.pages} Seite(n), ${Math.round((Date.now() - t0) / 1000)} s) — ${r.types.length} erkannt und angehakt (bitte prüfen):` : `✓ Scan fertig (${r.pages} Seite(n)) — nichts erkannt`, r.types);
+          return;
+        }
+      }
+      setIndicator(detected, 'error', '✗ Scan hat nicht rechtzeitig geantwortet — Run unter GitHub → Actions → „Scan Workshop URL“ prüfen.');
+    } catch (err) {
+      setIndicator(detected, 'error', `✗ Fehler: ${err.message}`);
+    } finally {
+      clearInterval(timer); btn.textContent = 'Website auslesen (Server)'; refreshTarget();
+    }
+  });
+  return wrap;
 }
 
 // ─── Entscheiden ─────────────────────────────────────────────────────────
@@ -346,6 +389,8 @@ async function execute(a) {
 async function decide(kind) {
   if (state.busy || state.current == null) return;
   const sp = spaceModel();
+  const stale = [...$('sp-rows').querySelectorAll('tr')].some(tr => tr.dataset.number !== String(sp.proposals[tr.dataset.key]?.number ?? ''));
+  if (stale) { msg('Die Vorschläge zu diesem Space haben sich inzwischen geändert — bitte mit ↻ neu laden (Eingaben gehen dabei verloren).'); return; }
   let rows = readRows();
   if (kind === 'reject') rows = rows.map(r => ({ ...r, include: false }));
   const { actions, errors } = planDecision(sp, rows, state.bodies);
@@ -365,12 +410,13 @@ async function decide(kind) {
   if (state.undo.length > 12) state.undo.shift();
   const g = state.groups.get(sp.id);
   for (const a of done) if (g && a.number) delete g.proposals[a.key];
-  state.okTotal += done.filter(a => a.type !== 'reject').length;
+  ctx.bumpOk(done.filter(a => a.type !== 'reject').length);
   const count = t => done.filter(a => a.type === t).length;
   const next = state.queue[state.queue.indexOf(sp.id) + 1];
   state.busy = false;
   rebuild(next);
-  toast(`${sp.name}: ${[count('ok') && `${count('ok')} übernommen`, count('create') && `${count('create')} neu`, count('reject') && `${count('reject')} verworfen`].filter(Boolean).join(', ')}`, 'ok', { withUndo: true });
+  toast(`${sp.name}: ${[count('ok') && `${count('ok')} übernommen`, count('create') && `${count('create')} neu`, count('reject') && `${count('reject')} verworfen`].filter(Boolean).join(', ')}`, 'ok', { withUndo: true, onUndo: undo });
+  ctx.onChange?.();
   show();
 }
 
@@ -417,6 +463,7 @@ async function undo() {
     toast(`Rückgängig fehlgeschlagen: ${err.message}`, 'no'); return;
   }
   state.busy = false;
+  ctx.bumpOk(-entry.records.filter(a => a.type !== 'reject').length);
   state.mode = 'all'; store.set('spaces-mode', 'all'); buildModeBar();
   state.queue = buildQueue(state.groups, state.later, 'all');
   if (!state.queue.includes(entry.spaceId)) state.queue.unshift(entry.spaceId);
@@ -425,27 +472,10 @@ async function undo() {
   toast(warnings.length ? `Rückgängig mit Hinweis: ${warnings.join('; ')}` : `${entry.name ?? '#' + entry.spaceId}: zurückgesetzt — Eingaben wiederhergestellt`, warnings.length ? 'warn' : 'info');
 }
 
-async function applyNow() {
-  if (!state.okTotal || state.busy) return;
-  state.busy = true;
-  try {
-    await gh(`/repos/${REPO}/actions/workflows/${APPLY_WORKFLOW}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: 'apply' } } });
-    const n = state.okTotal; state.okTotal = 0; state.undo = [];
-    toast(`${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
-    setTimeout(() => refresh(), 90000);
-  } catch (err) { toast(`Fehler: ${err.message}`, 'no'); }
-  finally { state.busy = false; show(); }
-}
 
-$('act-y').addEventListener('click', () => decide('ok'));
-$('act-n').addEventListener('click', () => decide('reject'));
-$('act-l').addEventListener('click', later);
-$('act-z').addEventListener('click', undo);
-$('apply').addEventListener('click', applyNow);
-
-// Tasten: y/n/ä/z + ←/→ (Bearbeiten-Auswahl durchwechseln). Niemals e l w a s d (Vivaldi-Direktkürzel) und keine Ziffern (Browser: Zoom/Tab-Wechsel)
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey || e.metaKey || e.altKey || !token) return;
+// ─── Aktivieren / Deaktivieren (Reiter) ─────────────────────────────────
+function onKey(e) {
+  if (!state.active || e.ctrlKey || e.metaKey || e.altKey) return;
   if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
   const k = e.key.toLowerCase();
   if (k === 'y') decide('ok');
@@ -455,11 +485,28 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') stepMode(e.key === 'ArrowRight' ? 1 : -1);
   else return;
   e.preventDefault();
-});
+}
+// Tasten: y/n/ä/z + ←/→ (Bearbeiten-Auswahl durchschalten). Niemals e l w a s d (Vivaldi-Direktkürzel) und keine Ziffern (Browser: Zoom/Tab-Wechsel)
 
-// Daten bleiben aktuell (Crawler/Apply laufen parallel)
-const stale = () => Date.now() - state.dataAt;
-document.addEventListener('visibilitychange', () => { if (!document.hidden && token && stale() > 60000) refresh(); });
-setInterval(() => { if (!document.hidden && token && !state.busy && stale() > 180000) refresh(); }, 120000);
+/** Reiter geöffnet: Ansicht zeigen (beim ersten Mal Issues laden) */
+export async function activate() {
+  state.active = true;
+  $('spaces-view').hidden = false;
+  buildModeBar();
+  if (!state.loaded) { $('sp-done').hidden = false; $('sp-done').textContent = 'Lade …'; $('sp-card').hidden = true; await reload({ quiet: true }); }
+  else { rebuild(); show(); reload({ quiet: true, rerender: false }); }   // still nachladen: Formular bleibt, Pläne nutzen frische Bodys
+  ctx.onChange?.();
+}
+export function deactivate() { state.active = false; $('spaces-view').hidden = true; }
+/** Anzahl Spaces mit offenen Vorschlägen (Zähler am Reiter) */
+export const openCount = () => buildQueue(state.groups, [], 'all').length;
+export { reload };
 
-if (token) start(); else $('login').hidden = false;
+export function initSpaces(context) {
+  ctx = context;
+  $('sp-act-y').addEventListener('click', () => decide('ok'));
+  $('sp-act-n').addEventListener('click', () => decide('reject'));
+  $('sp-act-l').addEventListener('click', later);
+  $('sp-act-z').addEventListener('click', undo);
+  document.addEventListener('keydown', onKey);
+}

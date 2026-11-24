@@ -142,7 +142,7 @@ test('10: undoStep kehrt jede Aktion um', () => {
   assert.deepEqual(undoStep({ type: 'create', createdNumber: 3 }), { op: 'close-created', number: 3 });
 });
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 
 test('11: Tasten — nie e l w a s d (Vivaldi), keine Ziffern; y n ä z und ← →', () => {
@@ -154,10 +154,26 @@ test('11: Tasten — nie e l w a s d (Vivaldi), keine Ziffern; y n ä z und ← 
   assert.match(js, /ArrowRight/); assert.match(js, /ArrowLeft/);
 });
 
-test('12: Seite verlinkt extern nur mit rel=noopener; beide Admin-Seiten sind verlinkt', () => {
-  for (const f of ['admin/spaces.html', 'admin/spaces.js']) {
-    for (const m of read(f).matchAll(/target="_blank"[^>]*>/g)) assert.match(m[0], /noopener/, `${f}: ${m[0]}`);
+test('12: Reiter „Spaces“ ist der erste Reiter und Standard; externe Links nur mit rel=noopener', () => {
+  const html = read('admin/index.html');
+  assert.ok(html.indexOf('id="tab-spaces"') > 0 && html.indexOf('id="tab-spaces"') < html.indexOf('id="tab-spaceapi"'), 'Spaces vor SpaceAPI');
+  assert.match(read('admin/admin.js'), /state\.tab = [^\n]*\n\s*showSpaces\(\);/);   // Start → Spaces (Standard)
+  for (const [f, text] of [['admin/index.html', html], ['admin/spaces.js', read('admin/spaces.js')]]) {
+    for (const m of text.matchAll(/target="_blank"[^>]*>/g)) assert.match(m[0], /noopener/, `${f}: ${m[0]}`);
   }
-  assert.match(read('admin/index.html'), /href="spaces\.html"/);
-  assert.match(read('admin/spaces.html'), /href="\.\/"/);
+  assert.ok(!existsSync(new URL('../admin/spaces.html', import.meta.url)), 'keine eigene Seite mehr');
+});
+
+test('13: keine doppelten IDs in der Admin-Seite (Spaces-Ansicht teilt die Seite mit der Reiter-Ansicht)', () => {
+  const ids = [...read('admin/index.html').matchAll(/\sid="([^"]+)"/g)].map(m => m[1]);
+  const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
+  assert.deepEqual(dup, []);
+});
+
+test('14: Freitext liest die Zwischenablage bei Fokus/Verlassen, überschreibt aber keine eigenen Eingaben', () => {
+  const js = read('admin/spaces.js');
+  assert.match(js, /navigator\.clipboard\?\.readText/);
+  assert.match(js, /area\.addEventListener\('focus', readClipboard\)/);
+  assert.match(js, /area\.addEventListener\('blur'/);
+  assert.match(js, /area\.value !== autoText/);   // nur leeres bzw. zuletzt automatisch gefülltes Feld
 });

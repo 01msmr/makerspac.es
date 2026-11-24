@@ -7,11 +7,14 @@
   <title>Admin – Review</title>
   <link rel="stylesheet" href="/main-layout.css">
   <link rel="stylesheet" href="/main-responsive.css">
+  <link rel="stylesheet" href="/libs/fontawesome/css/subset.min.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="spaces.css">
 </head>
 <body>
   <header id="bar">
     <nav id="tabs" hidden>
+      <button id="tab-spaces" data-spaces title="Ein Space = eine Karte mit allen Eigenschaften">Spaces</button>
       <button id="tab-spaceapi" data-kind="spaceapi">SpaceAPI</button>
       <button id="tab-workshops" data-kind="workshops">Workshops</button>
       <button id="tab-calendar" data-kind="calendar">Kalender</button>
@@ -24,7 +27,6 @@
     <span class="grow"></span>
     <button id="apply" hidden></button>
     <a class="aux-link aux-header" href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link aux-header" href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a>
-    <a class="aux-link aux-header" href="spaces.html" title="Ein Space = eine Karte mit allen Eigenschaften (neu)">Space-Ansicht</a>
     <a id="reset-app" href="reset.html?next=/admin/" title="Service Worker und Zwischenspeicher leeren, dann neu laden — Token bleibt erhalten">App zurücksetzen</a>
     <button id="logout" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button>
   </header>
@@ -73,7 +75,7 @@
       <p id="keys"><kbd>Esc</kbd> Änderungen verwerfen · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint/Kalender</p>
       <p id="status" role="status"></p>
       <div id="extra"></div>
-      <div id="foot-in"><a class="aux-link " href="spaces.html">Space-Ansicht</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-in" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout3" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></div>
+      <div id="foot-in"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-in" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout3" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></div>
     </section>
     <section id="right">
       <div id="viewbar">
@@ -85,10 +87,32 @@
     </section>
   </main>
 
+
+  <section id="spaces-view" hidden>
+    <fieldset id="sp-mode" title="Bearbeitung auf eine Eigenschaft begrenzen (Pfeiltasten ← →)">
+      <legend>Bearbeiten</legend>
+    </fieldset>
+    <main id="sp-card" hidden>
+      <h2 id="sp-title"><a id="sp-id" target="_blank" rel="noopener noreferrer" title="Gefundene bzw. vermutete Werkstatt-Infos in neuem Tab öffnen"></a> <span id="sp-name"></span></h2>
+      <p id="sp-meta"></p>
+      <p id="sp-sources" aria-label="Quellen"></p>
+      <table id="sp-rows"></table>
+      <p id="sp-msg" role="status"></p>
+      <div class="sp-actions">
+        <button type="button" id="sp-act-y" data-tone="ok"><kbd>y</kbd> übernehmen</button>
+        <button type="button" id="sp-act-l" data-tone="warn"><kbd>ä</kbd> später</button>
+        <button type="button" id="sp-act-n" data-tone="no"><kbd>n</kbd> alles verwerfen</button>
+        <button type="button" id="sp-act-z" data-tone="neutral" hidden><kbd>z</kbd> rückgängig</button>
+      </div>
+      <p id="sp-keys"><kbd>y</kbd> übernehmen · <kbd>n</kbd> alles verwerfen · <kbd>ä</kbd> später · <kbd>z</kbd> rückgängig · <kbd>←</kbd> <kbd>→</kbd> Bearbeiten-Auswahl</p>
+    </main>
+    <p id="sp-done" hidden></p>
+  </section>
+
   <section id="inbox" hidden></section>
 
   <p id="done" hidden></p>
-  <footer id="foot"><a class="aux-link " href="spaces.html">Space-Ansicht</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-foot" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout2" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></footer>
+  <footer id="foot"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-foot" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout2" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></footer>
   <div id="toasts" aria-live="polite"></div>
   <script type="module" src="admin.js"></script>
 </body>

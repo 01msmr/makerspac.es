@@ -9,6 +9,7 @@ import {
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyCssColours } from '../colours.js';
+import { initSpaces, activate as spacesActivate, deactivate as spacesDeactivate, openCount as spacesOpenCount, reload as spacesReload } from './spaces.js';
 import { applyEnrichment, normalizeUrl } from '../enrichment-merge.js';
 
 // Status-Farben (--space-open/-closed/-unknown) aus colours.js (SSOT), reagiert auf Dark Mode
@@ -58,7 +59,7 @@ async function gh(path, { method = 'GET', body } = {}) {
 
 // ─── Toasts ──────────────────────────────────────────────────────────────
 /** tone: ok (grün) · no (rot) · warn (gelb) · info. withUndo = Rückgängig-Knopf im Toast. */
-function toast(message, tone = 'info', { withUndo = false } = {}) {
+function toast(message, tone = 'info', { withUndo = false, onUndo = null } = {}) {
   const box = $('toasts');
   const t = document.createElement('div');
   t.className = 'toast';
@@ -67,7 +68,7 @@ function toast(message, tone = 'info', { withUndo = false } = {}) {
   if (withUndo) {
     const b = document.createElement('button');
     b.type = 'button'; b.textContent = 'Rückgängig';
-    b.addEventListener('click', () => { t.remove(); undo(); });
+    b.addEventListener('click', () => { t.remove(); (onUndo ?? undo)(); });
     t.append(b);
   }
   box.append(t);
@@ -83,6 +84,7 @@ function logout() {
   token = '';
   clearTimeout(autoTimer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
+  spacesDeactivate();
   for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
   state.dataAt = 0;
@@ -160,6 +162,7 @@ async function refreshData(manual = false) {
   try {
     const changed = await loadData();
     await refreshQueues();
+    if (state.list === 'spaces') await spacesReload({ quiet: true, rerender: manual });   // automatisch nur still (Eingaben im offenen Formular bleiben)
     if (changed) { toast(`Daten aktualisiert (${state.dataSha})`, 'info'); refreshCompare(); }
     else if (manual) toast('Daten und Liste sind aktuell', 'ok');
   } catch (err) {
@@ -207,8 +210,8 @@ async function start() {
     $('done').textContent = `Fehler: ${err.message}`;
     return;
   }
-  state.tab = Object.keys(KINDS).find(n => openCount(KINDS[n]) > 0) ?? 'spaceapi';
-  show();
+  state.tab = Object.keys(KINDS).find(n => openCount(KINDS[n]) > 0) ?? 'spaceapi';   // Reiter für „Reiter-Ansicht“ (nach Spaces)
+  showSpaces();
 }
 
 // Listen-Reiter (je Art einer, nur sichtbar wenn etwas offen ist) hinter den Review-Reitern anlegen
@@ -221,9 +224,12 @@ for (const [key, label] of INBOX_GROUPS) {
 for (const btn of document.querySelectorAll('#tabs button')) {
   btn.addEventListener('click', () => {
     if (state.busy) return;
+    if ('spaces' in btn.dataset) { showSpaces(); return; }
     if (btn.dataset.list) { showList(btn.dataset.list); return; }
+    const fromSpaces = state.list === 'spaces';
     state.tab = btn.dataset.kind;
     show();
+    if (fromSpaces) refreshQueues();   // dort wurde evtl. entschieden → Warteschlangen/ok-Zähler abgleichen
   });
 }
 
@@ -262,6 +268,17 @@ function renderList(key) {
     ul.append(li);
   }
   box.append(ul);
+}
+
+/** Reiter „Spaces“ (Standard): ein Space = eine Karte mit allen Eigenschaften (spaces.js) */
+async function showSpaces() {
+  state.list = 'spaces';
+  $('review').hidden = true;
+  $('done').hidden = true;
+  $('inbox').hidden = true;
+  $('counter').textContent = '';
+  updateBar();
+  await spacesActivate();
 }
 
 async function showList(key) {
@@ -357,6 +374,10 @@ function updateBar() {
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
+  const bs = $('tab-spaces');
+  setTab(bs, 'Spaces', spacesOpenCount(), 0, state.list === 'spaces');
+  bs.setAttribute('aria-pressed', String(state.list === 'spaces'));
+  if (state.list !== 'spaces') spacesDeactivate();
   const groups = groupInbox(state.inboxItems);
   for (const [key, label] of INBOX_GROUPS) {
     const n = groups[key]?.length || 0;
@@ -371,10 +392,10 @@ function updateBar() {
   $('tab-problems').setAttribute('aria-pressed', String(state.list === 'problems'));
   updateUndoButton();
   const k = cur();
-  $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
+  if (state.list !== 'spaces') $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
   const btn = $('apply');
   const total = okTotals().count;
-  btn.hidden = total === 0 || !!state.list;
+  btn.hidden = total === 0 || (!!state.list && state.list !== 'spaces');
   btn.textContent = `Übernehmen (${total})`;
   btn.title = `Übernimmt alle ok-Vorschläge aller Reiter in einem Lauf. Automatisch bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
 }
@@ -980,5 +1001,17 @@ async function applyNow(k, auto = false) {
   }
 }
 $('apply').addEventListener('click', () => applyNow(cur(), false));
+
+initSpaces({
+  gh, toast,
+  data: () => ({ locations: state.locations, enrichment: state.enrichment }),
+  /** Entscheidungen im Spaces-Reiter ändern die ok-Zahl (Übernehmen/Auto-Timer rechnen mit den Arten; refreshQueues stellt die echten Zahlen wieder her) */
+  bumpOk(delta) {
+    if (delta > 0) { KINDS.spaceapi.okCount += delta; KINDS.spaceapi.lastOkAt = Date.now(); return; }
+    let n = -delta;
+    for (const k of Object.values(KINDS)) { const d = Math.min(k.okCount, n); k.okCount -= d; n -= d; if (!n) break; }
+  },
+  onChange: () => updateBar(),
+});
 
 if (token) start(); else $('login').hidden = false;
