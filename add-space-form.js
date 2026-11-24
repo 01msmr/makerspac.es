@@ -670,6 +670,26 @@ function buildIssueBody(form, selectedSpace, workshopsAvailable, originalSnapsho
   return lines.join('\n\n');
 }
 
+// ─── Direkt-Submit mit Admin-Token ─────────────────────────────────────────
+
+/** Fine-grained PAT aus /admin/ (gleicher Ursprung, localStorage); nur der Schlüssel wird hier gelesen, nie angezeigt/gesendet außer an api.github.com */
+export function adminToken() {
+  try { return localStorage.getItem('admin-pat') || ''; } catch { return ''; }
+}
+
+/** Legt das Issue per REST an (Issues: Write genügt). @returns {Promise<{number:number, html_url:string}>} */
+export async function createIssueWithToken(token, title, body, fetchImpl = fetch) {
+  const res = await fetchImpl(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, body }),
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const issue = await res.json();
+  if (!issue?.number || !/^https:\/\/github\.com\//.test(issue.html_url || '')) throw new Error('unerwartete Antwort');
+  return issue;
+}
+
 // ─── Form: submit ─────────────────────────────────────────────────────────────
 
 async function handleSubmit(form, loadTime, overlay, selectedSpace = null, workshopsAvailable = true, originalSnapshot = null) {
@@ -701,15 +721,33 @@ async function handleSubmit(form, loadTime, overlay, selectedSpace = null, works
     : `neuer Makerspace: ${name}`;
   const body     = buildIssueBody(form, selectedSpace, workshopsAvailable, originalSnapshot);
 
+  const action = isUpdate
+    ? t('statusCorrectionSuccess', 'Correction submitted')
+    : t('statusSuccess', 'Submitted');
+
+  // Mit Admin-Token (FGT/PAT aus /admin/, gleicher Browser): Issue direkt anlegen — kein GitHub-Login/-Tab nötig.
+  // Die Workflows (validate-makerspace-issue → update-makerspace-pr / add-makerspace-pr) laufen wie bei jedem Issue.
+  const token = adminToken();
+  if (token) {
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      const issue = await createIssueWithToken(token, title, body);
+      const link = Object.assign(document.createElement('a'), { href: issue.html_url, target: '_blank', rel: 'noopener', textContent: `#${issue.number} ↗` });
+      statusEl.replaceChildren(`✅ ${action} — Issue `, link);
+      return;
+    } catch (err) {
+      console.warn('Issue per Token nicht angelegt — Fallback auf GitHub-Tab:', err.message);   // z. B. Token abgelaufen/ohne Issues-Recht
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
   const url_gh = `https://github.com/${GITHUB_REPO}/issues/new`
     + `?title=${encodeURIComponent(title)}`
     + `&body=${encodeURIComponent(body)}`;
 
   const win = window.open(url_gh, '_blank', 'noopener');
   if (win) {
-    const action = isUpdate
-      ? t('statusCorrectionSuccess', 'Correction submitted')
-      : t('statusSuccess', 'Submitted');
     statusEl.innerHTML = `✅ ${action} — ${t('statusGitHubOpened', 'GitHub opened in new tab')}.`;
   } else {
     // Popup blocked — show link instead
