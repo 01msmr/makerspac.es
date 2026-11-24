@@ -6,7 +6,7 @@
 import {
   parseIssue, parseWorkshopIssue, parseCalendarIssue, parseWeeklyIssue,
   replaceEndpoint, replaceWorkshops, replaceEvents, replaceWeekly,
-  formatWeekly, formatTime, formatEditDate,
+  formatWeekly, formatTime, formatEditDate, lockOf,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { applyEnrichment } from '../enrichment-merge.js';
@@ -105,15 +105,30 @@ export function groupBySpace(issuesByKind) {
 
 /**
  * Reihenfolge der Spaces: mit offenen Vorschlägen (in `mode`: nur Spaces mit Vorschlag für diese Eigenschaft),
- * viele Vorschläge zuerst, dann nach ID; „später“ verschobene ans Ende (in der Reihenfolge des Verschiebens).
+ * viele Vorschläge zuerst, dann nach ID; „später“ verschobene danach (in der Reihenfolge des Verschiebens);
+ * ganz am Ende Spaces, die gerade ein anderer Prüfer bearbeitet (`locked`).
  * @param {Map} groups @param {string[]} later spaceIds, älteste zuerst @param {string} mode 'all' | Eigenschaft
+ * @param {Set<number>} [locked] spaceIds in Bearbeitung durch andere
  */
-export function buildQueue(groups, later = [], mode = 'all') {
+export function buildQueue(groups, later = [], mode = 'all', locked = new Set()) {
   const open = [...groups.values()].filter(g => (mode === 'all' ? Object.keys(g.proposals).length : g.proposals[mode]));
   const rank = id => later.indexOf(id);
-  const fresh = open.filter(g => rank(g.spaceId) < 0).sort((a, b) => Object.keys(b.proposals).length - Object.keys(a.proposals).length || a.spaceId - b.spaceId);
-  const late = open.filter(g => rank(g.spaceId) >= 0).sort((a, b) => rank(a.spaceId) - rank(b.spaceId));
-  return [...fresh, ...late].map(g => g.spaceId);
+  const free = open.filter(g => !locked.has(g.spaceId));
+  const fresh = free.filter(g => rank(g.spaceId) < 0).sort((a, b) => Object.keys(b.proposals).length - Object.keys(a.proposals).length || a.spaceId - b.spaceId);
+  const late = free.filter(g => rank(g.spaceId) >= 0).sort((a, b) => rank(a.spaceId) - rank(b.spaceId));
+  const busy = open.filter(g => locked.has(g.spaceId)).sort((a, b) => a.spaceId - b.spaceId);
+  return [...fresh, ...late, ...busy].map(g => g.spaceId);
+}
+
+/** Bearbeitet ein anderer Prüfer diesen Space? (irgendein offener Vorschlag zugewiesen + frisch) @returns {{by:string, minutes:number}|null} */
+export function spaceLock(group, me, now = Date.now()) {
+  for (const p of Object.values(group?.proposals ?? {})) { const l = lockOf(p, me, now); if (l) return l; }
+  return null;
+}
+
+/** spaceIds, die gerade ein anderer Prüfer bearbeitet */
+export function lockedSpaces(groups, me, now = Date.now()) {
+  return new Set([...groups.values()].filter(g => spaceLock(g, me, now)).map(g => g.spaceId));
 }
 
 /** Anteil der Spaces mit gefülltem Feld je Eigenschaft (aus loc-enrichment.json + locations.json) */

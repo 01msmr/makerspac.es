@@ -24,9 +24,17 @@ Der Admin (ADR-006) prüft je Art (SpaceAPI, Workshops, Kalender, Treffen) ein I
 
 Keine neue Issue-Art: Der Link „Stammdaten“ in der Spaces-Karte öffnet `/?edit=ID` → das **Bearbeiten-Overlay** der Karte (derselbe Weg wie der Stift im Popup). Mit dem Admin-Token (nur FGT/PAT, Issues-Write; `localStorage['admin-pat']`, gleicher Ursprung) legt das Overlay das Korrektur-Issue **direkt per REST** an — ohne GitHub-Login/-Tab. Danach laufen die bestehenden Workflows (`validate-makerspace-issue` → `update-makerspace-pr`, Direkt-Commit). Ohne Token oder bei Fehler bleibt der Fallback (vorbefüllter GitHub-Tab).
 
+## Weitere Prüfer (nur FGT/PAT)
+
+Jede Person bekommt Collaborator-Rechte am Repo und einen **eigenen Fine-grained PAT** (nur dieses Repo, Issues R/W; Admins zusätzlich Actions R/W). Kein Backend, kein OAuth.
+- **Identität + Rolle:** `GET /user` und `GET /repos/{repo}` (→ `permissions` des Tokens). Schreibrecht (push/maintain/admin) = **Admin** (darf „Übernehmen“, sieht „Probleme“); Triage/Lesen = **Reviewer** (entscheidet, korrigiert, verwirft; übernommen wird automatisch durch den Cron ab 10 ok oder 1 h Ruhe). Chip „@login · Rolle“ in der Kopfzeile. Unbekannt (z. B. `/user` verweigert) → bisheriges Verhalten.
+- **Prüfpfad:** Jede Entscheidung (ok, angepasst, verworfen, angelegt, rückgängig) schreibt einen Kommentar „✓ … — @login (Admin-Review)“ ans Issue (best effort), in „Spaces“ und in den Reitern.
+- **„In Bearbeitung“:** Wer einen Space öffnet, wird dessen offenen Vorschlägen als Assignee zugewiesen und beim Weitergehen wieder entfernt. Andere Prüfer sehen die Zuweisung (frischer als 30 min), der Space rutscht in ihrer Warteschlange ans Ende, die Karte zeigt „@x bearbeitet diesen Space“; sie weisen sich dort nicht zusätzlich zu. Die Sperre verfällt nach 30 min ohne Änderung (Tab zu).
+- Hinweis: Triage-Rechte können Labels/Status/Zuweisungen setzen; ob sie fremde Issue-Bodys ändern dürfen (korrigieren), hängt von den Repo-Rechten ab — andernfalls Write-Rolle vergeben.
+
 ## Später (nicht Teil dieser Entscheidung)
 
-Prüfer-Identität/Rollen (Kommentar „✓ @login“, Sperre „in Bearbeitung“), gemeinsame Sperrliste verworfener Vorschläge im Crawler.
+Vier-Augen-Prinzip für riskante Felder, Aufteilung nach Land/Region, gemeinsame Sperrliste verworfener Vorschläge im Crawler.
 
 ## Verworfen
 
