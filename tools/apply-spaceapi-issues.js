@@ -15,6 +15,7 @@ import { execFileSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 import { stampLocationsFile } from './lib/edit-stamp.js';
+import { closeOrDefer } from './lib/issue-close.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -138,7 +139,7 @@ async function main() {
   fs.writeFileSync(enrichmentPath, JSON.stringify(enrichment, null, 2) + '\n');
   stampLocationsFile(path.join(ROOT, 'locations.json'), applied.map(p => p.spaceId));
   for (const p of applied) {
-    gh('issue', 'close', String(p.issueNumber), '--comment', 'Angewendet auf loc-enrichment.json');
+    closeOrDefer(p.issueNumber, 'Angewendet auf loc-enrichment.json');
   }
   console.log(`\n✅ ${applied.length} Endpoints angewendet, Issues geschlossen`);
 }

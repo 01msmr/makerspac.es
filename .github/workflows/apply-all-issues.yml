@@ -1,0 +1,125 @@
+# Zweck:  Übernimmt ALLE freigegebenen Vorschläge (SpaceAPI, Workshops, Kalender, Treffen) in EINEM Lauf:
+#         1 Validierung, 1 Commit, 1 Deploy. Issues werden erst NACH erfolgreichem Push geschlossen
+#         (Skripte merken sie nur vor: DEFERRED_CLOSE_FILE) → bei einem Fehler bleiben sie offen, nichts geht verloren.
+# Auslöser: /admin/ „Übernehmen“, Cron auto-apply-spaceapi.yml (tools/auto-apply-check.js), manuell.
+# Die vier Einzel-Workflows (apply-*-issues.yml) bleiben für manuelle Läufe / Notfälle.
+
+name: "✅ Apply All Issues"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modus — dry-run = Vorschau · apply = alle freigegebenen Vorschläge übernehmen"
+        required: true
+        type: choice
+        options:
+          - "dry-run"
+          - "apply"
+        default: "dry-run"
+
+concurrency:
+  group: data-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main   # neuester Stand zum AUSFÜHRUNGSZEITPUNKT — ohne ref gilt der Stand beim Auslösen (nach Wartezeit in der Concurrency-Gruppe veraltet)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vorgemerkte Issues (Schließen erst nach Push)
+        run: echo "DEFERRED_CLOSE_FILE=$RUNNER_TEMP/deferred-close.jsonl" >> "$GITHUB_ENV"
+
+      # Jede Art als eigener Schritt: ein Fehler in einer Art blockiert die anderen nicht (am Ende schlägt der Lauf trotzdem fehl)
+      - name: SpaceAPI
+        id: spaceapi
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""; if [ "${{ inputs.mode }}" = "apply" ]; then ARGS="--apply --only-ok"; fi
+          node tools/apply-spaceapi-issues.js $ARGS
+
+      - name: Workshops
+        id: workshops
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""; if [ "${{ inputs.mode }}" = "apply" ]; then ARGS="--apply"; fi
+          node tools/apply-workshop-issues.js $ARGS
+
+      - name: Kalender
+        id: calendar
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""; if [ "${{ inputs.mode }}" = "apply" ]; then ARGS="--apply --only-ok"; fi
+          node tools/apply-calendar-issues.js $ARGS
+
+      - name: Treffen
+        id: weekly
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""; if [ "${{ inputs.mode }}" = "apply" ]; then ARGS="--apply --only-ok"; fi
+          node tools/apply-weekly-issues.js $ARGS
+
+      - name: Validate
+        if: ${{ inputs.mode == 'apply' }}
+        uses: ./.github/actions/validate-data
+
+      - name: Commit data
+        id: commit
+        if: ${{ inputs.mode == 'apply' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add loc-enrichment.json locations.json
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: apply reviewed proposals (spaceapi, workshops, calendar, weekly)"
+            git pull --rebase origin main
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Deploy
+        if: ${{ steps.commit.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy.yml --repo ${{ github.repository }}
+
+      # Nur nach erfolgreichem Validate + Commit/Push (Schritt „Commit data“ erfolgreich)
+      - name: Issues schließen
+        if: ${{ inputs.mode == 'apply' && steps.commit.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/close-deferred.js "$DEFERRED_CLOSE_FILE"
+
+      - name: Fehler einzelner Arten melden
+        if: ${{ always() && (steps.spaceapi.outcome == 'failure' || steps.workshops.outcome == 'failure' || steps.calendar.outcome == 'failure' || steps.weekly.outcome == 'failure') }}
+        run: |
+          echo "::error::Mindestens eine Art ist fehlgeschlagen (siehe Schritte oben)."
+          exit 1

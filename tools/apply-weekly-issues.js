@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 import { isValidDate } from '../tests/validate-locations.js';
 import { stampLocationsFile } from './lib/edit-stamp.js';
+import { closeOrDefer } from './lib/issue-close.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RE_ID = /\*\*ID:\*\*\s*(\d+)/;
@@ -90,7 +91,7 @@ async function main() {
   fs.writeFileSync(enrichmentPath, JSON.stringify(sorted, null, 2) + '\n');
   const inits = new Map(applied.filter(p => p.init !== undefined).map(p => [p.spaceId, p.init]));
   stampLocationsFile(path.join(ROOT, 'locations.json'), applied.map(p => p.spaceId), undefined, { inits });
-  for (const p of applied) gh('issue', 'close', String(p.issueNumber), '--comment', 'Angewendet (loc-enrichment.json / locations.json)');
+  for (const p of applied) closeOrDefer(p.issueNumber, 'Angewendet (loc-enrichment.json / locations.json)');
   console.log(`\n✅ ${applied.length} Vorschläge angewendet, Issues geschlossen`);
 }
 
