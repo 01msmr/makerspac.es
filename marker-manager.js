@@ -20,6 +20,7 @@ import { bookmarkManager } from './bookmark-manager.js';
 import { consent } from './datasync.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { isPhone, isTouch } from './layout-mode.js';
+import { openOverlayTab } from './overlay-loader.js';
 
 // ─── Injizierte Abhängigkeiten (in initMarkerManager gesetzt) ───────────────
 /** @type {import('leaflet').Map} */
@@ -464,7 +465,7 @@ export function createMarkerForLocation(location) {
   window.markerById.set(location.ID, marker);
 
   _applyMarkerClickHandler(marker);
-  marker.bindPopup(() => buildPopupHTML(location, { bookmarkManager }), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
+  marker.bindPopup(() => buildPopupHTML(location, { bookmarkManager, editable: true }), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
   _applyPopupOpenHandler(marker, location);
   _applyPopupCloseHandler(marker);
   _applyMarkerHoverHandlers(marker, location);
@@ -597,6 +598,13 @@ function _applyPopupOpenHandler(marker, location) {
           if (!event.target.closest('.leaflet-popup-close-button')) event.stopPropagation();
         });
         popupElement.addEventListener('dblclick', (event) => { event.stopPropagation(); });
+        // Stift → Add/Edit-Overlay direkt im Bearbeiten-Modus. Delegiert: Leaflet baut den Inhalt bei popup.update() neu auf,
+        // ein Listener am Button ginge dabei verloren.
+        popupElement.addEventListener('click', (event) => {
+          if (!event.target.closest('.popup-edit')) return;
+          event.preventDefault();
+          openOverlayTab('addspace', { editId: location.ID });
+        });
         popupElement.addEventListener('mouseenter', handlePopupEnter);
         popupElement.dataset.msHandlersBound = '1';
       }
@@ -732,6 +740,9 @@ function _applyMarkerHoverHandlers(marker, location) {
 
     if (!state.isDropdownHovering) applyMarkerScale(marker, 1);
 
+    // Hover-Intent: offenes, nicht-stickies Popup bleibt kurz stehen, damit die Maus es erreichen kann
+    // (popupElement mouseenter → handlePopupEnter löscht closeTimeout und macht es sticky).
+    const graceMs = marker.isPopupOpen() && !(currentStickyMarker === marker && isPopupSticky) ? AppConfig.settings.popupGraceMs : 0;
     const closeCheckTimeout = setTimeout(() => {
       if (marker.isPopupOpen() && (!isPopupSticky || currentStickyMarker !== marker)) {
         marker.closePopup();
@@ -742,7 +753,7 @@ function _applyMarkerHoverHandlers(marker, location) {
           updateMarkerIcon(marker, location);
         }
       }, 50);
-    }, 0);
+    }, graceMs);
 
     window.markerStateManager.setState(marker.locationId, { closeTimeout: closeCheckTimeout });
   });

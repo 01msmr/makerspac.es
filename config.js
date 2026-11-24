@@ -102,6 +102,7 @@ const SETTINGS = {
   debounceMs:             150,
   zoomDebounceMs:         800,
   popupDelayMs:           300,
+  popupGraceMs:           700,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
   hintShrinkMs:           1350,
   hintFadeMs:             1200,
   inactivityMs:           3500,

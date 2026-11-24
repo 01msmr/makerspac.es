@@ -89,7 +89,7 @@
 | `bookmark-manager.js` | Favoriten (Add/Remove/Export) | `BookmarkManager`, `window.bookmarkManager` |
 | `datasync.js` | ConsentManager, localStorage-Wrapper | `ConsentManager`, `window.consent` |
 | `nearby-header.js` | Nearby: Desktop-Popover (Rechtsklick) · Phone-Layout ≤767px: Panel im .search-container + Treffer im Dropdown (`searchHeader._nearbyMode` unterdrückt Filter-Rendering), Radius-Slider | `NearbyHeader`, `window.nearbySpacesManager` |
-| `overlay-loader.js` | Lazy-Loader für das „+“-Overlay (Add Space / Embed / About): `initOverlayTrigger()` (Klick auf „+“, Vorladen bei pointerdown/hover) und `openOverlayTab(tab)` (Einstellungs-Links); lädt `embed-overlay.js` (+ `add-space-form.js`, ≈ 70 KB) erst bei Bedarf | `openOverlayTab`, `initOverlayTrigger` |
+| `overlay-loader.js` | Lazy-Loader für das „+“-Overlay (Add Space / Embed / About): `initOverlayTrigger()` (Klick auf „+“, Vorladen bei pointerdown/hover) und `openOverlayTab(tab, { editId })` (`editId`: Space direkt im Bearbeiten-Modus vorbelegt, z. B. vom Popup-Stift) (Einstellungs-Links); lädt `embed-overlay.js` (+ `add-space-form.js`, ≈ 70 KB) erst bei Bedarf | `openOverlayTab`, `initOverlayTrigger` |
 | `layout-mode.js` | SSOT der Layout-Modi: `isTouch()` (= `'ontouchstart' in window`), `isMobileUI()`/`isTablet()`/`isPhone()` (Media-Queries wie im CSS, per Test mit dem CSS abgeglichen) und `gridSpec()` (Grid-Maße der Dropdown-Seiten: Phone 2×3 à 40px, Tablet 4×4 / 5×3 à 58px); Leaf, keine Abhängigkeiten | `isTouch`, `isMobileUI`, `isTablet`, `isPhone`, `gridSpec`, `currentGridSpec` |
 | `dropdown-pager.js` | Seitenweises Blättern im Dropdown (Snap-Seiten, Ghost-Items, Ecken, laufende Nummern, Hoch/Runter 1×/2×/3×, Rand-Indikatoren, Mausrad) | `DropdownPager` (init aus `MobileFilterUI.init`) |
 | `mobile-filter.js` | Mobile Filter-Sheet, Chip-Bar; setzt `--mobile-ui-height` und ruft danach `map.invalidateSize()` (rAF-koalesziert) — einziger Pfad, der die Kartengröße an die Bottom-UI-Höhe koppelt (auch bei visualViewport-Resize) | `MobileFilterUI`, `window.mobileFilterUI` |
@@ -97,7 +97,7 @@
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom; Desktop-Fit als Polygon-Fit: alle Pins einzeln in der Freifläche (Viewport minus Logo minus Search/Dropdown) | `ZoomManager`, `window.zoomManager`, `computePolygonFit()`, `findFitTranslation()` |
 | `embed.js` | Embed-Karte (iframe-Standalone, lädt nur in embed.html) | `EmbedMapExtended`, `window.embedMap` |
 | `embed-overlay.js` | In-page Overlay für Embed-Anleitung (initiiert in map.js) | `initEmbedOverlay()` |
-| `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed) | `buildPopupHTML()` |
+| `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed); `editable: true` (nur Hauptkarte) rendert in der Weekly-Zeile (`.popup-meta-row`) den Stift `.popup-edit` | `buildPopupHTML()` |
 | `demo-mode.js` | Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode) | `DemoMode`, `OpenDemoMode`, `TodayDemoMode` (export) |
 | `error-monitor.js` | Dev-Tool, Fehler-Overlay, globales Error-Logging | `errorMonitor` (export), `window.AppErrorMonitor` |
 | `spaceapi-static.js` | SpaceAPI-Status-Verarbeitung | `StaticSpaceAPI` (export) |
@@ -221,6 +221,10 @@ Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindung
 - Wird gelöscht: bei `zoomstart`, `mouseleave`, `closeDropdown`
 - Wird neu gezeichnet: bei `zoomend` via `updateHoverSVGPosition()` — **nur wenn `currentHoverItem` gesetzt**
 - Nach Item-Click: `listingCore.currentHoverItem = activeItem` setzen, damit Redraw nach flyTo funktioniert
+
+### Popup: Hover-Karenz und Bearbeiten-Stift
+- **Hover-Intent (Desktop):** Verlässt die Maus Listeneintrag (`listing-core.js` → `removeHoverEffects(location, { graceMs })`, `_schedulePopupGrace`/`_flushPopupGrace`) oder Pin (`marker-manager.js` mouseout, `graceMs`), bleibt ein offenes, nicht-stickies Popup `AppConfig.settings.popupGraceMs` (700 ms) stehen; temporär entclusterte Marker werden erst danach entfernt. Betritt die Maus das Popup, macht `handlePopupEnter` es sticky und löscht `closeTimeout`. Ein Hover auf einen anderen Eintrag beendet die Karenz sofort.
+- **Stift `.popup-edit`** (`fa-pen-to-square`, im FA-Subset vorhanden; Tooltip `tooltips.editSpace`, 7 Sprachen): rechtsbündig in der Weekly-Zeile, in der x-Achse des Lesezeichens. Die Zeile wird bei `editable` immer gerendert. Klick (am Popup-Container delegiert, weil `popup.update()` den Inhalt neu aufbaut) → `openOverlayTab('addspace', { editId })` → Overlay im Bearbeiten-Modus, Space gewählt, Formular vorbelegt, kein Fokus im Suchfeld (keine Bildschirmtastatur). Touch: Trefferfläche ≥ 44 px (`pointer: coarse`). Embed (`embed.js`) bleibt ohne Stift.
 
 ### Zwei-Phasen Marker-Loading — `createMarkerForLocation` + `loadAndMergeFullData`
 - **Stage 1**: `createMarkerForLocation()` fügt Marker ausschließlich in `allMarkers[]` ein — **nie direkt** in `clusterGroup`. Die clusterGroup wird allein durch `updateMarkers()` befüllt (nach `triggerFilterUpdate`).

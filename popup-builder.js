@@ -17,11 +17,12 @@ const styleTranslationMap = {
 /**
  * Build the Leaflet popup HTML for a makerspace marker.
  * @param {MakerSpace} location
- * @param {{ bookmarkManager?: { createBookmarkIcon: (id: number, cls: string) => string } | null }} [opts]
+ * @param {{ bookmarkManager?: { createBookmarkIcon: (id: number, cls: string) => string } | null, editable?: boolean }} [opts]
+ *   editable: Stift „Eintrag bearbeiten“ in der Weekly-Zeile (nur Hauptkarte; der Embed hat kein Overlay)
  * @returns {string}
  */
 export function buildPopupHTML(location, opts = {}) {
-  const { bookmarkManager = null } = opts;
+  const { bookmarkManager = null, editable = false } = opts;
   const t = (key) => window.i18n ? window.i18n.t(key) : '';
 
   let statusIconHtml = '';
@@ -75,6 +76,13 @@ export function buildPopupHTML(location, opts = {}) {
   } else if (location.events) {
     const _evLabel = _t('weekly.eventsCalendar');
     weeklyHtml = `<div></div><div class="popup-weekly"><a href="${location.events}" target="_blank" class="popup-events-line"><i class="fas fa-calendar-day"></i> ${_evLabel}</a></div>`;
+  }
+
+  if (editable) {
+    // Zeile immer rendern (auch ohne Weekly/Events), damit der Stift erreichbar ist; Stift in der x-Achse des Lesezeichens
+    const editLabel = t('tooltips.editSpace');
+    const editBtn = `<button type="button" class="popup-edit" data-id="${location.ID}" aria-label="${editLabel}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-pen-to-square"></i></button>`;
+    weeklyHtml = `<div></div><div class="popup-meta-row">${weeklyHtml.replace(/^<div><\/div>/, '')}${editBtn}</div>`;
   }
 
   const streetName     = location.loc?.street?.name   || '';

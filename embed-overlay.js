@@ -108,13 +108,14 @@ function openSpaceOnMap(location) {
   }, 500);
 }
 
-export function openOverlayTab(tab) {
+export function openOverlayTab(tab, { editId = null } = {}) {
   const existing = document.querySelector('.embed-overlay');
-  if (existing) {
+  if (existing && editId == null) {
     existing.querySelector(`.embed-tab[data-tab="${tab}"]`)?.click();
     return;
   }
-  showOverlay(tab);
+  if (existing) _closeEmbed();   // neu aufbauen, damit der Space frisch vorbelegt wird
+  showOverlay(tab, { editId });
 }
 
 // Der Klick auf "+" liegt in overlay-loader.js (lädt dieses Modul erst bei Bedarf); Escape gilt ab dem Laden.
@@ -176,7 +177,7 @@ const snippetDiv =
 
 // ─── Overlay ───────────────────────────────────────────────────────────────────
 
-function showOverlay(initialTab = 'addspace') {
+function showOverlay(initialTab = 'addspace', { editId = null } = {}) {
   if (document.querySelector('.embed-overlay')) return;
 
   const backdrop = document.createElement('div');
@@ -540,7 +541,7 @@ function showOverlay(initialTab = 'addspace') {
   const addTabLabel = overlay.querySelector('.embed-tab[data-tab="addspace"] .tab-label-full');
   const addTabIcon  = overlay.querySelector('.embed-tab[data-tab="addspace"] i');
 
-  function setEditMode(on) {
+  function setEditMode(on, { focus = true } = {}) {
     lookupDiv.hidden = !on;
     form.hidden      =  on;
     if (addTabLabel) {
@@ -553,7 +554,7 @@ function showOverlay(initialTab = 'addspace') {
       addTabIcon.classList.toggle('fa-pen-to-square', on);
     }
     if (!on) resetLookup();
-    if (on) requestAnimationFrame(() => lookupInput.focus());
+    if (on && focus) requestAnimationFrame(() => lookupInput.focus());
   }
 
   modeRadios.forEach(r => r.addEventListener('change', () => setEditMode(r.value === 'edit')));
@@ -717,5 +718,14 @@ function showOverlay(initialTab = 'addspace') {
     e.preventDefault();
     await handleSubmit(e.target, loadTime, overlay, selectedSpace, workshopsAvailable, originalSnapshot);
   });
+
+  // ── Direkt-Einstieg aus dem Popup-Stift: Bearbeiten-Modus, Space gewählt, Formular vorbelegt ──
+  const editLoc = editId != null ? window.locationById?.get(editId) : null;
+  if (editLoc) {
+    overlay.querySelector('input[name="addspace_mode"][value="edit"]').checked = true;
+    setEditMode(true, { focus: false });   // kein Fokus → keine Bildschirmtastatur auf Touch
+    selectSpace(editLoc);
+    prefillAndEdit();
+  }
 }
 

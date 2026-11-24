@@ -678,6 +678,34 @@ a#titleurl:hover h3.space-unknown .fas {
   gap: 8px;
 }
 
+.popup-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Stift „Eintrag bearbeiten“: rechtsbündig in der Weekly-Zeile, x-Achse des Lesezeichens */
+.popup-edit {
+  flex: none;
+  margin: 8px 0 0 auto;            /* gleiche Oberkante wie .popup-weekly → gleiche Grundlinie */
+  padding: 0;
+  width: 16px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+  color: var(--status-color, var(--space-hover));
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.popup-edit:hover { transform: scale(1.2); }
+@media (pointer: coarse) {
+  .popup-edit { position: relative; }
+  .popup-edit::after { content: ''; position: absolute; inset: -15px; }   /* Trefferfläche ≥ 44 px */
+}
+
 .popup-weekly {
   display: flex;
   align-items: center;
