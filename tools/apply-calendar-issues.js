@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 import { stampLocationsFile } from './lib/edit-stamp.js';
+import { closeOrDefer } from './lib/issue-close.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,10 +100,7 @@ function parseIssueFullInfo(issue) {
 // === Issue schliessen ===
 
 function closeIssue(number, comment = 'Angewendet auf loc-enrichment.json') {
-  execSync(
-    `gh issue close ${number} --comment "${comment}"`,
-    { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
-  );
+  closeOrDefer(number, comment);   // bei apply-all aufgeschoben bis nach Validierung + Push
 }
 
 // === Main ===
@@ -167,10 +165,7 @@ async function main() {
     console.log(`${nullIssues.length} Issues ohne Kalenderlink-URL gefunden`);
     for (const issue of nullIssues) {
       try {
-        execSync(
-          `gh issue close ${issue.number} --comment "Kein Kalenderlink gefunden — automatisch geschlossen"`,
-          { cwd: path.join(__dirname, '..'), stdio: 'pipe' }
-        );
+        closeOrDefer(issue.number, 'Kein Kalenderlink gefunden — automatisch geschlossen');
         console.log(`   #${issue.number} geschlossen: ${issue.title}`);
       } catch (err) {
         console.error(`   #${issue.number} Fehler: ${err.message}`);

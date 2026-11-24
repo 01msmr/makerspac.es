@@ -1,5 +1,5 @@
 # Zweck:  Übernimmt „ok“-gelabelte SpaceAPI-Issues automatisch: ab 10 Stück oder 1 h nach der letzten Änderung.
-# Wie:    Cron prüft alle 15 Min (tools/auto-apply-check.js) und startet apply-spaceapi-issues.yml (apply-ok).
+# Wie:    Cron prüft alle 15 Min (tools/auto-apply-check.js) und startet apply-all-issues.yml (alle Arten in einem Lauf: 1 Commit, 1 Deploy).
 # Hinweis: Cron-Läufe starten nur vom Default-Branch und können sich um einige Minuten verzögern.
 
 name: "⏱️ Auto-Apply SpaceAPI (ok-Issues)"

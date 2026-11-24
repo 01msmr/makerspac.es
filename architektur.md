@@ -119,7 +119,8 @@
 | `tests/validate-enrichment.js` | Schema-Prüfung von `loc-enrichment.json` (IDs, Workshop-Typen, URLs, weekly); `validateProposal` prüft einen Vorschlag isoliert (nur Fehler der eigenen ID) — von den Apply-Skripten **vor** dem Schreiben/Schließen genutzt; Teil von `npm run validate` | `validateEnrichment`, `validateAfterPatch`, `validateProposal`, `rejectionComment`, `isHttpUrl` |
 | `.github/actions/validate-data/` | Composite-Action: `npm run validate:ci` (Daten + Unit-Tests), Log nach `$RUNNER_TEMP`; von `validate.yml`, `update-makerspace-pr.yml`, `add-makerspace-pr.yml` genutzt | — |
 | `tools/lib/crawl-selection.js` | Gemeinsame Crawler-Logik: verschmolzener Ist-Stand (`enrichment-merge.js`) und **inhaltliche Entscheidung** `decideProposal` — ein Fund wird nur vorgeschlagen, wenn er vom integrierten Stand UND vom jüngsten früheren Vorschlag abweicht (jede Art von Änderung: dazu/weg/anders); offene ältere Vorschläge mit anderem Inhalt werden ersetzt. Genutzt von `workshop-crawler.js` und `calendar-crawler.js` | `loadMergedLocations`, `decideProposal`, `proposalFromIssue`, `loadSpaceIssues`, `closeSuperseded`, `normalizeUrl`, `sameWorkshops` |
-| `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-spaceapi-issues.yml` (`apply-ok`) ab 10 `ok`-Issues oder 1 h nach der letzten Änderung | `decide` (export) |
+| `tools/auto-apply-check.js` | **Node.js** Cron-Script (alle 15 Min, `auto-apply-spaceapi.yml`) — startet `apply-all-issues.yml` (alle Arten in einem Lauf) ab 10 `ok`-Issues (alle Arten zusammen) oder 1 h nach der letzten Änderung | `decide`, `decideAll` (export) |
+| `tools/lib/issue-close.js` · `tools/close-deferred.js` | **Node.js** — `closeOrDefer(nr, text)`: mit `DEFERRED_CLOSE_FILE` nur vormerken (JSON-Zeilen), sonst sofort `gh issue close`; `close-deferred.js` schließt die vorgemerkten Issues erst nach Validierung + Push (apply-all) | `closeOrDefer`, `parseDeferred` |
 | `admin/admin-lib.js` | Pure Logik der Review-Seite (Issue parsen, Body-JSON ersetzen, Vergleichszeilen) | `parseIssue`, `replaceEndpoint`, `buildComparison`, `distanceMeters`, `autoApplyDelay`, `parseWorkshopIssue`, `parseWorkshopList`, `replaceWorkshops`, `buildWorkshopComparison`, `detectFromText`, `parseCalendarIssue`, `replaceEvents`, `buildCalendarComparison`, `classifyItem`, `groupInbox`, `parseScanComment` |
 
 ### CSS
@@ -307,8 +308,16 @@ git push main
      ├── git commit + push
      └── gh workflow run deploy.yml  (GITHUB_TOKEN-Push triggert keinen Deploy)
 
+.github/workflows/apply-all-issues.yml  (Admin „Übernehmen“ / Cron / manuell; mode dry-run | apply)
+     ├── je Art ein Schritt (continue-on-error): apply-spaceapi (--apply --only-ok) · apply-workshop (--apply) · apply-calendar (--apply --only-ok) · apply-weekly (--apply --only-ok)
+     │   Skripte schließen NICHT selbst: DEFERRED_CLOSE_FILE → closeOrDefer merkt nur vor
+     ├── validate-data  →  EIN Commit  →  EIN gh workflow run deploy.yml
+     ├── tools/close-deferred.js  (nur nach erfolgreichem Commit/Push; Fehler → Issues bleiben offen)
+     └── Abschluss-Schritt schlägt fehl, wenn eine Art fehlgeschlagen ist (andere Arten wurden trotzdem übernommen)
+     Die vier apply-*-issues.yml bleiben für manuelle Läufe / Notfälle.
+
 .github/workflows/auto-apply-spaceapi.yml  (cron */15)
-     └── node tools/auto-apply-check.js  (je Art ≥10 ok-Issues oder 1 h Ruhe → apply-spaceapi / apply-calendar (apply-ok) bzw. apply-workshop (apply) starten)
+     └── node tools/auto-apply-check.js  (alle Arten zusammen ≥10 ok-Issues oder 1 h Ruhe → apply-all-issues.yml (apply) starten)
 
 .github/workflows/update-makerspace-pr.yml / add-makerspace-pr.yml  (Label update-space / add-space am Formular-Issue)
      ├── Daten ändern → validate-data (npm run validate:ci) → erst dann schreiben

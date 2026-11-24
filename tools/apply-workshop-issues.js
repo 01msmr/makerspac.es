@@ -14,6 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 import { validateProposal, rejectionComment } from '../tests/validate-enrichment.js';
 import { stampLocationsFile } from './lib/edit-stamp.js';
+import { closeOrDefer } from './lib/issue-close.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -76,10 +77,7 @@ export function parseIssue(issue) {
 }
 
 function closeIssue(number, comment = 'Angewendet auf loc-enrichment.json') {
-  execSync(
-    `gh issue close ${number} --comment "${comment}"`,
-    { cwd: root, stdio: 'pipe' }
-  );
+  closeOrDefer(number, comment);   // bei apply-all aufgeschoben bis nach Validierung + Push
 }
 
 // === Main ===

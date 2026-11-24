@@ -23,16 +23,20 @@ const $ = id => document.getElementById(id);
  * edit 'url' = ein URL-Feld (urlOf/replaceUrl), 'workshops' = Checkboxen. Workshops: mode "apply" = alle freigegebenen (Label ok).
  */
 const KINDS = {
-  spaceapi: { label: 'SpaceAPI', query: 'data-update', parse: parseIssue, workflow: 'apply-spaceapi-issues.yml', mode: 'apply-ok',
+  spaceapi: { label: 'SpaceAPI', query: 'data-update', parse: parseIssue,
     edit: 'url', urlOf: p => p.endpoint, replaceUrl: replaceEndpoint, viewLabel: 'Endpoint' },
-  workshops: { label: 'Workshops', query: 'workshop-data', parse: parseWorkshopIssue, workflow: 'apply-workshop-issues.yml', mode: 'apply', edit: 'workshops' },
-  calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue, workflow: 'apply-calendar-issues.yml', mode: 'apply-ok',
+  workshops: { label: 'Workshops', query: 'workshop-data', parse: parseWorkshopIssue, edit: 'workshops' },
+  calendar: { label: 'Kalender', query: 'data-update', parse: parseCalendarIssue,
     edit: 'url', urlOf: p => p.events, replaceUrl: replaceEvents, viewLabel: 'Kalender' },
   // Treffen: ein Textfeld „Di 19:00, 2015“ (Weekly + Gründung); kein Endpoint-Frame (kein urlOf)
-  weekly: { label: 'Weekly', query: 'weekly-data', parse: parseWeeklyIssue, workflow: 'apply-weekly-issues.yml', mode: 'apply-ok',
+  weekly: { label: 'Weekly', query: 'weekly-data', parse: parseWeeklyIssue,
     edit: 'url', textOf: weeklyText, replaceUrl: replaceWeekly },
 };
-for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0, timer: null });
+for (const [name, k] of Object.entries(KINDS)) Object.assign(k, { name, queue: [], idx: 0, okCount: 0, lastOkAt: 0 });
+const APPLY_WORKFLOW = 'apply-all-issues.yml'; // übernimmt ALLE Arten in einem Lauf (1 Commit, 1 Deploy)
+/** ok-Vorschläge über alle Arten (Übernehmen gilt für alle gemeinsam) */
+const okTotals = () => ({ count: Object.values(KINDS).reduce((n, k) => n + k.okCount, 0), last: Math.max(0, ...Object.values(KINDS).map(k => k.lastOkAt)) });
+let autoTimer = null;
 
 let token = '';
 try { token = localStorage.getItem('admin-pat') || ''; } catch { /* privater Modus */ }
@@ -77,7 +81,7 @@ const websiteOf = p => state.locations.get(p.spaceId)?.link?.url || p.website ||
 // ─── Login ───────────────────────────────────────────────────────────────
 function logout() {
   token = '';
-  for (const k of Object.values(KINDS)) clearTimeout(k.timer);
+  clearTimeout(autoTimer);
   try { localStorage.removeItem('admin-pat'); } catch { /* ignore */ }
   for (const id of ['review', 'done', 'inbox', 'apply', 'logout', 'logout2', 'logout3', 'tabs', 'refresh']) $(id).hidden = true;
   $('data-stand').textContent = '';
@@ -369,9 +373,10 @@ function updateBar() {
   const k = cur();
   $('counter').textContent = state.list ? '' : openCount(k) ? `${k.idx + 1} / ${k.queue.length} · offen: ${openCount(k)}` : '';
   const btn = $('apply');
-  btn.hidden = k.okCount === 0 || !!state.list;
-  btn.textContent = `Übernehmen (${k.okCount})`;
-  btn.title = `Wird automatisch gestartet bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
+  const total = okTotals().count;
+  btn.hidden = total === 0 || !!state.list;
+  btn.textContent = `Übernehmen (${total})`;
+  btn.title = `Übernimmt alle ok-Vorschläge aller Reiter in einem Lauf. Automatisch bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
 }
 
 /** Nächster Review-Reiter (nach dem aktuellen, reihum) mit noch offenen Vorschlägen */
@@ -565,10 +570,11 @@ $('open-tab').addEventListener('click', () => {
 
 // ─── Aktionen ────────────────────────────────────────────────────────────
 function scheduleAutoApply(k) {
-  clearTimeout(k.timer);
-  const delay = autoApplyDelay(k.okCount, k.lastOkAt, Date.now());
+  clearTimeout(autoTimer);
+  const { count, last } = okTotals();
+  const delay = autoApplyDelay(count, last, Date.now());
   if (delay === null) return;
-  k.timer = setTimeout(() => applyNow(k, true), Math.min(delay, 2 ** 31 - 1));
+  autoTimer = setTimeout(() => applyNow(k, true), Math.min(delay, 2 ** 31 - 1));
 }
 
 const addOk = n => gh(`/repos/${REPO}/issues/${n}/labels`, { method: 'POST', body: { labels: [OK_LABEL] } });
@@ -947,22 +953,22 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── Übernehmen ──────────────────────────────────────────────────────────
-/** Startet den Apply-Workflow einer Art. @returns {Promise<{ok:boolean, link?:HTMLAnchorElement}>} */
+/** Startet den gemeinsamen Apply-Workflow (alle Arten). @returns {Promise<{ok:boolean, link?:HTMLAnchorElement}>} */
 async function applyNow(k, auto = false) {
-  if (!k.okCount || state.busy) return { ok: false };
+  const n = okTotals().count;
+  if (!n || state.busy) return { ok: false };
   state.busy = true;
-  const n = k.okCount;
   try {
-    await gh(`/repos/${REPO}/actions/workflows/${k.workflow}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: k.mode, id: '0' } } });
-    k.okCount = 0;
-    state.undo = state.undo.filter(e => !(e.kind === k.name && (e.type === 'y' || e.type === 'a'))); // bereits übernommen → nicht mehr rückgängig
+    await gh(`/repos/${REPO}/actions/workflows/${APPLY_WORKFLOW}/dispatches`, { method: 'POST', body: { ref: 'main', inputs: { mode: 'apply' } } });
+    for (const x of Object.values(KINDS)) x.okCount = 0;
+    state.undo = state.undo.filter(e => !(e.type === 'y' || e.type === 'a')); // bereits übernommen → nicht mehr rückgängig
     state.busy = false;
     setTimeout(() => refreshData(), 45000); setTimeout(() => refreshData(), 120000); // Apply + Deploy brauchen ~1 min
-    toast(`${auto ? 'Automatisch: ' : ''}${k.label} — ${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
+    toast(`${auto ? 'Automatisch: ' : ''}${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
     const link = document.createElement('a');
-    link.href = `https://github.com/${REPO}/actions/workflows/${k.workflow}`;
+    link.href = `https://github.com/${REPO}/actions/workflows/${APPLY_WORKFLOW}`;
     link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Run ansehen';
-    $('status').replaceChildren(`${auto ? 'Automatisch: ' : ''}${k.label} — ${n} Vorschlag/Vorschläge übernommen, Workflow gestartet: `, link);
+    $('status').replaceChildren(`${auto ? 'Automatisch: ' : ''}${n} Vorschlag/Vorschläge übernommen, Workflow gestartet: `, link);
     updateBar();
     if (k === cur() && !k.queue[k.idx]) { $('review').hidden = true; $('done').hidden = false; $('done').replaceChildren($('status').cloneNode(true)); }
     return { ok: true };
