@@ -250,6 +250,7 @@ function show(restore = null) {
   const a = $('sp-id'); a.textContent = `#${id}`;
   if (isHttp(sp.website)) { a.href = sp.website; a.removeAttribute('aria-disabled'); } else a.removeAttribute('href');
   $('sp-name').textContent = sp.name;
+  $('sp-edit').href = `/?edit=${id}`;
   const l = sp.loc;
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);

@@ -14,6 +14,7 @@
 #sp-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
 #sp-id { color: var(--hover-text-color); text-decoration: underline dotted; text-underline-offset: 3px; }
 #sp-name { font-weight: 700; }
+.sp-edit { margin-left: .5rem; font-size: .85em; font-weight: 400; color: var(--hover-text-color); text-decoration: underline dotted; text-underline-offset: 3px; }
 #sp-meta { margin: 0 0 .5rem; color: var(--hover-text-color); }
 
 /* Quell-Icons: gefüllt = vorhanden · gestrichelt = nur vermutet (aus Vorschlag) */

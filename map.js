@@ -15,7 +15,7 @@ import { BookmarkSync, consent } from './datasync.js';
 import { dataStore } from './data-store.js';
 import { zoomManager } from './zoom-manager.js';
 import { initApp } from './main.js';
-import { initOverlayTrigger } from './overlay-loader.js';
+import { initOverlayTrigger, openEditFromUrl } from './overlay-loader.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { appContext } from './app-context.js';
 import { errorMonitor } from './error-monitor.js';
@@ -58,6 +58,7 @@ window.zoomManager = zoomManager;   // backward compat
 
 appContext.ready('services');
 initOverlayTrigger();
+appContext.waitFor('app').then(openEditFromUrl);   // /?edit=ID aus dem Admin (Stammdaten bearbeiten)
 
 // Loading-Skeleton (#loading-backdrop/#loading-stack): Markup + Dismissal liegen in index.html
 

@@ -20,9 +20,13 @@ Der Admin (ADR-006) prüft je Art (SpaceAPI, Workshops, Kalender, Treffen) ein I
 - **Hilfen:** Quell-Icons (Website, Kalender, W = Treffen-Quelle, Tür = SpaceAPI; nur vorhandene/vermutete Links, vermutete gestrichelt), ID-Link öffnet die gefundene Infoseite, leere „wichtige“ Eigenschaften sind hervorgehoben (Eigenschaft bei > 35 % der Spaces gefüllt). Tasten: `y` `n` `ä` `z` und `←` `→` (Bearbeiten-Auswahl durchschalten, ohne Umbruch); **nie** `e` `l` `w` `a` `s` `d` (Vivaldi-Direktkürzel) und keine Ziffern (Browser: Zoom/Tab-Wechsel).
 - Die Reiter SpaceAPI / Workshops / Kalender / Weekly bleiben dahinter unverändert bestehen. Beim Wechsel dorthin werden Warteschlangen und ok-Zähler abgeglichen.
 
+## Stammdaten (Name, Adresse, Link, Stil) — über das bestehende Bearbeiten-Overlay
+
+Keine neue Issue-Art: Der Link „Stammdaten“ in der Spaces-Karte öffnet `/?edit=ID` → das **Bearbeiten-Overlay** der Karte (derselbe Weg wie der Stift im Popup). Mit dem Admin-Token (nur FGT/PAT, Issues-Write; `localStorage['admin-pat']`, gleicher Ursprung) legt das Overlay das Korrektur-Issue **direkt per REST** an — ohne GitHub-Login/-Tab. Danach laufen die bestehenden Workflows (`validate-makerspace-issue` → `update-makerspace-pr`, Direkt-Commit). Ohne Token oder bei Fehler bleibt der Fallback (vorbefüllter GitHub-Tab).
+
 ## Später (nicht Teil dieser Entscheidung)
 
-Adresse/Name/Link/Stil bearbeiten (neue Art `space-edit` + Apply-Skript), Prüfer-Identität/Rollen (Kommentar „✓ @login“, Sperre „in Bearbeitung“), gemeinsame Sperrliste verworfener Vorschläge im Crawler.
+Prüfer-Identität/Rollen (Kommentar „✓ @login“, Sperre „in Bearbeitung“), gemeinsame Sperrliste verworfener Vorschläge im Crawler.
 
 ## Verworfen
 

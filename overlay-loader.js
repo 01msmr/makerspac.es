@@ -11,6 +11,19 @@ export async function openOverlayTab(tab, opts) {
   (await loadOverlay()).openOverlayTab(tab, opts);
 }
 
+/** `/?edit=ID` (Link aus dem Admin, Reiter „Spaces“): Overlay direkt im Bearbeiten-Modus für diesen Space; Parameter wird entfernt */
+export async function openEditFromUrl() {
+  const url = new URL(location.href);
+  const id = Number(url.searchParams.get('edit'));
+  if (!url.searchParams.has('edit')) return;
+  url.searchParams.delete('edit');
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
+  if (!Number.isInteger(id) || id <= 0) return;
+  // Die Karte lädt Link/Straße usw. erst im Hintergrund nach (spaces-all.json, in-place) — das Formular liest sie beim Öffnen
+  for (let i = 0; i < 40 && !window.locationById?.get(id)?.link; i++) await new Promise(r => setTimeout(r, 250));
+  openOverlayTab('addspace', { editId: id });
+}
+
 /** "+" im Logo: Overlay öffnen; Modul bei erster Absicht (pointerdown/hover) vorladen */
 export function initOverlayTrigger() {
   const btn = document.querySelector('.tool-add');
