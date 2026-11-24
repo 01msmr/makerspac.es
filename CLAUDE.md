@@ -183,7 +183,7 @@ error-monitor.js    → Dev-Tool, Fehler-Overlay
 add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
 sw.js               → Service Worker (Cache-First / SWR; Daten-JSON Netz zuerst; `/admin/` ausgenommen)
 admin/              → Review-Seite für SpaceAPI-Issues (index.html, admin.js, admin-lib.js, admin.css; ADR-006)
-                       + Space-Review: spaces.html/js/css/spaces-lib.js (ein Space = eine Karte, alle Eigenschaften; ADR-009)
+                       + Reiter „Spaces“ (Standard): spaces.js/css/spaces-lib.js, läuft in index.html (ein Space = eine Karte, alle Eigenschaften; ADR-009)
 generate-map-splits.js → Dev-Tool: erzeugt Karten-Splits (`npm run generate`)
 ```
 
