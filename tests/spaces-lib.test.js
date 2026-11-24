@@ -169,3 +169,11 @@ test('13: keine doppelten IDs in der Admin-Seite (Spaces-Ansicht teilt die Seite
   const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
   assert.deepEqual(dup, []);
 });
+
+test('14: Freitext liest die Zwischenablage bei Fokus/Verlassen, überschreibt aber keine eigenen Eingaben', () => {
+  const js = read('admin/spaces.js');
+  assert.match(js, /navigator\.clipboard\?\.readText/);
+  assert.match(js, /area\.addEventListener\('focus', readClipboard\)/);
+  assert.match(js, /area\.addEventListener\('blur'/);
+  assert.match(js, /area\.value !== autoText/);   // nur leeres bzw. zuletzt automatisch gefülltes Feld
+});

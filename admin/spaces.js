@@ -297,19 +297,36 @@ function buildFreeText(tr, sp) {
     target.textContent = url ? `Scan-Ziel: ${url}${v && !looksLikeUrl(v) ? ' — der eingefügte Text wird dafür nicht verwendet (er wird direkt ausgewertet)' : ''}` : 'Kein Scan-Ziel: keine Website bekannt — URL einfügen.';
     btn.disabled = !issue || !url || tr.dataset.off === 'true';
   };
-  const evaluate = () => {
+  const evaluate = (source = '') => {
     refreshTarget();
     const v = area.value;
     if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
-    if (looksLikeUrl(v)) { setIndicator(detected, 'info', 'URL erkannt — mit „Website auslesen (Server)“ serverseitig auslesen.'); return; }
+    if (looksLikeUrl(v)) { setIndicator(detected, 'info', `URL erkannt${source} — mit „Website auslesen (Server)“ serverseitig auslesen.`); return; }
     const found = detectFromText(v);
     checkTypes(tr, found);
-    setIndicator(detected, found.length ? 'ok' : 'none', found.length ? `✓ Text ausgewertet (${v.length} Zeichen) — ${found.length} erkannt und angehakt:` : `✓ Text ausgewertet (${v.length} Zeichen) — nichts erkannt`, found);
+    setIndicator(detected, found.length ? 'ok' : 'none', found.length ? `✓ Text${source} ausgewertet (${v.length} Zeichen) — ${found.length} erkannt und angehakt:` : `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt`, found);
   };
-  area.addEventListener('input', evaluate);
+  area.addEventListener('input', () => evaluate());
   // Einfügen: erst nach dem Einsetzen auswerten (der Wert steht beim paste-Ereignis noch nicht im Feld)
   area.addEventListener('paste', () => setTimeout(evaluate, 0));
   queueMicrotask(refreshTarget);
+
+  // Zwischenablage automatisch lesen: wenn das Feld den Fokus bekommt (auch beim Zurückkehren ins Fenster, wenn das Feld
+  // fokussiert war) und beim Verlassen des leeren Feldes. Nur in ein leeres (bzw. zuletzt automatisch gefülltes) Feld, nie über
+  // eigene Eingaben; derselbe Inhalt wird nicht erneut übernommen. Ohne Berechtigung/Unterstützung (Safari) bleibt es still.
+  let lastClip = '', autoText = '';
+  const readClipboard = async () => {
+    if (area.disabled || !navigator.clipboard?.readText) return;
+    if (area.value.trim() && area.value !== autoText) return;
+    try {
+      const t = (await navigator.clipboard.readText()).trim();
+      if (!t || t === lastClip || t.length > 20000 || (area.value.trim() && area.value !== autoText)) return;
+      lastClip = t; autoText = area.value = t;
+      evaluate(' aus Zwischenablage');
+    } catch { /* keine Berechtigung / Fenster ohne Fokus */ }
+  };
+  area.addEventListener('focus', readClipboard);
+  area.addEventListener('blur', () => { if (area.value.trim()) evaluate(); else readClipboard(); });
 
   btn.addEventListener('click', async () => {
     const url = scanUrl();
