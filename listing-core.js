@@ -451,6 +451,7 @@ class ListingCore {
     this.connectionWeight = weight;
     this.isDropdownHovering = true;
     this.currentHoverItem = item;
+    this._flushPopupGrace(this.findMarkerByLocation(location));   // altes Karenz-Popup (anderer Space) sofort schließen
 
     // NUR visuelle Effekte - CSS-Klassen werden woanders verwaltet!
     const hoverColor = AppConfig.getDynamicSpaceColor(location);
@@ -500,7 +501,7 @@ class ListingCore {
    * Entfernt Hover-Effekte
    * @param {MakerSpace} location
    */
-  removeHoverEffects(location) {
+  removeHoverEffects(location, { graceMs = 0 } = {}) {
     // NUR visuelle Effekte entfernen - CSS-Klassen werden woanders verwaltet!
     this.isDropdownHovering = false;
     this.currentHoverItem = null;
@@ -514,8 +515,12 @@ class ListingCore {
 
     const targetMarker = this.findMarkerByLocation(location);
     if (targetMarker) {
-      // Marker zurück ins Cluster geben
-      if (targetMarker._isTemporarilyUnclustered) {
+      // Hover-Intent: offenes, nicht-stickies Popup bleibt kurz stehen (Marker ggf. noch auf der Karte),
+      // damit die Maus es erreichen kann; Betreten macht es sticky (marker-manager: handlePopupEnter).
+      const keepOpen = graceMs > 0 && targetMarker.isPopupOpen() && !this.isStickyMarker(targetMarker);
+
+      // Marker zurück ins Cluster geben (entfernt auch das Popup → bei Karenz erst danach)
+      if (!keepOpen && targetMarker._isTemporarilyUnclustered) {
         appContext.map.removeLayer(targetMarker);
         targetMarker._isTemporarilyUnclustered = false;
       }
@@ -530,7 +535,9 @@ class ListingCore {
       }
 
       // Popup schließen (außer sticky)
-      if (!this.isStickyMarker(targetMarker)) {
+      if (keepOpen) {
+        this._schedulePopupGrace(targetMarker, graceMs);
+      } else if (!this.isStickyMarker(targetMarker)) {
         targetMarker.closePopup();
       }
 
@@ -538,6 +545,31 @@ class ListingCore {
       if (appContext.mapUtils?.updateMarkerIcon) {
         appContext.mapUtils.updateMarkerIcon(targetMarker, location);
       }
+    }
+  }
+
+  /** Schließt das Popup nach `ms`, außer Maus/Sticky haben es inzwischen übernommen. */
+  _schedulePopupGrace(marker, ms) {
+    this._flushPopupGrace();
+    this._popupGrace = { marker, timer: setTimeout(() => this._flushPopupGrace(), ms) };
+  }
+
+  /** Beendet eine laufende Karenz sofort (neuer Hover, Timer-Ablauf); `except` = dieser Marker bleibt unberührt. */
+  _flushPopupGrace(except = null) {
+    const grace = this._popupGrace;
+    if (!grace) return;
+    clearTimeout(grace.timer);
+    this._popupGrace = null;
+    const m = grace.marker;
+    if (m === except) return;
+    const st = appContext.markerStateManager?.getState(m.locationId) || {};
+    const popupEl = m.getPopup?.()?._container;
+    if (st.isHovering || st.isDropdownHovering || this.isStickyMarker(m) || popupEl?.matches(':hover')) return;
+    if (m._isTemporarilyUnclustered) {
+      appContext.map.removeLayer(m);   // schließt das Popup mit
+      m._isTemporarilyUnclustered = false;
+    } else {
+      m.closePopup();
     }
   }
 
@@ -950,7 +982,7 @@ class ListingCore {
 
         // Standard (Dropdown): Alles entfernen
         item.classList.remove('active');
-        this.removeHoverEffects(location);
+        this.removeHoverEffects(location, { graceMs: AppConfig.settings.popupGraceMs });
       });
 
       // Click (Desktop); Touch-Geräte (Phone + Tablet) werden über touchend abgehandelt.

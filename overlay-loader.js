@@ -6,9 +6,9 @@
 let overlayModule = null;
 const loadOverlay = () => (overlayModule ??= import('./embed-overlay.js'));
 
-/** Öffnet das Overlay auf dem gewünschten Tab ('addspace' | 'embed' | 'about') */
-export async function openOverlayTab(tab) {
-  (await loadOverlay()).openOverlayTab(tab);
+/** Öffnet das Overlay auf dem gewünschten Tab ('addspace' | 'embed' | 'about'); `editId`: Space direkt zum Bearbeiten wählen */
+export async function openOverlayTab(tab, opts) {
+  (await loadOverlay()).openOverlayTab(tab, opts);
 }
 
 /** "+" im Logo: Overlay öffnen; Modul bei erster Absicht (pointerdown/hover) vorladen */
