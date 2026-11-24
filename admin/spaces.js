@@ -133,15 +133,20 @@ $('refresh').addEventListener('click', () => refresh({ manual: true }));
 function buildModeBar() {
   const bar = $('mode');
   bar.querySelectorAll('label').forEach(l => l.remove());
-  [{ key: 'all', label: 'Alles' }, ...FIELDS].forEach((f, i) => {
+  [{ key: 'all', label: 'Alles' }, ...FIELDS].forEach(f => {
     const label = document.createElement('label');
     const input = Object.assign(document.createElement('input'), { type: 'radio', name: 'mode', value: f.key, checked: state.mode === f.key });
     input.addEventListener('change', () => setMode(f.key));
     label.append(input, ` ${f.label}`);
-    label.title = `Taste ${i}`;
+    label.title = 'Pfeiltasten ← →';
     bar.append(label);
   });
   bar.hidden = false;
+}
+/** ← / →: Alles → Workshops → Kalender → SpaceAPI → Treffen → Alles … */
+function cycleMode(step) {
+  const keys = ['all', ...FIELDS.map(f => f.key)];
+  setMode(keys[(keys.indexOf(state.mode) + step + keys.length) % keys.length]);
 }
 function setMode(mode) {
   state.mode = mode; store.set('spaces-mode', mode);
@@ -437,7 +442,7 @@ $('act-l').addEventListener('click', later);
 $('act-z').addEventListener('click', undo);
 $('apply').addEventListener('click', applyNow);
 
-// Tasten: y/n/ä/z + Ziffern (niemals e l w a s d — Vivaldi-Direktkürzel)
+// Tasten: y/n/ä/z + ←/→ (Bearbeiten-Auswahl durchwechseln). Niemals e l w a s d (Vivaldi-Direktkürzel) und keine Ziffern (Browser: Zoom/Tab-Wechsel)
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || !token) return;
   if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -446,7 +451,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'n') decide('reject');
   else if (k === 'ä') later();
   else if (k === 'z') undo();
-  else if (/^[0-4]$/.test(k)) setMode(k === '0' ? 'all' : FIELDS[Number(k) - 1].key);
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') cycleMode(e.key === 'ArrowRight' ? 1 : -1);
   else return;
   e.preventDefault();
 });

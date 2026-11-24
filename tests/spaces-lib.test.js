@@ -145,12 +145,13 @@ test('10: undoStep kehrt jede Aktion um', () => {
 import { readFileSync } from 'node:fs';
 const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 
-test('11: Tasten — nie e l w a s d (Vivaldi-Direktkürzel); y n ä z und Ziffern', () => {
+test('11: Tasten — nie e l w a s d (Vivaldi), keine Ziffern; y n ä z und ← →', () => {
   const js = read('admin/spaces.js');
   const keys = [...js.matchAll(/k === '(.)'/g)].map(m => m[1]).filter(k => /[a-zäöü]/.test(k));
   assert.deepEqual(keys.sort(), ['n', 'y', 'z', 'ä']);
   assert.ok(!keys.some(k => 'elwasd'.includes(k)));
-  assert.match(js, /\/\^\[0-4\]\$\//);
+  assert.ok(!/\/\^\[0-\d\]\$\//.test(js), 'keine Ziffern-Tasten (Zoom/Tab-Wechsel im Browser)');
+  assert.match(js, /ArrowRight/); assert.match(js, /ArrowLeft/);
 });
 
 test('12: Seite verlinkt extern nur mit rel=noopener; beide Admin-Seiten sind verlinkt', () => {
