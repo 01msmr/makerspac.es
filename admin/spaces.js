@@ -143,10 +143,11 @@ function buildModeBar() {
   });
   bar.hidden = false;
 }
-/** ← / →: Alles → Workshops → Kalender → SpaceAPI → Treffen → Alles … */
-function cycleMode(step) {
+/** ← / →: Alles ⇄ Workshops ⇄ Kalender ⇄ SpaceAPI ⇄ Treffen — ohne Umbruch (an den Enden passiert nichts) */
+function stepMode(step) {
   const keys = ['all', ...FIELDS.map(f => f.key)];
-  setMode(keys[(keys.indexOf(state.mode) + step + keys.length) % keys.length]);
+  const next = keys.indexOf(state.mode) + step;
+  if (next >= 0 && next < keys.length) setMode(keys[next]);
 }
 function setMode(mode) {
   state.mode = mode; store.set('spaces-mode', mode);
@@ -451,7 +452,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'n') decide('reject');
   else if (k === 'ä') later();
   else if (k === 'z') undo();
-  else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') cycleMode(e.key === 'ArrowRight' ? 1 : -1);
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') stepMode(e.key === 'ArrowRight' ? 1 : -1);
   else return;
   e.preventDefault();
 });
