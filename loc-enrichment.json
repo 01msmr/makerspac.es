@@ -453,16 +453,36 @@
     }
   },
   "79": {
-    "events": "https://olaf.one/events/"
+    "events": "https://olaf.one/events/",
+    "workshops": [
+      "3d",
+      "electronics",
+      "coding"
+    ]
   },
   "80": {
-    "events": "https://www.makerspace-bs.de/programm"
+    "events": "https://www.makerspace-bs.de/programm",
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "wood",
+      "metal"
+    ]
   },
   "81": {
     "events": "https://stratum0.org/wiki/Kalender",
     "spaceapi": {
       "endpoint": "https://status.stratum0.org/status.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "cnc",
+      "laser",
+      "metal",
+      "textile",
+      "wood"
+    ]
   },
   "82": {
     "events": "https://macherburg.de/workshops/"
@@ -471,10 +491,35 @@
     "events": "https://www.netz39.de/events",
     "spaceapi": {
       "endpoint": "https://spaceapi.n39.eu/json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics",
+      "coding",
+      "wood",
+      "textile",
+      "screenprint"
+    ]
+  },
+  "84": {
+    "workshops": [
+      "3d",
+      "electronics",
+      "vr"
+    ]
   },
   "85": {
-    "events": "https://www.werkundkultur.de/tag/veranstaltungen/"
+    "events": "https://www.werkundkultur.de/tag/veranstaltungen/",
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics",
+      "music",
+      "wood",
+      "metal",
+      "screenprint"
+    ]
   },
   "86": {
     "events": "https://chaosdorf.de/termine/",
