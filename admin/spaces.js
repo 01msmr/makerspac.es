@@ -104,7 +104,7 @@ function buildModeBar() {
   });
   bar.hidden = false;
 }
-/** ← / →: Alles ⇄ Workshops ⇄ Kalender ⇄ SpaceAPI ⇄ Treffen — ohne Umbruch (an den Enden passiert nichts) */
+/** ← / →: Alles ⇄ Workshops ⇄ Kalender ⇄ SpaceAPI ⇄ Wöchentliches Treffen ⇄ Gründung — ohne Umbruch (an den Enden passiert nichts) */
 function stepMode(step) {
   const keys = ['all', ...FIELDS.map(f => f.key)];
   const next = keys.indexOf(state.mode) + step;
@@ -148,7 +148,7 @@ function renderSources(sp) {
   add(svgGlobe(), sp.loc.link?.url, 'Website', false);
   const cal = document.createElement('i'); cal.className = 'fas fa-calendar-day';
   add(cal, sp.current.calendar || sp.proposals.calendar?.events, 'Kalender', !sp.current.calendar);
-  add('W', sp.proposals.weekly?.website, 'Treffen (Quelle)', true);
+  add('W', sp.proposals.weekly?.website, 'Wöchentliches Treffen (Quelle)', true);
   const door = document.createElement('i'); door.className = 'fas fa-door-open';
   add(door, sp.current.spaceapi || sp.proposals.spaceapi?.endpoint, 'SpaceAPI', !sp.current.spaceapi);
 }
@@ -174,10 +174,10 @@ function renderEvidence(sp) {
     box.append(evBox('Workshops – Fundstellen', ...kids));
   }
   if (weekly?.evidence?.length) {
-    box.append(evBox('Treffen – Fundstellen', ...weekly.evidence.map(e => el('blockquote', { textContent: `${e.what === 'Gründung' ? 'Vereinsgründung' : e.what} ${e.value} (${e.confidence}): „${e.source}“` }))));
+    box.append(evBox('Wöchentliches Treffen – Fundstellen', ...weekly.evidence.map(e => el('blockquote', { textContent: `${e.what === 'Gründung' ? 'Vereinsgründung' : e.what} ${e.value} (${e.confidence}): „${e.source}“` }))));
   }
   if (calendar?.confidence) box.append(evBox('Kalender', el('p', { textContent: `Confidence: ${calendar.confidence}` })));
-  for (const [label, p] of [['Workshops', w], ['Kalender', calendar], ['SpaceAPI', spaceapi], ['Treffen', weekly]]) {
+  for (const [label, p] of [['Workshops', w], ['Kalender', calendar], ['SpaceAPI', spaceapi], ['Wöchentliches Treffen', weekly ?? sp.proposals.init]]) {
     if (!p?.problem) continue;
     const reason = el('span', { textContent: 'Grund wird geladen …' });
     box.append(el('div', { className: 'ev-problem' }, el('strong', { textContent: `⚠ ${label}: zuvor nicht übernommen` }), el('br'), reason));
@@ -205,12 +205,12 @@ function renderEvidence(sp) {
 }
 
 
-// „kein weekly“ (Treffen entfernen) steht zuerst; „–“ = keine Info (nichts ändern) bleibt die Vorauswahl
+// „kein weekly“ (wöchentliches Treffen entfernen) steht zuerst; „–“ = keine Info (nichts ändern) bleibt die Vorauswahl
 const WEEKDAYS = [['none', 'kein weekly'], ['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag']];
 const dayName = d => WEEKDAYS.find(([v]) => v === d)?.[1] ?? '–';
 function currentText(key, v) {
   if (key === 'workshops') return v.length ? v.join(', ') : '';
-  if (key === 'weekly') return [v.day !== '' && v.time ? `${dayName(v.day)} ${v.time}` : '', v.init ? `Verein gegr. ${v.init}` : ''].filter(Boolean).join(' · ');
+  if (key === 'weekly') return v.day !== '' && v.time ? `${dayName(v.day)} ${v.time}` : '';
   return v;
 }
 
@@ -235,11 +235,12 @@ function buildInputs(key, value) {
     for (let m = 0; m < 24 * 60; m += TIME_STEP_MINUTES) time.append(new Option(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`));
     if (value.time && ![...time.options].some(o => o.value === value.time)) time.append(new Option(`${value.time} (außerhalb des Rasters)`, value.time));   // vorhandener Wert bleibt sichtbar; „übernehmen“ verlangt eine Korrektur
     time.value = value.time;
-    const init = Object.assign(document.createElement('input'), { type: 'date', value: value.init, min: '1900-01-01', max: new Date().toISOString().slice(0, 10) }); init.dataset.f = 'init'; init.ariaLabel = 'Gegründet';
-    const lbl = document.createElement('small'); lbl.textContent = 'gegründet';
     const line1 = document.createElement('div'); line1.className = 'line'; line1.append(sel, time);
-    const line2 = document.createElement('div'); line2.className = 'line'; line2.append(lbl, init);   // „Gegründet“ beginnt in einer neuen Zeile
-    wrap.append(line1, line2);
+    wrap.append(line1);
+  } else if (key === 'init') {
+    wrap.className = 'weekly-in';
+    const init = Object.assign(document.createElement('input'), { type: 'date', value, min: '1900-01-01', max: new Date().toISOString().slice(0, 10) }); init.dataset.f = 'init'; init.ariaLabel = 'Vereinsgründung';
+    wrap.append(init);
   } else {
     const input = Object.assign(document.createElement('input'), { type: 'text', value });
     input.inputMode = 'url'; input.autocomplete = 'off'; input.spellcheck = false;
@@ -258,22 +259,26 @@ function syncWeeklyTime(tr) {
 function readValue(tr) {
   const key = tr.dataset.key;
   if (key === 'workshops') return [...tr.querySelectorAll('.ws-checks input')].filter(b => b.checked).map(b => b.value);
-  if (key === 'weekly') return { day: tr.querySelector('[data-f="day"]').value, time: tr.querySelector('[data-f="time"]').value, init: tr.querySelector('[data-f="init"]').value };
+  if (key === 'weekly') return { day: tr.querySelector('[data-f="day"]').value, time: tr.querySelector('[data-f="time"]').value };
+  if (key === 'init') return tr.querySelector('[data-f="init"]').value;
   return tr.querySelector('input[type="text"]').value.trim();
 }
 function writeValue(tr, v) {
   const key = tr.dataset.key;
   if (key === 'workshops') tr.querySelectorAll('.ws-checks input').forEach(b => { b.checked = v.includes(b.value); });
-  else if (key === 'weekly') { tr.querySelector('[data-f="day"]').value = v.day; tr.querySelector('[data-f="time"]').value = v.time; tr.querySelector('[data-f="init"]').value = v.init; }
+  else if (key === 'weekly') { tr.querySelector('[data-f="day"]').value = v.day; tr.querySelector('[data-f="time"]').value = v.time; }
+  else if (key === 'init') tr.querySelector('[data-f="init"]').value = v;
   else tr.querySelector('input[type="text"]').value = v;
 }
 
-/** Eindeutige Optik: genau die Eingaben, die vom aktuellen Stand abweichen, bekommen einen grünen Rahmen (Treffen: Tag/Uhrzeit/Gründung einzeln) */
+/** Eindeutige Optik: genau die Eingaben, die vom aktuellen Stand abweichen, bekommen einen grünen Rahmen (Wochentag/Uhrzeit einzeln) */
 function markChanged(tr, sp) {
   const key = tr.dataset.key, cur = sp.current[key], v = readValue(tr);
   const mark = (el, diff) => el?.classList.toggle('chg', diff);
   if (key === 'weekly') {
-    for (const f of ['day', 'time', 'init']) mark(tr.querySelector(`[data-f="${f}"]`), v[f] !== cur[f]);
+    for (const f of ['day', 'time']) mark(tr.querySelector(`[data-f="${f}"]`), v[f] !== cur[f]);
+  } else if (key === 'init') {
+    mark(tr.querySelector('[data-f="init"]'), v !== cur);
   } else if (key === 'workshops') {
     tr.querySelectorAll('.ws-checks label').forEach(l => mark(l, l.querySelector('input').checked !== cur.includes(l.querySelector('input').value)));
   } else {
@@ -286,9 +291,9 @@ function updateRow(tr, sp) {
   const key = tr.dataset.key, hasProposal = tr.dataset.proposal === '1';
   if (key === 'weekly') syncWeeklyTime(tr);
   const value = readValue(tr), cb = tr.querySelector('.inc input'), label = tr.querySelector('.inc label'), txt = label.querySelector('span');
-  const base = hasProposal ? displayValue(key, sp.proposals[key], sp.current[key]) : sp.current[key];
+  const base = hasProposal ? displayValue(key, sp.proposals[key]) : sp.current[key];
   const changed = !sameValue(key, value, base);
-  tr.classList.toggle('differs', changed || (hasProposal && !sameValue(key, displayValue(key, sp.proposals[key], sp.current[key]), sp.current[key])));
+  tr.classList.toggle('differs', changed || (hasProposal && !sameValue(key, displayValue(key, sp.proposals[key]), sp.current[key])));
   markChanged(tr, sp);
   if (hasProposal) {
     const removing = key === 'weekly' && value.day === 'none';
@@ -317,7 +322,7 @@ function buildRow(f, sp, restore) {
   const ct = currentText(f.key, sp.current[f.key]);
   if (ct) cur.textContent = ct; else cur.append(Object.assign(document.createElement('span'), { className: 'none', textContent: '–' }));
   const inp = document.createElement('td'); inp.className = 'inp';
-  const initial = restore?.[f.key]?.value ?? (p ? displayValue(f.key, p, sp.current[f.key]) : sp.current[f.key]);
+  const initial = restore?.[f.key]?.value ?? (p ? displayValue(f.key, p) : sp.current[f.key]);
   inp.append(buildInputs(f.key, initial));
   if (p) {
     const hint = document.createElement('small'); hint.className = 'row-hint';
@@ -404,7 +409,7 @@ function initPane() {
 }
 
 // ─── Freitext (alle Eigenschaften) ───────────────────────────────────────
-// Text/URLs einfügen → beim Verlassen des Feldes ausgewertet: Workshops angehakt, Treffen (30-min-Raster) + Gründung gesetzt, Kalender-/SpaceAPI-URL
+// Text/URLs einfügen → beim Verlassen des Feldes ausgewertet: Workshops angehakt, Wöchentliches Treffen (30-min-Raster) + Gründung gesetzt, Kalender-/SpaceAPI-URL
 // erkannt (spaces-lib analyzeFreeText). Eine einzelne Website-URL löst per Server-Scan die Workshop-Erkennung aus (braucht ein
 // Workshop-Issue zum Kommentieren). Die Zwischenablage wird nur über den Knopf „Einfügen“ gelesen.
 const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
@@ -434,11 +439,14 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
   const done = [];
   if (a.workshops.length && checkTypes(a.workshops)) done.push(`Workshops: ${a.workshops.join(', ')}`);
   const wk = rowEl('weekly');
-  if (rowOn(wk)) {
-    const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]'), init = wk.querySelector('[data-f="init"]');
-    if (a.weekly && !(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); }
-    if (a.init && !(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Vereinsgründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); }
-    if (done.some(d => d.startsWith('Treffen') || d.startsWith('Vereinsgründung'))) touch(wk);
+  if (rowOn(wk) && a.weekly) {
+    const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
+    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Wöchentliches Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(wk); }
+  }
+  const ini = rowEl('init');
+  if (rowOn(ini) && a.init) {
+    const init = ini.querySelector('[data-f="init"]');
+    if (!(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Vereinsgründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(ini); }
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
@@ -452,7 +460,7 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
 
 function buildFreeText(sp) {
   const wrap = document.createElement('div'); wrap.className = 'ws-free';
-  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, Treffen, Vereinsgründung, Kalender, SpaceAPI';
+  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, wöchentliches Treffen, Vereinsgründung, Kalender, SpaceAPI';
   const area = document.createElement('textarea');
   area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
   const paste = document.createElement('button'); paste.type = 'button'; paste.textContent = 'Einfügen'; paste.className = 'paste-btn';
@@ -584,7 +592,7 @@ async function decide(kind) {
   state.undo.push({ spaceId: sp.id, form: snap, records: done, name: sp.name });
   if (state.undo.length > 12) state.undo.shift();
   const g = state.groups.get(sp.id);
-  for (const a of done) if (g && a.number) delete g.proposals[a.key];
+  for (const a of done) if (g && a.number) { delete g.proposals[a.key]; if (a.key === 'weekly') delete g.proposals.init; }   // Weekly + Gründung teilen ein Issue
   ctx.bumpOk(done.filter(a => a.type !== 'reject').length);
   const count = t => done.filter(a => a.type === t).length;
   const next = state.queue[state.queue.indexOf(sp.id) + 1];
