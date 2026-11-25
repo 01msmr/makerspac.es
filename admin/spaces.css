@@ -16,7 +16,7 @@
 #sp-frame { flex: 1; width: 100%; border: 0; background: var(--bg-color); }
 #sp-layout.dragging #sp-frame { pointer-events: none; }
 #sp-pane-hint { margin: 0; padding: .3rem .6rem; font-size: .8em; color: var(--hover-text-color); border-top: 1px solid var(--dropdown-border); }
-@media (pointer: coarse), (max-width: 1099px) { #sp-split, #sp-pane { display: none; } }
+@media (pointer: coarse), (max-width: 1099px) { #sp-split, #sp-pane { display: none; } #sp-main { min-width: 0; } }   /* ohne Seitenfenster darf die Karte schmal sein (Phone/Tablet) */
 .sp-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: .75rem 0 .25rem; }
 /* Entscheiden-Buttons: Vollfarbe, weiße fette Schrift (Farbe leicht abgedunkelt → Kontrast auch bei Orange und im Dark Mode) */
 .sp-actions button { color: #fff; font-weight: 700; border-color: transparent; font-size: 1.2rem; padding: .65rem 1.4rem; border-radius: 8px; }
@@ -25,9 +25,21 @@
 .sp-actions button[data-tone="warn"] { background: var(--space-unknown); }
 .sp-actions button[data-tone="neutral"] { background: var(--hover-text-color); }
 .sp-actions button:hover:not(:disabled) { filter: brightness(1.12); }
-.sp-actions button kbd { font-size: 1.05rem; padding: .1rem .5rem; color: #fff; background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .55); }
+.sp-actions button kbd { font-size: 1.05rem; padding: .1rem .5rem; }
+.sp-actions button kbd { background: #fff; border-color: #fff; font-weight: 700; }   /* Tasten-Kürzel invertiert: Farbe des Knopfes auf weißem Grund */
+.sp-actions button[data-tone="ok"] kbd { color: var(--space-open); }
+.sp-actions button[data-tone="warn"] kbd { color: var(--space-unknown); }
+.sp-actions button[data-tone="no"] kbd { color: var(--space-closed); }
+.sp-actions button[data-tone="neutral"] kbd { color: var(--hover-text-color); }
 #sp-done { margin: .75rem 0; padding: 1rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
-#sp-mode { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .6rem; margin: 0; padding: .1rem .6rem .25rem; border: 1px solid var(--dropdown-border); border-radius: 8px; }
+#sp-mode { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .6rem; margin: 0; padding: .1rem .6rem .25rem; border: 1px solid var(--dropdown-border); border-radius: 8px; }
+#sp-modebar { margin: .5rem .75rem 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; }
+#sp-meta-slot { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; }
+@media (max-width: 767px) {
+  #sp-modebar { flex-direction: column; align-items: stretch; }   /* Phone: Bearbeiten-Auswahl, darunter Zähler/Prüfer/Stand */
+  #sp-meta-slot { margin-left: 0; }
+  #sp-meta-slot #counter { display: inline; }   /* „1 / 104“ bleibt; Datenstand steht (wie bisher auf Phone) im Tooltip von ↻ */
+}
 #sp-mode legend { padding: 0 .3rem; font-size: .8em; color: var(--hover-text-color); }
 #sp-mode label { display: inline-flex; align-items: center; gap: .25rem; cursor: pointer; white-space: nowrap; }
 #sp-mode input { margin: 0; accent-color: var(--focus-color); }
