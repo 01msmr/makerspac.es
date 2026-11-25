@@ -5,7 +5,7 @@
 #sp-layout { display: flex; align-items: flex-start; }
 #sp-main { flex: 1 1 0; min-width: 40rem; }
 #sp-split { flex: 0 0 18px; align-self: stretch; position: relative; cursor: col-resize; touch-action: none; margin: 0 .25rem; }
-#sp-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; border-radius: 2px; background: color-mix(in srgb, var(--text-color) 45%, var(--dropdown-bg)); }   /* Trennlinie: breiter + dunkler */
+#sp-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; border-radius: 2px; background: color-mix(in srgb, var(--text-color) 18%, var(--dropdown-bg)); }   /* Trennlinie: breiter + dunkler */
 #sp-split .grip { position: sticky; top: 45vh; display: block; width: 14px; height: 64px; margin: 0 auto; border-radius: 7px; background: var(--dropdown-bg); border: 2px solid color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); box-shadow: 0 1px 3px rgb(0 0 0 / .25); position: sticky; z-index: 1; }   /* Griff: breiter */
 #sp-split .grip::after { content: ''; position: absolute; inset: 14px 3px; border-left: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); border-right: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); }
 #sp-split:hover::before, #sp-split:focus-visible::before, #sp-layout.dragging #sp-split::before { background: color-mix(in srgb, var(--text-color) 80%, var(--dropdown-bg)); }   /* Hover/Ziehen: dunkelgrau statt blau */
