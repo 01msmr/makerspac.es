@@ -11,7 +11,7 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 /* ── Kopfzeile + Reiter ───────────────────────────────────────────── */
 #bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; padding: .5rem 1rem; border-bottom: 1px solid var(--dropdown-border); background: var(--dropdown-bg); }
 .grow { flex: 1; }
-#counter { color: var(--hover-text-color); }
+#counter { color: var(--hover-text-color); font-weight: 700; }
 #me { padding: .1rem .55rem; border: 1px solid var(--dropdown-border); border-radius: 999px; font-size: .85em; color: var(--hover-text-color); white-space: nowrap; }
 #tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
 #tabs button { border-radius: 999px; }
@@ -20,6 +20,7 @@ body { display: flex; flex-direction: column; font-size: 15px; background: var(-
 .badge.warn { background: var(--space-closed); }
 .badge.dot { width: .6em; height: .6em; padding: 0; margin-left: .35em; vertical-align: .05em; }
 #tabs button[data-empty="true"], #tab-problems[data-empty="true"] { opacity: .6; }
+#tab-spaces[aria-pressed="true"] { display: none; }   /* im Spaces-Reiter überflüssig; nur als Rückweg aus Listen/Probleme sichtbar */
 #tabs button[aria-pressed="true"] { border-color: var(--focus-color); font-weight: 700; box-shadow: inset 0 0 0 1px var(--focus-color); }
 
 button, input { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .75rem; }
@@ -66,7 +67,11 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #actions button[data-tone="warn"] { background: var(--space-unknown); }
 #actions button[data-tone="neutral"] { background: var(--hover-text-color); }
 #actions button:hover:not(:disabled) { filter: brightness(1.12); }
-#actions button kbd { color: #fff; background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .55); }
+#actions button kbd { background: #fff; border-color: #fff; font-weight: 700; }   /* Tasten-Kürzel invertiert: Farbe des Knopfes auf weißem Grund */
+#actions button[data-tone="ok"] kbd { color: var(--space-open); }
+#actions button[data-tone="warn"] kbd { color: var(--space-unknown); }
+#actions button[data-tone="no"] kbd { color: var(--space-closed); }
+#actions button[data-tone="neutral"] kbd { color: var(--hover-text-color); }
 #keys { margin: .25rem 0 .75rem; color: var(--hover-text-color); font-size: .9em; }
 
 /* ── Bearbeiten-Formular ──────────────────────────────────────────── */

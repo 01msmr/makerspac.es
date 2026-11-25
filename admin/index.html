@@ -90,11 +90,14 @@
 
 
   <section id="spaces-view" hidden>
+    <div id="sp-modebar">
+      <fieldset id="sp-mode" title="Bearbeitung auf eine Eigenschaft begrenzen (Pfeiltasten ← →)">
+        <legend>Bearbeiten</legend>
+      </fieldset>
+      <div id="sp-meta-slot"></div>   <!-- Zähler, Prüfer, Datenstand, ↻ wandern im Spaces-Reiter hierher (admin.js placeMeta) -->
+    </div>
     <div id="sp-layout">
       <div id="sp-main">
-        <fieldset id="sp-mode" title="Bearbeitung auf eine Eigenschaft begrenzen (Pfeiltasten ← →)">
-          <legend>Bearbeiten</legend>
-        </fieldset>
         <main id="sp-card" hidden>
           <h2 id="sp-title"><a id="sp-link" target="_blank" rel="noopener noreferrer" title="Webseite des Space im Seitenfenster öffnen"></a> <a id="sp-edit" class="sp-edit" target="_blank" rel="noopener noreferrer" title="Name, Adresse, Website, Zielgruppe im Bearbeiten-Overlay der Karte ändern"><i class="fas fa-pen-to-square"></i> Eintrag bearbeiten</a></h2>
           <p id="sp-meta"></p>

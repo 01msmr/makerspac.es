@@ -396,6 +396,7 @@ function updateBar() {
     b.setAttribute('aria-pressed', String(!state.list && name === state.tab));
     scheduleAutoApply(k);
   }
+  placeMeta(state.list === 'spaces');
   const bs = $('tab-spaces');
   setTab(bs, 'Spaces', spacesOpenCount(), 0, state.list === 'spaces');
   bs.setAttribute('aria-pressed', String(state.list === 'spaces'));
@@ -420,6 +421,16 @@ function updateBar() {
   btn.hidden = !canApply() || total === 0 || (!!state.list && state.list !== 'spaces');
   btn.textContent = `Übernehmen (${total})`;
   btn.title = `Übernimmt alle ok-Vorschläge aller Reiter in einem Lauf. Automatisch bei ${AUTO_APPLY_COUNT} Vorschlägen oder 1 h ohne neuen ok-Vorschlag`;
+}
+
+/** Zähler, Prüfer, Datenstand und ↻ stehen im Spaces-Reiter rechts in der zweiten Zeile (hinter „Bearbeiten“), sonst in der Kopfzeile */
+function placeMeta(inSpaces) {
+  const slot = $('sp-meta-slot'), bar = $('bar');
+  for (const id of ['counter', 'me', 'data-stand', 'refresh']) {
+    const e = $(id);
+    if (inSpaces && e.parentElement !== slot) slot.append(e);
+    else if (!inSpaces && e.parentElement !== bar) bar.insertBefore(e, bar.querySelector('.grow'));
+  }
 }
 
 /** Nächster Review-Reiter (nach dem aktuellen, reihum) mit noch offenen Vorschlägen */
