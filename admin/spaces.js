@@ -158,7 +158,7 @@ const WEEKDAYS = [['none', 'kein weekly'], ['', '–'], ['1', 'Montag'], ['2', '
 const dayName = d => WEEKDAYS.find(([v]) => v === d)?.[1] ?? '–';
 function currentText(key, v) {
   if (key === 'workshops') return v.length ? v.join(', ') : '';
-  if (key === 'weekly') return [v.day !== '' && v.time ? `${dayName(v.day)} ${v.time}` : '', v.init ? `gegr. ${v.init}` : ''].filter(Boolean).join(' · ');
+  if (key === 'weekly') return [v.day !== '' && v.time ? `${dayName(v.day)} ${v.time}` : '', v.init ? `Verein gegr. ${v.init}` : ''].filter(Boolean).join(' · ');
   return v;
 }
 
@@ -384,8 +384,8 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
   if (rowOn(wk)) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]'), init = wk.querySelector('[data-f="init"]');
     if (a.weekly && !(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); }
-    if (a.init && !(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Gründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); }
-    if (done.some(d => d.startsWith('Treffen') || d.startsWith('Gründung'))) touch(wk);
+    if (a.init && !(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Vereinsgründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); }
+    if (done.some(d => d.startsWith('Treffen') || d.startsWith('Vereinsgründung'))) touch(wk);
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
@@ -399,7 +399,7 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
 
 function buildFreeText(sp) {
   const wrap = document.createElement('div'); wrap.className = 'ws-free';
-  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, Treffen, Gründung, Kalender, SpaceAPI';
+  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, Treffen, Vereinsgründung, Kalender, SpaceAPI';
   const area = document.createElement('textarea');
   area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
   const paste = document.createElement('button'); paste.type = 'button'; paste.textContent = 'Einfügen'; paste.className = 'paste-btn';

@@ -85,14 +85,20 @@ const FOUND_BEFORE_RE = /(?:(\d{1,2})\.(\d{1,2})\.|(?:\b(?:im|in|am)\s+)?([A-Za-
 const SINCE_RE = /\b(seit|since)\s+(?:(\w{3,9})\s+)?((?:19|20)\d{2})\b/i;
 
 /**
- * Gründungsdatum als YYYYMMDD (nur Jahr → YYYY0101, Monat+Jahr → YYYYMM01).
+ * Satz beschreibt ein erstes Treffen / einen ersten offenen Tag / einen Umzug – das Datum ist dann KEINE Vereinsgründung.
+ * „Eröffnung“ zählt bewusst nicht dazu (kann die Gründungsbezeichnung sein).
+ */
+const NOT_FOUNDING_RE = /\b(erste[rnms]?|first)\b[^.\n]{0,40}\b(treffen|meeting|makertag|maker-?tag|offene[rnms]?\s+(?:tag|abend|werkstatt|treff)|open\s+(?:day|night|house|lab)|abend|stammtisch|termin|workshop|veranstaltung|event)\b|\b(umzug|umgezogen|moved|relocat\w*|neue[rnms]?\s+räume)\b/i;
+
+/**
+ * Vereins-/Community-Gründungsdatum (NICHT erstes Treffen, erster offener Tag, Umzug) als YYYYMMDD (nur Jahr → YYYY0101, Monat+Jahr → YYYYMM01).
  * high nur bei „gegründet/Gründung/founded/established“; „seit/since“ ist nur medium.
  * @returns {{date:number,confidence:'high'|'medium',source:string}|null}
  */
 export function extractInit(text, thisYear = new Date().getFullYear()) {
   for (const raw of text.split('\n')) {
     const s = raw.trim();
-    if (!s || s.length > 300) continue;
+    if (!s || s.length > 300 || NOT_FOUNDING_RE.test(s)) continue;
     const b = s.match(FOUND_BEFORE_RE);
     if (b) {
       const year = parseInt(b[4], 10);
@@ -113,7 +119,7 @@ export function extractInit(text, thisYear = new Date().getFullYear()) {
     }
   }
   for (const raw of text.split('\n')) {
-    const m = raw.match(SINCE_RE);
+    const m = NOT_FOUNDING_RE.test(raw) ? null : raw.match(SINCE_RE);
     if (m && parseInt(m[3], 10) <= thisYear) {
       const mon = m[2] && MONTHS[m[2].toLowerCase()];
       return { date: parseInt(m[3], 10) * 10000 + (mon || 1) * 100 + 1, confidence: 'medium', source: raw.trim() };
