@@ -455,19 +455,19 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
-    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push({ label: 'Wöchentliches Treffen', text: `${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}` }); touch(wk); }
+    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push({ label: 'Wöchentliches Treffen', chips: [`${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`] }); touch(wk); }
   }
   const ini = rowEl('init');
   if (rowOn(ini) && a.init) {
     const init = ini.querySelector('[data-f="init"]');
-    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push({ label: 'Vereinsgründung', text: `${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}` }); touch(ini); }
+    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push({ label: 'Vereinsgründung', chips: [`${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`] }); touch(ini); }
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
     if (!url || !rowOn(tr)) continue;
     const input = tr.querySelector('input[type="text"]');
     if (onlyEmpty && input.value.trim()) continue;
-    input.value = url; touch(tr); rows.push({ label, text: url.length > 60 ? url.slice(0, 58) + '…' : url });
+    input.value = url; touch(tr); rows.push({ label, chips: [url] });
   }
   return rows;
 }

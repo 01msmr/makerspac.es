@@ -342,6 +342,6 @@ test('27: Workshops — hinzugefügt grün (.add), entfernt rot (.del)', () => {
 test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line, Workshops als Pillen), mit vertikalem Abstand', () => {
   const js = read('admin/spaces.js'), css = read('admin/spaces.css');
   assert.match(js, /className: 'det-line'/); assert.match(js, /rows\.push\(\{ label: 'Workshops übernommen', chips: a\.workshops \}\)/);
-  assert.match(js, /label: 'Vereinsgründung'/); assert.ok(!js.includes('setAutoHint'), 'keine Hinweise mehr in den Zeilen');
-  assert.match(css, /\.ws-detected \.det-line \{ margin-top: \.55rem;/);
+  assert.match(js, /label: 'Vereinsgründung', chips: \[/); assert.match(js, /label: 'Wöchentliches Treffen', chips: \[/); assert.ok(!js.includes('setAutoHint'), 'keine Hinweise mehr in den Zeilen');
+  assert.match(css, /\.ws-detected \.det-line \{ margin-top: 1\.1rem;/);
 });

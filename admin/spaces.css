@@ -132,9 +132,9 @@
 .ws-detected[data-state="none"] { color: var(--space-unknown); font-weight: 600; border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
 .ws-detected[data-state="error"] { color: var(--space-closed); font-weight: 600; border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
 .ws-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
-.ws-detected .det-line { margin-top: .55rem; font-weight: 400; color: var(--text-color); }   /* je erkanntem Element eine eigene Zeile, mit Abstand */
+.ws-detected .det-line { margin-top: 1.1rem; font-weight: 400; color: var(--text-color); }   /* je erkanntem Element eine eigene Zeile, mit Abstand */
 .ws-detected .det-line strong { font-weight: 700; margin-right: .15rem; }
-.ws-detected .chip { display: inline-block; margin: .1rem .3rem .1rem 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
+.ws-detected .chip { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; margin: .1rem .3rem .1rem 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .ws-detected[data-state="working"] { animation: none; } }
 
 /* Phone (nach den Basisregeln, damit sie gelten): Workshops 2 Spalten, Einfügen-Knopf unter dem Feld */
