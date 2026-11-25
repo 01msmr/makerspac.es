@@ -152,7 +152,7 @@ function renderSources(sp) {
   add(door, sp.current.spaceapi || sp.proposals.spaceapi?.endpoint, 'SpaceAPI', !sp.current.spaceapi);
 }
 
-const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag'], ['none', 'kein weekly mehr']];   // letzte Option: Treffen entfernen
+const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag'], ['none', 'kein weekly']];   // letzte Option: Treffen entfernen
 const dayName = d => WEEKDAYS.find(([v]) => v === d)?.[1] ?? '–';
 function currentText(key, v) {
   if (key === 'workshops') return v.length ? v.join(', ') : '';
@@ -194,7 +194,7 @@ function buildInputs(key, value) {
   return wrap;
 }
 
-/** „kein weekly mehr“: Uhrzeit leeren und sperren (sonst folgt die Sperre der Bearbeiten-Auswahl) */
+/** „kein weekly“: Uhrzeit leeren und sperren (sonst folgt die Sperre der Bearbeiten-Auswahl) */
 function syncWeeklyTime(tr) {
   const day = tr.querySelector('[data-f="day"]'), time = tr.querySelector('[data-f="time"]');
   if (!day || !time) return;

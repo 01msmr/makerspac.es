@@ -30,7 +30,7 @@ export function parseIssue(issue) {
   let v;
   try { v = JSON.parse(js[1]); } catch { return null; }
   const out = { issueNumber: issue.number, spaceId: parseInt(id[1], 10) };
-  if (v.weekly === null) out.weekly = null;   // „kein weekly mehr“ (Admin): Treffen entfernen
+  if (v.weekly === null) out.weekly = null;   // „kein weekly“ (Admin): Treffen entfernen
   else if (v.weekly) out.weekly = { weekday: v.weekly.weekday, time: v.weekly.time };
   if (v['space.init'] !== undefined) out.init = v['space.init'];
   return out.weekly !== undefined || out.init !== undefined ? out : null;

@@ -1,4 +1,4 @@
-// tests/weekly-remove.test.js — Option „kein weekly mehr“: Treffen entfernen (Admin → Issue → Apply → Changelog)
+// tests/weekly-remove.test.js — Option „kein weekly“: Treffen entfernen (Admin → Issue → Apply → Changelog)
 // Läuft mit: node --test tests/weekly-remove.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,7 +13,8 @@ test('1: Admin-Parser — "weekly": null ist ein gültiger Vorschlag (Treffen en
   const p = parseWeeklyIssue(issue('{"weekly": null}'));
   assert.equal(p.weekly, null);
   assert.equal(weeklyText(p), 'kein Weekly');
-  assert.deepEqual(parseWeeklyInput('kein weekly mehr'), { weekly: null });
+  assert.deepEqual(parseWeeklyInput('kein weekly'), { weekly: null });
+  assert.deepEqual(parseWeeklyInput('kein weekly mehr'), { weekly: null });   // älterer Wortlaut bleibt lesbar
   assert.deepEqual(parseWeeklyInput('Kein Weekly, 2015'), { weekly: null, init: 20150101 });
   assert.equal(parseWeeklyInput('irgendwas'), null);
   const body = replaceWeekly(issue('{}').body, 'kein Weekly');
@@ -44,7 +45,7 @@ test('3: Spaces — Formwert „none“, Validierung, Text', () => {
 
 function sp(proposals, cur) { return { id: 48, name: 'CCC', website: '', proposals, current: { weekly: cur, workshops: [], calendar: '', spaceapi: '' } }; }
 
-test('4: planDecision — „kein weekly mehr“: neues Issue nur mit weekly: null; ohne vorhandenes Treffen nichts zu tun; Vorschlag unverändert = ok', () => {
+test('4: planDecision — „kein weekly“: neues Issue nur mit weekly: null; ohne vorhandenes Treffen nichts zu tun; Vorschlag unverändert = ok', () => {
   const cur = { day: '2', time: '19:00', init: '1984-01-01' };
   let r = planDecision(sp({}, cur), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '', init: '1984-01-01' } }]);
   assert.equal(r.errors.length, 0); assert.equal(r.actions[0].type, 'create');

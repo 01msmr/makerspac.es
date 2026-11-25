@@ -284,7 +284,7 @@ export function parseWeeklyIssue(issue) {
   if (!id || !js) return null;
   let v;
   try { v = JSON.parse(js[1]); } catch { return null; }
-  // `"weekly": null` = Treffen entfernen (vom Admin geschrieben: „kein weekly mehr“)
+  // `"weekly": null` = Treffen entfernen (vom Admin geschrieben: „kein weekly“)
   const weekly = v.weekly === null ? null : (v.weekly && Number.isInteger(v.weekly.weekday) ? { weekday: v.weekly.weekday, time: v.weekly.time } : undefined);
   const init = Number.isInteger(v['space.init']) ? v['space.init'] : undefined;
   if (weekly === undefined && init === undefined) return null;
