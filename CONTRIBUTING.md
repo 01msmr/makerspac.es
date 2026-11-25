@@ -159,7 +159,7 @@ Objekt, Schlüssel = Makerspace-ID als String. Alle Felder optional; `generate-m
 
 ## Vorschläge prüfen (`/admin/`)
 
-**Reiter „Spaces“ (Standard):** ein Space = eine Karte mit allen Eigenschaften (Workshops, Kalender, SpaceAPI, Treffen/Gründung). Offene Vorschläge sind vorbelegt, jede Eigenschaft ist änderbar. Tasten: `y` übernehmen · `n` alles verwerfen · `ä` später (ans Ende) · `z` rückgängig (stellt auch Häkchen und Werte wieder her) · `←` `→` Bearbeiten-Auswahl (Alles / eine Eigenschaft). Das **Freitextfeld** (auch aus der Zwischenablage) erkennt Workshops, Treffen (nur 30-Minuten-Raster), Gründung, Kalender- und SpaceAPI-URLs. Treffen-Teilvorschläge zeigen den aktuellen Rest; geschrieben wird nur, was sich ändert. Name/Adresse/Link/Stil: Link „Stammdaten“ → Edit-Overlay. Details: [adr/009](adr/009-admin-space-als-review-einheit.md).
+**Reiter „Spaces“ (Standard):** ein Space = eine Karte mit allen Eigenschaften (Workshops, Kalender, SpaceAPI, Treffen/Gründung). Offene Vorschläge sind vorbelegt, jede Eigenschaft ist änderbar. Tasten: `y` übernehmen · `n` verwerfen · `ä` später (ans Ende) · `z` rückgängig (stellt auch Häkchen und Werte wieder her) · `←` `→` Bearbeiten-Auswahl (Alles / eine Eigenschaft). Das **Freitextfeld** (auch aus der Zwischenablage) erkennt Workshops, Treffen (nur 30-Minuten-Raster), Gründung, Kalender- und SpaceAPI-URLs. Treffen-Teilvorschläge zeigen den aktuellen Rest; geschrieben wird nur, was sich ändert. Name/Adresse/Link/Stil: Link „Stammdaten“ → Edit-Overlay. Details: [adr/009](adr/009-admin-space-als-review-einheit.md).
 
 **Reiter je Art** (SpaceAPI, Workshops, Kalender, Weekly) bleiben dahinter bestehen:
 

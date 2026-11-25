@@ -424,10 +424,17 @@ function initPane() {
 const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function setIndicator(box, stateName, text, chips = []) {
+/** Auswertungsfeld: Text + je erkanntem Element EINE eigene Zeile (Name: Wert bzw. Pillen), mit vertikalem Abstand. lines: {label, text?, chips?}[] */
+function setIndicator(box, stateName, text, lines = []) {
   box.dataset.state = stateName;
   box.replaceChildren(text);
-  for (const t of chips) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+  for (const l of lines) {
+    const row = Object.assign(document.createElement('div'), { className: 'det-line' });
+    row.append(Object.assign(document.createElement('strong'), { textContent: `${l.label}: ` }));
+    if (l.text) row.append(l.text);
+    for (const c of l.chips ?? []) row.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: c }));
+    box.append(row);
+  }
 }
 const rowEl = key => state.rows.get(key)?.tr;
 const rowOn = tr => !!tr && tr.dataset.off !== 'true';
@@ -444,27 +451,28 @@ function checkTypes(types) {
 }
 
 /** Erkanntes in die Zeilen schreiben. onlyEmpty: nur leere Felder (Zwischenablage-Automatik), sonst überschreiben (bewusstes Einfügen/Tippen). */
+/** Erkanntes in die Zeilen schreiben. @returns {{label:string,text?:string,chips?:string[]}[]} je gesetzter Eigenschaft eine Zeile für das Auswertungsfeld */
 function applyAnalysis(a, { onlyEmpty = false } = {}) {
-  const done = [];
-  if (a.workshops.length && checkTypes(a.workshops)) done.push(...a.workshops);   // jeder erkannte Workshop als eigene Pille (nur der Name)
+  const rows = [];
+  if (a.workshops.length && checkTypes(a.workshops)) rows.push({ label: 'Workshops übernommen', chips: a.workshops });   // jeder erkannte Workshop als eigene Pille
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
-    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Wöchentliches Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(wk); }
+    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push({ label: 'Wöchentliches Treffen', chips: [`${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`] }); touch(wk); }
   }
   const ini = rowEl('init');
   if (rowOn(ini) && a.init) {
     const init = ini.querySelector('[data-f="init"]');
-    if (!(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Vereinsgründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(ini); }
+    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push({ label: 'Vereinsgründung', chips: [`${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`] }); touch(ini); }
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
     if (!url || !rowOn(tr)) continue;
     const input = tr.querySelector('input[type="text"]');
     if (onlyEmpty && input.value.trim()) continue;
-    input.value = url; touch(tr); done.push(`${label}: ${url.length > 48 ? url.slice(0, 46) + '…' : url}`);
+    input.value = url; touch(tr); rows.push({ label, chips: [url] });
   }
-  return done;
+  return rows;
 }
 
 function buildFreeText(sp) {
@@ -496,9 +504,9 @@ function buildFreeText(sp) {
     const v = area.value;
     if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
     const a = analyzeFreeText(v);
-    const done = applyAnalysis(a, opts);
+    const setRows = applyAnalysis(a, opts);
     const notes = a.notes.length ? ` · ${a.notes.join(' · ')}` : '';
-    if (done.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — übernommen:${notes}`, done); return; }
+    if (setRows.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — erkannt und eingetragen:${notes}`, setRows); return; }
     if (looksLikeUrl(v.trim())) { setIndicator(detected, 'info', `URL erkannt${source} (kein Kalender/SpaceAPI) — mit „Website auslesen (Server)“ die Workshops serverseitig auslesen.`); return; }
     setIndicator(detected, 'none', `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt${notes}`);
   };
