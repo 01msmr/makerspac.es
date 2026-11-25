@@ -347,7 +347,7 @@ test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line,
 });
 
 test('29: Entscheider-Knöpfe am Desktop in EINER Zeile (nowrap), gleich breit, mit klarem Abstand (gap)', () => {
-  assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ flex-wrap: nowrap; gap: 1\.5rem; \}[^\n]*\n\s*\.sp-actions button \{ flex: 1 1 0; min-width: 0;/);
+  assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ flex-wrap: nowrap; gap: 1\.5rem; \}\s*\.sp-actions button \{ position: relative; flex: 1 1 0; min-width: 0;/);
 });
 
 test('30: Tasten-Kürzel (kbd) mit doppeltem Radius (6px)', () => {
@@ -367,6 +367,6 @@ test('33: mit sichtbarem „zurück“ (4 Knöpfe) bleibt alles in einer Zeile (
   assert.match(read('admin/spaces.css'), /\.sp-actions:has\(#sp-act-z:not\(\[hidden\]\)\) \{ gap: 1rem; \}/);
 });
 
-test('34: Tasten-Kürzel in den Entscheider-Knöpfen linksbündig', () => {
-  assert.match(read('admin/spaces.css'), /\.sp-actions button \{ flex: 1 1 0;[^}]*justify-content: flex-start;/);
+test('34: Tasten-Kürzel in den Entscheider-Knöpfen linksbündig, Text zentriert', () => {
+  assert.match(read('admin/spaces.css'), /\.sp-actions button kbd \{ position: absolute; left: \.7rem;/); assert.match(read('admin/spaces.css'), /\.sp-actions button \{ position: relative; flex: 1 1 0;[^}]*justify-content: center;/);
 });

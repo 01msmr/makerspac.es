@@ -165,16 +165,19 @@
 #sp-rows .inp .ev-problem { margin: .4rem 0; padding: .4rem .6rem; border-left: 3px solid var(--space-closed); background: var(--dropdown-bg); }
 #sp-rows .inp .ev-hint { margin: .3rem 0 0; font-size: .85em; color: var(--hover-text-color); }
 
-/* Entscheider-Knöpfe (Desktop): breiter, mit klarem horizontalem Abstand */
+/* Entscheider-Knöpfe (Desktop): breiter, klarer Abstand, alle in EINER Zeile.
+   Tasten-Kürzel (kbd) immer linksbündig am Knopfrand, Text zentriert im verbleibenden Platz (links Platz per padding reserviert). */
 @media (min-width: 768px) {
-  .sp-actions { flex-wrap: nowrap; gap: 1.5rem; }   /* alle Entscheider-Knöpfe in EINER Zeile */
-  .sp-actions button { flex: 1 1 0; min-width: 0; padding: .7rem .5rem .7rem .8rem; white-space: nowrap; display: flex; align-items: center; justify-content: flex-start; gap: .5rem; }   /* Tasten-Kürzel immer linksbündig */
-  .sp-actions #sp-act-n { flex: .5 1 0; padding-left: .45rem; padding-right: .1rem; font-size: 1rem; gap: .3rem; }   /* „verwerfen“: halb so breit wie „übernehmen“ und „später“ (Text darf umbrechen) */
-  .sp-actions #sp-act-n kbd { padding-left: .35rem; padding-right: .35rem; }
-  /* mit „zurück“ (4 Knöpfe, schmal): kleinere Schrift/Abstände, „verwerfen“/„zurück“ etwas breiter als halb — nichts wird abgeschnitten (ohne „zurück“: „verwerfen“ genau halb so breit) */
+  .sp-actions { flex-wrap: nowrap; gap: 1.5rem; }
+  .sp-actions button { position: relative; flex: 1 1 0; min-width: 0; padding: .7rem .5rem .7rem 2.8rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .sp-actions button kbd { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); margin: 0; }
+  .sp-actions #sp-act-n { flex: .5 1 0; padding-left: 2.2rem; padding-right: .3rem; font-size: 1rem; }   /* „verwerfen“: halb so breit wie „übernehmen“ und „später“ */
+  .sp-actions #sp-act-n kbd { left: .45rem; padding-left: .35rem; padding-right: .35rem; }
+  /* mit „zurück“ (4 Knöpfe, schmal): kleinere Schrift/Abstände, „verwerfen“/„zurück“ etwas breiter als halb — nichts wird abgeschnitten */
   .sp-actions:has(#sp-act-z:not([hidden])) { gap: 1rem; }
-  .sp-actions:has(#sp-act-z:not([hidden])) button { font-size: .95rem; padding-left: .4rem; padding-right: .25rem; gap: .3rem; }
+  .sp-actions:has(#sp-act-z:not([hidden])) button { font-size: .95rem; padding-left: 2.1rem; padding-right: .25rem; }
   .sp-actions:has(#sp-act-z:not([hidden])) #sp-act-n { flex: .75 1 0; }
   .sp-actions:has(#sp-act-z:not([hidden])) #sp-act-z { flex: .65 1 0; }
-  .sp-actions:has(#sp-act-z:not([hidden])) kbd { font-size: .85rem; padding: .05rem .35rem; margin-right: .2rem; }
+  .sp-actions:has(#sp-act-z:not([hidden])) kbd { left: .4rem; font-size: .85rem; padding: .05rem .35rem; }
+}
 }
