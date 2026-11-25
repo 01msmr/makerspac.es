@@ -24,7 +24,7 @@ const audit = (n, type) => ctx.audit?.(n, type);
 const state = {
   rates: {}, bodies: {}, groups: new Map(), queue: [], current: null,
   mode: store.get('spaces-mode', 'all'), later: store.get('spaces-later', []),
-  undo: [], busy: false, active: false, loaded: false, claimed: null,
+  undo: [], busy: false, active: false, loaded: false, claimed: null, rows: new Map(),
 };
 Object.defineProperties(state, {
   locations: { get: () => ctx.data().locations },
@@ -374,7 +374,10 @@ function show(restore = null) {
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);
   if (paneEnabled() && isHttp(sp.website)) loadPane(sp.website, 'Webseite');   // Standard: Webseite des Space im Seitenfenster
-  $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
+  // Zeilen beim Aufbau MERKEN (statt später per DOM-Abfrage suchen): immun gegen verschachtelte <tr> (Beleg-Tabellen) u. Ä.
+  const trs = FIELDS.map(f => buildRow(f, sp, restore));
+  state.rows = new Map(FIELDS.map((f, i) => [f.key, { tr: trs[i], number: sp.proposals[f.key]?.number ?? null }]));
+  $('sp-rows').replaceChildren(...trs);
   $('sp-free').replaceChildren(buildFreeText(sp));
   msg('');
   const lock = spaceLock(state.groups.get(id), me()?.login);
@@ -426,7 +429,7 @@ function setIndicator(box, stateName, text, chips = []) {
   box.replaceChildren(text);
   for (const t of chips) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
 }
-const rowEl = key => $('sp-rows').querySelector(`tr[data-key="${key}"]`);
+const rowEl = key => state.rows.get(key)?.tr;
 const rowOn = tr => !!tr && tr.dataset.off !== 'true';
 /** Zeile neu bewerten (geändert? Häkchen-Text, Auto-Häkchen) */
 const touch = tr => tr.dispatchEvent(new Event('change'));
@@ -550,8 +553,8 @@ function buildFreeText(sp) {
 
 // ─── Entscheiden ─────────────────────────────────────────────────────────
 function readRows() {
-  return [...$('sp-rows').querySelectorAll('tr[data-key]')].map(tr => ({
-    key: tr.dataset.key, enabled: tr.dataset.off !== 'true',
+  return [...state.rows].map(([key, { tr }]) => ({
+    key, enabled: tr.dataset.off !== 'true',
     include: tr.querySelector('.inc input').checked && !(tr.dataset.proposal !== '1' && tr.querySelector('.inc label').hidden),
     value: readValue(tr),
   }));
@@ -577,7 +580,7 @@ async function execute(a) {
 async function decide(kind) {
   if (state.busy || state.current == null) return;
   const sp = spaceModel();
-  const stale = [...$('sp-rows').querySelectorAll('tr[data-key]')].some(tr => tr.dataset.number !== String(sp.proposals[tr.dataset.key]?.number ?? ''));
+  const stale = [...state.rows].some(([key, r]) => r.number !== (sp.proposals[key]?.number ?? null));   // Vorschlags-Nummern beim Aufbau ↔ jetzt
   if (stale) { msg('Die Vorschläge zu diesem Space haben sich inzwischen geändert — bitte mit ↻ neu laden (Eingaben gehen dabei verloren).'); return; }
   let rows = readRows();
   if (kind === 'reject') rows = rows.map(r => ({ ...r, include: false }));
