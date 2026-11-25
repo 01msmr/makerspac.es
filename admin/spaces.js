@@ -444,27 +444,35 @@ function checkTypes(types) {
 }
 
 /** Erkanntes in die Zeilen schreiben. onlyEmpty: nur leere Felder (Zwischenablage-Automatik), sonst überschreiben (bewusstes Einfügen/Tippen). */
+/** Hinweis „aus Freitext erkannt“ direkt in der betroffenen Zeile (nicht im Workshop-Bereich) */
+function setAutoHint(tr, text) {
+  tr.querySelector('.auto-hint')?.remove();
+  if (text) tr.querySelector('td.inp')?.append(Object.assign(document.createElement('small'), { className: 'row-hint auto-hint', textContent: text }));
+}
+const clearAutoHints = () => $('sp-rows').querySelectorAll('.auto-hint').forEach(e => e.remove());
+
+/** @returns {{workshops: string[], rows: string[]}} workshops = erkannte Typen (Pillen), rows = Namen der in ihrer Zeile gesetzten Eigenschaften */
 function applyAnalysis(a, { onlyEmpty = false } = {}) {
-  const done = [];
-  if (a.workshops.length && checkTypes(a.workshops)) done.push(...a.workshops);   // jeder erkannte Workshop als eigene Pille (nur der Name)
+  const workshops = [], rows = [];
+  if (a.workshops.length && checkTypes(a.workshops)) workshops.push(...a.workshops);   // jeder erkannte Workshop als eigene Pille (nur der Name)
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
-    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Wöchentliches Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(wk); }
+    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push('Wöchentliches Treffen'); setAutoHint(wk, `aus Text erkannt${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(wk); }
   }
   const ini = rowEl('init');
   if (rowOn(ini) && a.init) {
     const init = ini.querySelector('[data-f="init"]');
-    if (!(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Vereinsgründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(ini); }
+    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push('Gründung'); setAutoHint(ini, `aus Text erkannt (Vereinsgründung)${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(ini); }
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
     if (!url || !rowOn(tr)) continue;
     const input = tr.querySelector('input[type="text"]');
     if (onlyEmpty && input.value.trim()) continue;
-    input.value = url; touch(tr); done.push(`${label}: ${url.length > 48 ? url.slice(0, 46) + '…' : url}`);
+    input.value = url; touch(tr); rows.push(label); setAutoHint(tr, 'aus Text erkannt');
   }
-  return done;
+  return { workshops, rows };
 }
 
 function buildFreeText(sp) {
@@ -494,11 +502,12 @@ function buildFreeText(sp) {
   const evaluate = (source = '', opts = {}) => {
     refreshTarget();
     const v = area.value;
-    if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
+    if (!v.trim()) { clearAutoHints(); setIndicator(detected, 'idle', ''); return; }
     const a = analyzeFreeText(v);
-    const done = applyAnalysis(a, opts);
+    clearAutoHints();
+    const { workshops: done, rows: setRows } = applyAnalysis(a, opts);
     const notes = a.notes.length ? ` · ${a.notes.join(' · ')}` : '';
-    if (done.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — übernommen:${notes}`, done); return; }
+    if (done.length || setRows.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — ${setRows.length ? `gesetzt in: ${setRows.join(', ')}${done.length ? ' · ' : ''}` : ''}${done.length ? 'Workshops übernommen:' : ''}${notes}`, done); return; }
     if (looksLikeUrl(v.trim())) { setIndicator(detected, 'info', `URL erkannt${source} (kein Kalender/SpaceAPI) — mit „Website auslesen (Server)“ die Workshops serverseitig auslesen.`); return; }
     setIndicator(detected, 'none', `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt${notes}`);
   };

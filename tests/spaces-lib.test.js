@@ -339,7 +339,8 @@ test('27: Workshops — hinzugefügt grün (.add), entfernt rot (.del)', () => {
   assert.match(css, /\.ws-checks label\.add \{[^}]*--space-open/); assert.match(css, /\.ws-checks label\.del \{[^}]*--space-closed/);
 });
 
-test('28: erkannte Pillen stehen in eigener Zeile (.chips) unter dem Text', () => {
+test('28: Pillen = nur Workshops, in eigener Zeile (.chips); Gründung/Weekly/Kalender/SpaceAPI als Hinweis in ihrer eigenen Zeile', () => {
+  assert.match(read('admin/spaces.js'), /function setAutoHint\(tr, text\)/); assert.match(read('admin/spaces.js'), /setAutoHint\(ini, `aus Text erkannt \(Vereinsgründung\)/);
   assert.match(read('admin/spaces.js'), /className: 'chips'/);
   assert.match(read('admin/spaces.css'), /\.ws-detected \.chips \{ display: flex; flex-wrap: wrap;/);
 });
