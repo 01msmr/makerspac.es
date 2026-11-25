@@ -162,7 +162,12 @@ const evBox = (title, ...kids) => { const d = el('details', { open: true }, el('
 function renderEvidence(sp) {
   const box = $('sp-evidence'); box.replaceChildren();
   const id = state.current, still = () => state.current === id;
-  const { workshops: w, weekly, spaceapi, calendar } = sp.proposals;
+  const { workshops: w0, weekly: weekly0, init: init0, spaceapi: spaceapi0, calendar: calendar0 } = sp.proposals;
+  // Bearbeiten-Auswahl ≠ „Alles“: nur die Belege der gewählten Eigenschaft zeigen
+  const only = k => state.mode === 'all' || state.mode === k;
+  const w = only('workshops') ? w0 : undefined, spaceapi = only('spaceapi') ? spaceapi0 : undefined, calendar = only('calendar') ? calendar0 : undefined;
+  const weekly = (only('weekly') ? weekly0 : undefined) ?? (only('init') ? init0 : undefined);
+  const evFilter = e => state.mode === 'all' || (state.mode === 'init' ? e.what === 'Gründung' : state.mode === 'weekly' ? e.what === 'Weekly' : true);
   if (w?.rows?.length || w?.evidence) {
     const kids = [];
     if (w.rows.length) {
@@ -173,11 +178,11 @@ function renderEvidence(sp) {
     if (w.evidence) kids.push(el('blockquote', { textContent: w.evidence }));
     box.append(evBox('Workshops – Fundstellen', ...kids));
   }
-  if (weekly?.evidence?.length) {
-    box.append(evBox('Wöchentliches Treffen – Fundstellen', ...weekly.evidence.map(e => el('blockquote', { textContent: `${e.what === 'Gründung' ? 'Vereinsgründung' : e.what} ${e.value} (${e.confidence}): „${e.source}“` }))));
+  if (weekly?.evidence?.filter(evFilter).length) {
+    box.append(evBox(state.mode === 'init' ? 'Gründung – Fundstellen' : 'Wöchentliches Treffen – Fundstellen', ...weekly.evidence.filter(evFilter).map(e => el('blockquote', { textContent: `${e.what === 'Gründung' ? 'Vereinsgründung' : e.what} ${e.value} (${e.confidence}): „${e.source}“` }))));
   }
   if (calendar?.confidence) box.append(evBox('Kalender', el('p', { textContent: `Confidence: ${calendar.confidence}` })));
-  for (const [label, p] of [['Workshops', w], ['Kalender', calendar], ['SpaceAPI', spaceapi], ['Wöchentliches Treffen', weekly ?? sp.proposals.init]]) {
+  for (const [label, p] of [['Workshops', w], ['Kalender', calendar], ['SpaceAPI', spaceapi], [state.mode === 'init' ? 'Gründung' : 'Wöchentliches Treffen', weekly]]) {
     if (!p?.problem) continue;
     const reason = el('span', { textContent: 'Grund wird geladen …' });
     box.append(el('div', { className: 'ev-problem' }, el('strong', { textContent: `⚠ ${label}: zuvor nicht übernommen` }), el('br'), reason));

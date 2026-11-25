@@ -49,7 +49,7 @@
 #sp-rows th { width: 6.5rem; }
 #sp-rows td.cur { color: var(--hover-text-color); }
 #sp-rows td.cur .none { opacity: .6; }
-#sp-rows tr[data-off="true"] { opacity: .45; }
+#sp-rows tr[data-off="true"] { display: none !important; }   /* Auswahl ≠ „Alles“: nur die gewählte Eigenschaft zeigen */
 #sp-rows input[type="text"], #sp-rows input[type="url"], #sp-rows input[type="time"], #sp-rows input[type="date"], #sp-rows select { width: 100%; max-width: 30rem; }
 #sp-rows select { font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .5rem; width: auto; }
 .weekly-in { display: flex; flex-direction: column; gap: .35rem; }
