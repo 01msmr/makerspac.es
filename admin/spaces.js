@@ -282,7 +282,12 @@ function markChanged(tr, sp) {
   } else if (key === 'init') {
     mark(tr.querySelector('[data-f="init"]'), v !== cur);
   } else if (key === 'workshops') {
-    tr.querySelectorAll('.ws-checks label').forEach(l => mark(l, l.querySelector('input').checked !== cur.includes(l.querySelector('input').value)));
+    tr.querySelectorAll('.ws-checks label').forEach(l => {
+      const box = l.querySelector('input'), was = cur.includes(box.value);
+      mark(l, box.checked !== was);
+      l.classList.toggle('add', box.checked && !was);    // neu hinzugefügt → grün
+      l.classList.toggle('del', !box.checked && was);    // entfernt → rot
+    });
   } else {
     mark(tr.querySelector('input[type="text"]'), v !== cur);
   }

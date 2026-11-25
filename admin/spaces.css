@@ -75,12 +75,17 @@
 .row-hint a { color: inherit; }
 /* geänderte Eingabe (gegenüber dem aktuellen Stand): grüner Rahmen — nur das, was sich wirklich ändert */
 #sp-rows .chg { box-shadow: 0 0 0 2px var(--space-open); border-radius: 6px; }
-.ws-checks label.chg { padding: 0 .3rem; background: color-mix(in srgb, var(--space-open) 18%, transparent); box-shadow: none; }
+.ws-checks label.chg { padding: 0 .3rem; box-shadow: none; font-weight: 600; }
+.ws-checks label.add { background: color-mix(in srgb, var(--space-open) 28%, transparent); outline: 2px solid var(--space-open); }     /* hinzugefügt / erkannt: deutlich grün */
+.ws-checks label.del { background: color-mix(in srgb, var(--space-closed) 22%, transparent); outline: 2px solid var(--space-closed); text-decoration: line-through; }   /* entfernt: rot */
+.ws-checks label { border-radius: 6px; }
 /* wichtige leere Eigenschaft: leicht gelb */
 #sp-rows tr.gap td, #sp-rows tr.gap th { background: color-mix(in srgb, var(--space-unknown) 14%, transparent); }
 #sp-rows tr.gap th::after { content: " ○"; color: var(--space-unknown); }
 /* geändert: rot = alt · grün = neu (wie die Reiter-Ansicht) */
-#sp-rows tr.differs td.inp { box-shadow: inset 3px 0 0 var(--space-open); }
+#sp-rows tr.differs td.inp { box-shadow: inset 3px 0 0 var(--space-open); background: color-mix(in srgb, var(--space-open) 5.4%, transparent); font-weight: 400; }   /* Vorschlagsbereich: 66 % blasser (vorher 16 %) */
+/* verschachtelte Beleg-Tabellen: nicht von den Alt-Regeln `tr.differs td:nth-child(2/3)` (rot/grün, fett) einfärben lassen */
+#sp-rows .inp .ev-table td { background: transparent; box-shadow: none; font-weight: 400; }
 #sp-rows td.inc { width: var(--sp-inc-w); }
 #sp-rows td.inp { min-width: 15rem; }
 #sp-rows td.inc label { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
