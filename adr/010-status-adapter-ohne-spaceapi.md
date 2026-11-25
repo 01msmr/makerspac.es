@@ -21,6 +21,10 @@ Manche Spaces zeigen ihren Status nur auf einer eigenen Webseite (z. B. fablab-h
 - Erkennung über den **Quelltext** (Style-Attribut), nicht über gerenderte Pixel.
 - Ein später vorgeschlagener echter SpaceAPI-Endpoint ersetzt den Adapter (`applyProposal`); derselbe Endpoint behält ihn.
 
+## Mailvorlage
+
+Für die Anfrage an Spaces (SpaceAPI einführen, auch bei schwierigen Voraussetzungen): [docs/spaceapi-anfrage.md](../docs/spaceapi-anfrage.md).
+
 ## Konsequenzen
 
 - Anbieter-Seiten ändern sich → Adapter liefert „unbekannt“ statt Falschwerte; die Alters-Regel kann bei 24/7-offenen Spaces ein „unbekannt“ erzeugen; Überwachung (z. B. Eintrag unter „Probleme“) ist ein möglicher späterer Schritt.

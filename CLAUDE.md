@@ -184,6 +184,9 @@ add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
 sw.js               → Service Worker (Cache-First / SWR; Daten-JSON Netz zuerst; `/admin/` ausgenommen)
 admin/              → Review-Seite für SpaceAPI-Issues (index.html, admin.js, admin-lib.js, admin.css; ADR-006)
                        + Reiter „Spaces“ (Standard): spaces.js/css/spaces-lib.js, läuft in index.html (ein Space = eine Karte, alle Eigenschaften; ADR-009)
+tools/              → Crawler, Apply-Skripte (`apply-*-issues.js`, gemeinsamer Lauf `.github/workflows/apply-all-issues.yml`), Changelog-Bau;
+                       `tools/lib/status-adapters.js` + `status-freshness.js` = Status ohne SpaceAPI + Alters-Regel (ADR-010)
+docs/               → Vorlagen (z. B. `spaceapi-anfrage.md`: Mail an Spaces)
 generate-map-splits.js → Dev-Tool: erzeugt Karten-Splits (`npm run generate`)
 ```
 
@@ -206,6 +209,8 @@ npm run validate                 # locations.json + loc-enrichment.json prüfen
 
 - Push auf `main` → GitHub Actions → FTPS → Netcup
 - `status.json` wird per Cron aktualisiert, nicht per git
-- Nächste freie Makerspace-ID: **278**
+- Nächste freie Makerspace-ID: **279** (`max(IDs) + 1`)
 - **Bot-Änderungen (GITHUB_TOKEN) lösen weder CI noch Deploy aus.** Workflows, die nach `main` pushen/mergen, validieren vorher (`./.github/actions/validate-data`) und starten `deploy.yml` selbst (`gh workflow run deploy.yml`, `actions: write`). Apply-Skripte prüfen jeden Vorschlag vor dem Schreiben (`validateProposal`). Wächter: `tests/workflow-guards.test.js`
+- Übernahme der Vorschläge: `apply-all-issues.yml` (alle Arten, 1 Commit, Issues erst nach dem Push geschlossen; Admin „Übernehmen“/Cron).
+- **Status (ADR-010):** „offen“ nur bei Zeitstempel < 24 h (`STATUS_MAX_AGE_HOURS`, global), „geschlossen“ bleibt; Gedächtnis (`status-memory.json`) nur im Actions-Cache, nie in `status.json`/git. Unbekannt heißt überall „unknown“.
 - Prüfen: `npm run validate` (locations + enrichment) · `npm run validate:ci` (wie CI: + Unit-Tests + Wächter)
