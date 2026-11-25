@@ -173,6 +173,8 @@
 @media (min-width: 768px) {
   .sp-actions { flex-wrap: nowrap; gap: 1.5rem; }
   .sp-actions button { position: relative; flex: 1 1 0; min-width: 0; padding: .7rem .5rem .7rem 2.8rem; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; }
+  /* Desktop + Tablet: Entscheider-Leiste bleibt beim Scrollen unten fixiert (wie auf Phone; Kopfzeile/Leiste oben sind ab 768 px ebenfalls fest) */
+  .sp-actions { position: sticky; bottom: 0; z-index: 5; margin: .75rem -1rem -1rem; padding: .6rem 1rem; background: var(--dropdown-bg); border-top: 1px solid var(--dropdown-border); border-radius: 0 0 8px 8px; }
   .sp-actions button kbd { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); margin: 0; }
   .sp-actions #sp-act-n { flex: .5 1 0; padding-left: 2.2rem; padding-right: .3rem; font-size: 1rem; }   /* „verwerfen“: halb so breit wie „übernehmen“ und „später“ */
   .sp-actions #sp-act-n kbd { left: .45rem; padding-left: .35rem; padding-right: .35rem; }
