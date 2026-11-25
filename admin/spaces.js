@@ -545,7 +545,7 @@ function buildFreeText(sp) {
 
 // ─── Entscheiden ─────────────────────────────────────────────────────────
 function readRows() {
-  return [...$('sp-rows').querySelectorAll('tr')].map(tr => ({
+  return [...$('sp-rows').querySelectorAll('tr[data-key]')].map(tr => ({
     key: tr.dataset.key, enabled: tr.dataset.off !== 'true',
     include: tr.querySelector('.inc input').checked && !(tr.dataset.proposal !== '1' && tr.querySelector('.inc label').hidden),
     value: readValue(tr),
@@ -572,7 +572,7 @@ async function execute(a) {
 async function decide(kind) {
   if (state.busy || state.current == null) return;
   const sp = spaceModel();
-  const stale = [...$('sp-rows').querySelectorAll('tr')].some(tr => tr.dataset.number !== String(sp.proposals[tr.dataset.key]?.number ?? ''));
+  const stale = [...$('sp-rows').querySelectorAll('tr[data-key]')].some(tr => tr.dataset.number !== String(sp.proposals[tr.dataset.key]?.number ?? ''));
   if (stale) { msg('Die Vorschläge zu diesem Space haben sich inzwischen geändert — bitte mit ↻ neu laden (Eingaben gehen dabei verloren).'); return; }
   let rows = readRows();
   if (kind === 'reject') rows = rows.map(r => ({ ...r, include: false }));
