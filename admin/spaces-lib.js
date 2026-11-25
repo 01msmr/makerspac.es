@@ -6,9 +6,10 @@
 import {
   parseIssue, parseWorkshopIssue, parseCalendarIssue, parseWeeklyIssue,
   replaceEndpoint, replaceWorkshops, replaceEvents, replaceWeekly,
-  formatWeekly, formatTime, formatEditDate, lockOf,
+  formatWeekly, formatTime, formatEditDate, lockOf, detectFromText, parseWeeklyInput, looksLikeUrl,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
+import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder } from '../tools/lib/weekly-extract.js';
 import { applyEnrichment } from '../enrichment-merge.js';
 
 export const PLACEHOLDER_INIT = 20010000;     // „keine Gründung bekannt“ in locations.json
@@ -71,6 +72,7 @@ export function validateValue(key, v, today = new Date().toISOString().slice(0, 
   if (key === 'calendar' || key === 'spaceapi') return !v || (/^https?:\/\/\S+$/.test(v) && !v.includes('"')) ? null : 'Ungültige URL (http/https)';
   if (key === 'weekly') {
     if (!!v.day !== !!v.time) return 'Wochentag und Uhrzeit nur zusammen';
+    if (v.time && !/^\d{2}:(00|30)$/.test(v.time)) return 'Uhrzeit nur im 30-Minuten-Raster (:00 oder :30)';
     if (v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today)) return 'Gründungsdatum ungültig';
     return null;
   }
@@ -213,4 +215,62 @@ export function undoStep(a) {
   if (a.type === 'ok') return { op: 'unok', number: a.number, prevBody: a.prevBody };
   if (a.type === 'reject') return { op: 'reopen', number: a.number };
   return { op: 'close-created', number: a.createdNumber };
+}
+
+// ─── Freitext → alle Eigenschaften ────────────────────────────────────────
+
+export const TIME_STEP_MINUTES = 30;   // Treffen-Uhrzeit nur im 30-Minuten-Raster
+
+/** „19:15“ → nächstes Raster („19:00“); bei Gleichstand der frühere Wert („19:45“ → „19:30“). */
+export function snapTime(hhmm) {
+  const m = String(hhmm).match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return '';
+  const total = Math.min(23 * 60 + 30, Math.round((parseInt(m[1], 10) * 60 + parseInt(m[2], 10) - 0.01) / TIME_STEP_MINUTES) * TIME_STEP_MINUTES);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+const CAL_RE = /(?:\.ics(?:[?#]|$)|^webcal:|calendar\.google\.com|\/apps\/calendar\/|\/public-calendars\/|meetup\.com\/|eventbrite\.|pretix|\/(?:calendar|kalender|termine|events)(?:[/?#]|$))/i;
+const API_RE = /(?:spaceapi|\/status\.json(?:[?#]|$)|spacestatus\.)/i;
+
+/** @returns {'calendar'|'spaceapi'|null} */
+export function classifyUrl(u) {
+  if (API_RE.test(u)) return 'spaceapi';
+  if (CAL_RE.test(u)) return 'calendar';
+  return null;
+}
+
+/**
+ * Freitext (Zwischenablage, Website-Text, einzelne URLs) → erkannte Eigenschaften.
+ * Workshops (Typen + Stichwörter), Treffen (Wochentag + Uhrzeit, 30-min-Raster), Gründung, Kalender-/SpaceAPI-URLs.
+ * @returns {{workshops:string[], weekly:{day:string,time:string,confidence:string,source:string}|null,
+ *   init:{value:string,confidence:string,source:string}|null, calendar:string, spaceapi:string, notes:string[]}}
+ */
+export function analyzeFreeText(text, now = new Date()) {
+  const t = String(text ?? '');
+  const out = { workshops: [], weekly: null, init: null, calendar: '', spaceapi: '', notes: [] };
+  if (!t.trim()) return out;
+  // URLs herauslösen (und aus dem Text für die Wort-Erkennung entfernen: „…/termine/“ ist kein Wochentag)
+  const urls = [...t.matchAll(/(?:https?|webcal):\/\/[^\s<>"')\]]+/gi)].map(m => m[0].replace(/[.,;]+$/, ''));
+  const prose = t.replace(/(?:https?|webcal):\/\/[^\s<>"')\]]+/gi, ' ');
+  for (const u of urls) {
+    const kind = classifyUrl(u), https = u.replace(/^webcal:/i, 'https:');
+    if (kind === 'calendar' && !out.calendar) out.calendar = https;
+    else if (kind === 'spaceapi' && !out.spaceapi) out.spaceapi = https;
+  }
+  if (looksLikeUrl(t.trim())) return out;   // nur eine URL → kein Text auszuwerten
+  out.workshops = detectFromText(prose);
+  // Treffen: Satzsuche (wie der Crawler); kurze Eingaben wie „Di 19:00, 2015“ zusätzlich direkt
+  const picked = pickWeekly(extractWeeklyCandidates(prose));
+  let weekday = picked?.weekday, time = picked?.time, conf = picked?.confidence, source = picked?.source;
+  const direct = prose.trim().length <= 60 ? parseWeeklyInput(prose.trim()) : null;
+  if (weekday === undefined && direct?.weekly) { weekday = direct.weekly.weekday; time = direct.weekly.time; conf = 'high'; source = prose.trim(); }
+  if (weekday !== undefined && time) {
+    const raw = formatTime(time), snapped = snapTime(raw);
+    if (snapped !== raw) out.notes.push(`Uhrzeit ${raw} → ${snapped} (30-Minuten-Raster)`);
+    out.weekly = { day: String(weekday), time: snapped, confidence: conf ?? 'medium', source };
+  } else if (picked?.confidence === 'low') out.notes.push('Mehrere verschiedene Termine im Text — nicht übernommen');
+  // Gründung
+  const found = extractInit(prose, now.getFullYear()) ?? (direct?.init !== undefined ? { date: direct.init, confidence: 'high', source: prose.trim() } : null);
+  if (found && !isInitPlaceholder(found.date)) out.init = { value: ymd(found.date), confidence: found.confidence, source: found.source };
+  return out;
 }

@@ -177,3 +177,43 @@ test('14: Freitext liest die Zwischenablage bei Fokus/Verlassen, überschreibt a
   assert.match(js, /area\.addEventListener\('blur'/);
   assert.match(js, /area\.value !== autoText/);   // nur leeres bzw. zuletzt automatisch gefülltes Feld
 });
+
+import { snapTime, classifyUrl, analyzeFreeText } from '../admin/spaces-lib.js';
+
+test('15: Treffen-Uhrzeit nur im 30-Minuten-Raster (Validierung + Rundung)', () => {
+  assert.equal(validateValue('weekly', { day: '2', time: '19:15', init: '' }), 'Uhrzeit nur im 30-Minuten-Raster (:00 oder :30)');
+  assert.equal(validateValue('weekly', { day: '2', time: '19:00', init: '' }), null);
+  assert.equal(validateValue('weekly', { day: '2', time: '19:30', init: '' }), null);
+  assert.deepEqual(['19:15', '19:45', '19:20', '19:10', '23:50', '18:00'].map(snapTime), ['19:00', '19:30', '19:30', '19:00', '23:30', '18:00']);
+  const sp = { id: 1, name: 'A', website: '', proposals: {}, current: { weekly: { day: '', time: '', init: '' } } };
+  const r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { day: '2', time: '19:15', init: '' } }]);
+  assert.equal(r.actions.length, 0); assert.match(r.errors[0], /30-Minuten-Raster/);
+});
+
+test('16: classifyUrl — Kalender und SpaceAPI erkennen, normale Seiten nicht', () => {
+  for (const u of ['https://x.example/a.ics', 'webcal://x.example/c', 'https://calendar.google.com/calendar/ical/abc/public/basic.ics', 'https://cloud.example/apps/calendar/p/xyz', 'https://x.example/termine/', 'https://www.meetup.com/foo/']) assert.equal(classifyUrl(u), 'calendar', u);
+  for (const u of ['https://status.example/status.json', 'https://spacestatus.example.de', 'https://x.example/spaceapi.json']) assert.equal(classifyUrl(u), 'spaceapi', u);
+  for (const u of ['https://makerspace.example/', 'https://x.example/ueber-uns']) assert.equal(classifyUrl(u), null, u);
+});
+
+test('17: analyzeFreeText — alles aus einem Text: Workshops, Treffen (gerastert), Gründung, Kalender, SpaceAPI', () => {
+  const t = 'Wir sind ein Makerspace, gegründet 2015. Jeden Dienstag ab 19:15 Uhr offener Abend. Lasercutter, 3D-Drucker und Nähmaschine vorhanden.\nKalender: webcal://cloud.example/apps/calendar/p/abc und https://status.example/status.json';
+  const a = analyzeFreeText(t, new Date('2026-11-25'));
+  assert.deepEqual(a.workshops, ['3d', 'laser', 'textile']);
+  assert.deepEqual([a.weekly.day, a.weekly.time], ['2', '19:00']);
+  assert.match(a.notes[0], /19:15 → 19:00/);
+  assert.equal(a.init.value, '2015-01-01');
+  assert.equal(a.calendar, 'https://cloud.example/apps/calendar/p/abc');
+  assert.equal(a.spaceapi, 'https://status.example/status.json');
+});
+
+test('18: analyzeFreeText — Kurzform, nur URL, leer, mehrdeutig', () => {
+  const k = analyzeFreeText('Mi 18:30, 2012');
+  assert.deepEqual([k.weekly.day, k.weekly.time, k.init.value], ['3', '18:30', '2012-01-01']);
+  const u = analyzeFreeText('https://x.example/cal.ics');
+  assert.equal(u.calendar, 'https://x.example/cal.ics'); assert.deepEqual(u.workshops, []); assert.equal(u.weekly, null);
+  assert.deepEqual(analyzeFreeText('  '), { workshops: [], weekly: null, init: null, calendar: '', spaceapi: '', notes: [] });
+  const m = analyzeFreeText('Jeden Montag 18:00 Uhr offener Abend. Jeden Freitag 20:00 Uhr offener Abend.');
+  assert.equal(m.weekly, null); assert.match(m.notes[0], /Mehrere/);
+  assert.equal(analyzeFreeText('Treffen jeden Donnerstag ab 18 Uhr, später vielleicht auch Dienstag').weekly?.day, '4');
+});

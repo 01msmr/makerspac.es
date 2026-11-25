@@ -5,7 +5,7 @@ import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } 
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
   FIELDS, currentValue, proposalValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
-  groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock,
+  groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock, analyzeFreeText, TIME_STEP_MINUTES,
 } from './spaces-lib.js';
 
 const $ = id => document.getElementById(id);
@@ -175,10 +175,12 @@ function buildInputs(key, value) {
     const sel = document.createElement('select'); sel.dataset.f = 'day'; sel.ariaLabel = 'Wochentag';
     for (const [v, l] of WEEKDAYS) sel.append(Object.assign(document.createElement('option'), { value: v, textContent: l }));
     sel.value = value.day;
-    const time = Object.assign(document.createElement('input'), { type: 'time', value: value.time }); time.dataset.f = 'time'; time.ariaLabel = 'Uhrzeit';
+    const time = Object.assign(document.createElement('input'), { type: 'time', value: value.time, step: TIME_STEP_MINUTES * 60 }); time.dataset.f = 'time'; time.ariaLabel = 'Uhrzeit (30-Minuten-Raster)'; time.title = 'Nur volle und halbe Stunden (:00 / :30)';
     const init = Object.assign(document.createElement('input'), { type: 'date', value: value.init, min: '1900-01-01', max: new Date().toISOString().slice(0, 10) }); init.dataset.f = 'init'; init.ariaLabel = 'Gegründet';
     const lbl = document.createElement('small'); lbl.textContent = 'gegründet';
-    wrap.append(sel, time, lbl, init);
+    const line1 = document.createElement('div'); line1.className = 'line'; line1.append(sel, time);
+    const line2 = document.createElement('div'); line2.className = 'line'; line2.append(lbl, init);   // „Gegründet“ beginnt in einer neuen Zeile
+    wrap.append(line1, line2);
   } else {
     const input = Object.assign(document.createElement('input'), { type: 'text', value, placeholder: key === 'spaceapi' ? 'https://… (SpaceAPI-Endpoint)' : 'https://… (Kalender-Link)' });
     input.inputMode = 'url'; input.autocomplete = 'off'; input.spellcheck = false;
@@ -233,7 +235,6 @@ function buildRow(f, sp, restore) {
   const inp = document.createElement('td'); inp.className = 'inp';
   const initial = restore?.[f.key]?.value ?? (p ? proposalValue(f.key, p) : sp.current[f.key]);
   inp.append(buildInputs(f.key, initial));
-  if (f.key === 'workshops') inp.append(buildFreeText(tr, sp));
   if (p) {
     const hint = document.createElement('small'); hint.className = 'row-hint';
     const a = Object.assign(document.createElement('a'), { href: p.url, target: '_blank', rel: 'noopener noreferrer', textContent: `Vorschlag #${p.number} ↗` });
@@ -277,6 +278,7 @@ function show(restore = null) {
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);
   $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
+  $('sp-free').replaceChildren(buildFreeText(sp));
   msg('');
   const lock = spaceLock(state.groups.get(id), me()?.login);
   if (lock) msg(`⚠ @${lock.by} bearbeitet diesen Space gerade (seit ${lock.minutes} min) — abstimmen oder „später“ nehmen.`);
@@ -284,29 +286,59 @@ function show(restore = null) {
   window.scrollTo?.(0, 0);
 }
 
-// ─── Freitext (Workshops) ────────────────────────────────────────────────
-// Text einfügen/eintippen → sofort ausgewertet, erkannte Typen werden angehakt (vorhandene Haken bleiben). Eine URL wird
-// stattdessen serverseitig ausgelesen (Workflow scan-workshop-url.yml; braucht ein Workshop-Issue zum Kommentieren).
+// ─── Freitext (alle Eigenschaften) ───────────────────────────────────────
+// Text/URLs einfügen → sofort ausgewertet: Workshops angehakt, Treffen (30-min-Raster) + Gründung gesetzt, Kalender-/SpaceAPI-URL
+// erkannt (spaces-lib analyzeFreeText). Eine einzelne Website-URL löst per Server-Scan die Workshop-Erkennung aus (braucht ein
+// Workshop-Issue zum Kommentieren). Zwischenablage wird bei Fokus/Verlassen des leeren Feldes automatisch gelesen.
 const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function setIndicator(box, stateName, text, types = []) {
+function setIndicator(box, stateName, text, chips = []) {
   box.dataset.state = stateName;
   box.replaceChildren(text);
-  for (const t of types) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+  for (const t of chips) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
 }
-function checkTypes(tr, types) {
-  for (const box of tr.querySelectorAll('.ws-checks input')) if (types.includes(box.value)) box.checked = true;
-  tr.dispatchEvent(new Event('change'));   // Zeile neu bewerten (geändert? Häkchen-Text)
+const rowEl = key => $('sp-rows').querySelector(`tr[data-key="${key}"]`);
+const rowOn = tr => !!tr && tr.dataset.off !== 'true';
+/** Zeile neu bewerten (geändert? Häkchen-Text, Auto-Häkchen) */
+const touch = tr => tr.dispatchEvent(new Event('change'));
+
+function checkTypes(types) {
+  const tr = rowEl('workshops');
+  if (!rowOn(tr)) return false;
+  let any = false;
+  for (const box of tr.querySelectorAll('.ws-checks input')) if (types.includes(box.value) && !box.checked) { box.checked = true; any = true; }
+  if (any) touch(tr);
+  return types.length > 0;
 }
 
-function buildFreeText(tr, sp) {
+/** Erkanntes in die Zeilen schreiben. onlyEmpty: nur leere Felder (Zwischenablage-Automatik), sonst überschreiben (bewusstes Einfügen/Tippen). */
+function applyAnalysis(a, { onlyEmpty = false } = {}) {
+  const done = [];
+  if (a.workshops.length && checkTypes(a.workshops)) done.push(`Workshops: ${a.workshops.join(', ')}`);
+  const wk = rowEl('weekly');
+  if (rowOn(wk)) {
+    const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]'), init = wk.querySelector('[data-f="init"]');
+    if (a.weekly && !(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; done.push(`Treffen: ${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); }
+    if (a.init && !(onlyEmpty && init.value)) { init.value = a.init.value; done.push(`Gründung: ${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); }
+    if (done.some(d => d.startsWith('Treffen') || d.startsWith('Gründung'))) touch(wk);
+  }
+  for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
+    const tr = rowEl(key), url = a[key];
+    if (!url || !rowOn(tr)) continue;
+    const input = tr.querySelector('input[type="text"]');
+    if (onlyEmpty && input.value.trim()) continue;
+    input.value = url; touch(tr); done.push(`${label}: ${url.length > 48 ? url.slice(0, 46) + '…' : url}`);
+  }
+  return done;
+}
+
+function buildFreeText(sp) {
   const wrap = document.createElement('div'); wrap.className = 'ws-free';
-  const label = document.createElement('label'); label.textContent = 'Freitext — hier Text einfügen (wird sofort ausgewertet) oder eine URL';
+  const label = document.createElement('label'); label.textContent = 'Freitext — hier Text oder URLs einfügen (wird sofort ausgewertet): Workshops, Treffen, Gründung, Kalender, SpaceAPI';
   const area = document.createElement('textarea');
-  area.rows = 3; area.spellcheck = false;
-  area.placeholder = 'Text oder URL einfügen — Text: erkannte Typen werden angehakt · URL: „Website auslesen (Server)“ liest sie serverseitig aus';
-  area.setAttribute('aria-label', 'Freitext für Workshop-Erkennung');
+  area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
+  area.placeholder = 'z. B. „Jeden Dienstag ab 19 Uhr offener Abend, Lasercutter, 3D-Drucker … gegründet 2015“ oder eine Kalender-/SpaceAPI-URL — oder eine Website-URL zum Auslesen per Server';
   const detected = document.createElement('p'); detected.className = 'ws-detected'; detected.dataset.state = 'idle'; detected.setAttribute('role', 'status');
   const row = document.createElement('div'); row.className = 'scan-row';
   const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Website auslesen (Server)';
@@ -315,31 +347,32 @@ function buildFreeText(tr, sp) {
   if (!issue) btn.title = 'Der Server-Scan kommentiert ein Workshop-Issue — für diesen Space gibt es keins (Text einfügen geht trotzdem).';
   row.append(btn, target);
   wrap.append(label, area, detected, row);
-  label.htmlFor = area.id = `ws-free-${sp.id}`;
 
   const scanUrl = () => { const v = area.value.trim(); return looksLikeUrl(v) ? v : sp.website; };
   const refreshTarget = () => {
     const v = area.value.trim(), url = scanUrl();
     target.textContent = url ? `Scan-Ziel: ${url}${v && !looksLikeUrl(v) ? ' — der eingefügte Text wird dafür nicht verwendet (er wird direkt ausgewertet)' : ''}` : 'Kein Scan-Ziel: keine Website bekannt — URL einfügen.';
-    btn.disabled = !issue || !url || tr.dataset.off === 'true';
+    btn.disabled = !issue || !url || !rowOn(rowEl('workshops'));
   };
-  const evaluate = (source = '') => {
+  const evaluate = (source = '', opts = {}) => {
     refreshTarget();
     const v = area.value;
     if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
-    if (looksLikeUrl(v)) { setIndicator(detected, 'info', `URL erkannt${source} — mit „Website auslesen (Server)“ serverseitig auslesen.`); return; }
-    const found = detectFromText(v);
-    checkTypes(tr, found);
-    setIndicator(detected, found.length ? 'ok' : 'none', found.length ? `✓ Text${source} ausgewertet (${v.length} Zeichen) — ${found.length} erkannt und angehakt:` : `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt`, found);
+    const a = analyzeFreeText(v);
+    const done = applyAnalysis(a, opts);
+    const notes = a.notes.length ? ` · ${a.notes.join(' · ')}` : '';
+    if (done.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — übernommen:${notes}`, done); return; }
+    if (looksLikeUrl(v.trim())) { setIndicator(detected, 'info', `URL erkannt${source} (kein Kalender/SpaceAPI) — mit „Website auslesen (Server)“ die Workshops serverseitig auslesen.`); return; }
+    setIndicator(detected, 'none', `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt${notes}`);
   };
   area.addEventListener('input', () => evaluate());
   // Einfügen: erst nach dem Einsetzen auswerten (der Wert steht beim paste-Ereignis noch nicht im Feld)
-  area.addEventListener('paste', () => setTimeout(evaluate, 0));
+  area.addEventListener('paste', () => setTimeout(() => evaluate(), 0));
   queueMicrotask(refreshTarget);
 
   // Zwischenablage automatisch lesen: wenn das Feld den Fokus bekommt (auch beim Zurückkehren ins Fenster, wenn das Feld
   // fokussiert war) und beim Verlassen des leeren Feldes. Nur in ein leeres (bzw. zuletzt automatisch gefülltes) Feld, nie über
-  // eigene Eingaben; derselbe Inhalt wird nicht erneut übernommen. Ohne Berechtigung/Unterstützung (Safari) bleibt es still.
+  // eigene Eingaben; es werden nur leere Eigenschaften gefüllt; derselbe Inhalt wird nicht erneut übernommen. Ohne Berechtigung/Unterstützung bleibt es still.
   let lastClip = '', autoText = '';
   const readClipboard = async () => {
     if (area.disabled || !navigator.clipboard?.readText) return;
@@ -348,7 +381,7 @@ function buildFreeText(tr, sp) {
       const t = (await navigator.clipboard.readText()).trim();
       if (!t || t === lastClip || t.length > 20000 || (area.value.trim() && area.value !== autoText)) return;
       lastClip = t; autoText = area.value = t;
-      evaluate(' aus Zwischenablage');
+      evaluate(' aus Zwischenablage', { onlyEmpty: true });
     } catch { /* keine Berechtigung / Fenster ohne Fokus */ }
   };
   area.addEventListener('focus', readClipboard);
@@ -373,7 +406,7 @@ function buildFreeText(tr, sp) {
           if (!r) continue;
           gh(`/repos/${REPO}/issues/comments/${c.id}`, { method: 'DELETE' }).catch(() => { /* Kommentar bleibt, harmlos */ });
           if (r.error) { setIndicator(detected, 'error', `✗ Scan fehlgeschlagen: ${r.error}`); toast(`Scan fehlgeschlagen: ${r.error}`, 'no'); return; }
-          checkTypes(tr, r.types);
+          checkTypes(r.types);
           toast(r.types.length ? `Scan: ${r.types.join(', ')} erkannt` : 'Scan: nichts erkannt', r.types.length ? 'ok' : 'warn');
           setIndicator(detected, r.types.length ? 'ok' : 'none', r.types.length ? `✓ Scan fertig (${r.pages} Seite(n), ${Math.round((Date.now() - t0) / 1000)} s) — ${r.types.length} erkannt und angehakt (bitte prüfen):` : `✓ Scan fertig (${r.pages} Seite(n)) — nichts erkannt`, r.types);
           return;
