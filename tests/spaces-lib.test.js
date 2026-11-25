@@ -217,3 +217,10 @@ test('18: analyzeFreeText — Kurzform, nur URL, leer, mehrdeutig', () => {
   assert.equal(m.weekly, null); assert.match(m.notes[0], /Mehrere/);
   assert.equal(analyzeFreeText('Treffen jeden Donnerstag ab 18 Uhr, später vielleicht auch Dienstag').weekly?.day, '4');
 });
+
+test('19: Uhrzeit ist eine Auswahlliste im 30-Minuten-Raster (iOS/Android-Picker ignorieren step)', () => {
+  const js = readFileSync(new URL('../admin/spaces.js', import.meta.url), 'utf8');
+  assert.match(js, /time = document\.createElement\('select'\)/);
+  assert.match(js, /m \+= TIME_STEP_MINUTES/);
+  assert.ok(!/type: 'time'/.test(js), 'kein <input type="time"> mehr');
+});

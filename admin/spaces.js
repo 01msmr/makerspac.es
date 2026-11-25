@@ -175,7 +175,12 @@ function buildInputs(key, value) {
     const sel = document.createElement('select'); sel.dataset.f = 'day'; sel.ariaLabel = 'Wochentag';
     for (const [v, l] of WEEKDAYS) sel.append(Object.assign(document.createElement('option'), { value: v, textContent: l }));
     sel.value = value.day;
-    const time = Object.assign(document.createElement('input'), { type: 'time', value: value.time, step: TIME_STEP_MINUTES * 60 }); time.dataset.f = 'time'; time.ariaLabel = 'Uhrzeit (30-Minuten-Raster)'; time.title = 'Nur volle und halbe Stunden (:00 / :30)';
+    // Auswahlliste statt <input type="time">: iOS und Android ignorieren `step` im Zeit-Picker (Minutenrad), eine Liste erzwingt das Raster überall
+    const time = document.createElement('select'); time.dataset.f = 'time'; time.ariaLabel = 'Uhrzeit (30-Minuten-Raster)'; time.title = 'Nur volle und halbe Stunden (:00 / :30)';
+    time.append(new Option('– Uhrzeit', ''));
+    for (let m = 0; m < 24 * 60; m += TIME_STEP_MINUTES) time.append(new Option(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`));
+    if (value.time && ![...time.options].some(o => o.value === value.time)) time.append(new Option(`${value.time} (außerhalb des Rasters)`, value.time));   // vorhandener Wert bleibt sichtbar; „übernehmen“ verlangt eine Korrektur
+    time.value = value.time;
     const init = Object.assign(document.createElement('input'), { type: 'date', value: value.init, min: '1900-01-01', max: new Date().toISOString().slice(0, 10) }); init.dataset.f = 'init'; init.ariaLabel = 'Gegründet';
     const lbl = document.createElement('small'); lbl.textContent = 'gegründet';
     const line1 = document.createElement('div'); line1.className = 'line'; line1.append(sel, time);
