@@ -19,8 +19,22 @@ jobs:
         with:
           node-version: '18'
 
+      # Gedächtnis (letzte zwei Signaturen, nur für „offen“ ohne Zeitstempel): nicht öffentlich → Actions-Cache, nie hochladen/committen
+      - name: Status-Gedächtnis laden
+        uses: actions/cache/restore@v4
+        with:
+          path: status-memory.json
+          key: status-memory-${{ github.run_id }}
+          restore-keys: status-memory-
+
       - name: SpaceAPI Status abrufen
         run: node fetch-spaceapi-status.js
+
+      - name: Status-Gedächtnis speichern
+        uses: actions/cache/save@v4
+        with:
+          path: status-memory.json
+          key: status-memory-${{ github.run_id }}
 
       - name: status.json zu Netcup hochladen (FTP via curl)
         env:

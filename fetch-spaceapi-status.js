@@ -3,10 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { adapterFor } from './tools/lib/status-adapters.js';
+import { decideFreshness } from './tools/lib/status-freshness.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ✨ KEINE DOPPELTE PFLEGE MEHR!
 // SpaceAPI Endpoints werden aus loc-enrichment.json gelesen (spaceapi.endpoint, per ID), Namen aus locations.json
+
+// Gedächtnis (NICHT öffentlich): nur die letzten zwei Signaturen je Space, nur wo ein „offen“ keinen Zeitstempel liefert.
+// Liegt neben dem Skript, wird per Actions-Cache zwischen den Läufen gehalten (update-status.yml) und weder hochgeladen noch committet.
+const MEMORY_FILE = process.env.STATUS_MEMORY_FILE || path.join(__dirname, 'status-memory.json');
+let MEMORY = {};
+try { MEMORY = JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8')); } catch { MEMORY = {}; }
 
 // Konfiguration
 const TIMEOUT_MS = 45000; // 45 Sekunden
@@ -99,6 +106,9 @@ async function fetchSpaceStatus(space) {
       adapterError = r.reason || null;
     } else {
       ({ status: isOpen, message } = parseOpenStatus(text));
+      // Alters-Regel (ADR-010): „offen“ nur, wenn der Sende-/Zeitstempel < 24 h alt ist; „geschlossen“ bleibt; Gedächtnis nur wo unumgänglich
+      const fresh = decideFreshness({ status: isOpen, text, lastModified: response.headers.get('last-modified') || '' }, MEMORY, space.endpoint);
+      if (fresh.status !== isOpen) { isOpen = fresh.status; adapterError = fresh.reason || null; }
     }
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
@@ -214,6 +224,11 @@ async function main() {
       }])
     ),
   };
+
+  // Gedächtnis fortschreiben (nur aktuelle Endpoints; nicht öffentlich, nie in status.json)
+  const keep = new Set(SPACE_APIS.map(s => s.endpoint));
+  for (const k of Object.keys(MEMORY)) if (!keep.has(k)) delete MEMORY[k];
+  try { fs.writeFileSync(MEMORY_FILE, JSON.stringify(MEMORY)); } catch (e) { console.warn('⚠️ Gedächtnis nicht gespeichert:', e.message); }
 
   // Schreibe JSON File
   const outputPath = path.join(__dirname, 'status.json');

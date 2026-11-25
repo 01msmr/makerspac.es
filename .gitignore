@@ -6,6 +6,8 @@ __*.js
 
 # Laufzeit-Daten (immer aktuell auf dem Server)
 status.json
+# Status-Gedächtnis (nicht öffentlich: nur Actions-Cache, nie committen/hochladen)
+status-memory.json
 
 # Generierte Datendateien (werden bei jedem Deploy neu erzeugt + hochgeladen)
 data/markers.json

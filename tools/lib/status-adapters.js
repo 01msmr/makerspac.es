@@ -3,11 +3,12 @@
 // Pilot „html-style“ (Fabulous St. Pauli / fablab-hamburg.org/sesame): die Statusseite ist
 //   <body style="…;background:red">November 25 03:01</body>
 // → Zustand steckt im Style-Attribut (red/green, auch Hex/rgb), der Text ist der Zeitpunkt der letzten Änderung.
-// Es zählt NUR der aktuelle Stand (keine Historie). Der Zeitpunkt dient allein dazu, zu alte Stände als „unbekannt“ zu werten.
+// Es zählt NUR der aktuelle Stand (keine Historie). Der Zeitpunkt dient allein dazu, ein zu altes „offen“ als „unbekannt“ zu werten
+// (Regel für alle Quellen: tools/lib/status-freshness.js; „geschlossen“ wird nie verworfen).
 // Der Adapter rät nie: Nicht lesbar/zu alt/mehrdeutig → status null + reason.
 
-/** Globale Grenze (nicht je Space): ein Stand, dessen Änderungszeitpunkt älter ist, gilt als nicht mehr gültig → unbekannt. */
-export const STATUS_MAX_AGE_HOURS = 48;
+/** Globale Grenze (nicht je Space): ein „offen“, dessen Sende-/Änderungszeitpunkt älter ist, gilt als nicht mehr gültig → unbekannt. „Geschlossen“ wird nie verworfen (lange geschlossen ist normal). */
+export const STATUS_MAX_AGE_HOURS = 24;
 export const ADAPTERS = ['html-style'];
 
 // ─── Farbe ──────────────────────────────────────────────────────────────
@@ -109,10 +110,11 @@ export function parseHtmlStyleStatus(html, { now = Date.now(), maxAgeHours = STA
   if (!rgb) return { status: null, reason: `Farbe nicht lesbar („${bg.slice(0, 30)}“)` };
   const status = classifyRedGreen(rgb);
   if (status === null) return { status: null, reason: `Farbe weder rot noch grün („${bg.slice(0, 30)}“)` };
+  if (status === false) return { status: false };   // „geschlossen“ bleibt auch nach Tagen (lange geschlossen ist normal)
   const changed = parseChangeTime(bodyText(html), now);
-  if (changed === null) return { status: null, reason: 'Zeitpunkt der letzten Änderung nicht lesbar — Aktualität unbekannt' };
+  if (changed === null) return { status: null, reason: 'Zeitpunkt der letzten Änderung nicht lesbar — „offen“ nicht prüfbar' };
   const ageHours = Math.round((now - changed) / 3600e3 * 10) / 10;
-  if (ageHours > maxAgeHours) return { status: null, reason: `Stand zu alt (${Math.round(ageHours)} h > ${maxAgeHours} h)`, ageHours };
+  if (ageHours > maxAgeHours) return { status: null, reason: `offen seit zu langer Zeit (${Math.round(ageHours)} h > ${maxAgeHours} h)`, ageHours };
   return { status, ageHours };
 }
 
