@@ -9,6 +9,7 @@ import { WORKSHOP_TYPES } from '../workshop-types.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+import { ADAPTERS as STATUS_ADAPTERS } from '../tools/lib/status-adapters.js';
 const ALLOWED_FIELDS = new Set(['workshops', 'events', 'spaceapi', 'weekly']); // dates gehören in locations.json
 
 /** true bei einer http(s)-URL ohne Leerzeichen (z. B. „https: //x“ ist ungültig) */
@@ -52,6 +53,13 @@ export function validateEnrichment(enrichment, locationIds) {
     if (entry.spaceapi !== undefined) {
       const s = entry.spaceapi;
       if (!s || typeof s !== 'object' || !isHttpUrl(s.endpoint)) errors.push(`${at}: "spaceapi.endpoint" ist keine gültige http(s)-URL`);
+      else {
+        // optional: Status ohne SpaceAPI (tools/lib/status-adapters.js) — adapter + maxAgeHours
+        if (s.adapter !== undefined && !STATUS_ADAPTERS.includes(s.adapter)) errors.push(`${at}: "spaceapi.adapter" unbekannt ("${s.adapter}"; erlaubt: ${STATUS_ADAPTERS.join(', ')})`);
+        if (s.maxAgeHours !== undefined && !(Number.isInteger(s.maxAgeHours) && s.maxAgeHours >= 1 && s.maxAgeHours <= 720)) errors.push(`${at}: "spaceapi.maxAgeHours" muss eine ganze Zahl 1–720 sein`);
+        const extra = Object.keys(s).filter(k => !['endpoint', 'adapter', 'maxAgeHours'].includes(k));
+        if (extra.length) errors.push(`${at}: "spaceapi" enthält unbekannte Felder: ${extra.join(', ')}`);
+      }
     }
 
     if (entry.weekly !== undefined) {

@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { adapterFor } from './tools/lib/status-adapters.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ✨ KEINE DOPPELTE PFLEGE MEHR!
@@ -88,7 +89,17 @@ async function fetchSpaceStatus(space) {
     }
 
     const text = await response.text();
-    const { status: isOpen, message } = parseOpenStatus(text);
+    // Spaces ohne SpaceAPI: Adapter aus loc-enrichment.json (spaceapi.adapter, z. B. „html-style“) — nur der aktuelle Stand,
+    // zu alt/unlesbar → unbekannt (nie raten). Ohne Adapter: SpaceAPI/0-1/ThingSpeak wie bisher.
+    const adapter = space.adapter && adapterFor(space.adapter);
+    let isOpen, message = null, adapterError = null;
+    if (adapter) {
+      const r = adapter(text, { maxAgeHours: space.maxAgeHours });
+      isOpen = r.status;
+      adapterError = r.reason || null;
+    } else {
+      ({ status: isOpen, message } = parseOpenStatus(text));
+    }
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
       isOpen === false ? '🔴 CLOSED' :
@@ -101,7 +112,7 @@ async function fetchSpaceStatus(space) {
       status: isOpen,
       ...(isOpen === null && message ? { message } : {}),
       lastUpdate: new Date().toISOString(),
-      error: null
+      error: adapterError
     };
 
   } catch (error) {
@@ -138,8 +149,9 @@ function loadSpaceAPIsFromLocations() {
     const spacesWithAPI = locations
       .filter(loc => loc.name !== 'TEMPLATE')
       .map(loc => {
-        const endpoint = enrichment[String(loc.ID)]?.spaceapi?.endpoint || '';
-        return endpoint.trim() ? { name: loc.name, endpoint: endpoint.trim() } : null;
+        const api = enrichment[String(loc.ID)]?.spaceapi;
+        const endpoint = api?.endpoint || '';
+        return endpoint.trim() ? { name: loc.name, endpoint: endpoint.trim(), adapter: api.adapter, maxAgeHours: api.maxAgeHours } : null;
       })
       .filter(Boolean);
 

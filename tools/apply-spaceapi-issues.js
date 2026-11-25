@@ -39,7 +39,9 @@ export function parseIssue(issue) {
 
 /** Setzt spaceapi.endpoint fuer eine ID (mutiert enrichment) */
 export function applyProposal(enrichment, id, endpoint) {
-  (enrichment[String(id)] ??= {}).spaceapi = { endpoint };
+  const e = (enrichment[String(id)] ??= {});
+  // Gleicher Endpoint: Adapter-Angaben (ohne SpaceAPI, tools/lib/status-adapters.js) bleiben; neuer Endpoint = echte SpaceAPI ersetzt den Adapter
+  e.spaceapi = e.spaceapi?.endpoint === endpoint ? e.spaceapi : { endpoint };
 }
 
 // === Review-Label + Live-Check (pure / injizierbar) ===
