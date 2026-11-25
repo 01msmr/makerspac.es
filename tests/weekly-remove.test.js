@@ -35,26 +35,25 @@ test('2: Apply — weekly: null entfernt das Treffen; leerer Eintrag verschwinde
 });
 
 test('3: Spaces — Formwert „none“, Validierung, Text', () => {
-  assert.equal(validateValue('weekly', { day: 'none', time: '', init: '' }), null);
-  assert.equal(validateValue('weekly', { day: 'none', time: '', init: '2999-01-01' }, '2026-11-25'), 'Gründungsdatum ungültig');
+  assert.equal(validateValue('weekly', { day: 'none', time: '' }), null);
   assert.equal(weeklyTextOf({ day: 'none', time: '', init: '' }), 'kein Weekly');
   const p = parseWeeklyIssue(issue('{"weekly": null}'));
-  assert.deepEqual(proposalValue('weekly', p), { day: 'none', time: '', init: '' });
-  assert.deepEqual(displayValue('weekly', p, { day: '2', time: '19:00', init: '2015-05-01' }), { day: 'none', time: '', init: '2015-05-01' });
+  assert.deepEqual(proposalValue('weekly', p), { day: 'none', time: '' });
+  assert.deepEqual(displayValue('weekly', p), { day: 'none', time: '' });
 });
 
-function sp(proposals, cur) { return { id: 48, name: 'CCC', website: '', proposals, current: { weekly: cur, workshops: [], calendar: '', spaceapi: '' } }; }
+function sp(proposals, cur) { return { id: 48, name: 'CCC', website: '', proposals, current: { weekly: cur, init: '', workshops: [], calendar: '', spaceapi: '' } }; }
 
 test('4: planDecision — „kein weekly“: neues Issue nur mit weekly: null; ohne vorhandenes Treffen nichts zu tun; Vorschlag unverändert = ok', () => {
-  const cur = { day: '2', time: '19:00', init: '1984-01-01' };
-  let r = planDecision(sp({}, cur), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '', init: '1984-01-01' } }]);
+  const cur = { day: '2', time: '19:00' };
+  let r = planDecision(sp({}, cur), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '' } }]);
   assert.equal(r.errors.length, 0); assert.equal(r.actions[0].type, 'create');
   const created = parseWeeklyIssue({ ...issue('{}'), body: r.actions[0].body });
-  assert.equal(created.weekly, null); assert.equal(created.init, undefined);                     // Gründung (unverändert) nicht mitgeschrieben
-  r = planDecision(sp({}, { day: '', time: '', init: '' }), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '', init: '' } }]);
+  assert.equal(created.weekly, null); assert.equal(created.init, undefined);
+  r = planDecision(sp({}, { day: '', time: '' }), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '' } }]);
   assert.deepEqual(r.actions, []);                                                                // nichts zu entfernen
   const g = groupBySpace({ weekly: [issue('{"weekly": null}')], workshops: [], calendar: [], spaceapi: [] }).get(48);
-  r = planDecision(sp(g.proposals, cur), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '', init: '1984-01-01' } }], { 5: issue('{"weekly": null}').body });
+  r = planDecision(sp(g.proposals, cur), [{ key: 'weekly', enabled: true, include: true, value: { day: 'none', time: '' } }], { 5: issue('{"weekly": null}').body });
   assert.deepEqual(r.actions.map(a => [a.type, a.body]), [['ok', undefined]]);                   // Vorschlag „entfernen“ übernehmen = nur ok
 });
 

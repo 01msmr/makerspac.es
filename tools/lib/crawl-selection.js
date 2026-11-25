@@ -57,7 +57,12 @@ export function proposalFromIssue(issue, kind) {
   if (kind === 'weekly') {
     const m = body.match(RE_WEEKLY);
     if (!m) return null;
-    try { return deltaKey(JSON.parse(m[1])); } catch { return null; }
+    try { const v = JSON.parse(m[1]); return v.weekly ? deltaKey({ weekly: v.weekly }) : null; } catch { return null; }   // nur der Weekly-Teil
+  }
+  if (kind === 'init') {
+    const m = body.match(RE_WEEKLY);
+    if (!m) return null;
+    try { const v = JSON.parse(m[1]); return v['space.init'] != null ? deltaKey({ 'space.init': v['space.init'] }) : null; } catch { return null; }   // nur der Gründungs-Teil
   }
   const m = body.match(RE_EVENTS);
   return m ? normalizeUrl(m[1]) : null;
@@ -71,7 +76,7 @@ const sameProposal = (kind, a, b) => (kind === 'workshops'
  * Entscheidet über einen Crawler-Fund anhand der INHALTE.
  *  - skip: Fund == integrierter Stand, oder == jüngster früherer Vorschlag (Website seit dem letzten Crawl unverändert)
  *  - propose: jede andere Abweichung = neuere Änderung; offene ältere Vorschläge mit anderem Inhalt werden ersetzt
- * @param {{kind:'workshops'|'events'|'weekly', found:string[]|string|null, integrated?:string[]|string|null, issues:{number:number,state:string,createdAt:string,body:string}[]}} a
+ * @param {{kind:'workshops'|'events'|'weekly'|'init', found:string[]|string|null, integrated?:string[]|string|null, issues:{number:number,state:string,createdAt:string,body:string}[]}} a
  * @returns {{action:'skip'|'propose', reason:string, supersede:number[]}}
  */
 export function decideProposal({ kind, found, integrated, issues }) {

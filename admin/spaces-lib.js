@@ -1,7 +1,8 @@
 // admin/spaces-lib.js — reine Logik der Space-Review-Seite (ADR-009); kein DOM, kein Netz → testbar mit node --test
 //
 // Formwerte je Eigenschaft: workshops = string[] · calendar/spaceapi = string (leer = keine) ·
-// weekly = { day: ''|'0'..'6', time: ''|'HH:MM', init: ''|'YYYY-MM-DD' }
+// weekly = { day: ''|'0'..'6'|'none', time: ''|'HH:MM' } · init (Gründung) = ''|'YYYY-MM-DD'
+// weekly und init sind getrennte Eigenschaften mit je eigenem Issue (`weekly` bzw. `space.init`; alte kombinierte Issues werden beiden zugeordnet).
 
 import {
   parseIssue, parseWorkshopIssue, parseCalendarIssue, parseWeeklyIssue,
@@ -20,12 +21,12 @@ export const FIELDS = [
   { key: 'workshops', label: 'Workshops', parse: parseWorkshopIssue, title: '[Workshop-Daten]', labels: ['workshop-data'], query: 'workshop-data' },
   { key: 'calendar', label: 'Kalender', parse: parseCalendarIssue, title: 'Kalenderlink:', labels: ['data-update'], query: 'data-update' },
   { key: 'spaceapi', label: 'SpaceAPI', parse: parseIssue, title: 'SpaceAPI:', labels: ['data-update'], query: 'data-update' },
-  { key: 'weekly', label: 'Treffen', parse: parseWeeklyIssue, title: 'Treffen-Daten:', labels: ['weekly-data'], query: 'weekly-data' },
+  { key: 'weekly', label: 'Wöchentliches Treffen', parse: parseWeeklyIssue, title: 'Treffen-Daten:', labels: ['weekly-data'], query: 'weekly-data' },
+  { key: 'init', label: 'Gründung', parse: parseWeeklyIssue, title: 'Treffen-Daten:', suffix: ' (Gründung)', labels: ['weekly-data'], query: 'weekly-data' },   // eigenes Issue mit nur `space.init`
 ];
 export const FIELD = Object.fromEntries(FIELDS.map(f => [f.key, f]));
 
 const ymd = n => (n && n !== PLACEHOLDER_INIT ? formatEditDate(n) : '');
-const emptyWeekly = () => ({ day: '', time: '', init: '' });
 
 /** Formwert aus dem aktuellen Stand (locations.json + loc-enrichment.json, verschmolzen wie die Karte) */
 export function currentValue(key, loc, enr) {
@@ -37,8 +38,8 @@ export function currentValue(key, loc, enr) {
     case 'weekly': return {
       day: m.weekly && m.weekly.time ? String(m.weekly.weekday) : '',
       time: m.weekly && m.weekly.time ? formatTime(m.weekly.time) : '',
-      init: ymd(loc?.dates?.['space.init']),
     };
+    case 'init': return ymd(loc?.dates?.['space.init']);
     default: return null;
   }
 }
@@ -52,47 +53,26 @@ export function proposalValue(key, p) {
     case 'weekly': return {
       day: p.weekly === null ? 'none' : (p.weekly ? String(p.weekly.weekday) : ''),   // 'none' = „kein weekly“
       time: p.weekly?.time ? formatTime(p.weekly.time) : '',
-      init: p.init !== undefined ? ymd(p.init) : '',
     };
+    case 'init': return p.init !== undefined ? ymd(p.init) : '';
     default: return null;
   }
 }
 
-/**
- * Formwert zur ANZEIGE eines Vorschlags. Beim Treffen enthält ein Vorschlag oft nur einen Teil (z. B. nur die Gründung):
- * die fehlenden Teile werden mit dem aktuellen Wert vorbelegt, damit nichts wie „entfernen“ aussieht. Nur Anzeige — geschrieben wird
- * ausschließlich, was der Vorschlag enthält oder was du änderst (siehe weeklyWriteValue).
- */
-export function displayValue(key, p, current) {
-  const v = proposalValue(key, p);
-  if (key !== 'weekly') return v;
-  const hasWk = p.weekly !== undefined, hasInit = p.init !== undefined;
-  return { day: hasWk ? v.day : current.day, time: hasWk ? v.time : current.time, init: hasInit ? v.init : current.init };
-}
+/** Formwert zur ANZEIGE eines Vorschlags (Weekly und Gründung sind getrennte Eigenschaften → kein Auffüllen mit dem Rest mehr). */
+export const displayValue = (key, p) => proposalValue(key, p);
 
-/**
- * Welche Teile eines Treffen-Werts in das Issue geschrieben werden: nur die, die der Vorschlag schon enthält oder die du gegenüber
- * dem aktuellen Stand geändert hast. Bestehende Daten werden nie mit identischen Werten neu geschrieben.
- * @param {{day:string,time:string,init:string}} value @param {object|null} p Vorschlag (null = neues Issue) @param {{day:string,time:string,init:string}} current
- */
-export function weeklyWriteValue(value, p, current) {
-  const hasWk = p?.weekly !== undefined, hasInit = p?.init !== undefined;
-  const wk = hasWk || value.day !== current.day || value.time !== current.time;
-  const init = hasInit || value.init !== current.init;
-  return { day: wk ? value.day : '', time: wk ? value.time : '', init: init ? value.init : '' };
-}
-
-/** Würde der Wert einen vorhandenen Teil entfernen? (Treffen: Termin ODER Gründung geleert; sonst: Wert geleert) */
+/** Würde der Wert einen vorhandenen Wert entfernen? (Weekly: Termin geleert; sonst: Wert geleert) */
 export function removesExisting(key, value, current) {
-  if (key === 'weekly') return !!((current.day || current.time) && !value.day && !value.time) || !!(current.init && !value.init);
+  if (key === 'weekly') return !!((current.day || current.time) && !value.day && !value.time);
   return !isEmptyValue(key, current) && isEmptyValue(key, value);
 }
 
-export const isEmptyValue = (key, v) => key === 'workshops' ? !v.length : key === 'weekly' ? !v.day && !v.time && !v.init : !v;
+export const isEmptyValue = (key, v) => key === 'workshops' ? !v.length : key === 'weekly' ? !v.day && !v.time : !v;
 
 export function sameValue(key, a, b) {
   if (key === 'workshops') return a.length === b.length && a.every(w => b.includes(w));
-  if (key === 'weekly') return a.day === b.day && a.time === b.time && a.init === b.init;
+  if (key === 'weekly') return a.day === b.day && a.time === b.time;
   return a === b;
 }
 
@@ -101,17 +81,18 @@ export function validateValue(key, v, today = new Date().toISOString().slice(0, 
   if (key === 'workshops') return v.every(w => w in WORKSHOP_TYPES) ? null : 'Unbekannter Workshop-Typ';
   if (key === 'calendar' || key === 'spaceapi') return !v || (/^https?:\/\/\S+$/.test(v) && !v.includes('"')) ? null : 'Ungültige URL (http/https)';
   if (key === 'weekly') {
-    if (v.day === 'none') return v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today) ? 'Gründungsdatum ungültig' : null;   // „kein weekly“: keine Uhrzeit nötig
+    if (v.day === 'none') return null;   // „kein weekly“: keine Uhrzeit nötig
     if (!!v.day !== !!v.time) return 'Wochentag und Uhrzeit nur zusammen';
     if (v.time && !/^\d{2}:(00|30)$/.test(v.time)) return 'Uhrzeit nur im 30-Minuten-Raster (:00 oder :30)';
-    if (v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today)) return 'Gründungsdatum ungültig';
     return null;
   }
+  if (key === 'init') return !v || (/^\d{4}-\d{2}-\d{2}$/.test(v) && v >= '1900-01-01' && v <= today) ? null : 'Gründungsdatum ungültig';
   return null;
 }
 
 /** Text im Format von parseWeeklyInput: „Di 19:00, 2015-05-01“ */
 export function weeklyTextOf(v) {
+  v = { init: '', ...v };
   const wk = v.day === 'none' ? 'kein Weekly' : (v.day !== '' && v.time ? formatWeekly({ weekday: Number(v.day), time: Number(v.time.replace(':', '')) }) : '');
   return [wk, v.init].filter(Boolean).join(', ');
 }
@@ -125,10 +106,13 @@ export function weeklyTextOf(v) {
 export function groupBySpace(issuesByKind) {
   const map = new Map();
   for (const f of FIELDS) {
-    const parsed = (issuesByKind[f.key] ?? []).map(f.parse).filter(Boolean);
+    const parsed = (issuesByKind[f.key === 'init' ? 'weekly' : f.key] ?? []).map(f.parse).filter(Boolean);
     for (const p of parsed) {
+      // weekly-data-Issues tragen `weekly` und/oder `space.init`: jede Eigenschaft nimmt nur die Issues mit ihrem Teil
+      if (f.key === 'weekly' && p.weekly === undefined) continue;
+      if (f.key === 'init' && p.init === undefined) continue;
       const g = map.get(p.spaceId) ?? { spaceId: p.spaceId, proposals: {}, okCount: 0 };
-      if (p.ok) g.okCount++;
+      if (p.ok) { if (f.key !== 'init' || p.weekly === undefined) g.okCount++; }
       else if (!g.proposals[f.key] || p.number > g.proposals[f.key].number) g.proposals[f.key] = p;
       map.set(p.spaceId, g);
     }
@@ -167,13 +151,14 @@ export function lockedSpaces(groups, me, now = Date.now()) {
 /** Anteil der Spaces mit gefülltem Feld je Eigenschaft (aus loc-enrichment.json + locations.json) */
 export function fillRates(locations, enrichment) {
   const n = locations.length || 1;
-  const c = { workshops: 0, calendar: 0, spaceapi: 0, weekly: 0 };
+  const c = { workshops: 0, calendar: 0, spaceapi: 0, weekly: 0, init: 0 };
   for (const l of locations) {
     const e = enrichment[String(l.ID)] ?? {};
     if (e.workshops?.length) c.workshops++;
     if (e.events) c.calendar++;
     if (e.spaceapi?.endpoint) c.spaceapi++;
     if (e.weekly?.time) c.weekly++;
+    if (l.dates?.['space.init'] && l.dates['space.init'] !== PLACEHOLDER_INIT) c.init++;
   }
   return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v / n]));
 }
@@ -191,6 +176,7 @@ export function newIssueBody(key, space, value, replace) {
   if (key === 'calendar') return replaceEvents(head + block('{"events": ""}'), value, replace);
   if (key === 'workshops') return replaceWorkshops(head + block('"workshops": []'), value, replace);
   if (key === 'weekly') return replaceWeekly(head + block('{}'), weeklyTextOf(value));
+  if (key === 'init') return replaceWeekly(head + block('{}'), value);
   return null;
 }
 
@@ -200,6 +186,7 @@ export function editedBody(key, body, value, replace) {
   if (key === 'calendar') return replaceEvents(body, value, replace);
   if (key === 'workshops') return replaceWorkshops(body, value, replace);
   if (key === 'weekly') return replaceWeekly(body, weeklyTextOf(value));
+  if (key === 'init') return replaceWeekly(body, value);
   return null;
 }
 
@@ -212,10 +199,23 @@ export function editedBody(key, body, value, replace) {
  *   action: {type:'ok'|'reject'|'create', key, number?, body?, title?, labels?, prevBody?}
  */
 export function planDecision(space, rows, bodies = {}) {
+  rows = [...rows];
   const actions = [], errors = [];
+  // Altes kombiniertes Issue (weekly + space.init in EINEM Issue, vor der Trennung angelegt): beide Eigenschaften nur gemeinsam
+  // und unverändert übernehmen/verwerfen; neue Crawler-Issues sind getrennt.
+  const pw = space.proposals.weekly, pi = space.proposals.init;
+  if (pw && pi && pw.number === pi.number) {
+    const rw = rows.find(r => r.key === 'weekly'), ri = rows.find(r => r.key === 'init');
+    if (rw?.enabled && ri?.enabled) {
+      if (rw.include !== ri.include) errors.push('Altes kombiniertes Issue: Weekly und Gründung nur gemeinsam übernehmen/verwerfen');
+      else if (rw.include && (!sameValue('weekly', rw.value, proposalValue('weekly', pw)) || ri.value !== proposalValue('init', pi))) errors.push('Altes kombiniertes Issue: nur unverändert übernehmen (Werte ändern = Weekly und Gründung getrennt neu anlegen)');
+      else actions.push({ type: rw.include ? 'ok' : 'reject', key: 'weekly', number: pw.number });
+      rows = rows.filter(r => r.key !== 'weekly' && r.key !== 'init');
+    } else rows = rows.filter(r => r.key !== 'weekly' && r.key !== 'init');
+  }
   for (let r of rows) {
     if (!r.enabled) continue;
-    // „kein weekly“ ohne vorhandenes Treffen ist nichts zu tun
+    // „kein weekly“ ohne vorhandenes Weekly ist nichts zu tun
     if (r.key === 'weekly' && r.value.day === 'none' && !(space.current.weekly.day || space.current.weekly.time)) r = { ...r, value: { ...r.value, day: '', time: '' } };
     const f = FIELD[r.key], p = space.proposals[r.key], cur = space.current[r.key];
     const err = validateValue(r.key, r.value);
@@ -229,16 +229,16 @@ export function planDecision(space, rows, bodies = {}) {
       const replace = !isEmptyValue(r.key, cur);
       if (!changed) { actions.push({ type: 'ok', key: r.key, number: p.number }); continue; }
       if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
-      const body = editedBody(r.key, bodies[p.number] ?? '', r.key === 'weekly' ? weeklyWriteValue(r.value, p, cur) : r.value, replace);
+      const body = editedBody(r.key, bodies[p.number] ?? '', r.value, replace);
       if (!body) { errors.push(`${f.label}: Eingabe konnte nicht in das Issue geschrieben werden`); continue; }
       actions.push({ type: 'ok', key: r.key, number: p.number, body, prevBody: bodies[p.number] ?? '' });
     } else if (r.include && !sameValue(r.key, r.value, cur)) {
       if (err) { errors.push(`${f.label}: ${err}`); continue; }
       if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
       const replace = !isEmptyValue(r.key, cur);
-      const body = newIssueBody(r.key, space, r.key === 'weekly' ? weeklyWriteValue(r.value, null, cur) : r.value, replace);
+      const body = newIssueBody(r.key, space, r.value, replace);
       if (!body) { errors.push(`${f.label}: neues Issue konnte nicht erzeugt werden`); continue; }
-      actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}`, body, labels: [...f.labels, 'ok'] });
+      actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}${f.suffix ?? ''}`, body, labels: [...f.labels, 'ok'] });
     }
   }
   return { actions, errors };
