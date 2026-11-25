@@ -345,3 +345,7 @@ test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line,
   assert.match(js, /label: 'Vereinsgründung', chips: \[/); assert.match(js, /label: 'Wöchentliches Treffen', chips: \[/); assert.ok(!js.includes('setAutoHint'), 'keine Hinweise mehr in den Zeilen');
   assert.match(css, /\.ws-detected \.det-line \{ margin-top: 1\.1rem;/);
 });
+
+test('29: Entscheider-Knöpfe am Desktop breit (min-width) mit klarem Abstand (gap)', () => {
+  assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ gap: 1\.75rem; \}\s*\.sp-actions button \{ min-width: 12\.5rem;/);
+});
