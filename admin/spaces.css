@@ -3,9 +3,9 @@
 .sp-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 .25rem; }
 /* Entscheiden-Buttons: Vollfarbe, weiße fette Schrift (Farbe leicht abgedunkelt → Kontrast auch bei Orange und im Dark Mode) */
 .sp-actions button { color: #fff; font-weight: 700; border-color: transparent; }
-.sp-actions button[data-tone="ok"] { background: color-mix(in srgb, var(--space-open) 80%, black); }
-.sp-actions button[data-tone="no"] { background: color-mix(in srgb, var(--space-closed) 80%, black); }
-.sp-actions button[data-tone="warn"] { background: color-mix(in srgb, var(--space-unknown) 78%, black); }
+.sp-actions button[data-tone="ok"] { background: var(--space-open); }
+.sp-actions button[data-tone="no"] { background: var(--space-closed); }
+.sp-actions button[data-tone="warn"] { background: var(--space-unknown); }
 .sp-actions button[data-tone="neutral"] { background: var(--hover-text-color); }
 .sp-actions button:hover:not(:disabled) { filter: brightness(1.12); }
 .sp-actions button kbd { color: #fff; background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .55); }
@@ -91,3 +91,14 @@
 .ws-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
 .ws-detected .chip { display: inline-block; margin: .25rem .35rem 0 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .ws-detected[data-state="working"] { animation: none; } }
+
+/* Belege & Prüfhinweise */
+#sp-evidence { margin: .5rem 0; }
+#sp-evidence:empty { display: none; }
+#sp-evidence details { margin: .4rem 0; padding: .3rem .6rem; border: 1px solid var(--dropdown-border); border-radius: 6px; }
+#sp-evidence summary { cursor: pointer; font-weight: 600; }
+#sp-evidence blockquote { margin: .3rem 0 .6rem; padding-left: .6rem; border-left: 3px solid var(--dropdown-border); color: var(--hover-text-color); overflow-wrap: anywhere; }
+#sp-evidence .ev-table td { padding: .1rem .6rem .1rem 0; vertical-align: top; overflow-wrap: anywhere; }
+#sp-evidence .ev-table tr.warn td { background: rgba(255, 200, 0, .25); }
+#sp-evidence .ev-problem { margin: .4rem 0; padding: .4rem .6rem; border-left: 3px solid var(--space-closed); background: var(--dropdown-bg); }
+#sp-evidence .ev-hint { margin: .3rem 0 0; font-size: .85em; color: var(--hover-text-color); }

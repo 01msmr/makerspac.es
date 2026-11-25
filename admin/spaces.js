@@ -1,7 +1,7 @@
 // admin/spaces.js — Reiter „Spaces“ der Review-Seite: ein Space = eine Karte mit allen Eigenschaften (adr/009).
 // Läuft IM Admin (admin.js: Login/Token, Daten, Toasts, Übernehmen). Schreibt NUR Issues (Label/Body/Status/neu anlegen);
 // Daten schreibt ausschließlich der Apply-Workflow (adr/006).
-import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } from './admin-lib.js';
+import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment, problemReason, buildComparison } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
   FIELDS, currentValue, proposalValue, displayValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
@@ -150,6 +150,58 @@ function renderSources(sp) {
   add('W', sp.proposals.weekly?.website, 'Treffen (Quelle)', true);
   const door = document.createElement('i'); door.className = 'fas fa-door-open';
   add(door, sp.current.spaceapi || sp.proposals.spaceapi?.endpoint, 'SpaceAPI', !sp.current.spaceapi);
+}
+
+
+// ─── Belege & Prüfhinweise ───────────────────────────────────────────────
+// Zeigt, WARUM ein Wert vorgeschlagen wurde (Fundstellen), warum ein Vorschlag zuvor nicht übernommen wurde (Bot-Kommentar)
+// und den Live-Vergleich des SpaceAPI-Endpoints mit unseren Daten. Nur textContent; async-Teile prüfen, ob der Space noch aktuell ist.
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+const evBox = (title, ...kids) => { const d = el('details', { open: true }, el('summary', { textContent: title })); d.append(...kids); return d; };
+
+function renderEvidence(sp) {
+  const box = $('sp-evidence'); box.replaceChildren();
+  const id = state.current, still = () => state.current === id;
+  const { workshops: w, weekly, spaceapi, calendar } = sp.proposals;
+  if (w?.rows?.length || w?.evidence) {
+    const kids = [];
+    if (w.rows.length) {
+      const t = el('table', { className: 'ev-table' });
+      for (const r of w.rows) { const tr = t.insertRow(); for (const v of [r.type, r.confidence, r.keywords]) tr.insertCell().textContent = v; }
+      kids.push(t);
+    }
+    if (w.evidence) kids.push(el('blockquote', { textContent: w.evidence }));
+    box.append(evBox('Workshops – Fundstellen', ...kids));
+  }
+  if (weekly?.evidence?.length) {
+    box.append(evBox('Treffen – Fundstellen', ...weekly.evidence.map(e => el('blockquote', { textContent: `${e.what === 'Gründung' ? 'Vereinsgründung' : e.what} ${e.value} (${e.confidence}): „${e.source}“` }))));
+  }
+  if (calendar?.confidence) box.append(evBox('Kalender', el('p', { textContent: `Confidence: ${calendar.confidence}` })));
+  for (const [label, p] of [['Workshops', w], ['Kalender', calendar], ['SpaceAPI', spaceapi], ['Treffen', weekly]]) {
+    if (!p?.problem) continue;
+    const reason = el('span', { textContent: 'Grund wird geladen …' });
+    box.append(el('div', { className: 'ev-problem' }, el('strong', { textContent: `⚠ ${label}: zuvor nicht übernommen` }), el('br'), reason));
+    gh(`/repos/${REPO}/issues/${p.number}/comments?per_page=100`).then(cs => {
+      if (still()) reason.textContent = problemReason(cs) || 'Kein Kommentar des Bots gefunden — siehe Issue auf GitHub.';
+    }).catch(() => { if (still()) reason.textContent = 'Grund konnte nicht geladen werden.'; });
+  }
+  if (spaceapi?.endpoint) {
+    const t = el('table', { className: 'ev-table' }), hint = el('p', { className: 'ev-hint', textContent: 'Endpoint wird geladen …' });
+    const draw = data => {
+      t.replaceChildren();
+      for (const r of buildComparison(sp.loc, sp.current.spaceapi ? { endpoint: sp.current.spaceapi } : undefined, data, spaceapi.endpoint)) {
+        const tr = t.insertRow(); if (r.warn) tr.className = 'warn';
+        for (const v of [r.label, r.ours, r.proposed]) tr.insertCell().textContent = v;
+      }
+    };
+    draw(null);
+    box.append(evBox('SpaceAPI – Live-Vergleich', t, hint));
+    fetch(spaceapi.endpoint, { signal: AbortSignal.timeout(8000) }).then(r => r.json()).then(data => {
+      if (!still()) return;
+      draw(data);
+      hint.textContent = typeof data.space === 'string' ? '' : '⚠ Kein gültiges SpaceAPI-JSON (space fehlt)';
+    }).catch(() => { if (still()) hint.textContent = 'Endpoint nicht direkt ladbar (CORS/Timeout/Fehler) — Link oben („Tür“-Symbol) prüfen.'; });
+  }
 }
 
 const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag'], ['none', 'kein weekly']];   // letzte Option: Treffen entfernen
@@ -308,6 +360,7 @@ function show(restore = null) {
   const l = sp.loc;
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);
+  renderEvidence(sp);
   $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
   $('sp-free').replaceChildren(buildFreeText(sp));
   msg('');
