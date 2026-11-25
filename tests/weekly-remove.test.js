@@ -14,7 +14,7 @@ test('1: Admin-Parser — "weekly": null ist ein gültiger Vorschlag (Treffen en
   assert.equal(p.weekly, null);
   assert.equal(weeklyText(p), 'kein Weekly');
   assert.deepEqual(parseWeeklyInput('kein weekly'), { weekly: null });
-  assert.deepEqual(parseWeeklyInput('kein weekly mehr'), { weekly: null });   // älterer Wortlaut bleibt lesbar
+  assert.equal(parseWeeklyInput('kein weekly mehr'), null);   // nur „kein weekly“ (ohne „mehr“)
   assert.deepEqual(parseWeeklyInput('Kein Weekly, 2015'), { weekly: null, init: 20150101 });
   assert.equal(parseWeeklyInput('irgendwas'), null);
   const body = replaceWeekly(issue('{}').body, 'kein Weekly');
