@@ -50,12 +50,42 @@ export function proposalValue(key, p) {
     case 'calendar': return p.events;
     case 'spaceapi': return p.endpoint;
     case 'weekly': return {
-      day: p.weekly ? String(p.weekly.weekday) : '',
+      day: p.weekly === null ? 'none' : (p.weekly ? String(p.weekly.weekday) : ''),   // 'none' = „kein weekly mehr“
       time: p.weekly?.time ? formatTime(p.weekly.time) : '',
       init: p.init !== undefined ? ymd(p.init) : '',
     };
     default: return null;
   }
+}
+
+/**
+ * Formwert zur ANZEIGE eines Vorschlags. Beim Treffen enthält ein Vorschlag oft nur einen Teil (z. B. nur die Gründung):
+ * die fehlenden Teile werden mit dem aktuellen Wert vorbelegt, damit nichts wie „entfernen“ aussieht. Nur Anzeige — geschrieben wird
+ * ausschließlich, was der Vorschlag enthält oder was du änderst (siehe weeklyWriteValue).
+ */
+export function displayValue(key, p, current) {
+  const v = proposalValue(key, p);
+  if (key !== 'weekly') return v;
+  const hasWk = p.weekly !== undefined, hasInit = p.init !== undefined;
+  return { day: hasWk ? v.day : current.day, time: hasWk ? v.time : current.time, init: hasInit ? v.init : current.init };
+}
+
+/**
+ * Welche Teile eines Treffen-Werts in das Issue geschrieben werden: nur die, die der Vorschlag schon enthält oder die du gegenüber
+ * dem aktuellen Stand geändert hast. Bestehende Daten werden nie mit identischen Werten neu geschrieben.
+ * @param {{day:string,time:string,init:string}} value @param {object|null} p Vorschlag (null = neues Issue) @param {{day:string,time:string,init:string}} current
+ */
+export function weeklyWriteValue(value, p, current) {
+  const hasWk = p?.weekly !== undefined, hasInit = p?.init !== undefined;
+  const wk = hasWk || value.day !== current.day || value.time !== current.time;
+  const init = hasInit || value.init !== current.init;
+  return { day: wk ? value.day : '', time: wk ? value.time : '', init: init ? value.init : '' };
+}
+
+/** Würde der Wert einen vorhandenen Teil entfernen? (Treffen: Termin ODER Gründung geleert; sonst: Wert geleert) */
+export function removesExisting(key, value, current) {
+  if (key === 'weekly') return !!((current.day || current.time) && !value.day && !value.time) || !!(current.init && !value.init);
+  return !isEmptyValue(key, current) && isEmptyValue(key, value);
 }
 
 export const isEmptyValue = (key, v) => key === 'workshops' ? !v.length : key === 'weekly' ? !v.day && !v.time && !v.init : !v;
@@ -71,6 +101,7 @@ export function validateValue(key, v, today = new Date().toISOString().slice(0, 
   if (key === 'workshops') return v.every(w => w in WORKSHOP_TYPES) ? null : 'Unbekannter Workshop-Typ';
   if (key === 'calendar' || key === 'spaceapi') return !v || (/^https?:\/\/\S+$/.test(v) && !v.includes('"')) ? null : 'Ungültige URL (http/https)';
   if (key === 'weekly') {
+    if (v.day === 'none') return v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today) ? 'Gründungsdatum ungültig' : null;   // „kein weekly mehr“: keine Uhrzeit nötig
     if (!!v.day !== !!v.time) return 'Wochentag und Uhrzeit nur zusammen';
     if (v.time && !/^\d{2}:(00|30)$/.test(v.time)) return 'Uhrzeit nur im 30-Minuten-Raster (:00 oder :30)';
     if (v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today)) return 'Gründungsdatum ungültig';
@@ -81,7 +112,7 @@ export function validateValue(key, v, today = new Date().toISOString().slice(0, 
 
 /** Text im Format von parseWeeklyInput: „Di 19:00, 2015-05-01“ */
 export function weeklyTextOf(v) {
-  const wk = v.day !== '' && v.time ? formatWeekly({ weekday: Number(v.day), time: Number(v.time.replace(':', '')) }) : '';
+  const wk = v.day === 'none' ? 'kein Weekly' : (v.day !== '' && v.time ? formatWeekly({ weekday: Number(v.day), time: Number(v.time.replace(':', '')) }) : '');
   return [wk, v.init].filter(Boolean).join(', ');
 }
 
@@ -182,8 +213,10 @@ export function editedBody(key, body, value, replace) {
  */
 export function planDecision(space, rows, bodies = {}) {
   const actions = [], errors = [];
-  for (const r of rows) {
+  for (let r of rows) {
     if (!r.enabled) continue;
+    // „kein weekly mehr“ ohne vorhandenes Treffen ist nichts zu tun
+    if (r.key === 'weekly' && r.value.day === 'none' && !(space.current.weekly.day || space.current.weekly.time)) r = { ...r, value: { ...r.value, day: '', time: '' } };
     const f = FIELD[r.key], p = space.proposals[r.key], cur = space.current[r.key];
     const err = validateValue(r.key, r.value);
     if (p) {
@@ -192,17 +225,18 @@ export function planDecision(space, rows, bodies = {}) {
       if (r.key === 'workshops' && !r.value.length && isEmptyValue('workshops', cur)) {   // kein Typ + nichts vorhanden → nichts zu übernehmen
         actions.push({ type: 'reject', key: r.key, number: p.number }); continue;
       }
-      const changed = !sameValue(r.key, r.value, proposalValue(r.key, p));
+      const changed = !sameValue(r.key, r.value, displayValue(r.key, p, cur));
       const replace = !isEmptyValue(r.key, cur);
       if (!changed) { actions.push({ type: 'ok', key: r.key, number: p.number }); continue; }
-      const body = editedBody(r.key, bodies[p.number] ?? '', r.value, replace);
+      if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
+      const body = editedBody(r.key, bodies[p.number] ?? '', r.key === 'weekly' ? weeklyWriteValue(r.value, p, cur) : r.value, replace);
       if (!body) { errors.push(`${f.label}: Eingabe konnte nicht in das Issue geschrieben werden`); continue; }
       actions.push({ type: 'ok', key: r.key, number: p.number, body, prevBody: bodies[p.number] ?? '' });
     } else if (r.include && !sameValue(r.key, r.value, cur)) {
       if (err) { errors.push(`${f.label}: ${err}`); continue; }
-      if (isEmptyValue(r.key, r.value) && r.key !== 'workshops' && r.key !== 'calendar') { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
+      if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
       const replace = !isEmptyValue(r.key, cur);
-      const body = newIssueBody(r.key, space, r.value, replace);
+      const body = newIssueBody(r.key, space, r.key === 'weekly' ? weeklyWriteValue(r.value, null, cur) : r.value, replace);
       if (!body) { errors.push(`${f.label}: neues Issue konnte nicht erzeugt werden`); continue; }
       actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}`, body, labels: [...f.labels, 'ok'] });
     }

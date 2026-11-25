@@ -42,6 +42,9 @@
 .ws-checks label { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 .row-hint { display: block; margin-top: .2rem; font-size: .85em; color: var(--hover-text-color); }
 .row-hint a { color: inherit; }
+/* geänderte Eingabe (gegenüber dem aktuellen Stand): grüner Rahmen — nur das, was sich wirklich ändert */
+#sp-rows .chg { box-shadow: 0 0 0 2px var(--space-open); border-radius: 6px; }
+.ws-checks label.chg { padding: 0 .3rem; background: color-mix(in srgb, var(--space-open) 18%, transparent); box-shadow: none; }
 /* wichtige leere Eigenschaft: leicht gelb */
 #sp-rows tr.gap td, #sp-rows tr.gap th { background: color-mix(in srgb, var(--space-unknown) 14%, transparent); }
 #sp-rows tr.gap th::after { content: " ○"; color: var(--space-unknown); }

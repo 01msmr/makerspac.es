@@ -284,9 +284,10 @@ export function parseWeeklyIssue(issue) {
   if (!id || !js) return null;
   let v;
   try { v = JSON.parse(js[1]); } catch { return null; }
-  const weekly = v.weekly && Number.isInteger(v.weekly.weekday) ? { weekday: v.weekly.weekday, time: v.weekly.time } : undefined;
+  // `"weekly": null` = Treffen entfernen (vom Admin geschrieben: „kein weekly mehr“)
+  const weekly = v.weekly === null ? null : (v.weekly && Number.isInteger(v.weekly.weekday) ? { weekday: v.weekly.weekday, time: v.weekly.time } : undefined);
   const init = Number.isInteger(v['space.init']) ? v['space.init'] : undefined;
-  if (!weekly && init === undefined) return null;
+  if (weekly === undefined && init === undefined) return null;
   return {
     number: issue.number, title: issue.title, spaceId: parseInt(id[1], 10), weekly, init,
     ok: (issue.labels || []).some(l => (typeof l === 'string' ? l : l?.name) === OK_LABEL),
@@ -303,7 +304,7 @@ export function weeklyEvidence(body) {
 }
 
 /** Eingabefeld-Text des Vorschlags: "Di 19:00, 2015-05-01" */
-export const weeklyText = p => [p.weekly ? formatWeekly(p.weekly) : '', p.init !== undefined ? formatInit(p.init) : ''].filter(x => x && x !== '–').join(', ');
+export const weeklyText = p => [p.weekly === null ? 'kein Weekly' : (p.weekly ? formatWeekly(p.weekly) : ''), p.init !== undefined ? formatInit(p.init) : ''].filter(x => x && x !== '–').join(', ');
 
 /**
  * "Di 19:00, 2015" → {weekly?, init?}; null bei Unlesbarem. Wochentag: So/Mo/…/Sa bzw. ausgeschrieben;
@@ -313,6 +314,7 @@ export function parseWeeklyInput(text) {
   const out = {};
   for (const part of String(text).split(/[,;|]/).map(x => x.trim()).filter(Boolean)) {
     let m;
+    if (/^kein\s+weekly(?:\s+mehr)?$/i.test(part)) { out.weekly = null; continue; }   // Treffen entfernen
     if ((m = part.match(/^([A-Za-zäöü]{2,10})\.?\s+(\d{1,2})[:.](\d{2})$/))) {
       const w = WEEKDAY_SHORT.findIndex(d => d.toLowerCase() === m[1].toLowerCase().slice(0, 2)) ;
       const long = WEEKDAY_NAMES.findIndex(d => d.toLowerCase() === m[1].toLowerCase());
@@ -327,7 +329,7 @@ export function parseWeeklyInput(text) {
       out.init = parseInt(m[1], 10) * 10000 + mo * 100 + d;
     } else return null;
   }
-  return out.weekly || out.init !== undefined ? out : null;
+  return out.weekly || out.weekly === null || out.init !== undefined ? out : null;
 }
 
 /** Ersetzt den JSON-Block durch den geparsten Text; null bei ungültiger Eingabe / fehlendem Block. */
@@ -335,7 +337,7 @@ export function replaceWeekly(body, text) {
   const v = parseWeeklyInput(text);
   if (!v || !RE_WEEKLY_BLOCK.test(body)) return null;
   const block = {};
-  if (v.weekly) block.weekly = v.weekly;
+  if (v.weekly !== undefined) block.weekly = v.weekly;   // null = Treffen entfernen
   if (v.init !== undefined) block['space.init'] = v.init;
   return body.replace(RE_WEEKLY_BLOCK, () => '```json\n' + JSON.stringify(block, null, 2) + '\n```');
 }

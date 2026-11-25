@@ -224,3 +224,36 @@ test('19: Uhrzeit ist eine Auswahlliste im 30-Minuten-Raster (iOS/Android-Picker
   assert.match(js, /m \+= TIME_STEP_MINUTES/);
   assert.ok(!/type: 'time'/.test(js), 'kein <input type="time"> mehr');
 });
+
+import { displayValue, weeklyWriteValue } from '../admin/spaces-lib.js';
+
+test('20: Treffen-Vorschlag mit nur einem Teil — Anzeige mit aktuellem Rest, aber nur Geändertes wird geschrieben', () => {
+  const cur = { day: '2', time: '19:00', init: '' };
+  const onlyInit = parseWeeklyIssue(wk(7, 48, null, 19840101));
+  assert.deepEqual(displayValue('weekly', onlyInit, cur), { day: '2', time: '19:00', init: '1984-01-01' });           // Rest = aktuell (nur Anzeige)
+  const onlyWeekly = parseWeeklyIssue(wk(8, 48, { weekday: 3, time: 1830 }, undefined));
+  assert.deepEqual(displayValue('weekly', onlyWeekly, { day: '', time: '', init: '2015-05-01' }), { day: '3', time: '18:30', init: '2015-05-01' });
+  // Schreiben: nur Teile des Vorschlags bzw. geänderte; identische Bestandsdaten werden nie neu geschrieben
+  assert.deepEqual(weeklyWriteValue({ day: '2', time: '19:00', init: '1984-01-01' }, onlyInit, cur), { day: '', time: '', init: '1984-01-01' });
+  assert.deepEqual(weeklyWriteValue({ day: '2', time: '19:00', init: '1990-01-01' }, onlyInit, cur), { day: '', time: '', init: '1990-01-01' });   // Gründung bearbeitet
+  assert.deepEqual(weeklyWriteValue({ day: '4', time: '19:30', init: '1984-01-01' }, onlyInit, cur), { day: '4', time: '19:30', init: '1984-01-01' });   // Termin bewusst geändert
+  assert.deepEqual(weeklyWriteValue({ day: '3', time: '20:00', init: '' }, null, cur), { day: '3', time: '20:00', init: '' });                              // neues Issue: nur der geänderte Teil
+});
+
+test('21: planDecision — Vorschlag nur Gründung: unverändert = ok ohne Schreiben; Bearbeiten schreibt weekly NICHT mit; Leeren des Termins wird abgelehnt', () => {
+  const issues = { weekly: [wk(11, 48, null, 19840101)], workshops: [], calendar: [], spaceapi: [] };
+  const g = groupBySpace(issues).get(48);
+  const bodies = { 11: issues.weekly[0].body };
+  const cur = { weekly: { day: '2', time: '19:00', init: '' }, workshops: [], calendar: '', spaceapi: '' };
+  const sp = { id: 48, name: 'CCC', website: '', proposals: g.proposals, current: cur };
+  const same = { day: '2', time: '19:00', init: '1984-01-01' };
+  let r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: same }], bodies);
+  assert.deepEqual(r.actions.map(a => [a.type, a.body]), [['ok', undefined]]);                         // kein Neuschreiben
+  r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { ...same, init: '1990-02-03' } }], bodies);
+  assert.equal(r.actions[0].type, 'ok');
+  const written = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
+  assert.equal(written.init, 19900203); assert.equal(written.weekly, undefined);                       // Termin nicht mitgeschrieben
+  r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { day: '', time: '', init: '1984-01-01' } }], bodies);
+  assert.equal(r.actions.length, 0); assert.match(r.errors[0], /Entfernen nur bei Workshops\/Kalender/);   // Entfernen nie über die Karte
+});
+function wkIssue(n) { return { number: n, title: 'Treffen-Daten: A', labels: [], updated_at: '2026-11-25T00:00:00Z', html_url: 'x' }; }
