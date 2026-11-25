@@ -49,7 +49,6 @@
 /* Titel („#73 Makerspace …“) steht links in der festen zweiten Leiste, rechts daneben Zähler/Prüfer/Stand */
 #sp-title { margin: 0; font-size: 1.2rem; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
 #sp-title[hidden] { display: none; }
-#bar > #sp-mode { margin-right: auto; }
 #sp-id { color: var(--hover-text-color); text-decoration: underline dotted; text-underline-offset: 3px; }
 #sp-name { font-weight: 700; }
 #sp-meta { margin: 0 0 .5rem; color: var(--hover-text-color); }
