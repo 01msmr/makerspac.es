@@ -339,8 +339,9 @@ test('27: Workshops — hinzugefügt grün (.add), entfernt rot (.del)', () => {
   assert.match(css, /\.ws-checks label\.add \{[^}]*--space-open/); assert.match(css, /\.ws-checks label\.del \{[^}]*--space-closed/);
 });
 
-test('28: Pillen = nur Workshops, in eigener Zeile (.chips); Gründung/Weekly/Kalender/SpaceAPI als Hinweis in ihrer eigenen Zeile', () => {
-  assert.match(read('admin/spaces.js'), /function setAutoHint\(tr, text\)/); assert.match(read('admin/spaces.js'), /setAutoHint\(ini, `aus Text erkannt \(Vereinsgründung\)/);
-  assert.match(read('admin/spaces.js'), /className: 'chips'/);
-  assert.match(read('admin/spaces.css'), /\.ws-detected \.chips \{ display: flex; flex-wrap: wrap;/);
+test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line, Workshops als Pillen), mit vertikalem Abstand', () => {
+  const js = read('admin/spaces.js'), css = read('admin/spaces.css');
+  assert.match(js, /className: 'det-line'/); assert.match(js, /rows\.push\(\{ label: 'Workshops', chips: a\.workshops \}\)/);
+  assert.match(js, /label: 'Vereinsgründung'/); assert.ok(!js.includes('setAutoHint'), 'keine Hinweise mehr in den Zeilen');
+  assert.match(css, /\.ws-detected \.det-line \{ margin-top: \.55rem;/);
 });

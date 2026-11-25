@@ -421,13 +421,17 @@ function initPane() {
 const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function setIndicator(box, stateName, text, chips = []) {
+/** Auswertungsfeld: Text + je erkanntem Element EINE eigene Zeile (Name: Wert bzw. Pillen), mit vertikalem Abstand. lines: {label, text?, chips?}[] */
+function setIndicator(box, stateName, text, lines = []) {
   box.dataset.state = stateName;
   box.replaceChildren(text);
-  if (!chips.length) return;
-  const row = Object.assign(document.createElement('div'), { className: 'chips' });   // Pillen in eigener Zeile unter dem Text
-  for (const t of chips) row.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
-  box.append(row);
+  for (const l of lines) {
+    const row = Object.assign(document.createElement('div'), { className: 'det-line' });
+    row.append(Object.assign(document.createElement('strong'), { textContent: `${l.label}: ` }));
+    if (l.text) row.append(l.text);
+    for (const c of l.chips ?? []) row.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: c }));
+    box.append(row);
+  }
 }
 const rowEl = key => $('sp-rows').querySelector(`tr[data-key="${key}"]`);
 const rowOn = tr => !!tr && tr.dataset.off !== 'true';
@@ -444,35 +448,28 @@ function checkTypes(types) {
 }
 
 /** Erkanntes in die Zeilen schreiben. onlyEmpty: nur leere Felder (Zwischenablage-Automatik), sonst überschreiben (bewusstes Einfügen/Tippen). */
-/** Hinweis „aus Freitext erkannt“ direkt in der betroffenen Zeile (nicht im Workshop-Bereich) */
-function setAutoHint(tr, text) {
-  tr.querySelector('.auto-hint')?.remove();
-  if (text) tr.querySelector('td.inp')?.append(Object.assign(document.createElement('small'), { className: 'row-hint auto-hint', textContent: text }));
-}
-const clearAutoHints = () => $('sp-rows').querySelectorAll('.auto-hint').forEach(e => e.remove());
-
-/** @returns {{workshops: string[], rows: string[]}} workshops = erkannte Typen (Pillen), rows = Namen der in ihrer Zeile gesetzten Eigenschaften */
+/** Erkanntes in die Zeilen schreiben. @returns {{label:string,text?:string,chips?:string[]}[]} je gesetzter Eigenschaft eine Zeile für das Auswertungsfeld */
 function applyAnalysis(a, { onlyEmpty = false } = {}) {
-  const workshops = [], rows = [];
-  if (a.workshops.length && checkTypes(a.workshops)) workshops.push(...a.workshops);   // jeder erkannte Workshop als eigene Pille (nur der Name)
+  const rows = [];
+  if (a.workshops.length && checkTypes(a.workshops)) rows.push({ label: 'Workshops', chips: a.workshops });   // jeder erkannte Workshop als eigene Pille
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
-    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push('Wöchentliches Treffen'); setAutoHint(wk, `aus Text erkannt${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(wk); }
+    if (!(onlyEmpty && (day.value || time.value))) { day.value = a.weekly.day; time.value = a.weekly.time; rows.push({ label: 'Wöchentliches Treffen', text: `${dayName(a.weekly.day)} ${a.weekly.time}${a.weekly.confidence === 'medium' ? ' (unsicher)' : ''}` }); touch(wk); }
   }
   const ini = rowEl('init');
   if (rowOn(ini) && a.init) {
     const init = ini.querySelector('[data-f="init"]');
-    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push('Gründung'); setAutoHint(ini, `aus Text erkannt (Vereinsgründung)${a.init.confidence === 'medium' ? ' (unsicher)' : ''}`); touch(ini); }
+    if (!(onlyEmpty && init.value)) { init.value = a.init.value; rows.push({ label: 'Vereinsgründung', text: `${a.init.value}${a.init.confidence === 'medium' ? ' (unsicher)' : ''}` }); touch(ini); }
   }
   for (const [key, label] of [['calendar', 'Kalender'], ['spaceapi', 'SpaceAPI']]) {
     const tr = rowEl(key), url = a[key];
     if (!url || !rowOn(tr)) continue;
     const input = tr.querySelector('input[type="text"]');
     if (onlyEmpty && input.value.trim()) continue;
-    input.value = url; touch(tr); rows.push(label); setAutoHint(tr, 'aus Text erkannt');
+    input.value = url; touch(tr); rows.push({ label, text: url.length > 60 ? url.slice(0, 58) + '…' : url });
   }
-  return { workshops, rows };
+  return rows;
 }
 
 function buildFreeText(sp) {
@@ -502,12 +499,11 @@ function buildFreeText(sp) {
   const evaluate = (source = '', opts = {}) => {
     refreshTarget();
     const v = area.value;
-    if (!v.trim()) { clearAutoHints(); setIndicator(detected, 'idle', ''); return; }
+    if (!v.trim()) { setIndicator(detected, 'idle', ''); return; }
     const a = analyzeFreeText(v);
-    clearAutoHints();
-    const { workshops: done, rows: setRows } = applyAnalysis(a, opts);
+    const setRows = applyAnalysis(a, opts);
     const notes = a.notes.length ? ` · ${a.notes.join(' · ')}` : '';
-    if (done.length || setRows.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — ${setRows.length ? `gesetzt in: ${setRows.join(', ')}${done.length ? ' · ' : ''}` : ''}${done.length ? 'Workshops übernommen:' : ''}${notes}`, done); return; }
+    if (setRows.length) { setIndicator(detected, 'ok', `✓ Text${source} ausgewertet (${v.length} Zeichen) — erkannt und eingetragen:${notes}`, setRows); return; }
     if (looksLikeUrl(v.trim())) { setIndicator(detected, 'info', `URL erkannt${source} (kein Kalender/SpaceAPI) — mit „Website auslesen (Server)“ die Workshops serverseitig auslesen.`); return; }
     setIndicator(detected, 'none', `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt${notes}`);
   };
