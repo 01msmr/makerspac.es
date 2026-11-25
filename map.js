@@ -58,7 +58,7 @@ window.zoomManager = zoomManager;   // backward compat
 
 appContext.ready('services');
 initOverlayTrigger();
-appContext.waitFor('app').then(openEditFromUrl);   // /?edit=ID aus dem Admin (Stammdaten bearbeiten)
+appContext.waitFor('app').then(openEditFromUrl);   // /?edit=ID aus dem Admin (Eintrag bearbeiten)
 
 // Loading-Skeleton (#loading-backdrop/#loading-stack): Markup + Dismissal liegen in index.html
 

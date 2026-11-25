@@ -225,7 +225,7 @@ function showOverlay(initialTab = 'addspace', { editId = null } = {}) {
             <div class="addspace-lookup" hidden>
               <div class="addspace-lookup-field">
                 <input type="text" class="addspace-input addspace-lookup-input"
-                       placeholder="${t('lookupPlaceholder', 'Name or ID — e.g. Toolbox Bodensee or 45')}"
+                       placeholder="${t('lookupPlaceholder', 'Name or ID')}"
                        autocomplete="off" spellcheck="false">
                 <div class="addspace-lookup-results" hidden></div>
               </div>
@@ -254,21 +254,21 @@ function showOverlay(initialTab = 'addspace', { editId = null } = {}) {
             ])}</select>
 
             <label class="addspace-label">${t('labelWebsite', 'Website')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-            <input type="url" name="url" class="addspace-input" required placeholder="https://yourspace.org">
+            <input type="url" name="url" class="addspace-input" required placeholder="https://">
 
             <label class="addspace-label">${t('labelLinkText', 'Link display text')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-            <input type="text" name="url_text" class="addspace-input" required placeholder="yourspace.org">
+            <input type="text" name="url_text" class="addspace-input" required>
 
             <h3 class="embed-h3">${t('sectionLocation', 'Location')}</h3>
 
             <div class="addspace-row">
               <div>
                 <label class="addspace-label">${t('labelLatitude', 'Latitude')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-                <input type="text" name="lat" class="addspace-input" required placeholder="47.7126816">
+                <input type="text" name="lat" class="addspace-input" required>
               </div>
               <div>
                 <label class="addspace-label">${t('labelLongitude', 'Longitude')} <span class="embed-pill embed-pill-required">${t('required', 'required')}</span></label>
-                <input type="text" name="long" class="addspace-input" required placeholder="9.3995537">
+                <input type="text" name="long" class="addspace-input" required>
               </div>
             </div>
             <div class="addspace-map-preview"></div>
@@ -308,7 +308,7 @@ function showOverlay(initialTab = 'addspace', { editId = null } = {}) {
               </div>
               <div>
                 <label class="addspace-label">${t('labelAddressAddition', 'Address addition')}</label>
-                <input type="text" name="street_ext" class="addspace-input" autocomplete="off" placeholder="${t('addressAdditionPlaceholder', 'e.g. Apt. 2, Building B')}">
+                <input type="text" name="street_ext" class="addspace-input" autocomplete="off">
               </div>
             </div>
 
@@ -340,17 +340,17 @@ function showOverlay(initialTab = 'addspace', { editId = null } = {}) {
               </div>
               <div>
                 <label class="addspace-label">${t('labelTime', 'Time')}</label>
-                <input type="text" name="weekly_time" class="addspace-input" placeholder="1900">
+                <input type="text" name="weekly_time" class="addspace-input">
               </div>
             </div>
 
             <h3 class="embed-h3">${t('sectionOnline', 'Online presence')} <span class="embed-pill">${t('optional', 'optional')}</span></h3>
 
             <label class="addspace-label">${t('labelSpaceAPI', 'SpaceAPI Endpoint')}</label>
-            <input type="url" name="spaceapi" class="addspace-input" placeholder="https://yourspace.org/spaceapi.json">
+            <input type="url" name="spaceapi" class="addspace-input" placeholder="https://">
 
             <label class="addspace-label">${t('labelEventsUrl', 'Event calendar URL')}</label>
-            <input type="url" name="events_url" class="addspace-input" placeholder="https://yourspace.org/events/">
+            <input type="url" name="events_url" class="addspace-input" placeholder="https://">
 
             <div class="addspace-submit-row">
               <button type="submit" class="addspace-submit-btn">${t('submitBtn', 'Submit to maintainers')}</button>

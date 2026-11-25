@@ -56,7 +56,7 @@
           <legend>Workshops</legend>
           <div id="edit-checks"></div>
           <label for="edit-free" id="edit-free-label">Freitext — hier Text einfügen (wird sofort ausgewertet) oder eine URL</label>
-          <textarea id="edit-free" rows="3" placeholder="Text oder URL einfügen — Text: erkannte Typen werden angehakt · URL: „Website auslesen (Server)“ liest sie serverseitig aus"></textarea>
+          <textarea id="edit-free" rows="3"></textarea>
           <button type="button" id="edit-scan" title="Liest die Website des Spaces (oder die oben eingefügte URL) serverseitig per GitHub-Workflow aus, ca. 30–60 s. Der eingefügte Text wird dafür nicht verwendet.">Website auslesen (Server)</button>
           <small id="scan-target"></small>
           <p id="edit-detected" data-state="idle"></p>
@@ -96,7 +96,7 @@
           <legend>Bearbeiten</legend>
         </fieldset>
         <main id="sp-card" hidden>
-          <h2 id="sp-title"><a id="sp-link" target="_blank" rel="noopener noreferrer" title="Webseite des Space im Seitenfenster öffnen"></a> <a id="sp-edit" class="sp-edit" target="_blank" rel="noopener noreferrer" title="Stammdaten (Name, Adresse, Link, Stil) im Bearbeiten-Overlay der Karte öffnen"><i class="fas fa-pen-to-square"></i> Stammdaten</a></h2>
+          <h2 id="sp-title"><a id="sp-link" target="_blank" rel="noopener noreferrer" title="Webseite des Space im Seitenfenster öffnen"></a> <a id="sp-edit" class="sp-edit" target="_blank" rel="noopener noreferrer" title="Name, Adresse, Website, Zielgruppe im Bearbeiten-Overlay der Karte ändern"><i class="fas fa-pen-to-square"></i> Eintrag bearbeiten</a></h2>
           <p id="sp-meta"></p>
           <p id="sp-sources" aria-label="Quellen"></p>
           <div id="sp-free"></div>
