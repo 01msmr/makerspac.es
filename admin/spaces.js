@@ -361,11 +361,11 @@ function show(restore = null) {
   const pos = state.queue.indexOf(id);
   $('counter').textContent = id == null ? '' : `${pos + 1} /${state.queue.length}`;
   if (id == null) {
-    $('sp-card').hidden = true; $('sp-done').hidden = false;
+    $('sp-card').hidden = true; $('sp-title').hidden = true; $('sp-done').hidden = false;
     $('sp-done').textContent = state.mode === 'all' ? 'Alles geprüft — keine offenen Vorschläge.' : `Keine offenen Vorschläge für „${FIELDS.find(f => f.key === state.mode)?.label}“.`;
     return;
   }
-  $('sp-done').hidden = true; $('sp-card').hidden = false;
+  $('sp-done').hidden = true; $('sp-card').hidden = false; $('sp-title').hidden = false;
   if (state.claimed && state.claimed.id !== id) release();
   const sp = spaceModel(id);
   const a = $('sp-link'); a.textContent = `#${id} ${sp.name}`;
@@ -695,7 +695,7 @@ export async function activate() {
   state.active = true;
   $('spaces-view').hidden = false;
   buildModeBar();
-  if (!state.loaded) { $('sp-done').hidden = false; $('sp-done').textContent = 'Lade …'; $('sp-card').hidden = true; await reload({ quiet: true }); }
+  if (!state.loaded) { $('sp-done').hidden = false; $('sp-done').textContent = 'Lade …'; $('sp-card').hidden = true; $('sp-title').hidden = true; await reload({ quiet: true }); }
   else { rebuild(); show(); reload({ quiet: true, rerender: false }); }   // still nachladen: Formular bleibt, Pläne nutzen frische Bodys
   ctx.onChange?.();
 }
