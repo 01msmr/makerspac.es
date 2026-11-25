@@ -256,6 +256,8 @@ test('19: Uhrzeit ist eine Auswahlliste im 30-Minuten-Raster (iOS/Android-Picker
 });
 
 import { displayValue } from '../admin/spaces-lib.js';
+import { withdrawnOf } from '../tools/lib/weekly-extract.js';
+let r0body;
 
 test('20: Weekly und Gründung sind getrennte Eigenschaften; ein Issue → zwei Vorschläge; kein Auffüllen mit dem Rest', () => {
   const onlyInit = parseWeeklyIssue(wk(7, 48, null, 19840101));
@@ -281,6 +283,7 @@ test('21: planDecision — Weekly + Gründung getrennt entscheiden, EIN Issue; v
   r = planDecision(sp, rows(true, false), bodies);                                                       // Gründung verworfen
   const w1 = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
   assert.deepEqual(w1.weekly, { weekday: 3, time: 1830 }); assert.equal(w1.init, undefined);
+  assert.deepEqual(withdrawnOf(r0body = planDecision(sp, rows(true, false), bodies).actions[0].body), { 'space.init': 19840101 });   // Verworfenes im Issue gemerkt (Crawler schlägt es nicht erneut vor)
   r = planDecision(sp, rows(false, true), bodies);                                                       // Weekly verworfen
   const w2 = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
   assert.equal(w2.weekly, undefined); assert.equal(w2.init, 19840101);

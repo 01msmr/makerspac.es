@@ -10,7 +10,7 @@ import {
   formatWeekly, formatTime, formatEditDate, lockOf, detectFromText, parseWeeklyInput, looksLikeUrl,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
-import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder } from '../tools/lib/weekly-extract.js';
+import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder, setWithdrawn } from '../tools/lib/weekly-extract.js';
 import { applyEnrichment } from '../enrichment-merge.js';
 
 export const PLACEHOLDER_INIT = 20010000;     // „keine Gründung bekannt“ in locations.json
@@ -221,10 +221,15 @@ function planWeeklyPair(space, rows, bodies, actions, errors) {
   const anyKept = !!(partW.keep && (partW.keep.day || partW.keep.time)) || !!partI.keep;   // leerer Wert = kein Teil
   if (issue) {
     if (!anyKept) { actions.push({ type: 'reject', key: 'weekly', number: issue.number }); return; }
-    const body = replaceWeekly(bodies[issue.number] ?? '', weeklyTextOf(value));
+    // verworfene Teile im Issue merken, damit der Crawler sie nicht erneut vorschlägt
+    const withdrawn = {};
+    if (hasW && on(wk) && !wk.include) withdrawn.weekly = { weekday: issue.weekly.weekday, time: issue.weekly.time };
+    if (hasI && on(ini) && !ini.include) withdrawn['space.init'] = issue.init;
+    const body0 = replaceWeekly(bodies[issue.number] ?? '', weeklyTextOf(value));
+    const body = body0 && setWithdrawn(body0, withdrawn);
     if (!body) { errors.push('Weekly/Gründung: Eingabe konnte nicht in das Issue geschrieben werden'); return; }
     const orig = { day: hasW ? proposalValue('weekly', issue).day : '', time: hasW ? proposalValue('weekly', issue).time : '', init: hasI ? proposalValue('init', issue) : '' };
-    const same = weeklyTextOf(orig) === weeklyTextOf(value);   // Inhalt unverändert → nur freigeben, nicht neu schreiben
+    const same = weeklyTextOf(orig) === weeklyTextOf(value) && !Object.keys(withdrawn).length;   // Inhalt unverändert → nur freigeben, nicht neu schreiben
     actions.push(same ? { type: 'ok', key: 'weekly', number: issue.number } : { type: 'ok', key: 'weekly', number: issue.number, body, prevBody: bodies[issue.number] ?? '' });
   } else if (anyKept) {
     const body = newIssueBody('weekly', space, value, false);

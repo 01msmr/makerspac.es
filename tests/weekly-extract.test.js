@@ -134,3 +134,13 @@ test('extractInit: erstes Treffen / erster offener Tag / Umzug ist keine Vereins
   assert.equal(extractInit('Der erste offene Makertag war am 13.10.2018.\nDer Verein wurde am 1.9.2018 gegründet.', 2026).date, 20180901);
   assert.equal(extractInit('Gründung des Vereins: 2017', 2026).date, 20170101);
 });
+
+test('Verworfene Teile: setWithdrawn/withdrawnOf + Crawler-Vergleich schlägt Verworfenes nicht erneut vor', async () => {
+  const { setWithdrawn, withdrawnOf } = await import('../tools/lib/weekly-extract.js');
+  const { proposalFromIssue } = await import('../tools/lib/crawl-selection.js');
+  const body = 'x\n\n```json\n{"weekly":{"weekday":3,"time":1830}}\n```\n';
+  const w = setWithdrawn(body, { 'space.init': 19840101 });
+  assert.deepEqual(withdrawnOf(w), { 'space.init': 19840101 });
+  assert.equal(proposalFromIssue({ body: w }, 'weekly'), deltaKey({ weekly: { weekday: 3, time: 1830 }, 'space.init': 19840101 }));   // = Fund → skip
+  assert.equal(withdrawnOf(setWithdrawn(w, {})) && Object.keys(withdrawnOf(setWithdrawn(w, {}))).length, 0);                        // leer → Zeile entfernt
+});

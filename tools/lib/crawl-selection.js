@@ -12,7 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { applyEnrichment, normalizeUrl } from '../../enrichment-merge.js';
-import { deltaKey } from './weekly-extract.js';
+import { deltaKey, withdrawnOf } from './weekly-extract.js';
 export { normalizeUrl }; // Re-Export: Single Source of Truth liegt in enrichment-merge.js
 
 const RE_BODY_ID = /\*\*ID:\*\*\s*(\d+)/;
@@ -57,7 +57,7 @@ export function proposalFromIssue(issue, kind) {
   if (kind === 'weekly') {
     const m = body.match(RE_WEEKLY);
     if (!m) return null;
-    try { return deltaKey(JSON.parse(m[1])); } catch { return null; }
+    try { return deltaKey({ ...withdrawnOf(body), ...JSON.parse(m[1]) }); } catch { return null; }   // im Admin verworfene Teile zählen mit (kein erneuter Vorschlag)
   }
   const m = body.match(RE_EVENTS);
   return m ? normalizeUrl(m[1]) : null;
