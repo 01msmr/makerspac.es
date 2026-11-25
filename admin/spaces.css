@@ -1,5 +1,22 @@
 /* Reiter „Spaces“ (ADR-009) — Basis (Farben, Buttons, Toasts, Kopfzeile) kommt aus admin.css */
-#spaces-view { padding: .25rem .75rem 1rem; }
+#spaces-view { --sp-inc-w: 11rem; padding: .25rem .75rem 1rem; }
+
+/* Seitenfenster (Webseite zum Space) rechts, ziehbarer Trenner dazwischen */
+#sp-layout { display: flex; align-items: flex-start; }
+#sp-main { flex: 1 1 0; min-width: 40rem; }
+#sp-split { flex: 0 0 18px; align-self: stretch; position: relative; cursor: col-resize; touch-action: none; margin: 0 .25rem; }
+#sp-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; border-radius: 2px; background: color-mix(in srgb, var(--text-color) 45%, var(--dropdown-bg)); }   /* Trennlinie: breiter + dunkler */
+#sp-split .grip { position: sticky; top: 45vh; display: block; width: 14px; height: 64px; margin: 0 auto; border-radius: 7px; background: var(--dropdown-bg); border: 2px solid color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); box-shadow: 0 1px 3px rgb(0 0 0 / .25); position: sticky; z-index: 1; }   /* Griff: breiter */
+#sp-split .grip::after { content: ''; position: absolute; inset: 14px 3px; border-left: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); border-right: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); }
+#sp-split:hover::before, #sp-split:focus-visible::before, #sp-layout.dragging #sp-split::before { background: var(--focus-color); }
+#sp-split:focus-visible { outline: 2px solid var(--focus-color); border-radius: 6px; }
+#sp-pane { flex: 0 0 var(--sp-pane-w, 45%); min-width: 0; position: sticky; top: 4.2rem; height: calc(100vh - 5rem); display: flex; flex-direction: column; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; overflow: hidden; }
+#sp-viewbar { display: flex; align-items: center; gap: .5rem; padding: .4rem .5rem; border-bottom: 1px solid var(--dropdown-border); }
+#sp-pane-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--hover-text-color); }
+#sp-frame { flex: 1; width: 100%; border: 0; background: var(--bg-color); }
+#sp-layout.dragging #sp-frame { pointer-events: none; }
+#sp-pane-hint { margin: 0; padding: .3rem .6rem; font-size: .8em; color: var(--hover-text-color); border-top: 1px solid var(--dropdown-border); }
+@media (pointer: coarse), (max-width: 1099px) { #sp-split, #sp-pane { display: none; } }
 .sp-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 .25rem; }
 /* Entscheiden-Buttons: Vollfarbe, weiße fette Schrift (Farbe leicht abgedunkelt → Kontrast auch bei Orange und im Dark Mode) */
 .sp-actions button { color: #fff; font-weight: 700; border-color: transparent; }
@@ -15,7 +32,7 @@
 #sp-mode label { display: inline-flex; align-items: center; gap: .25rem; cursor: pointer; white-space: nowrap; }
 #sp-mode input { margin: 0; accent-color: var(--focus-color); }
 
-#sp-card { margin: .75rem; padding: 1rem; max-width: 62rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
+#sp-card { margin: .75rem 0 .75rem; padding: 1rem; max-width: 62rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #sp-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
 #sp-id { color: var(--hover-text-color); text-decoration: underline dotted; text-underline-offset: 3px; }
 #sp-name { font-weight: 700; }
@@ -38,7 +55,9 @@
 .weekly-in { display: flex; flex-direction: column; gap: .35rem; }
 .weekly-in .line { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
 .weekly-in input { width: auto !important; }
-.ws-checks { display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
+/* Workshop-Typen als Raster ohne Kantenlinien: 3 Spalten (Desktop), 2 Spalten (Phone) */
+/* höchstens 3 Spalten, weniger wenn der Platz fehlt (nie überlappend) */
+.ws-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(max(7.2rem, calc(33.33% - 1rem)), 1fr)); gap: .3rem 1rem; }
 .ws-checks label { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 .row-hint { display: block; margin-top: .2rem; font-size: .85em; color: var(--hover-text-color); }
 .row-hint a { color: inherit; }
@@ -50,6 +69,8 @@
 #sp-rows tr.gap th::after { content: " ○"; color: var(--space-unknown); }
 /* geändert: rot = alt · grün = neu (wie die Reiter-Ansicht) */
 #sp-rows tr.differs td.inp { box-shadow: inset 3px 0 0 var(--space-open); }
+#sp-rows td.inc { width: var(--sp-inc-w); }
+#sp-rows td.inp { min-width: 15rem; }
 #sp-rows td.inc label { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
 #sp-rows td.inc label.rej { color: var(--space-closed); font-weight: 600; }
 #sp-msg:not(:empty) { padding: .4rem .6rem; border-radius: 6px; background: color-mix(in srgb, var(--space-unknown) 16%, transparent); }
@@ -79,6 +100,11 @@
 /* Freitext (Workshops): Text einfügen → sofort ausgewertet, erkannte Typen werden angehakt */
 .ws-free { margin: .25rem 0 .75rem; padding: .6rem; border: 1px solid var(--dropdown-border); border-radius: 8px; }
 .ws-free label { display: block; margin-bottom: .2rem; font-weight: 600; font-size: .9em; }
+.free-grid { display: grid; grid-template-columns: minmax(0, 1fr) calc(var(--sp-inc-w) + 1rem); gap: .5rem; align-items: start; }   /* Einfügen-Knopf: Breite wie die „übernehmen“-Spalte */
+.free-grid .paste-btn { width: 100%; min-height: 2.4rem; font-weight: 700; }
+.free-hint { display: block; margin-top: .25rem; color: var(--hover-text-color); }
+.ws-free textarea { font-weight: 400; }
+.ws-free textarea::placeholder { font-weight: 400; opacity: .65; }
 .ws-free textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--text-color); background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 6px; padding: .3rem .5rem; resize: vertical; }
 .ws-free textarea:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 1px; }
 .ws-free .scan-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; margin-top: .3rem; }
@@ -91,3 +117,22 @@
 .ws-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
 .ws-detected .chip { display: inline-block; margin: .25rem .35rem 0 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .ws-detected[data-state="working"] { animation: none; } }
+
+/* Phone (nach den Basisregeln, damit sie gelten): Workshops 2 Spalten, Einfügen-Knopf unter dem Feld */
+@media (max-width: 767px) {
+  .ws-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .free-grid { grid-template-columns: minmax(0, 1fr); }
+  #sp-rows td.inc { width: auto; }
+}
+
+/* Desktop: Eigenschaft + „Aktuell“ in EINER schmalen Spalte links, Eingaben breit, „übernehmen“ rechts → Workshop-Raster hat Platz */
+@media (min-width: 768px) {
+  #sp-rows, #sp-rows tbody { display: block; }
+  #sp-rows tr { display: grid; grid-template-columns: 9rem minmax(0, 1fr) var(--sp-inc-w); grid-template-rows: auto 1fr; column-gap: .5rem; padding: .3rem 0; border-bottom: 1px solid var(--dropdown-alt-border); }
+  #sp-rows th, #sp-rows td { border: 0; width: auto; min-width: 0; }
+  #sp-rows th { grid-column: 1; grid-row: 1; padding: .2rem .5rem; }
+  #sp-rows td.cur { grid-column: 1; grid-row: 2; align-self: start; padding: .15rem .5rem; font-size: .88em; word-break: break-word; }
+  #sp-rows td.inp { grid-column: 2; grid-row: 1 / span 2; }
+  #sp-rows td.inc { grid-column: 3; grid-row: 1 / span 2; }
+  #sp-rows tr.differs td.cur { box-shadow: inset 3px 0 0 var(--space-closed); background: color-mix(in srgb, var(--space-closed) 12%, transparent); }
+}

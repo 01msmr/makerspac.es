@@ -5,7 +5,7 @@ import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } 
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
   FIELDS, currentValue, proposalValue, displayValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
-  groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock, analyzeFreeText, TIME_STEP_MINUTES,
+  groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock, analyzeFreeText, TIME_STEP_MINUTES, clampPaneWidth,
 } from './spaces-lib.js';
 
 const $ = id => document.getElementById(id);
@@ -140,7 +140,8 @@ function renderSources(sp) {
   const box = $('sp-sources'); box.replaceChildren();
   const add = (content, url, title, guess) => {
     if (!isHttp(url)) return;
-    const a = Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener noreferrer', title: `${title}${guess ? ' (vermutet)' : ''}: ${url}`, className: `src${guess ? ' guess' : ''}` });
+    const a = Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener noreferrer', title: `${title}${guess ? ' (vermutet)' : ''}: ${url} — im Seitenfenster öffnen`, className: `src${guess ? ' guess' : ''}` });
+    a.addEventListener('click', e => { if (paneEnabled()) { e.preventDefault(); loadPane(url, title); } });
     if (typeof content === 'string') a.append(content); else a.append(content);
     box.append(a);
   };
@@ -152,7 +153,8 @@ function renderSources(sp) {
   add(door, sp.current.spaceapi || sp.proposals.spaceapi?.endpoint, 'SpaceAPI', !sp.current.spaceapi);
 }
 
-const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag'], ['none', 'kein weekly']];   // letzte Option: Treffen entfernen
+// „kein weekly“ (Treffen entfernen) steht zuerst; „–“ = keine Info (nichts ändern) bleibt die Vorauswahl
+const WEEKDAYS = [['none', 'kein weekly'], ['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag']];
 const dayName = d => WEEKDAYS.find(([v]) => v === d)?.[1] ?? '–';
 function currentText(key, v) {
   if (key === 'workshops') return v.length ? v.join(', ') : '';
@@ -301,13 +303,13 @@ function show(restore = null) {
   $('sp-done').hidden = true; $('sp-card').hidden = false;
   if (state.claimed && state.claimed.id !== id) release();
   const sp = spaceModel(id);
-  const a = $('sp-id'); a.textContent = `#${id}`;
-  if (isHttp(sp.website)) { a.href = sp.website; a.removeAttribute('aria-disabled'); } else a.removeAttribute('href');
-  $('sp-name').textContent = sp.name;
+  const a = $('sp-link'); a.textContent = `#${id} ${sp.name}`;
+  if (isHttp(sp.website)) a.href = sp.website; else a.removeAttribute('href');
   $('sp-edit').href = `/?edit=${id}`;
   const l = sp.loc;
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);
+  if (paneEnabled() && isHttp(sp.website)) loadPane(sp.website, 'Webseite');   // Standard: Webseite des Space im Seitenfenster
   $('sp-rows').replaceChildren(...FIELDS.map(f => buildRow(f, sp, restore)));
   $('sp-free').replaceChildren(buildFreeText(sp));
   msg('');
@@ -317,10 +319,41 @@ function show(restore = null) {
   window.scrollTo?.(0, 0);
 }
 
+// ─── Seitenfenster (Webseite zum Space) ──────────────────────────────────
+// Links der Karte (ID + Name, Quell-Icons) öffnen die Seite in einem Seitenfenster rechts, nicht in einem neuen Tab. Auf Touch/schmalen
+// Fenstern (< 1100 px) gibt es kein Seitenfenster: dort bleibt es ein neuer Tab. Trenner ziehbar (oder ← → bei Fokus), Breite wird gemerkt.
+const paneEnabled = () => !window.matchMedia?.('(pointer: coarse), (max-width: 1099px)').matches;
+let paneUrl = '';
+function loadPane(url, title = '') {
+  if (!isHttp(url)) return;
+  paneUrl = url;
+  $('sp-frame').src = url;
+  $('sp-pane-title').textContent = `${title ? title + ': ' : ''}${url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 60)}`;
+  document.querySelectorAll('#sp-sources .src').forEach(a => a.setAttribute('aria-pressed', String(a.href === url)));
+}
+const setPaneWidth = px => { const w = clampPaneWidth(px, $('sp-layout').clientWidth); $('sp-layout').style.setProperty('--sp-pane-w', `${w}px`); store.set('spaces-pane-w', w); };
+function initPane() {
+  const saved = store.get('spaces-pane-w', 0);
+  if (saved) $('sp-layout').style.setProperty('--sp-pane-w', `${clampPaneWidth(saved, $('sp-layout').clientWidth)}px`);
+  const split = $('sp-split');
+  split.addEventListener('pointerdown', e => {
+    e.preventDefault(); split.setPointerCapture(e.pointerId); $('sp-layout').classList.add('dragging');
+    const move = ev => { const box = $('sp-layout').getBoundingClientRect(); setPaneWidth(box.right - ev.clientX - split.offsetWidth / 2); };
+    const up = () => { $('sp-layout').classList.remove('dragging'); split.removeEventListener('pointermove', move); split.removeEventListener('pointerup', up); split.removeEventListener('pointercancel', up); };
+    split.addEventListener('pointermove', move); split.addEventListener('pointerup', up); split.addEventListener('pointercancel', up);
+  });
+  split.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault(); e.stopPropagation();
+    setPaneWidth($('sp-pane').offsetWidth + (e.key === 'ArrowLeft' ? 24 : -24));
+  });
+  $('sp-pane-tab').addEventListener('click', () => { if (paneUrl) window.open(paneUrl, '_blank', 'noopener'); });
+}
+
 // ─── Freitext (alle Eigenschaften) ───────────────────────────────────────
-// Text/URLs einfügen → sofort ausgewertet: Workshops angehakt, Treffen (30-min-Raster) + Gründung gesetzt, Kalender-/SpaceAPI-URL
+// Text/URLs einfügen → beim Verlassen des Feldes ausgewertet: Workshops angehakt, Treffen (30-min-Raster) + Gründung gesetzt, Kalender-/SpaceAPI-URL
 // erkannt (spaces-lib analyzeFreeText). Eine einzelne Website-URL löst per Server-Scan die Workshop-Erkennung aus (braucht ein
-// Workshop-Issue zum Kommentieren). Zwischenablage wird bei Fokus/Verlassen des leeren Feldes automatisch gelesen.
+// Workshop-Issue zum Kommentieren). Die Zwischenablage wird nur über den Knopf „Einfügen“ gelesen.
 const SCAN_POLL_MS = 5000, SCAN_MAX_POLLS = 36;   // ≈ 3 min
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -366,9 +399,12 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
 
 function buildFreeText(sp) {
   const wrap = document.createElement('div'); wrap.className = 'ws-free';
-  const label = document.createElement('label'); label.textContent = 'Freitext — hier Text oder URLs einfügen (wird sofort ausgewertet): Workshops, Treffen, Gründung, Kalender, SpaceAPI';
+  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, Treffen, Gründung, Kalender, SpaceAPI';
   const area = document.createElement('textarea');
   area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
+  const paste = document.createElement('button'); paste.type = 'button'; paste.textContent = 'Einfügen'; paste.className = 'paste-btn';
+  paste.title = 'Zwischenablage ins Feld einfügen und auswerten';
+  const grid = document.createElement('div'); grid.className = 'free-grid'; grid.append(area, paste);
   area.placeholder = 'z. B. „Jeden Dienstag ab 19 Uhr offener Abend, Lasercutter, 3D-Drucker … gegründet 2015“ oder eine Kalender-/SpaceAPI-URL — oder eine Website-URL zum Auslesen per Server';
   const detected = document.createElement('p'); detected.className = 'ws-detected'; detected.dataset.state = 'idle'; detected.setAttribute('role', 'status');
   const row = document.createElement('div'); row.className = 'scan-row';
@@ -377,7 +413,8 @@ function buildFreeText(sp) {
   const issue = sp.proposals.workshops?.number;
   if (!issue) btn.title = 'Der Server-Scan kommentiert ein Workshop-Issue — für diesen Space gibt es keins (Text einfügen geht trotzdem).';
   row.append(btn, target);
-  wrap.append(label, area, detected, row);
+  const hint = document.createElement('small'); hint.className = 'free-hint'; hint.textContent = 'Wird beim Verlassen des Feldes ausgewertet.';
+  wrap.append(label, grid, hint, detected, row);
 
   const scanUrl = () => { const v = area.value.trim(); return looksLikeUrl(v) ? v : sp.website; };
   const refreshTarget = () => {
@@ -396,27 +433,19 @@ function buildFreeText(sp) {
     if (looksLikeUrl(v.trim())) { setIndicator(detected, 'info', `URL erkannt${source} (kein Kalender/SpaceAPI) — mit „Website auslesen (Server)“ die Workshops serverseitig auslesen.`); return; }
     setIndicator(detected, 'none', `✓ Text${source} ausgewertet (${v.length} Zeichen) — nichts erkannt${notes}`);
   };
-  area.addEventListener('input', () => evaluate());
-  // Einfügen: erst nach dem Einsetzen auswerten (der Wert steht beim paste-Ereignis noch nicht im Feld)
-  area.addEventListener('paste', () => setTimeout(() => evaluate(), 0));
+  // Der Inhalt wird erst beim VERLASSEN des Feldes ausgewertet (nie beim Tippen/Einfügen, nie automatisch aus der Zwischenablage).
+  area.addEventListener('blur', () => evaluate());
   queueMicrotask(refreshTarget);
 
-  // Zwischenablage automatisch lesen: wenn das Feld den Fokus bekommt (auch beim Zurückkehren ins Fenster, wenn das Feld
-  // fokussiert war) und beim Verlassen des leeren Feldes. Nur in ein leeres (bzw. zuletzt automatisch gefülltes) Feld, nie über
-  // eigene Eingaben; es werden nur leere Eigenschaften gefüllt; derselbe Inhalt wird nicht erneut übernommen. Ohne Berechtigung/Unterstützung bleibt es still.
-  let lastClip = '', autoText = '';
-  const readClipboard = async () => {
-    if (area.disabled || !navigator.clipboard?.readText) return;
-    if (area.value.trim() && area.value !== autoText) return;
+  // „Einfügen“: liest die Zwischenablage ausdrücklich per Klick, setzt den Text ins Feld und wertet ihn sofort aus
+  paste.addEventListener('click', async () => {
     try {
       const t = (await navigator.clipboard.readText()).trim();
-      if (!t || t === lastClip || t.length > 20000 || (area.value.trim() && area.value !== autoText)) return;
-      lastClip = t; autoText = area.value = t;
-      evaluate(' aus Zwischenablage', { onlyEmpty: true });
-    } catch { /* keine Berechtigung / Fenster ohne Fokus */ }
-  };
-  area.addEventListener('focus', readClipboard);
-  area.addEventListener('blur', () => { if (area.value.trim()) evaluate(); else readClipboard(); });
+      if (!t) { setIndicator(detected, 'none', 'Die Zwischenablage ist leer.'); return; }
+      area.value = area.value.trim() ? `${area.value.trimEnd()}\n${t}` : t;
+      evaluate(' aus Zwischenablage');
+    } catch { setIndicator(detected, 'error', 'Zwischenablage nicht lesbar (Berechtigung?) — Text im Feld mit Strg/Cmd+V einfügen und das Feld verlassen.'); }
+  });
 
   btn.addEventListener('click', async () => {
     const url = scanUrl();
@@ -572,7 +601,7 @@ async function undo() {
 // ─── Aktivieren / Deaktivieren (Reiter) ─────────────────────────────────
 function onKey(e) {
   if (!state.active || e.ctrlKey || e.metaKey || e.altKey) return;
-  if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.closest?.('#sp-split')) return;
   const k = e.key.toLowerCase();
   if (k === 'y') decide('ok');
   else if (k === 'n') decide('reject');
@@ -593,7 +622,7 @@ export async function activate() {
   else { rebuild(); show(); reload({ quiet: true, rerender: false }); }   // still nachladen: Formular bleibt, Pläne nutzen frische Bodys
   ctx.onChange?.();
 }
-export function deactivate() { state.active = false; release(); $('spaces-view').hidden = true; }
+export function deactivate() { state.active = false; release(); $('spaces-view').hidden = true; if (paneUrl) { $('sp-frame').src = 'about:blank'; paneUrl = ''; } }
 /** Anzahl Spaces mit offenen Vorschlägen (Zähler am Reiter) */
 export const openCount = () => buildQueue(state.groups, [], 'all').length;
 export { reload };
@@ -605,4 +634,5 @@ export function initSpaces(context) {
   $('sp-act-l').addEventListener('click', later);
   $('sp-act-z').addEventListener('click', undo);
   document.addEventListener('keydown', onKey);
+  initPane();
 }
