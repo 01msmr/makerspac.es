@@ -648,6 +648,15 @@
     "events": "https://www.fnordeingang.de/kalender",
     "spaceapi": {
       "endpoint": "https://status.fnordeingang.de/spaceapi.json"
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "wood"
+    ],
+    "weekly": {
+      "weekday": 3,
+      "time": 1900
     }
   },
   "92": {
@@ -1799,7 +1808,15 @@
     "events": "https://www.makeraustria.at/events"
   },
   "237": {
-    "events": "https://www.handwerkstadt.org/termine"
+    "events": "https://www.handwerkstadt.org/termine",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "wood",
+      "metal",
+      "textile"
+    ]
   },
   "238": {
     "events": "https://www.usrspace.at/termine",
