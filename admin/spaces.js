@@ -477,7 +477,7 @@ function applyAnalysis(a, { onlyEmpty = false } = {}) {
 
 function buildFreeText(sp) {
   const wrap = document.createElement('div'); wrap.className = 'ws-free';
-  const label = document.createElement('label'); label.textContent = 'Freitext — Text oder URLs einfügen; erkannt werden Workshops, wöchentliches Treffen, Vereinsgründung, Kalender, SpaceAPI';
+  const label = document.createElement('label'); label.textContent = 'Freitext — Text einfügen; Workshops, wöchentliches Treffen, Vereinsgründung, Kalender, SpaceAPI werden erkannt';
   const area = document.createElement('textarea');
   area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
   const paste = document.createElement('button'); paste.type = 'button'; paste.textContent = 'Einfügen'; paste.className = 'paste-btn';
