@@ -346,10 +346,23 @@ test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line,
   assert.match(css, /\.ws-detected \.det-line \{ margin-top: 1\.1rem;/);
 });
 
-test('29: Entscheider-Knöpfe am Desktop breit (min-width) mit klarem Abstand (gap)', () => {
-  assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ gap: 1\.75rem; \}\s*\.sp-actions button \{ min-width: 12\.5rem;/);
+test('29: Entscheider-Knöpfe am Desktop in EINER Zeile (nowrap), gleich breit, mit klarem Abstand (gap)', () => {
+  assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ flex-wrap: nowrap; gap: 1\.5rem; \}[^\n]*\n\s*\.sp-actions button \{ flex: 1 1 0; min-width: 0;/);
 });
 
 test('30: Tasten-Kürzel (kbd) mit doppeltem Radius (6px)', () => {
   assert.match(read('admin/admin.css'), /\nkbd \{[^}]*border-radius: 6px;/);
+});
+
+test('31: „verwerfen“ am Desktop halb so breit wie „übernehmen“/„später“', () => {
+  assert.match(read('admin/spaces.css'), /\.sp-actions #sp-act-n \{ flex: \.5 1 0;/);
+});
+
+test('32: Spaces-Knopf „zurück“ statt „rückgängig“ (kürzer)', () => {
+  const html = read('admin/index.html');
+  assert.match(html, /id="sp-act-z"[^>]*><kbd>z<\/kbd> zurück<\/button>/);
+});
+
+test('33: mit sichtbarem „zurück“ (4 Knöpfe) bleibt alles in einer Zeile (:has-Regel, kleinere Schrift)', () => {
+  assert.match(read('admin/spaces.css'), /\.sp-actions:has\(#sp-act-z:not\(\[hidden\]\)\) \{ gap: 1rem; \}/);
 });

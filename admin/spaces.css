@@ -167,6 +167,13 @@
 
 /* Entscheider-Knöpfe (Desktop): breiter, mit klarem horizontalem Abstand */
 @media (min-width: 768px) {
-  .sp-actions { gap: 1.75rem; }
-  .sp-actions button { min-width: 12.5rem; padding: .7rem 2.4rem; justify-content: center; }
+  .sp-actions { flex-wrap: nowrap; gap: 1.5rem; }   /* alle Entscheider-Knöpfe in EINER Zeile */
+  .sp-actions button { flex: 1 1 0; min-width: 0; padding: .7rem .5rem; white-space: nowrap; justify-content: center; }
+  .sp-actions #sp-act-n { flex: .5 1 0; padding-left: .3rem; padding-right: .3rem; font-size: 1.05rem; }   /* „verwerfen“: halb so breit wie „übernehmen“ und „später“ (Text darf umbrechen) */
+  /* mit „zurück“ (4 Knöpfe, schmal): kleinere Schrift/Abstände, „verwerfen“/„zurück“ etwas breiter als halb — nichts wird abgeschnitten (ohne „zurück“: „verwerfen“ genau halb so breit) */
+  .sp-actions:has(#sp-act-z:not([hidden])) { gap: 1rem; }
+  .sp-actions:has(#sp-act-z:not([hidden])) button { font-size: .95rem; padding-left: .25rem; padding-right: .25rem; }
+  .sp-actions:has(#sp-act-z:not([hidden])) #sp-act-n { flex: .75 1 0; }
+  .sp-actions:has(#sp-act-z:not([hidden])) #sp-act-z { flex: .65 1 0; }
+  .sp-actions:has(#sp-act-z:not([hidden])) kbd { font-size: .85rem; padding: .05rem .35rem; margin-right: .2rem; }
 }
