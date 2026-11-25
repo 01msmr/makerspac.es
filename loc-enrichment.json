@@ -81,7 +81,18 @@
     }
   },
   "13": {
-    "events": "https://gutziegenberg.de/werkstattangebote"
+    "events": "https://gutziegenberg.de/werkstattangebote",
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "wood",
+      "textile"
+    ],
+    "weekly": {
+      "weekday": 5,
+      "time": 1530
+    }
   },
   "14": {
     "events": "https://kraut.space/krautspace.ics",
@@ -170,7 +181,14 @@
     }
   },
   "31": {
-    "events": "https://www.studio114.de/workshops/"
+    "events": "https://www.studio114.de/workshops/",
+    "workshops": [
+      "screenprint"
+    ],
+    "weekly": {
+      "weekday": 4,
+      "time": 1600
+    }
   },
   "32": {
     "events": "https://offene-werkstatt.th-brandenburg.de/termine",
@@ -248,7 +266,16 @@
     "spaceapi": {
       "endpoint": "https://www.fablab-hamburg.org/sesame",
       "adapter": "html-style"
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "coding",
+      "wood",
+      "metal"
+    ]
   },
   "44": {
     "events": "https://www.tuhh.de/workinglab/termine-veranstaltungen"
