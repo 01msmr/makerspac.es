@@ -296,9 +296,11 @@ git push main
      └── Tag "last-deployed" aktualisieren
 
 .github/workflows/update-status.yml  (cron */30 + cron-job.de alle 15 Min)
-     ├── node fetch-spaceapi-status.js  (SpaceAPI-Endpunkte abfragen)
-     ├── curl FTPS → status.json hochladen
-     └── kein git commit (status.json in .gitignore)
+     ├── actions/cache/restore  status-memory.json  (nicht öffentlich; nur letzte zwei Signaturen je „offen“-Space ohne Zeitstempel)
+     ├── node fetch-spaceapi-status.js  (SpaceAPI-/Adapter-Endpunkte abfragen; Alters-Regel: „offen“ nur < 24 h, „geschlossen“ bleibt; Sensor-Lebenszeichen — ADR-010)
+     ├── actions/cache/save  status-memory.json
+     ├── curl FTPS → status.json hochladen  (nur status.json; Gedächtnis/Zeitstempel nie öffentlich)
+     └── kein git commit (status.json und status-memory.json in .gitignore)
 
 .github/workflows/spaceapi-directory-sync.yml  (cron Mo 06:00 UTC)
      └── node tools/spaceapi-directory-sync.js --create-issues
