@@ -103,6 +103,7 @@ const SETTINGS = {
   zoomDebounceMs:         800,
   popupDelayMs:           300,
   popupGraceMs:          1100,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
+  haloMinZoom:           15.5,   // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte), 1,5 s Einblenden (CSS)
   hintShrinkMs:           1350,
   hintFadeMs:             1200,
   inactivityMs:           3500,
@@ -195,15 +196,23 @@ function escapeHtml(text) {
  * @param {number} [scale=1.0] - Skalierungsfaktor
  * @returns {L.DivIcon}
  */
+const HALO_SIZE = 150;   // Durchmesser des Pin-Halos in px (≈ 2,5× von 56)
+
 export function createLeafletIcon(color, scale = 1.0) {
   const w = Math.round(25 * scale);
   const h = Math.round(41 * scale);
+  const PIN = 'M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z';
+  // Pin: 1 px weißer Rand (direkt im Symbol, außerhalb des schwarzen 1-px-Rands) → löst den Pin von dunklen/bunten Kartenflächen
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
-    `<path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>` +
+    `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +
+    `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
     `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
     `</svg>`;
+  // Halo: 150-px-Kreis um den Pin-Körper, Mitte 50 % Deckung → außen 0 % (linearer Verlauf), siehe .pin-halo in main-layout.css;
+  // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 1,5 s Einblenden
+  const halo = `<span class="pin-halo" style="width:${HALO_SIZE}px;height:${HALO_SIZE}px;left:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px;top:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px"></span>`;
   return L.divIcon({
-    html: svg,
+    html: halo + svg,
     className: 'ms-marker-icon',
     iconSize: [w, h],
     iconAnchor: [w / 2, h],

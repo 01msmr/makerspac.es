@@ -220,6 +220,11 @@ await appContext.waitFor('data');  // Blockiert bis locations.json geladen
 ### window-Globals als Modul-Bus
 Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindungen bevorzugt über `appContext` oder direkte Instanz-Referenzen in `main.js`.
 
+### Pin-Halo & Outline
+- `createLeafletIcon` (config.js) setzt vor das Pin-SVG ein `<span class="pin-halo">` (150 px, zentriert auf dem Pin) und zeichnet im SVG eine 1 px weiße Kontur (3-px-Weiß-Unterlage unter dem 1-px-Schwarzstrich).
+- CSS (`main-layout.css`): `radial-gradient` 50 % → 0 % in `--pin-halo-rgb` (hell `191 191 191` = 25 % Schwarz, dunkel `64 64 64` = 75 % Schwarz). Sichtbar nur mit Klasse `.halo-on` am Karten-Container; Einblenden 1,5 s, Ausblenden 0,4 s; `prefers-reduced-motion` ohne Übergang.
+- `marker-manager.js` (`initMarkerManager`) schaltet `.halo-on` bei `zoomend` anhand `AppConfig.settings.haloMinZoom` (15,5).
+
 ### Connection Line (Dropdown ↔ Marker)
 - Wird gezeichnet: `listingCore.createConnectionLine(item, marker, color)`
 - Wird gelöscht: bei `zoomstart`, `mouseleave`, `closeDropdown`
