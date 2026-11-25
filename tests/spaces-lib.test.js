@@ -313,3 +313,9 @@ test('23: Ändern eines Vorschlags merkt den ursprünglichen Crawler-Fund im Iss
   assert.match(r.actions[0].body, /\*\*Crawler-Fund:\*\* "/);
   assert.equal(parseWeeklyIssue({ ...wkIssue(31), body: r.actions[0].body }).weekly.time, 1900);   // Parser liest den geänderten Block, nicht das Original
 });
+
+test('24: Eigenschaftszeilen nur über tr[data-key] lesen (Beleg-Tabellen innerhalb der Zeilen haben eigene <tr>)', () => {
+  const js = read('admin/spaces.js');
+  assert.ok(!/\$\('sp-rows'\)\.querySelectorAll\('tr'\)/.test(js), 'Stale-Check/readRows dürfen keine verschachtelten <tr> der Beleg-Tabellen erfassen');
+  assert.match(js, /querySelectorAll\('tr\[data-key\]'\)\]\.some\(tr => tr\.dataset\.number/);
+});
