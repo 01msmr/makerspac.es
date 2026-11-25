@@ -52,11 +52,10 @@ test('3: createIssueWithToken — Fehlerstatus und unerwartete Antwort werfen (�
   await assert.rejects(form.createIssueWithToken('t', 'x', 'y', async () => ({ ok: true, json: async () => ({ number: 1, html_url: 'https://evil.example/x' }) })), /unerwartete Antwort/);
 });
 
-test('4: Verdrahtung — Fallback bleibt, ?edit=ID öffnet das Overlay, Admin verlinkt es', () => {
+test('4: Verdrahtung — Fallback bleibt, ?edit=ID öffnet das Overlay', () => {
   assert.match(read('add-space-form.js'), /const token = adminToken\(\);\s*if \(token\)[\s\S]*?const url_gh = /);   // Token-Pfad vor dem GitHub-Tab-Fallback
   assert.match(read('map.js'), /waitFor\('app'\)\.then\(openEditFromUrl\)/);
   assert.match(read('overlay-loader.js'), /openOverlayTab\('addspace', \{ editId: id \}\)/);
   assert.match(read('overlay-loader.js'), /locationById\?\.get\(id\)\?\.link/);   // wartet auf die nachgeladenen Details
-  assert.match(read('admin/spaces.js'), /\$\('sp-edit'\)\.href = `\/\?edit=\$\{id\}`/);
-  assert.match(read('admin/index.html'), /id="sp-edit"[^>]*rel="noopener noreferrer"/);
+  assert.ok(!read('admin/index.html').includes('sp-edit'), 'Link „Eintrag bearbeiten“ steht nicht mehr im Admin (Stift im Popup genügt)');
 });

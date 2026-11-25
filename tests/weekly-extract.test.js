@@ -151,3 +151,19 @@ test('Getrennte Issues: je Eigenschaft ein Issue und ein eigener Vergleich (kind
   const openWeekly = [{ number: 7, state: 'OPEN', createdAt: '2026-01-01', body: w.body }];
   assert.deepEqual(decideProposal({ kind: 'weekly', found: '4:1900|-', issues: openWeekly }).supersede, [7]);
 });
+
+test('Im Admin geänderter Vorschlag: der ursprüngliche Crawler-Fund wird nicht erneut vorgeschlagen', async () => {
+  const { markOriginal, originalOf } = await import('../tools/lib/crawl-original.js');
+  const orig = '**ID:** 5\n```json\n{\n  "weekly": { "weekday": 3, "time": 1830 }\n}\n```\n';
+  const edited = '**ID:** 5\n```json\n{\n  "weekly": { "weekday": 3, "time": 1900 }\n}\n```\n';
+  const body = markOriginal(edited, orig);
+  assert.equal(markOriginal(body, edited), body);                                       // Marker bleibt, wird nie überschrieben
+  assert.equal(proposalFromIssue({ body }, 'weekly'), '3:1900|-');                       // aktueller Inhalt = geänderter Wert
+  assert.equal(proposalFromIssue({ body: originalOf(body) }, 'weekly'), '3:1830|-');     // Original lesbar
+  const issues = [{ number: 7, state: 'CLOSED', createdAt: '2026-01-01', body }];
+  assert.equal(decideProposal({ kind: 'weekly', found: '3:1830|-', issues }).action, 'skip');    // gleicher Fund wie damals
+  assert.equal(decideProposal({ kind: 'weekly', found: '3:1900|-', issues }).action, 'skip');    // = geänderter Wert
+  assert.equal(decideProposal({ kind: 'weekly', found: '4:2000|-', issues }).action, 'propose'); // echte Änderung der Website
+  const ws = markOriginal('x\n```json\n"workshops": ["3d"]\n```\n', 'x\n```json\n"workshops": ["3d","laser"]\n```\n');
+  assert.equal(decideProposal({ kind: 'workshops', found: ['3d', 'laser'], issues: [{ number: 8, state: 'OPEN', createdAt: '2026-01-01', body: ws }] }).action, 'skip');
+});

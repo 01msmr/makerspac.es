@@ -26,9 +26,9 @@ Der Admin (ADR-006) prüft je Art (SpaceAPI, Workshops, Kalender, Treffen) ein I
 - **Freitext** (oberhalb der Tabelle, auch aus der Zwischenablage): wird **erst beim Verlassen des Feldes** ausgewertet (nie beim Tippen/Einfügen, die Zwischenablage nur über den Knopf **„Einfügen“**, rechts in der Breite der „übernehmen“-Spalte) und erkennt in einem Zug Workshops, Treffen (Wochentag + Uhrzeit), Gründung sowie Kalender- und SpaceAPI-URLs (`analyzeFreeText`, nutzt die Crawler-Extraktion `tools/lib/weekly-extract.js`); überschreibt nur Zeilen, die in der Bearbeiten-Auswahl aktiv sind. **Treffen-Uhrzeit nur im 30-Minuten-Raster** (`:00`/`:30`; Eingabe `step`, Validierung, erkannte Zeiten werden gerundet und der Hinweis nennt es).
 - Die Reiter SpaceAPI / Workshops / Kalender / Weekly bleiben dahinter unverändert bestehen. Beim Wechsel dorthin werden Warteschlangen und ok-Zähler abgeglichen.
 
-## Eintrag bearbeiten (Name, Adresse, Link, Stil) — über das bestehende Bearbeiten-Overlay
+## Eintrag bearbeiten (Name, Adresse, Link, Stil) — nicht im Admin
 
-Keine neue Issue-Art: Der Link „Eintrag bearbeiten“ in der Spaces-Karte öffnet `/?edit=ID` → das **Bearbeiten-Overlay** der Karte (derselbe Weg wie der Stift im Popup). Mit dem Admin-Token (nur FGT/PAT, Issues-Write; `localStorage['admin-pat']`, gleicher Ursprung) legt das Overlay das Korrektur-Issue **direkt per REST** an — ohne GitHub-Login/-Tab. Danach laufen die bestehenden Workflows (`validate-makerspace-issue` → `update-makerspace-pr`, Direkt-Commit). Ohne Token oder bei Fehler bleibt der Fallback (vorbefüllter GitHub-Tab).
+Der frühere Link „Eintrag bearbeiten“ im Kartenkopf ist entfallen (wenig nützlich, führt aus dem Review heraus). Korrekturen laufen weiter über den **Stift im Popup** der Karte bzw. `/?edit=ID` (Bearbeiten-Overlay); mit dem Admin-Token legt das Overlay das Korrektur-Issue direkt per REST an.
 
 ## Weitere Prüfer (nur FGT/PAT)
 

@@ -304,3 +304,12 @@ test('22: Altes kombiniertes Issue (weekly + space.init) — beide Zeilen nur ge
   assert.match(planDecision(sp, rows(true, true, '1990-01-01'), {}).errors[0], /nur unverändert/);
 });
 function wkIssue(n) { return { number: n, title: 'Treffen-Daten: A', labels: [], updated_at: '2026-11-25T00:00:00Z', html_url: 'x' }; }
+
+test('23: Ändern eines Vorschlags merkt den ursprünglichen Crawler-Fund im Issue (kein erneuter Vorschlag)', () => {
+  const issues = { weekly: [wk(31, 48, { weekday: 3, time: 1830 }, null)], workshops: [], calendar: [], spaceapi: [] };
+  const g = groupBySpace(issues).get(48);
+  const sp = { id: 48, name: 'CCC', website: '', proposals: g.proposals, current: { weekly: { day: '', time: '' }, init: '', workshops: [], calendar: '', spaceapi: '' } };
+  const r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { day: '3', time: '19:00' } }], { 31: issues.weekly[0].body });
+  assert.match(r.actions[0].body, /\*\*Crawler-Fund:\*\* "/);
+  assert.equal(parseWeeklyIssue({ ...wkIssue(31), body: r.actions[0].body }).weekly.time, 1900);   // Parser liest den geänderten Block, nicht das Original
+});
