@@ -12,6 +12,7 @@ import {
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder } from '../tools/lib/weekly-extract.js';
 import { applyEnrichment } from '../enrichment-merge.js';
+import { markOriginal } from '../tools/lib/crawl-original.js';
 
 export const PLACEHOLDER_INIT = 20010000;     // „keine Gründung bekannt“ in locations.json
 export const IMPORTANT_THRESHOLD = 0.35;       // Eigenschaft bei mehr als 35 % der Spaces gefüllt → leer wird hervorgehoben
@@ -229,7 +230,8 @@ export function planDecision(space, rows, bodies = {}) {
       const replace = !isEmptyValue(r.key, cur);
       if (!changed) { actions.push({ type: 'ok', key: r.key, number: p.number }); continue; }
       if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
-      const body = editedBody(r.key, bodies[p.number] ?? '', r.value, replace);
+      const edited = editedBody(r.key, bodies[p.number] ?? '', r.value, replace);
+      const body = edited && markOriginal(edited, bodies[p.number] ?? '');   // ursprünglicher Crawler-Fund bleibt dem Crawler bekannt
       if (!body) { errors.push(`${f.label}: Eingabe konnte nicht in das Issue geschrieben werden`); continue; }
       actions.push({ type: 'ok', key: r.key, number: p.number, body, prevBody: bodies[p.number] ?? '' });
     } else if (r.include && !sameValue(r.key, r.value, cur)) {

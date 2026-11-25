@@ -365,7 +365,6 @@ function show(restore = null) {
   const sp = spaceModel(id);
   const a = $('sp-link'); a.textContent = `#${id} ${sp.name}`;
   if (isHttp(sp.website)) a.href = sp.website; else a.removeAttribute('href');
-  $('sp-edit').href = `/?edit=${id}`;
   const l = sp.loc;
   $('sp-meta').textContent = [l.loc?.city, l.loc?.country, `Stand ${formatEditDate(l.dates?.['space.edited.latest'])}`].filter(Boolean).join(' · ');
   renderSources(sp);

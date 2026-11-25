@@ -25,8 +25,7 @@ test('2: i18n-Platzhalter: Lookup ohne Beispiel in 7 Sprachen, kein Adresszusatz
   assert.equal(am.addressAdditionPlaceholder, undefined);
 });
 
-test('3: Link im Spaces-Reiter heißt „Eintrag bearbeiten“', () => {
+test('3: kein „Stammdaten“/„Eintrag bearbeiten“-Link mehr im Spaces-Reiter', () => {
   const html = read('admin/index.html');
-  assert.match(html, /id="sp-edit"[^>]*title="Name, Adresse, Website, Zielgruppe[^"]*"[\s\S]*?Eintrag bearbeiten<\/a>/);
-  assert.ok(!html.includes('Stammdaten'));
+  assert.ok(!html.includes('Stammdaten') && !html.includes('Eintrag bearbeiten'));
 });

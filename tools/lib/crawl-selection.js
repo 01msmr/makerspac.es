@@ -13,6 +13,7 @@ import path from 'path';
 import { execFileSync } from 'child_process';
 import { applyEnrichment, normalizeUrl } from '../../enrichment-merge.js';
 import { deltaKey } from './weekly-extract.js';
+import { originalOf } from './crawl-original.js';
 export { normalizeUrl }; // Re-Export: Single Source of Truth liegt in enrichment-merge.js
 
 const RE_BODY_ID = /\*\*ID:\*\*\s*(\d+)/;
@@ -90,6 +91,11 @@ export function decideProposal({ kind, found, integrated, issues }) {
   const latest = sorted[0];
   if (latest && sameProposal(kind, proposalFromIssue(latest, kind), foundC)) {
     return { action: 'skip', reason: `identisch mit dem jüngsten Vorschlag #${latest.number} (${String(latest.state).toLowerCase()}) — Website seit dem letzten Crawl unverändert`, supersede: [] };
+  }
+  // im Admin geänderter Vorschlag: der ursprüngliche Crawler-Fund zählt weiter als „bekannt“ (kein erneuter Vorschlag)
+  const orig = latest && originalOf(latest.body);
+  if (orig && sameProposal(kind, proposalFromIssue({ body: orig }, kind), foundC)) {
+    return { action: 'skip', reason: `identisch mit dem ursprünglichen Fund von Vorschlag #${latest.number} (im Admin geändert) — Website unverändert`, supersede: [] };
   }
   const supersede = sorted.filter(i => String(i.state).toUpperCase() === 'OPEN' && !sameProposal(kind, proposalFromIssue(i, kind), foundC)).map(i => i.number);
   return { action: 'propose', reason: latest ? `neuere Änderung gegenüber Vorschlag #${latest.number}` : 'erster Vorschlag', supersede };
