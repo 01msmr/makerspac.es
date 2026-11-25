@@ -12,7 +12,7 @@ Der Admin (ADR-006) prüft je Art (SpaceAPI, Workshops, Kalender, Treffen) ein I
 ## Entscheidung
 
 - Neuer Reiter **„Spaces“** — erster Reiter und Standard der Admin-Seite (`/admin/`, kein eigenes HTML; `spaces.js` läuft im Admin und nutzt dessen Login, Daten, Toasts und „Übernehmen“): ein Space = eine Karte mit **allen** Eigenschaften (Workshops, Kalender, SpaceAPI, Treffen/Gründung). Offene Vorschläge sind vorbelegt, jede Eigenschaft ist änderbar, auch leere.
-- **Entscheidung pro Space** (`y` übernehmen · `n` alles verwerfen · `ä` später · `z` rückgängig); je Eigenschaft ein Häkchen „übernehmen / verwerfen“.
+- **Entscheidung pro Space** (`y` übernehmen · `n` verwerfen · `ä` später · `z` zurück); je Eigenschaft ein Häkchen „übernehmen / verwerfen“.
 - **Radio-Leiste „Bearbeiten“** (Alles | eine Eigenschaft) begrenzt die Bearbeitung; die Warteschlange zeigt dann nur Spaces mit Vorschlag für diese Eigenschaft. Verhindert Fehlbedienung bei Reihenprüfungen.
 - **Später** schiebt den Space ans Ende der Warteschlange (lokal, `localStorage`).
 - **Schreiben nur über Issues** (wie ADR-006, PAT ohne Contents-Write): Vorschlag vorhanden → Body anpassen + Label `ok`; Verwerfen → Issue schließen (`not_planned`); Eigenschaft ohne Vorschlag, aber im Admin eingegeben → **neues Issue** im selben Format wie die Crawler-Issues (+ `ok`). Übernommen wird wie bisher durch `apply-all-issues.yml` (1 Commit, 1 Deploy). Kein neuer Workflow, kein neues Datenformat.
