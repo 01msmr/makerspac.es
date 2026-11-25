@@ -152,7 +152,7 @@ function renderSources(sp) {
   add(door, sp.current.spaceapi || sp.proposals.spaceapi?.endpoint, 'SpaceAPI', !sp.current.spaceapi);
 }
 
-const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag']];
+const WEEKDAYS = [['', '–'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag'], ['none', 'kein weekly mehr']];   // letzte Option: Treffen entfernen
 const dayName = d => WEEKDAYS.find(([v]) => v === d)?.[1] ?? '–';
 function currentText(key, v) {
   if (key === 'workshops') return v.length ? v.join(', ') : '';
@@ -194,6 +194,13 @@ function buildInputs(key, value) {
   return wrap;
 }
 
+/** „kein weekly mehr“: Uhrzeit leeren und sperren (sonst folgt die Sperre der Bearbeiten-Auswahl) */
+function syncWeeklyTime(tr) {
+  const day = tr.querySelector('[data-f="day"]'), time = tr.querySelector('[data-f="time"]');
+  if (!day || !time) return;
+  if (day.value === 'none') { time.value = ''; time.disabled = true; } else time.disabled = tr.dataset.off === 'true';
+}
+
 function readValue(tr) {
   const key = tr.dataset.key;
   if (key === 'workshops') return [...tr.querySelectorAll('.ws-checks input')].filter(b => b.checked).map(b => b.value);
@@ -223,20 +230,24 @@ function markChanged(tr, sp) {
 /** Zeile aktualisieren: geändert? Häkchen-Text, gelbe Lücke */
 function updateRow(tr, sp) {
   const key = tr.dataset.key, hasProposal = tr.dataset.proposal === '1';
+  if (key === 'weekly') syncWeeklyTime(tr);
   const value = readValue(tr), cb = tr.querySelector('.inc input'), label = tr.querySelector('.inc label'), txt = label.querySelector('span');
   const base = hasProposal ? displayValue(key, sp.proposals[key], sp.current[key]) : sp.current[key];
   const changed = !sameValue(key, value, base);
   tr.classList.toggle('differs', changed || (hasProposal && !sameValue(key, displayValue(key, sp.proposals[key], sp.current[key]), sp.current[key])));
   markChanged(tr, sp);
   if (hasProposal) {
-    txt.textContent = cb.checked ? (key === 'workshops' && !value.length ? 'nichts übernehmen' : 'übernehmen') : 'verwerfen';
-    label.classList.toggle('rej', !cb.checked);
+    const removing = key === 'weekly' && value.day === 'none';
+    txt.textContent = !cb.checked ? 'verwerfen' : removing ? 'Weekly wird entfernt' : (key === 'workshops' && !value.length ? 'nichts übernehmen' : 'übernehmen');
+    label.classList.toggle('rej', !cb.checked || removing);
   } else {
     const diff = !sameValue(key, value, sp.current[key]);
     label.hidden = !diff;
     if (diff && !tr._wasDiff) cb.checked = true;   // neu angefangene Änderung: Häkchen automatisch an
     tr._wasDiff = diff;
-    txt.textContent = isEmptyValue(key, value) ? 'entfernen' : 'neu anlegen';
+    const removing = key === 'weekly' && value.day === 'none';
+    txt.textContent = removing ? 'Weekly wird entfernt' : isEmptyValue(key, value) ? 'entfernen' : 'neu anlegen';
+    label.classList.toggle('rej', removing);
     tr.classList.toggle('gap', !diff && isImportantEmpty(key, value, state.rates));
   }
 }
@@ -269,6 +280,7 @@ function buildRow(f, sp, restore) {
   const off = state.mode !== 'all' && state.mode !== f.key;
   tr.dataset.off = String(off);
   tr.querySelectorAll('input, select, textarea, button').forEach(el => { el.disabled = off; });
+  if (f.key === 'weekly') syncWeeklyTime(tr);
   tr.addEventListener('input', () => updateRow(tr, sp));
   tr.addEventListener('change', () => updateRow(tr, sp));
   if (!p) { tr._wasDiff = restore?.[f.key] ? true : false; label.hidden = true; }

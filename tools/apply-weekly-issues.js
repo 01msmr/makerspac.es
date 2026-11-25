@@ -30,9 +30,21 @@ export function parseIssue(issue) {
   let v;
   try { v = JSON.parse(js[1]); } catch { return null; }
   const out = { issueNumber: issue.number, spaceId: parseInt(id[1], 10) };
-  if (v.weekly) out.weekly = { weekday: v.weekly.weekday, time: v.weekly.time };
+  if (v.weekly === null) out.weekly = null;   // „kein weekly mehr“ (Admin): Treffen entfernen
+  else if (v.weekly) out.weekly = { weekday: v.weekly.weekday, time: v.weekly.time };
   if (v['space.init'] !== undefined) out.init = v['space.init'];
-  return out.weekly || out.init !== undefined ? out : null;
+  return out.weekly !== undefined || out.init !== undefined ? out : null;
+}
+
+/** Treffen setzen bzw. (weekly: null) entfernen; ein dadurch leerer Eintrag verschwindet. Nur Felder, die im Vorschlag stehen, werden angefasst. */
+export function applyWeeklyChanges(enrichment, applied) {
+  for (const p of applied) {
+    if (p.weekly === undefined) continue;
+    const id = String(p.spaceId);
+    if (p.weekly === null) {
+      if (enrichment[id]) { delete enrichment[id].weekly; if (!Object.keys(enrichment[id]).length) delete enrichment[id]; }
+    } else (enrichment[id] ??= {}).weekly = p.weekly;
+  }
 }
 
 /** Prüft einen Vorschlag isoliert; leeres Array = gültig. */
@@ -80,13 +92,13 @@ async function main() {
       }
       continue;
     }
-    console.log(`#${p.issueNumber}  ID ${p.spaceId}: ${p.weekly ? `weekly ${p.weekly.weekday}/${p.weekly.time}` : ''} ${p.init !== undefined ? `init ${p.init}` : ''}`);
+    console.log(`#${p.issueNumber}  ID ${p.spaceId}: ${p.weekly === null ? 'weekly ENTFERNEN' : p.weekly ? `weekly ${p.weekly.weekday}/${p.weekly.time}` : ''} ${p.init !== undefined ? `init ${p.init}` : ''}`);
     applied.push(p);
   }
   if (!applyMode) { console.log(`\nDry-Run: ${applied.length} würden angewendet.`); return; }
   if (!applied.length) return;
 
-  for (const p of applied) if (p.weekly) (enrichment[String(p.spaceId)] ??= {}).weekly = p.weekly;
+  applyWeeklyChanges(enrichment, applied);
   const sorted = Object.fromEntries(Object.entries(enrichment).sort((a, b) => Number(a[0]) - Number(b[0])));
   fs.writeFileSync(enrichmentPath, JSON.stringify(sorted, null, 2) + '\n');
   const inits = new Map(applied.filter(p => p.init !== undefined).map(p => [p.spaceId, p.init]));
