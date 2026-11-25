@@ -426,6 +426,10 @@ function updateBar() {
 /** Zähler, Prüfer, Datenstand und ↻ stehen im Spaces-Reiter rechts in der zweiten Zeile (hinter „Bearbeiten“), sonst in der Kopfzeile */
 function placeMeta(inSpaces) {
   const slot = $('sp-meta-slot'), bar = $('bar');
+  // Space-Name („#ID Name“) + „Bearbeiten“: im Spaces-Reiter ganz links in der ersten Zeile der Kopfzeile, sonst zurück in die (verborgene) Spaces-Leiste
+  const head = [$('sp-title'), $('sp-mode')];
+  if (inSpaces && head[0].parentElement !== bar) bar.prepend(...head);
+  else if (!inSpaces && head[0].parentElement === bar) $('sp-modebar').prepend(...head);
   for (const id of ['counter', 'me', 'data-stand', 'refresh']) {
     const e = $(id);
     if (inSpaces && e.parentElement !== slot) slot.append(e);
