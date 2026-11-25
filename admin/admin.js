@@ -469,7 +469,7 @@ async function show() {
     $('review').hidden = true;
     $('done').hidden = false;
     $('done').textContent = k.okCount
-      ? `${k.label}: fertig — ${k.okCount} Vorschlag/Vorschläge mit „ok“ warten auf „Übernehmen“.`
+      ? `${k.label}: fertig — ${k.okCount} Vorschläge mit „ok“ warten auf „Übernehmen“.`
       : `${k.label}: keine offenen Vorschläge.`;
     return;
   }
@@ -1034,11 +1034,11 @@ async function applyNow(k, auto = false) {
     state.undo = state.undo.filter(e => !(e.type === 'y' || e.type === 'a')); // bereits übernommen → nicht mehr rückgängig
     state.busy = false;
     setTimeout(() => refreshData(), 45000); setTimeout(() => refreshData(), 120000); // Apply + Deploy brauchen ~1 min
-    toast(`${auto ? 'Automatisch: ' : ''}${n} Vorschlag/Vorschläge übernommen, Workflow gestartet`, 'ok');
+    toast(`${auto ? 'Automatisch: ' : ''}${n} Vorschläge übernommen, Workflow gestartet`, 'ok');
     const link = document.createElement('a');
     link.href = `https://github.com/${REPO}/actions/workflows/${APPLY_WORKFLOW}`;
     link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Run ansehen';
-    $('status').replaceChildren(`${auto ? 'Automatisch: ' : ''}${n} Vorschlag/Vorschläge übernommen, Workflow gestartet: `, link);
+    $('status').replaceChildren(`${auto ? 'Automatisch: ' : ''}${n} Vorschläge übernommen, Workflow gestartet: `, link);
     updateBar();
     if (k === cur() && !k.queue[k.idx]) { $('review').hidden = true; $('done').hidden = false; $('done').replaceChildren($('status').cloneNode(true)); }
     return { ok: true };
