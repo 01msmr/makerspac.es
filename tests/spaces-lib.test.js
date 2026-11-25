@@ -366,3 +366,7 @@ test('32: Spaces-Knopf „zurück“ statt „rückgängig“ (kürzer)', () => 
 test('33: mit sichtbarem „zurück“ (4 Knöpfe) bleibt alles in einer Zeile (:has-Regel, kleinere Schrift)', () => {
   assert.match(read('admin/spaces.css'), /\.sp-actions:has\(#sp-act-z:not\(\[hidden\]\)\) \{ gap: 1rem; \}/);
 });
+
+test('34: Tasten-Kürzel in den Entscheider-Knöpfen linksbündig', () => {
+  assert.match(read('admin/spaces.css'), /\.sp-actions button \{ flex: 1 1 0;[^}]*justify-content: flex-start;/);
+});
