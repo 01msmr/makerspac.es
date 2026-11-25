@@ -13,7 +13,7 @@ const NOW = Date.parse('2026-11-25T06:30:00Z');   // 07:30 Berlin → Änderung 
 const page = (bg, text = 'November 25 03:01') => PAGE.replace('background:red', `background:${bg}`).replace('November 25 03:01', text);
 
 test('1: Originalseite — rot = niemand da, aktuell', () => {
-  assert.deepEqual(parseHtmlStyleStatus(PAGE, { now: NOW }), { status: false, ageHours: 4.5 });
+  assert.deepEqual(parseHtmlStyleStatus(PAGE, { now: NOW }), { status: false });   // rot: kein Alterstest
   assert.equal(backgroundOf(PAGE), 'red');
   assert.equal(bodyText(PAGE).includes('November 25 03:01'), true);
 });
@@ -35,17 +35,21 @@ test('3: andere Farben/Grau/Orange/unbekannt → unbekannt, kein Raten', () => {
   assert.equal(classifyRedGreen([200, 150, 0]), null);
 });
 
-test('4: Zeitpunkt zu alt → unbekannt (globale Grenze); nur der aktuelle Stand zählt', () => {
-  assert.equal(STATUS_MAX_AGE_HOURS, 48);
-  const old = parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z') });   // 5 Tage später
-  assert.equal(old.status, null); assert.match(old.reason, /zu alt/);
-  assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z'), maxAgeHours: 240 }).status, false);
-  assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-27T01:30:00Z') }).status, false);    // 47,5 h < 48 h
+test('4: Zeitpunkt älter als 24 h → nur „offen“ (grün) wird unbekannt; „geschlossen“ (rot) bleibt', () => {
+  assert.equal(STATUS_MAX_AGE_HOURS, 24);
+  const later = Date.parse('2026-11-30T06:30:00Z');   // 125 h nach der Änderung
+  assert.deepEqual(parseHtmlStyleStatus(PAGE, { now: later }), { status: false });                     // rot bleibt auch nach Tagen
+  const green = parseHtmlStyleStatus(page('green'), { now: later });
+  assert.equal(green.status, null); assert.match(green.reason, /offen/);
+  assert.equal(parseHtmlStyleStatus(page('green'), { now: Date.parse('2026-11-26T00:30:00Z') }).status, true);   // 22,5 h < 24 h
+  assert.equal(parseHtmlStyleStatus(page('green'), { now: Date.parse('2026-11-26T03:30:00Z') }).status, null);   // 25,5 h > 24 h
+  assert.equal(parseHtmlStyleStatus(page('green'), { now: later, maxAgeHours: 240 }).status, true);
 });
 
-test('5: Zeitpunkt nicht lesbar → unbekannt (Aktualität nicht prüfbar)', () => {
-  const r = parseHtmlStyleStatus(page('red', 'gestern'), { now: NOW });
-  assert.equal(r.status, null); assert.match(r.reason, /Zeitpunkt/);
+test('5: grün ohne lesbaren Zeitpunkt → unbekannt (nicht prüfbar); rot braucht keinen Zeitpunkt', () => {
+  const g = parseHtmlStyleStatus(page('green', 'gestern'), { now: NOW });
+  assert.equal(g.status, null); assert.match(g.reason, /Zeitpunkt/);
+  assert.equal(parseHtmlStyleStatus(page('red', 'gestern'), { now: NOW }).status, false);
   assert.equal(parseHtmlStyleStatus('<html><body>kaputt</body></html>', { now: NOW }).status, null);
   assert.equal(parseHtmlStyleStatus('', { now: NOW }).status, null);
 });
