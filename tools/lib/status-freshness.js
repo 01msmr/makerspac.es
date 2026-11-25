@@ -5,7 +5,8 @@
 // Der Cron prüft bei jedem Lauf neu: ist der Zeitstempel wieder jünger als 24 h, gilt „offen“ wieder.
 //
 // 1) Quelle liefert einen absoluten Zeitstempel (SpaceAPI state.lastchange, ThingSpeak created_at, Hamburg-Datum) → direkt prüfen, OHNE Gedächtnis.
-//    Lebenszeichen: ist `state.lastchange` alt, aber ein SpaceAPI-SENSOR (sensors.*[].lastchange, Unix-Sekunden) jünger als 24 h, lebt die Quelle
+//    Lebenszeichen: ist `state.lastchange` alt, aber ein ANWESENHEITS-Sensor (sensors.people_now_present / door_locked [].lastchange, Unix-Sekunden)
+//    jünger als 24 h, lebt die Quelle
 //    → „offen“ bleibt gültig (so wird ein ehrlich durchgehend offener Space nicht fälschlich „unbekannt“). Kennzeichnung: rescuedBy: 'sensor'.
 // 2) Nur wo das unumgänglich ist (offen, aber KEIN Zeitstempel): Gedächtnis = die letzten ZWEI Signaturen mit Erstsehen-Zeitpunkt
 //    (Last-Modified-Header bzw. Prüfsumme des Inhalts). Unverändert seit > 24 h → unbekannt. Das Gedächtnis ist NICHT öffentlich
@@ -31,6 +32,9 @@ export function extractSignalTime(text, now = Date.now()) {
   return ms;
 }
 
+/** Sensor-Typen (SpaceAPI), die mit Anwesenheit zusammenhängen und deshalb als Lebenszeichen für „offen“ taugen */
+export const PRESENCE_SENSORS = new Set(['people_now_present', 'door_locked']);
+
 /**
  * Jüngster plausibler Sensor-Zeitstempel einer SpaceAPI-Antwort (sensors.<typ>[].lastchange, Unix-Sekunden) oder null.
  * Nur eindeutige Werte zählen (Zahl, nach 2001, höchstens 1 Tag in der Zukunft).
@@ -41,7 +45,8 @@ export function extractSensorTime(text, now = Date.now()) {
   const sensors = data?.sensors;
   if (!sensors || typeof sensors !== 'object') return null;
   let best = null;
-  for (const group of Object.values(sensors)) {
+  for (const [type, group] of Object.entries(sensors)) {
+    if (!PRESENCE_SENSORS.has(type)) continue;   // nur Anwesenheits-Sensoren: Temperatur & Co. belegen nicht, dass der Offen-Schalter stimmt
     for (const s of Array.isArray(group) ? group : [group]) {
       const n = Number(s?.lastchange);
       if (!Number.isFinite(n) || n <= 0) continue;

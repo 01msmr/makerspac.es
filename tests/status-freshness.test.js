@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { extractSignalTime, extractSensorTime, applyOpenAgeRule, signatureOf, updateMemory, applyMemoryRule, decideFreshness } from '../tools/lib/status-freshness.js';
+import { PRESENCE_SENSORS, extractSignalTime, extractSensorTime, applyOpenAgeRule, signatureOf, updateMemory, applyMemoryRule, decideFreshness } from '../tools/lib/status-freshness.js';
 
 const NOW = Date.parse('2026-11-25T12:00:00Z');
 const H = 3600e3;
@@ -82,8 +82,8 @@ test('6: Gedächtnis ist NICHT öffentlich — nie in status.json, nie hochgelad
 const apiS = (stateMs, sensors) => JSON.stringify({ api_compatibility: ['14'], space: 'X', state: { open: true, ...(stateMs !== undefined ? { lastchange: Math.floor(stateMs / 1000) } : {}) }, sensors });
 
 test('7: Sensor-Zeitstempel als Lebenszeichen — state.lastchange alt, Sensor < 24 h → „offen“ bleibt (rescuedBy: sensor)', () => {
-  const sensors = { temperature: [{ value: 21, unit: '°C', location: 'Raum', lastchange: Math.floor((NOW - 2 * H) / 1000) }], people_now_present: [{ value: 3, lastchange: Math.floor((NOW - 90 * H) / 1000) }] };
-  assert.equal(extractSensorTime(apiS(NOW - 90 * H, sensors), NOW), NOW - 2 * H);          // jüngster Sensor zählt
+  const sensors = { people_now_present: [{ value: 3, lastchange: Math.floor((NOW - 2 * H) / 1000) }], door_locked: [{ value: false, lastchange: Math.floor((NOW - 50 * H) / 1000) }], temperature: [{ value: 21, unit: '°C', lastchange: Math.floor((NOW - 1 * H) / 1000) }] };
+  assert.equal(extractSensorTime(apiS(NOW - 90 * H, sensors), NOW), NOW - 2 * H);          // jüngster ANWESENHEITS-Sensor zählt (Temperatur nicht)
   const mem = {};
   const r = decideFreshness({ status: true, text: apiS(NOW - 90 * H, sensors) }, mem, 'k', NOW);
   assert.deepEqual(r, { status: true, rescuedBy: 'sensor' });
@@ -92,19 +92,19 @@ test('7: Sensor-Zeitstempel als Lebenszeichen — state.lastchange alt, Sensor <
 
 test('8: Sensor-Zeitstempel zählen nur, wenn eindeutig und frisch — sonst bleibt es bei unbekannt', () => {
   const mem = {};
-  const oldSensors = { temperature: [{ value: 21, lastchange: Math.floor((NOW - 60 * H) / 1000) }] };
+  const oldSensors = { people_now_present: [{ value: 2, lastchange: Math.floor((NOW - 60 * H) / 1000) }] };
   assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, oldSensors) }, mem, 'k', NOW).status, null);   // Sensor ebenfalls alt
-  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { t: [{ value: 1 }] }) }, mem, 'k', NOW).status, null);   // Sensor ohne Zeitstempel
-  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { t: [{ lastchange: 'gestern' }, { lastchange: 0 }, { lastchange: Math.floor((NOW + 5 * 24 * H) / 1000) }] }) }, mem, 'k', NOW).status, null);   // unplausibel
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { people_now_present: [{ value: 1 }] }) }, mem, 'k', NOW).status, null);   // Sensor ohne Zeitstempel
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { people_now_present: [{ lastchange: 'gestern' }, { lastchange: 0 }, { lastchange: Math.floor((NOW + 5 * 24 * H) / 1000) }] }) }, mem, 'k', NOW).status, null);   // unplausibel
   assert.equal(extractSensorTime(apiS(NOW, undefined), NOW), null);
   assert.equal(extractSensorTime('1', NOW), null);
 });
 
 test('9: ohne state.lastchange: frischer Sensor genügt; alter Sensor allein → Gedächtnis-Pfad (kein Urteil nach Sensorzeit)', () => {
   const mem = {};
-  const fresh = { t: [{ value: 1, lastchange: Math.floor((NOW - H) / 1000) }] };
+  const fresh = { door_locked: [{ value: true, lastchange: Math.floor((NOW - H) / 1000) }] };
   assert.deepEqual(decideFreshness({ status: true, text: apiS(undefined, fresh) }, mem, 'a', NOW), { status: true, rescuedBy: 'sensor' });
-  const old = { t: [{ value: 1, lastchange: Math.floor((NOW - 80 * H) / 1000) }] };
+  const old = { people_now_present: [{ value: 1, lastchange: Math.floor((NOW - 80 * H) / 1000) }] };
   assert.equal(decideFreshness({ status: true, text: apiS(undefined, old) }, mem, 'b', NOW).status, true);      // erste Sicht → Gedächtnis angelegt
   assert.ok(mem.b);
 });
@@ -118,4 +118,11 @@ test('10: Tooltip für unbekannten Status heißt „unknown“ (7 Sprachen), nie
     assert.ok(!/laden|loading|charg|caricamento|geladen|indlæs|завантаж/i.test(txt), `${l}: ${txt}`);
   }
   for (const f of ['listing-core.js', 'popup-builder.js']) assert.ok(!readFileSync(new URL(`../${f}`, import.meta.url), 'utf8').includes('spaceStatusLoading'), f);
+});
+
+test('11: Temperatur & Co. sind KEIN Lebenszeichen für „offen“ (nur people_now_present / door_locked)', () => {
+  const temp = { temperature: [{ value: 21, unit: '°C', lastchange: Math.floor((NOW - H) / 1000) }], humidity: [{ value: 40, unit: '%', lastchange: Math.floor((NOW - H) / 1000) }] };
+  assert.equal(extractSensorTime(apiS(NOW - 90 * H, temp), NOW), null);
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, temp) }, {}, 'k', NOW).status, null);   // alter Offen-Schalter, nur Temperatur lebt → unbekannt
+  assert.deepEqual([...PRESENCE_SENSORS].sort(), ['door_locked', 'people_now_present']);
 });
