@@ -688,6 +688,18 @@ export function deactivate() { state.active = false; release(); $('spaces-view')
 export const openCount = () => buildQueue(state.groups, [], 'all').length;
 export { reload };
 
+/** Höhe der festen Kopfzeile + Bearbeiten-Leiste als CSS-Variablen (Leiste und Seitenfenster kleben darunter) */
+function trackStickyOffsets() {
+  const root = document.documentElement.style, bar = $('bar'), mode = $('sp-modebar');
+  const update = () => {
+    const b = bar.offsetHeight, m = getComputedStyle(mode).position === 'sticky' ? mode.offsetHeight : 0;
+    root.setProperty('--bar-h', `${b}px`); root.setProperty('--sp-top', `${b + m}px`);
+  };
+  update();
+  if (typeof ResizeObserver === 'function') { const ro = new ResizeObserver(update); ro.observe(bar); ro.observe(mode); }
+  window.addEventListener('resize', update);
+}
+
 export function initSpaces(context) {
   ctx = context;
   $('sp-act-y').addEventListener('click', () => decide('ok'));
@@ -696,4 +708,5 @@ export function initSpaces(context) {
   $('sp-act-z').addEventListener('click', undo);
   document.addEventListener('keydown', onKey);
   initPane();
+  trackStickyOffsets();
 }

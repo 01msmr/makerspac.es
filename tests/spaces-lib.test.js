@@ -313,3 +313,10 @@ test('23: Ändern eines Vorschlags merkt den ursprünglichen Crawler-Fund im Iss
   assert.match(r.actions[0].body, /\*\*Crawler-Fund:\*\* "/);
   assert.equal(parseWeeklyIssue({ ...wkIssue(31), body: r.actions[0].body }).weekly.time, 1900);   // Parser liest den geänderten Block, nicht das Original
 });
+
+test('25: Bearbeiten-Leiste klebt unter der Kopfzeile; Seitenfenster klebt darunter (Offsets als CSS-Variablen)', () => {
+  const css = read('admin/spaces.css'), js = read('admin/spaces.js');
+  assert.match(css, /#sp-modebar \{ position: sticky; top: var\(--bar-h/);
+  assert.match(css, /#sp-pane \{[^}]*top: var\(--sp-top/);
+  assert.match(js, /setProperty\('--bar-h'/); assert.match(js, /setProperty\('--sp-top'/);
+});
