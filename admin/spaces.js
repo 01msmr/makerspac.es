@@ -424,7 +424,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function setIndicator(box, stateName, text, chips = []) {
   box.dataset.state = stateName;
   box.replaceChildren(text);
-  for (const t of chips) box.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+  if (!chips.length) return;
+  const row = Object.assign(document.createElement('div'), { className: 'chips' });   // Pillen in eigener Zeile unter dem Text
+  for (const t of chips) row.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: t }));
+  box.append(row);
 }
 const rowEl = key => $('sp-rows').querySelector(`tr[data-key="${key}"]`);
 const rowOn = tr => !!tr && tr.dataset.off !== 'true';

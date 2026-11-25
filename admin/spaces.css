@@ -132,7 +132,8 @@
 .ws-detected[data-state="none"] { color: var(--space-unknown); font-weight: 600; border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
 .ws-detected[data-state="error"] { color: var(--space-closed); font-weight: 600; border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
 .ws-detected[data-state="working"] { animation: pulse 1.2s ease-in-out infinite; }
-.ws-detected .chip { display: inline-block; margin: .25rem .35rem 0 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
+.ws-detected .chips { display: flex; flex-wrap: wrap; gap: .25rem .35rem; margin-top: .3rem; }
+.ws-detected .chip { display: inline-block; margin: 0; padding: .1rem .6rem; border-radius: 999px; background: var(--space-open); color: var(--bg-color); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .ws-detected[data-state="working"] { animation: none; } }
 
 /* Phone (nach den Basisregeln, damit sie gelten): Workshops 2 Spalten, Einfügen-Knopf unter dem Feld */

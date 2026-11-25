@@ -338,3 +338,8 @@ test('27: Workshops — hinzugefügt grün (.add), entfernt rot (.del)', () => {
   assert.match(js, /classList\.toggle\('add', box\.checked && !was\)/); assert.match(js, /classList\.toggle\('del', !box\.checked && was\)/);
   assert.match(css, /\.ws-checks label\.add \{[^}]*--space-open/); assert.match(css, /\.ws-checks label\.del \{[^}]*--space-closed/);
 });
+
+test('28: erkannte Pillen stehen in eigener Zeile (.chips) unter dem Text', () => {
+  assert.match(read('admin/spaces.js'), /className: 'chips'/);
+  assert.match(read('admin/spaces.css'), /\.ws-detected \.chips \{ display: flex; flex-wrap: wrap;/);
+});
