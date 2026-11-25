@@ -90,25 +90,35 @@
 
 
   <section id="spaces-view" hidden>
-    <fieldset id="sp-mode" title="Bearbeitung auf eine Eigenschaft begrenzen (Pfeiltasten ← →)">
-      <legend>Bearbeiten</legend>
-    </fieldset>
-    <main id="sp-card" hidden>
-      <h2 id="sp-title"><a id="sp-id" target="_blank" rel="noopener noreferrer" title="Gefundene bzw. vermutete Werkstatt-Infos in neuem Tab öffnen"></a> <span id="sp-name"></span> <a id="sp-edit" class="sp-edit" target="_blank" rel="noopener noreferrer" title="Stammdaten (Name, Adresse, Link, Stil) im Bearbeiten-Overlay der Karte öffnen"><i class="fas fa-pen-to-square"></i> Stammdaten</a></h2>
-      <p id="sp-meta"></p>
-      <p id="sp-sources" aria-label="Quellen"></p>
-      <div id="sp-free"></div>
-      <table id="sp-rows"></table>
-      <p id="sp-msg" role="status"></p>
-      <div class="sp-actions">
-        <button type="button" id="sp-act-y" data-tone="ok"><kbd>y</kbd> übernehmen</button>
-        <button type="button" id="sp-act-l" data-tone="warn"><kbd>ä</kbd> später</button>
-        <button type="button" id="sp-act-n" data-tone="no"><kbd>n</kbd> alles verwerfen</button>
-        <button type="button" id="sp-act-z" data-tone="neutral" hidden><kbd>z</kbd> rückgängig</button>
+    <div id="sp-layout">
+      <div id="sp-main">
+        <fieldset id="sp-mode" title="Bearbeitung auf eine Eigenschaft begrenzen (Pfeiltasten ← →)">
+          <legend>Bearbeiten</legend>
+        </fieldset>
+        <main id="sp-card" hidden>
+          <h2 id="sp-title"><a id="sp-link" target="_blank" rel="noopener noreferrer" title="Webseite des Space im Seitenfenster öffnen"></a> <a id="sp-edit" class="sp-edit" target="_blank" rel="noopener noreferrer" title="Stammdaten (Name, Adresse, Link, Stil) im Bearbeiten-Overlay der Karte öffnen"><i class="fas fa-pen-to-square"></i> Stammdaten</a></h2>
+          <p id="sp-meta"></p>
+          <p id="sp-sources" aria-label="Quellen"></p>
+          <div id="sp-free"></div>
+          <table id="sp-rows"></table>
+          <p id="sp-msg" role="status"></p>
+          <div class="sp-actions">
+            <button type="button" id="sp-act-y" data-tone="ok"><kbd>y</kbd> übernehmen</button>
+            <button type="button" id="sp-act-l" data-tone="warn"><kbd>ä</kbd> später</button>
+            <button type="button" id="sp-act-n" data-tone="no"><kbd>n</kbd> alles verwerfen</button>
+            <button type="button" id="sp-act-z" data-tone="neutral" hidden><kbd>z</kbd> rückgängig</button>
+          </div>
+          <p id="sp-keys"><kbd>y</kbd> übernehmen · <kbd>n</kbd> alles verwerfen · <kbd>ä</kbd> später · <kbd>z</kbd> rückgängig · <kbd>←</kbd> <kbd>→</kbd> Bearbeiten-Auswahl</p>
+        </main>
+        <p id="sp-done" hidden></p>
       </div>
-      <p id="sp-keys"><kbd>y</kbd> übernehmen · <kbd>n</kbd> alles verwerfen · <kbd>ä</kbd> später · <kbd>z</kbd> rückgängig · <kbd>←</kbd> <kbd>→</kbd> Bearbeiten-Auswahl</p>
-    </main>
-    <p id="sp-done" hidden></p>
+      <div id="sp-split" role="separator" aria-orientation="vertical" aria-label="Breite des Seitenfensters" tabindex="0" title="Ziehen (oder ← → bei Fokus) ändert die Breite des Seitenfensters"><span class="grip"></span></div>
+      <aside id="sp-pane" aria-label="Webseite zum Space">
+        <div id="sp-viewbar"><span id="sp-pane-title"></span><button type="button" id="sp-pane-tab" title="Aktuelle Seite in einem neuen Tab öffnen">im Tab öffnen ↗</button></div>
+        <iframe id="sp-frame" title="Vorschau" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        <p id="sp-pane-hint">Lässt die Seite sich hier nicht einbetten (leer oder Fehlermeldung), „im Tab öffnen“ nutzen.</p>
+      </aside>
+    </div>
   </section>
 
   <section id="inbox" hidden></section>

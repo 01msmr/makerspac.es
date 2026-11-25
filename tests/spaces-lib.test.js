@@ -170,13 +170,40 @@ test('13: keine doppelten IDs in der Admin-Seite (Spaces-Ansicht teilt die Seite
   assert.deepEqual(dup, []);
 });
 
-test('14: Freitext liest die Zwischenablage bei Fokus/Verlassen, überschreibt aber keine eigenen Eingaben', () => {
-  const js = read('admin/spaces.js');
-  assert.match(js, /navigator\.clipboard\?\.readText/);
-  assert.match(js, /area\.addEventListener\('focus', readClipboard\)/);
-  assert.match(js, /area\.addEventListener\('blur'/);
-  assert.match(js, /area\.value !== autoText/);   // nur leeres bzw. zuletzt automatisch gefülltes Feld
+test('14: Freitext — Übernahme erst beim Verlassen des Feldes; Zwischenablage nur über den Knopf „Einfügen“', () => {
+  const js = readFileSync(new URL('../admin/spaces.js', import.meta.url), 'utf8');
+  const free = js.slice(js.indexOf('function buildFreeText'), js.indexOf('// ─── Entscheiden'));
+  assert.match(free, /area\.addEventListener\('blur', \(\) => evaluate\(\)\)/);           // Auswertung beim Verlassen
+  assert.ok(!/area\.addEventListener\('(input|paste|focus)'/.test(free), 'nicht beim Tippen/Einfügen/Fokussieren');
+  assert.equal((free.match(/clipboard\.readText/g) || []).length, 1);                           // genau einmal: im Einfügen-Knopf
+  assert.match(free, /paste\.addEventListener\('click'[\s\S]*?clipboard\.readText/);
+  assert.match(free, /className = 'paste-btn'/);
 });
+
+test('22: Wochentag-Auswahl: „kein weekly“ zuerst, danach „–“ (keine Info, Standard), dann Mo…So', () => {
+  const js = readFileSync(new URL('../admin/spaces.js', import.meta.url), 'utf8');
+  const m = js.match(/const WEEKDAYS = (\[\[[^;]*\]\]);/)[1];
+  const list = JSON.parse(m.replace(/'/g, '"'));
+  assert.deepEqual(list.map(x => x[1]), ['kein weekly', '–', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']);
+  assert.equal(list[1][0], '');                                  // Standard (leer) = keine Info
+});
+
+test('23: Seitenfenster — Links öffnen dort statt im Tab; ID + Name sind EIN Link; Trenner breit + dunkel; Breite begrenzt', async () => {
+  const { clampPaneWidth } = await import('../admin/spaces-lib.js');
+  assert.equal(clampPaneWidth(10, 1000), 200); assert.equal(clampPaneWidth(5000, 2000), 1200); assert.equal(clampPaneWidth(450, 1000), 330);   // max 60 % bzw. Karte ≥ 640 px + Trenner
+  assert.equal(clampPaneWidth(5000, 1500), 830); assert.equal(clampPaneWidth(900, 1200), 530);
+  assert.equal(clampPaneWidth(NaN, 1000), 450);
+  const js = readFileSync(new URL('../admin/spaces.js', import.meta.url), 'utf8'), css = readFileSync(new URL('../admin/spaces.css', import.meta.url), 'utf8'), html = readFileSync(new URL('../admin/index.html', import.meta.url), 'utf8');
+  assert.match(js, /if \(paneEnabled\(\)\) \{ e\.preventDefault\(\); loadPane\(url, title\); \}/);
+  assert.match(js, /\$\('sp-link'\)[\s\S]*?#\$\{id\} \$\{sp\.name\}/);
+  assert.ok(!/id="sp-id"|id="sp-name"/.test(html));
+  assert.match(html, /id="sp-split"[^>]*role="separator"[^>]*tabindex="0"/);
+  assert.match(css, /#sp-split \{ flex: 0 0 18px;/);          // breiter Griff-Bereich
+  assert.match(css, /#sp-split::before \{[^}]*width: 4px;/);   // breitere Trennlinie
+  assert.match(css, /repeat\(auto-fill, minmax\(max\(7\.2rem, calc\(33\.33% - 1rem\)\), 1fr\)\)/); assert.match(css, /repeat\(2, minmax\(0, 1fr\)\)/);   // Workshop-Raster: höchstens 3 Spalten (Desktop), 2 (Phone)
+  assert.match(js, /closest\?\.\('#sp-split'\)/);               // Pfeiltasten am Trenner schalten nicht die Bearbeiten-Auswahl
+});
+
 
 import { snapTime, classifyUrl, analyzeFreeText } from '../admin/spaces-lib.js';
 

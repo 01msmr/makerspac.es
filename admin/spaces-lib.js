@@ -308,3 +308,10 @@ export function analyzeFreeText(text, now = new Date()) {
   if (found && !isInitPlaceholder(found.date)) out.init = { value: ymd(found.date), confidence: found.confidence, source: found.source };
   return out;
 }
+
+/** Breite des Seitenfensters (px) klemmen: 20 % … 60 % der Gesamtbreite, die Karte links behält mindestens `minMain` px (+ Trenner) */
+export function clampPaneWidth(px, total, min = 0.2, max = 0.6, minMain = 640) {
+  if (!Number.isFinite(px) || !Number.isFinite(total) || total <= 0) return Math.round((total || 1000) * 0.45);
+  const upper = Math.max(total * min, Math.min(total * max, total - minMain - 30));
+  return Math.round(Math.min(upper, Math.max(total * min, px)));
+}
