@@ -437,7 +437,7 @@ function checkTypes(types) {
 /** Erkanntes in die Zeilen schreiben. onlyEmpty: nur leere Felder (Zwischenablage-Automatik), sonst überschreiben (bewusstes Einfügen/Tippen). */
 function applyAnalysis(a, { onlyEmpty = false } = {}) {
   const done = [];
-  if (a.workshops.length && checkTypes(a.workshops)) done.push(`Workshops: ${a.workshops.join(', ')}`);
+  if (a.workshops.length && checkTypes(a.workshops)) done.push(...a.workshops);   // jeder erkannte Workshop als eigene Pille (nur der Name)
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
@@ -592,7 +592,7 @@ async function decide(kind) {
   state.undo.push({ spaceId: sp.id, form: snap, records: done, name: sp.name });
   if (state.undo.length > 12) state.undo.shift();
   const g = state.groups.get(sp.id);
-  for (const a of done) if (g && a.number) { delete g.proposals[a.key]; if (a.key === 'weekly') delete g.proposals.init; }   // Weekly + Gründung teilen ein Issue
+  for (const a of done) if (g && a.number) for (const k of Object.keys(g.proposals)) if (g.proposals[k].number === a.number) delete g.proposals[k];   // (altes kombiniertes Issue hängt an Weekly UND Gründung)
   ctx.bumpOk(done.filter(a => a.type !== 'reject').length);
   const count = t => done.filter(a => a.type === t).length;
   const next = state.queue[state.queue.indexOf(sp.id) + 1];

@@ -256,54 +256,51 @@ test('19: Uhrzeit ist eine Auswahlliste im 30-Minuten-Raster (iOS/Android-Picker
 });
 
 import { displayValue } from '../admin/spaces-lib.js';
-import { withdrawnOf } from '../tools/lib/weekly-extract.js';
-let r0body;
 
-test('20: Weekly und Gründung sind getrennte Eigenschaften; ein Issue → zwei Vorschläge; kein Auffüllen mit dem Rest', () => {
-  const onlyInit = parseWeeklyIssue(wk(7, 48, null, 19840101));
-  const g = groupBySpace({ weekly: [wk(7, 48, null, 19840101)], workshops: [], calendar: [], spaceapi: [] }).get(48);
-  assert.deepEqual(Object.keys(g.proposals), ['init']);                       // nur Gründung vorgeschlagen → keine Weekly-Zeile mit Vorschlag
-  assert.equal(displayValue('init', onlyInit), '1984-01-01');
-  const both = groupBySpace({ weekly: [wk(8, 48, { weekday: 3, time: 1830 }, 20120304)], workshops: [], calendar: [], spaceapi: [] }).get(48);
-  assert.deepEqual(Object.keys(both.proposals).sort(), ['init', 'weekly']);
-  assert.equal(both.proposals.weekly.number, both.proposals.init.number);     // dasselbe Issue
-  assert.deepEqual(displayValue('weekly', both.proposals.weekly), { day: '3', time: '18:30' });
+test('20: Weekly und Gründung sind getrennte Eigenschaften mit je eigenem Issue', () => {
+  const g = groupBySpace({ weekly: [wk(7, 48, { weekday: 3, time: 1830 }, null), wk(8, 48, null, 19840101)], workshops: [], calendar: [], spaceapi: [] }).get(48);
+  assert.deepEqual([g.proposals.weekly.number, g.proposals.init.number], [7, 8]);
+  assert.deepEqual(displayValue('weekly', g.proposals.weekly), { day: '3', time: '18:30' });
+  assert.equal(displayValue('init', g.proposals.init), '1984-01-01');
+  const onlyInit = groupBySpace({ weekly: [wk(9, 48, null, 19840101)], workshops: [], calendar: [], spaceapi: [] }).get(48);
+  assert.deepEqual(Object.keys(onlyInit.proposals), ['init']);               // keine Weekly-Zeile mit Vorschlag
 });
 
-test('21: planDecision — Weekly + Gründung getrennt entscheiden, EIN Issue; verworfener Teil wird entfernt', () => {
-  const issues = { weekly: [wk(11, 48, { weekday: 3, time: 1830 }, 19840101)], workshops: [], calendar: [], spaceapi: [] };
+test('21: planDecision — Weekly und Gründung getrennt entscheiden (je ein Issue); neue Gründung = eigenes Issue', () => {
+  const issues = { weekly: [wk(11, 48, { weekday: 3, time: 1830 }, null), wk(12, 48, null, 19840101)], workshops: [], calendar: [], spaceapi: [] };
   const g = groupBySpace(issues).get(48);
-  const bodies = { 11: issues.weekly[0].body };
+  const bodies = { 11: issues.weekly[0].body, 12: issues.weekly[1].body };
   const cur = { weekly: { day: '2', time: '19:00' }, init: '', workshops: [], calendar: '', spaceapi: '' };
   const sp = { id: 48, name: 'CCC', website: '', proposals: g.proposals, current: cur };
   const W = { day: '3', time: '18:30' }, I = '1984-01-01';
   const rows = (w, i) => [{ key: 'weekly', enabled: true, include: w, value: W }, { key: 'init', enabled: true, include: i, value: I }];
-  let r = planDecision(sp, rows(true, true), bodies);
-  assert.deepEqual(r.actions.map(a => [a.type, a.key, a.body]), [['ok', 'weekly', undefined]]);          // beide unverändert → ein ok, kein Neuschreiben
-  r = planDecision(sp, rows(true, false), bodies);                                                       // Gründung verworfen
-  const w1 = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
-  assert.deepEqual(w1.weekly, { weekday: 3, time: 1830 }); assert.equal(w1.init, undefined);
-  assert.deepEqual(withdrawnOf(r0body = planDecision(sp, rows(true, false), bodies).actions[0].body), { 'space.init': 19840101 });   // Verworfenes im Issue gemerkt (Crawler schlägt es nicht erneut vor)
-  r = planDecision(sp, rows(false, true), bodies);                                                       // Weekly verworfen
-  const w2 = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
-  assert.equal(w2.weekly, undefined); assert.equal(w2.init, 19840101);
-  r = planDecision(sp, rows(false, false), bodies);
-  assert.deepEqual(r.actions.map(a => [a.type, a.number]), [['reject', 11]]);
-  // Gründung bearbeitet
+  let r = planDecision(sp, rows(true, false), bodies);
+  assert.deepEqual(r.actions.map(a => [a.type, a.key, a.number, a.body]), [['ok', 'weekly', 11, undefined], ['reject', 'init', 12, undefined]]);
+  r = planDecision(sp, rows(false, true), bodies);
+  assert.deepEqual(r.actions.map(a => [a.type, a.number]), [['reject', 11], ['ok', 12]]);
+  // Gründung bearbeitet → nur das Gründungs-Issue wird neu geschrieben
   r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: W }, { key: 'init', enabled: true, include: true, value: '1990-02-03' }], bodies);
-  assert.equal(parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body }).init, 19900203);
+  assert.equal(r.actions[0].body, undefined); assert.equal(parseWeeklyIssue({ ...wkIssue(12), body: r.actions[1].body }).init, 19900203);
   // Weekly-Leeren wird abgelehnt
-  r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { day: '', time: '' } }, { key: 'init', enabled: true, include: true, value: I }], bodies);
+  r = planDecision(sp, [{ key: 'weekly', enabled: true, include: true, value: { day: '', time: '' } }], bodies);
   assert.equal(r.actions.length, 0); assert.match(r.errors[0], /Entfernen nur bei Workshops\/Kalender/);
-  // nur Gründungs-Zeile aktiv: Weekly-Teil des Vorschlags bleibt unberührt im Issue
-  r = planDecision(sp, [{ key: 'init', enabled: true, include: true, value: '1990-02-03' }], bodies);
-  const w3 = parseWeeklyIssue({ ...wkIssue(11), body: r.actions[0].body });
-  assert.deepEqual(w3.weekly, { weekday: 3, time: 1830 }); assert.equal(w3.init, 19900203);
-  // ohne Vorschlag: neue Gründung → neues Issue nur mit space.init
-  const sp2 = { ...sp, proposals: {} };
-  r = planDecision(sp2, [{ key: 'weekly', enabled: true, include: false, value: { day: '', time: '' } }, { key: 'init', enabled: true, include: true, value: '2001-05-06' }]);
-  assert.equal(r.actions[0].type, 'create');
+  // ohne Vorschlag: neue Gründung → neues Issue „… (Gründung)“ nur mit space.init
+  r = planDecision({ ...sp, proposals: {} }, [{ key: 'init', enabled: true, include: true, value: '2001-05-06' }]);
+  assert.equal(r.actions[0].type, 'create'); assert.equal(r.actions[0].title, 'Treffen-Daten: CCC (Gründung)');
   const c = parseWeeklyIssue({ ...wkIssue(0), body: r.actions[0].body });
   assert.equal(c.init, 20010506); assert.equal(c.weekly, undefined);
+});
+
+test('22: Altes kombiniertes Issue (weekly + space.init) — beide Zeilen nur gemeinsam und unverändert', () => {
+  const issues = { weekly: [wk(21, 48, { weekday: 3, time: 1830 }, 19840101)], workshops: [], calendar: [], spaceapi: [] };
+  const g = groupBySpace(issues).get(48);
+  const cur = { weekly: { day: '', time: '' }, init: '', workshops: [], calendar: '', spaceapi: '' };
+  const sp = { id: 48, name: 'CCC', website: '', proposals: g.proposals, current: cur };
+  const W = { day: '3', time: '18:30' }, I = '1984-01-01';
+  const rows = (w, i, iv = I) => [{ key: 'weekly', enabled: true, include: w, value: W }, { key: 'init', enabled: true, include: i, value: iv }];
+  assert.deepEqual(planDecision(sp, rows(true, true), { 21: issues.weekly[0].body }).actions.map(a => [a.type, a.number]), [['ok', 21]]);
+  assert.deepEqual(planDecision(sp, rows(false, false), {}).actions.map(a => [a.type, a.number]), [['reject', 21]]);
+  assert.match(planDecision(sp, rows(true, false), {}).errors[0], /nur gemeinsam/);
+  assert.match(planDecision(sp, rows(true, true, '1990-01-01'), {}).errors[0], /nur unverändert/);
 });
 function wkIssue(n) { return { number: n, title: 'Treffen-Daten: A', labels: [], updated_at: '2026-11-25T00:00:00Z', html_url: 'x' }; }

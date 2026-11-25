@@ -2,7 +2,7 @@
 //
 // Formwerte je Eigenschaft: workshops = string[] · calendar/spaceapi = string (leer = keine) ·
 // weekly = { day: ''|'0'..'6'|'none', time: ''|'HH:MM' } · init (Gründung) = ''|'YYYY-MM-DD'
-// weekly und init sind getrennte Eigenschaften, teilen sich aber EIN Issue (Weekly-Daten: `weekly` + `space.init`).
+// weekly und init sind getrennte Eigenschaften mit je eigenem Issue (`weekly` bzw. `space.init`; alte kombinierte Issues werden beiden zugeordnet).
 
 import {
   parseIssue, parseWorkshopIssue, parseCalendarIssue, parseWeeklyIssue,
@@ -10,7 +10,7 @@ import {
   formatWeekly, formatTime, formatEditDate, lockOf, detectFromText, parseWeeklyInput, looksLikeUrl,
 } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
-import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder, setWithdrawn } from '../tools/lib/weekly-extract.js';
+import { extractWeeklyCandidates, pickWeekly, extractInit, isInitPlaceholder } from '../tools/lib/weekly-extract.js';
 import { applyEnrichment } from '../enrichment-merge.js';
 
 export const PLACEHOLDER_INIT = 20010000;     // „keine Gründung bekannt“ in locations.json
@@ -22,7 +22,7 @@ export const FIELDS = [
   { key: 'calendar', label: 'Kalender', parse: parseCalendarIssue, title: 'Kalenderlink:', labels: ['data-update'], query: 'data-update' },
   { key: 'spaceapi', label: 'SpaceAPI', parse: parseIssue, title: 'SpaceAPI:', labels: ['data-update'], query: 'data-update' },
   { key: 'weekly', label: 'Wöchentliches Treffen', parse: parseWeeklyIssue, title: 'Treffen-Daten:', labels: ['weekly-data'], query: 'weekly-data' },
-  { key: 'init', label: 'Gründung', parse: null, title: 'Treffen-Daten:', labels: ['weekly-data'], query: 'weekly-data' },   // Vorschlag stammt aus dem Weekly-Issue
+  { key: 'init', label: 'Gründung', parse: parseWeeklyIssue, title: 'Treffen-Daten:', suffix: ' (Gründung)', labels: ['weekly-data'], query: 'weekly-data' },   // eigenes Issue mit nur `space.init`
 ];
 export const FIELD = Object.fromEntries(FIELDS.map(f => [f.key, f]));
 
@@ -106,20 +106,14 @@ export function weeklyTextOf(v) {
 export function groupBySpace(issuesByKind) {
   const map = new Map();
   for (const f of FIELDS) {
-    if (!f.parse) continue;
-    const parsed = (issuesByKind[f.key] ?? []).map(f.parse).filter(Boolean);
+    const parsed = (issuesByKind[f.key === 'init' ? 'weekly' : f.key] ?? []).map(f.parse).filter(Boolean);
     for (const p of parsed) {
+      // weekly-data-Issues tragen `weekly` und/oder `space.init`: jede Eigenschaft nimmt nur die Issues mit ihrem Teil
+      if (f.key === 'weekly' && p.weekly === undefined) continue;
+      if (f.key === 'init' && p.init === undefined) continue;
       const g = map.get(p.spaceId) ?? { spaceId: p.spaceId, proposals: {}, okCount: 0 };
-      if (p.ok) g.okCount++;
-      else if (f.key === 'weekly') {
-        // EIN Issue (Weekly-Daten) → zwei Eigenschaften: Weekly (Termin) und Gründung (space.init); beide verweisen auf dasselbe Issue
-        if (!g.issue || p.number > g.issue.number) {
-          g.issue = p;
-          delete g.proposals.weekly; delete g.proposals.init;
-          if (p.weekly !== undefined) g.proposals.weekly = p;
-          if (p.init !== undefined) g.proposals.init = p;
-        }
-      } else if (!g.proposals[f.key] || p.number > g.proposals[f.key].number) g.proposals[f.key] = p;
+      if (p.ok) { if (f.key !== 'init' || p.weekly === undefined) g.okCount++; }
+      else if (!g.proposals[f.key] || p.number > g.proposals[f.key].number) g.proposals[f.key] = p;
       map.set(p.spaceId, g);
     }
   }
@@ -182,6 +176,7 @@ export function newIssueBody(key, space, value, replace) {
   if (key === 'calendar') return replaceEvents(head + block('{"events": ""}'), value, replace);
   if (key === 'workshops') return replaceWorkshops(head + block('"workshops": []'), value, replace);
   if (key === 'weekly') return replaceWeekly(head + block('{}'), weeklyTextOf(value));
+  if (key === 'init') return replaceWeekly(head + block('{}'), value);
   return null;
 }
 
@@ -191,58 +186,8 @@ export function editedBody(key, body, value, replace) {
   if (key === 'calendar') return replaceEvents(body, value, replace);
   if (key === 'workshops') return replaceWorkshops(body, value, replace);
   if (key === 'weekly') return replaceWeekly(body, weeklyTextOf(value));
+  if (key === 'init') return replaceWeekly(body, value);
   return null;
-}
-
-/**
- * Weekly + Gründung teilen sich EIN Issue (`weekly` + `space.init`), werden aber getrennt entschieden:
- * jede Eigenschaft hat eigenes Häkchen, eigenen Wert, eigenen aktuellen Stand. Hier wird daraus EINE Aktion auf das Issue.
- * Ein verworfener Teil wird aus dem Issue entfernt (der Body wird aus den behaltenen Teilen neu aufgebaut).
- */
-function planWeeklyPair(space, rows, bodies, actions, errors) {
-  const wk = rows.find(r => r.key === 'weekly'), ini = rows.find(r => r.key === 'init');
-  const on = r => r?.enabled;
-  if (!on(wk) && !on(ini)) return;
-  const issue = space.proposals.weekly ?? space.proposals.init;   // dasselbe Issue
-  const curW = space.current.weekly, curI = space.current.init;
-  const hasW = !!space.proposals.weekly, hasI = !!space.proposals.init;
-  // Teil → { keep: Wert|null, drop: bool }
-  const partW = on(wk) ? decidePart(wk, hasW, v => sameValue('weekly', v, curW)) : { keep: hasW ? proposalValue('weekly', issue) : null };
-  const partI = on(ini) ? decidePart(ini, hasI, v => v === curI) : { keep: hasI ? proposalValue('init', issue) : null };
-  for (const [part, r, label, cur] of [[partW, wk, 'Weekly', curW], [partI, ini, 'Gründung', curI]]) {
-    if (!on(r) || part.keep == null) continue;
-    // „kein weekly“ ohne vorhandenes Weekly ist nichts zu tun
-    if (r.key === 'weekly' && part.keep.day === 'none' && !(curW.day || curW.time)) { part.keep = null; continue; }
-    const err = validateValue(r.key, part.keep);
-    if (err) { errors.push(`${label}: ${err}`); return; }
-    if (removesExisting(r.key, part.keep, cur)) { errors.push(`${label}: Entfernen nur bei Workshops/Kalender`); return; }
-  }
-  const value = { day: partW.keep?.day ?? '', time: partW.keep?.time ?? '', init: partI.keep ?? '' };
-  const anyKept = !!(partW.keep && (partW.keep.day || partW.keep.time)) || !!partI.keep;   // leerer Wert = kein Teil
-  if (issue) {
-    if (!anyKept) { actions.push({ type: 'reject', key: 'weekly', number: issue.number }); return; }
-    // verworfene Teile im Issue merken, damit der Crawler sie nicht erneut vorschlägt
-    const withdrawn = {};
-    if (hasW && on(wk) && !wk.include) withdrawn.weekly = { weekday: issue.weekly.weekday, time: issue.weekly.time };
-    if (hasI && on(ini) && !ini.include) withdrawn['space.init'] = issue.init;
-    const body0 = replaceWeekly(bodies[issue.number] ?? '', weeklyTextOf(value));
-    const body = body0 && setWithdrawn(body0, withdrawn);
-    if (!body) { errors.push('Weekly/Gründung: Eingabe konnte nicht in das Issue geschrieben werden'); return; }
-    const orig = { day: hasW ? proposalValue('weekly', issue).day : '', time: hasW ? proposalValue('weekly', issue).time : '', init: hasI ? proposalValue('init', issue) : '' };
-    const same = weeklyTextOf(orig) === weeklyTextOf(value) && !Object.keys(withdrawn).length;   // Inhalt unverändert → nur freigeben, nicht neu schreiben
-    actions.push(same ? { type: 'ok', key: 'weekly', number: issue.number } : { type: 'ok', key: 'weekly', number: issue.number, body, prevBody: bodies[issue.number] ?? '' });
-  } else if (anyKept) {
-    const body = newIssueBody('weekly', space, value, false);
-    if (!body) { errors.push('Weekly/Gründung: neues Issue konnte nicht erzeugt werden'); return; }
-    actions.push({ type: 'create', key: 'weekly', title: `${FIELD.weekly.title} ${space.name}`, body, labels: [...FIELD.weekly.labels, 'ok'] });
-  }
-}
-
-/** Teil behalten? Nur mit Häkchen und (Vorschlag vorhanden ODER gegenüber dem aktuellen Stand geändert); leerer Wert = kein Teil */
-function decidePart(r, hasProposal, same) {
-  if (!r.include) return { keep: null };
-  if (!hasProposal && same(r.value)) return { keep: null };
-  return { keep: r.value };
 }
 
 /**
@@ -254,10 +199,24 @@ function decidePart(r, hasProposal, same) {
  *   action: {type:'ok'|'reject'|'create', key, number?, body?, title?, labels?, prevBody?}
  */
 export function planDecision(space, rows, bodies = {}) {
+  rows = [...rows];
   const actions = [], errors = [];
-  const pair = planWeeklyPair(space, rows, bodies, actions, errors);
+  // Altes kombiniertes Issue (weekly + space.init in EINEM Issue, vor der Trennung angelegt): beide Eigenschaften nur gemeinsam
+  // und unverändert übernehmen/verwerfen; neue Crawler-Issues sind getrennt.
+  const pw = space.proposals.weekly, pi = space.proposals.init;
+  if (pw && pi && pw.number === pi.number) {
+    const rw = rows.find(r => r.key === 'weekly'), ri = rows.find(r => r.key === 'init');
+    if (rw?.enabled && ri?.enabled) {
+      if (rw.include !== ri.include) errors.push('Altes kombiniertes Issue: Weekly und Gründung nur gemeinsam übernehmen/verwerfen');
+      else if (rw.include && (!sameValue('weekly', rw.value, proposalValue('weekly', pw)) || ri.value !== proposalValue('init', pi))) errors.push('Altes kombiniertes Issue: nur unverändert übernehmen (Werte ändern = Weekly und Gründung getrennt neu anlegen)');
+      else actions.push({ type: rw.include ? 'ok' : 'reject', key: 'weekly', number: pw.number });
+      rows = rows.filter(r => r.key !== 'weekly' && r.key !== 'init');
+    } else rows = rows.filter(r => r.key !== 'weekly' && r.key !== 'init');
+  }
   for (let r of rows) {
-    if (!r.enabled || r.key === 'weekly' || r.key === 'init') continue;
+    if (!r.enabled) continue;
+    // „kein weekly“ ohne vorhandenes Weekly ist nichts zu tun
+    if (r.key === 'weekly' && r.value.day === 'none' && !(space.current.weekly.day || space.current.weekly.time)) r = { ...r, value: { ...r.value, day: '', time: '' } };
     const f = FIELD[r.key], p = space.proposals[r.key], cur = space.current[r.key];
     const err = validateValue(r.key, r.value);
     if (p) {
@@ -279,7 +238,7 @@ export function planDecision(space, rows, bodies = {}) {
       const replace = !isEmptyValue(r.key, cur);
       const body = newIssueBody(r.key, space, r.value, replace);
       if (!body) { errors.push(`${f.label}: neues Issue konnte nicht erzeugt werden`); continue; }
-      actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}`, body, labels: [...f.labels, 'ok'] });
+      actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}${f.suffix ?? ''}`, body, labels: [...f.labels, 'ok'] });
     }
   }
   return { actions, errors };

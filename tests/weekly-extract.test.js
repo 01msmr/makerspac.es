@@ -69,7 +69,8 @@ test('crawlSpace + buildIssue: Seitentexte → Fund → Issue mit JSON-Block, de
   const delta = weeklyDelta(space, found);
   const { title, body } = buildIssue(space, found, delta);
   assert.equal(title, 'Treffen-Daten: X');
-  assert.equal(proposalFromIssue({ body }, 'weekly'), deltaKey(delta));
+  assert.equal(proposalFromIssue({ body }, 'weekly'), deltaKey({ weekly: delta.weekly }));
+  assert.equal(proposalFromIssue({ body }, 'init'), deltaKey({ 'space.init': delta['space.init'] }));
   assert.match(body, /\*\*ID:\*\* 5/);
 });
 
@@ -135,12 +136,18 @@ test('extractInit: erstes Treffen / erster offener Tag / Umzug ist keine Vereins
   assert.equal(extractInit('Gründung des Vereins: 2017', 2026).date, 20170101);
 });
 
-test('Verworfene Teile: setWithdrawn/withdrawnOf + Crawler-Vergleich schlägt Verworfenes nicht erneut vor', async () => {
-  const { setWithdrawn, withdrawnOf } = await import('../tools/lib/weekly-extract.js');
-  const { proposalFromIssue } = await import('../tools/lib/crawl-selection.js');
-  const body = 'x\n\n```json\n{"weekly":{"weekday":3,"time":1830}}\n```\n';
-  const w = setWithdrawn(body, { 'space.init': 19840101 });
-  assert.deepEqual(withdrawnOf(w), { 'space.init': 19840101 });
-  assert.equal(proposalFromIssue({ body: w }, 'weekly'), deltaKey({ weekly: { weekday: 3, time: 1830 }, 'space.init': 19840101 }));   // = Fund → skip
-  assert.equal(withdrawnOf(setWithdrawn(w, {})) && Object.keys(withdrawnOf(setWithdrawn(w, {}))).length, 0);                        // leer → Zeile entfernt
+test('Getrennte Issues: je Eigenschaft ein Issue und ein eigener Vergleich (kind weekly / init)', () => {
+  const found = { weekly: { weekday: 3, time: 1830, confidence: 'high', source: 'Mi 18:30' }, init: { date: 20120304, confidence: 'high', source: 'gegründet 2012' } };
+  const space = { ID: 5, name: 'X', link: { url: 'https://x.de' } };
+  const w = buildIssue(space, found, { weekly: { weekday: 3, time: 1830 } });
+  const i = buildIssue(space, found, { 'space.init': 20120304 });
+  assert.equal(w.title, 'Treffen-Daten: X'); assert.equal(i.title, 'Treffen-Daten: X (Gründung)');
+  assert.match(i.body, /"space\.init": 20120304/); assert.ok(!/"weekly"/.test(i.body));
+  assert.equal(proposalFromIssue({ body: w.body }, 'weekly'), '3:1830|-'); assert.equal(proposalFromIssue({ body: w.body }, 'init'), null);
+  assert.equal(proposalFromIssue({ body: i.body }, 'init'), '-|20120304'); assert.equal(proposalFromIssue({ body: i.body }, 'weekly'), null);
+  // verworfene Gründung (Issue geschlossen) → derselbe Fund wird nicht erneut vorgeschlagen, Weekly-Änderung aber schon
+  const closedInit = [{ number: 9, state: 'CLOSED', createdAt: '2026-01-01', body: i.body }];
+  assert.equal(decideProposal({ kind: 'init', found: '-|20120304', issues: closedInit }).action, 'skip');
+  const openWeekly = [{ number: 7, state: 'OPEN', createdAt: '2026-01-01', body: w.body }];
+  assert.deepEqual(decideProposal({ kind: 'weekly', found: '4:1900|-', issues: openWeekly }).supersede, [7]);
 });

@@ -151,23 +151,6 @@ export function weeklyDelta(loc, found, { force = false } = {}) {
   return delta;
 }
 
-const RE_WITHDRAWN = /\n*\*\*Verworfen:\*\*[^\n]*/;
-
-/**
- * Im Admin verworfene Teile eines Weekly-Vorschlags ({weekly?, 'space.init'?}) als Zeile `**Verworfen:** {json}` im Issue merken.
- * Der Crawler rechnet sie beim Vergleich wieder dazu (withdrawnOf) und schlägt Verworfenes nicht erneut vor. Leer → Zeile entfernen.
- */
-export function setWithdrawn(body, parts) {
-  const clean = String(body).replace(RE_WITHDRAWN, '');
-  return parts && Object.keys(parts).length ? `${clean.trimEnd()}\n\n**Verworfen:** ${JSON.stringify(parts)}\n` : clean;
-}
-
-/** @returns {{weekly?:object,'space.init'?:number}} verworfene Teile (leer, wenn keine/unlesbar) */
-export function withdrawnOf(body) {
-  const m = String(body).match(/\*\*Verworfen:\*\*\s*(\{.*\})/);
-  try { return m ? JSON.parse(m[1]) : {}; } catch { return {}; }
-}
-
 /** Kanonischer Schlüssel für Vergleiche (Issue-Inhalt ↔ Fund). */
 export function deltaKey(d) {
   if (!d || (!d.weekly && !d['space.init'])) return null;

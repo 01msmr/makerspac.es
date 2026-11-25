@@ -1,6 +1,7 @@
 // tools/weekly-crawler.js — Weekly-Treffen + Gründungsdatum auf Space-Websites finden (regelbasiert, ohne KI/API-Key).
-// Ergebnis: GitHub Issues „Treffen-Daten: <Name>“ (Label weekly-data) mit JSON-Block, geprüft im /admin/ (Reiter „Weekly“).
-// Entscheidung (neuer Fund ja/nein) wie bei den anderen Crawlern: tools/lib/crawl-selection.js (decideProposal, kind 'weekly').
+// Ergebnis: je Eigenschaft ein GitHub-Issue (Label weekly-data) mit JSON-Block, geprüft im /admin/ (Reiter „Spaces“):
+// „Treffen-Daten: <Name>“ (nur `weekly`) und „Treffen-Daten: <Name> (Gründung)“ (nur `space.init`) — getrennt entscheidbar.
+// Entscheidung (neuer Fund ja/nein) wie bei den anderen Crawlern: tools/lib/crawl-selection.js (decideProposal, kind 'weekly' bzw. 'init').
 //
 // Usage:
 //   node tools/weekly-crawler.js                    # Dry-Run (Default)
@@ -13,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { loadMergedLocations, loadSpaceIssues, decideProposal, closeSuperseded } from './lib/crawl-selection.js';
+import { loadMergedLocations, loadSpaceIssues, decideProposal, closeSuperseded, proposalFromIssue } from './lib/crawl-selection.js';
 import { extractWeeklyCandidates, pickWeekly, extractInit, weeklyDelta, deltaKey, isWeeklyPlaceholder, isInitPlaceholder } from './lib/weekly-extract.js';
 import { WEEKDAY_NAMES } from '../date-utils.js';
 
@@ -87,7 +88,7 @@ export function buildIssue(space, found, delta, supersedes = []) {
   if (delta['space.init']) body += `| Gründung | ${delta['space.init']} | ${found.init.confidence} | ${found.init.source.replace(/\|/g, '/')} |\n`;
   body += `\n### Vorgeschlagener Wert\n\`\`\`json\n${JSON.stringify(delta, null, 2)}\n\`\`\`\n`;
   body += '\n---\n*Automatisch generiert von tools/weekly-crawler.js — bitte manuell prüfen*';
-  return { title: `${TITLE_PREFIX} ${space.name}`, body };
+  return { title: `${TITLE_PREFIX} ${space.name}${delta.weekly || !delta['space.init'] ? '' : ' (Gründung)'}`, body };
 }
 
 function createIssue(title, body) {
@@ -124,20 +125,32 @@ async function main() {
     let found;
     try { found = await crawlSpace(space.link.url); } catch (err) { console.log(`   SKIP: ${err.message}`); continue; }
     const delta = weeklyDelta(space, found, { force });
-    const key = deltaKey(delta);
-    if (!key) {
+    // Weekly und Gründung getrennt: je Eigenschaft ein eigenes Issue und eine eigene Entscheidung
+    const parts = [
+      ['weekly', delta.weekly ? { weekly: delta.weekly } : null],
+      ['init', delta['space.init'] ? { 'space.init': delta['space.init'] } : null],
+    ].filter(([, d]) => d);
+    if (!parts.length) {
       const hint = [found.weekly && weeklyHint(space, found.weekly), found.init && initHint(space, found.init)].filter(Boolean).join(', ');
       if (hint) { stats.weak++; console.log(`   kein Vorschlag — nur unsicher: ${hint}`); } else { stats.none++; console.log('   nichts gefunden'); }
       continue;
     }
-    stats.found++;
-    const d = decideProposal({ kind: 'weekly', found: key, integrated: null, issues: issuesBySpace.get(space.ID) || [] });
-    console.log(`   -> ${JSON.stringify(delta)}`);
-    if (d.action === 'skip') { stats.unchanged++; console.log(`   kein Vorschlag: ${d.reason}`); continue; }
-    if (!createIssues) { console.log(`   würde vorschlagen (${d.reason}${d.supersede.length ? `, ersetzt ${d.supersede.map(n => '#' + n).join(', ')}` : ''})`); continue; }
-    const { title, body } = buildIssue(space, found, delta, d.supersede);
-    const n = createIssue(title, body);
-    if (n) { stats.issues++; console.log(`   Issue ${typeof n === 'number' ? '#' + n + ' ' : ''}erstellt`); if (typeof n === 'number') closeSuperseded(d.supersede, n, ROOT); }
+    for (const [kind, partDelta] of parts) {
+      stats.found++;
+      const key = deltaKey(partDelta);
+      const all = issuesBySpace.get(space.ID) || [];
+      const withPart = all.filter(i => proposalFromIssue(i, kind) != null);
+      const d = decideProposal({ kind, found: key, integrated: null, issues: withPart });
+      // alte kombinierte Issues (weekly + space.init) nie wegen EINES Teils schließen
+      const supersede = d.supersede.filter(n => proposalFromIssue(all.find(i => i.number === n), kind === 'weekly' ? 'init' : 'weekly') == null);
+      console.log(`   -> ${JSON.stringify(partDelta)}`);
+      if (d.action === 'skip') { stats.unchanged++; console.log(`   kein Vorschlag (${kind}): ${d.reason}`); continue; }
+      if (!createIssues) { console.log(`   würde vorschlagen (${kind}: ${d.reason}${supersede.length ? `, ersetzt ${supersede.map(n => '#' + n).join(', ')}` : ''})`); continue; }
+      const { title, body } = buildIssue(space, found, partDelta, supersede);
+      const n = createIssue(title, body);
+      if (n) { stats.issues++; console.log(`   Issue ${typeof n === 'number' ? '#' + n + ' ' : ''}erstellt`); if (typeof n === 'number') closeSuperseded(supersede, n, ROOT); }
+      else console.log('   Issue-Erstellung fehlgeschlagen');
+    }
   }
   console.log(`\n${'='.repeat(50)}\nGesamt ${stats.total} · mit Vorschlag ${stats.found} · unverändert ${stats.unchanged} · nur unsicher ${stats.weak} · nichts ${stats.none} · Issues ${stats.issues}`);
 }
