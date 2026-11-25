@@ -59,9 +59,14 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 
 /* ── Aktionen ─────────────────────────────────────────────────────── */
 #actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 .25rem; }
-#actions button[data-tone="ok"] { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
-#actions button[data-tone="no"] { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
-#actions button[data-tone="warn"] { border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
+/* Entscheiden-Buttons: Vollfarbe, weiße fette Schrift (Farbe leicht abgedunkelt → Kontrast auch bei Orange und im Dark Mode) */
+#actions button { color: #fff; font-weight: 700; border-color: transparent; }
+#actions button[data-tone="ok"] { background: color-mix(in srgb, var(--space-open) 80%, black); }
+#actions button[data-tone="no"] { background: color-mix(in srgb, var(--space-closed) 80%, black); }
+#actions button[data-tone="warn"] { background: color-mix(in srgb, var(--space-unknown) 78%, black); }
+#actions button[data-tone="neutral"] { background: var(--hover-text-color); }
+#actions button:hover:not(:disabled) { filter: brightness(1.12); }
+#actions button kbd { color: #fff; background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .55); }
 #keys { margin: .25rem 0 .75rem; color: var(--hover-text-color); font-size: .9em; }
 
 /* ── Bearbeiten-Formular ──────────────────────────────────────────── */

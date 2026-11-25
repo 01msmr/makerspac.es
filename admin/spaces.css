@@ -1,9 +1,14 @@
 /* Reiter „Spaces“ (ADR-009) — Basis (Farben, Buttons, Toasts, Kopfzeile) kommt aus admin.css */
 #spaces-view { padding: .25rem .75rem 1rem; }
 .sp-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 .25rem; }
-.sp-actions button[data-tone="ok"] { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
-.sp-actions button[data-tone="no"] { border-color: var(--space-closed); background: color-mix(in srgb, var(--space-closed) 14%, var(--dropdown-bg)); }
-.sp-actions button[data-tone="warn"] { border-color: var(--space-unknown); background: color-mix(in srgb, var(--space-unknown) 16%, var(--dropdown-bg)); }
+/* Entscheiden-Buttons: Vollfarbe, weiße fette Schrift (Farbe leicht abgedunkelt → Kontrast auch bei Orange und im Dark Mode) */
+.sp-actions button { color: #fff; font-weight: 700; border-color: transparent; }
+.sp-actions button[data-tone="ok"] { background: color-mix(in srgb, var(--space-open) 80%, black); }
+.sp-actions button[data-tone="no"] { background: color-mix(in srgb, var(--space-closed) 80%, black); }
+.sp-actions button[data-tone="warn"] { background: color-mix(in srgb, var(--space-unknown) 78%, black); }
+.sp-actions button[data-tone="neutral"] { background: var(--hover-text-color); }
+.sp-actions button:hover:not(:disabled) { filter: brightness(1.12); }
+.sp-actions button kbd { color: #fff; background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .55); }
 #sp-done { margin: .75rem 0; padding: 1rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #sp-mode { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .6rem; margin: 0; padding: .1rem .6rem .25rem; border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #sp-mode legend { padding: 0 .3rem; font-size: .8em; color: var(--hover-text-color); }
