@@ -349,3 +349,7 @@ test('28: Auswertungsfeld — je erkanntem Element eine eigene Zeile (.det-line,
 test('29: Entscheider-Knöpfe am Desktop breit (min-width) mit klarem Abstand (gap)', () => {
   assert.match(read('admin/spaces.css'), /@media \(min-width: 768px\) \{\s*\.sp-actions \{ gap: 1\.75rem; \}\s*\.sp-actions button \{ min-width: 12\.5rem;/);
 });
+
+test('30: Tasten-Kürzel (kbd) mit doppeltem Radius (6px)', () => {
+  assert.match(read('admin/admin.css'), /\nkbd \{[^}]*border-radius: 6px;/);
+});

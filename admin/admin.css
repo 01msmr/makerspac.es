@@ -28,7 +28,7 @@ button { cursor: pointer; }
 button:hover:not(:disabled) { background: var(--dropdown-alt-bg); }
 button:disabled { opacity: .5; cursor: default; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 1px; }
-kbd { border: 1px solid var(--dropdown-border); border-radius: 3px; padding: 0 .3rem; background: var(--dropdown-alt-bg); font-size: .85em; }
+kbd { border: 1px solid var(--dropdown-border); border-radius: 6px; padding: 0 .3rem; background: var(--dropdown-alt-bg); font-size: .85em; }
 
 /* Übernehmen = grün hervorgehoben */
 #apply { border-color: var(--space-open); background: color-mix(in srgb, var(--space-open) 16%, var(--dropdown-bg)); font-weight: 700; }
