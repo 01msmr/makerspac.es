@@ -36,11 +36,11 @@ test('3: andere Farben/Grau/Orange/unbekannt → unbekannt, kein Raten', () => {
 });
 
 test('4: Zeitpunkt zu alt → unbekannt (globale Grenze); nur der aktuelle Stand zählt', () => {
-  assert.equal(STATUS_MAX_AGE_HOURS, 72);
+  assert.equal(STATUS_MAX_AGE_HOURS, 48);
   const old = parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z') });   // 5 Tage später
   assert.equal(old.status, null); assert.match(old.reason, /zu alt/);
   assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z'), maxAgeHours: 240 }).status, false);
-  assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-27T06:30:00Z') }).status, false);    // 52 h < 72 h
+  assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-27T01:30:00Z') }).status, false);    // 47,5 h < 48 h
 });
 
 test('5: Zeitpunkt nicht lesbar → unbekannt (Aktualität nicht prüfbar)', () => {

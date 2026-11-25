@@ -6,8 +6,8 @@
 // Es zählt NUR der aktuelle Stand (keine Historie). Der Zeitpunkt dient allein dazu, zu alte Stände als „unbekannt“ zu werten.
 // Der Adapter rät nie: Nicht lesbar/zu alt/mehrdeutig → status null + reason.
 
-/** Globale Grenze (nicht je Space): ein Stand, dessen Änderungszeitpunkt älter ist, gilt als nicht mehr gültig → unbekannt. Wert noch zu bestätigen. */
-export const STATUS_MAX_AGE_HOURS = 72;
+/** Globale Grenze (nicht je Space): ein Stand, dessen Änderungszeitpunkt älter ist, gilt als nicht mehr gültig → unbekannt. */
+export const STATUS_MAX_AGE_HOURS = 48;
 export const ADAPTERS = ['html-style'];
 
 // ─── Farbe ──────────────────────────────────────────────────────────────
