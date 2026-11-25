@@ -73,6 +73,29 @@ body {
   border: none !important;
 }
 
+/* Pin-Halo: 150-px-Kreis hinter dem Pin, Mitte 50 % Deckung → außen 0 % (linear), hell im Light-, dunkel im Dark Mode.
+   Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 1,5 s ein, bei niedrigem Zoom zügig aus. */
+:root { --pin-halo-rgb: 191 191 191; }
+@media (prefers-color-scheme: dark) { :root { --pin-halo-rgb: 64 64 64; } }
+.ms-marker-icon .pin-halo {
+  position: absolute;
+  z-index: -1;                      /* hinter dem Pin-SVG (Stacking-Context des Markers) */
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle closest-side, rgb(var(--pin-halo-rgb) / .5) 0%, rgb(var(--pin-halo-rgb) / 0) 100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease, visibility 0s .4s;
+}
+.halo-on .ms-marker-icon .pin-halo {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.5s ease-out, visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-marker-icon .pin-halo, .halo-on .ms-marker-icon .pin-halo { transition: none; }
+}
+
 #map {
   position: absolute;
   inset: 0;

@@ -826,6 +826,11 @@ export function initMarkerManager({ map: mapInstance, icons: iconsRef }) {
   map = mapInstance;
   icons = iconsRef;
 
+  // Pin-Halo erst bei hohem Zoom (dichte Karte): Klasse am Karten-Container, das Einblenden (1,5 s) macht CSS
+  const syncHalo = () => map.getContainer().classList.toggle('halo-on', map.getZoom() >= AppConfig.settings.haloMinZoom);
+  map.on('zoomend', syncHalo);
+  syncHalo();
+
   // window-Bridge (routing.js nutzt window.zfill)
   window.zfill = zfill;
 
