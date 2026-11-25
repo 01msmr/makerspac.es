@@ -124,3 +124,13 @@ test('Log-Hinweis: sicherer Fund bei vorhandenem Wert = „vorhanden, nicht übe
   assert.equal(weeklyHint(have, { confidence: 'medium' }), 'Weekly medium');
   assert.equal(weeklyHint({ weekly: { weekday: 9, time: 0 } }, { confidence: 'low', reason: 'mehrere verschiedene Termine' }), 'Weekly low (mehrere verschiedene Termine)');
 });
+
+test('extractInit: erstes Treffen / erster offener Tag / Umzug ist keine Vereinsgründung', () => {
+  assert.equal(extractInit('Der erste offene Makertag hat am 13.10.2018 stattgefunden.', 2026), null);
+  assert.equal(extractInit('Nach der Gründung fand das erste Treffen am 5.3.2019 statt.', 2026), null);
+  assert.equal(extractInit('Seit dem Umzug 2020 gegründet in neuen Räumen', 2026), null);
+  assert.equal(extractInit('First meeting founded 2019', 2026), null);
+  // Vereinsgründung bleibt erkannt, auch wenn ein anderer Satz ein erstes Treffen nennt
+  assert.equal(extractInit('Der erste offene Makertag war am 13.10.2018.\nDer Verein wurde am 1.9.2018 gegründet.', 2026).date, 20180901);
+  assert.equal(extractInit('Gründung des Vereins: 2017', 2026).date, 20170101);
+});
