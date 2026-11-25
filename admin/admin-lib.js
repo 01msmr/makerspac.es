@@ -173,6 +173,7 @@ export function setModeMarker(body, replace) {
   return replace ? out.replace(RE_ID, m => `${m}\n**Modus:** ersetzen`) : out;
 }
 
+// ▼ ALT-REITER (ausgeblendet, Löschkandidat): nur vom alten Reiter genutzt
 /** Vergleichszeilen für Workshop-Vorschläge. */
 export function buildWorkshopComparison(loc, currentWorkshops, proposed) {
   const dash = '–';
@@ -248,6 +249,7 @@ export function replaceEvents(body, url, replace = false) {
   return setModeMarker(body.replace(RE_EVENTS, () => '```json\n{\n  "events": "' + url + '"\n}\n```'), replace);
 }
 
+// ▼ ALT-REITER (ausgeblendet, Löschkandidat): nur vom alten Reiter genutzt
 export function buildCalendarComparison(loc, currentEvents, proposed, confidence) {
   const dash = '–';
   return [
@@ -342,6 +344,7 @@ export function replaceWeekly(body, text) {
   return body.replace(RE_WEEKLY_BLOCK, () => '```json\n' + JSON.stringify(block, null, 2) + '\n```');
 }
 
+// ▼ ALT-REITER (ausgeblendet, Löschkandidat): nur vom alten Reiter genutzt
 export function buildWeeklyComparison(loc, current, p) {
   const dash = '–';
   const curW = formatWeekly(current?.weekly), curI = formatInit(current?.dates?.['space.init']);

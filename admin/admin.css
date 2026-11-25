@@ -199,3 +199,6 @@ tr.warn th::after { content: " ⚠"; color: var(--space-unknown); }
 #reset-app, #reset-app-foot, #reset-app-in, .aux-link { color: var(--hover-text-color); font-size: .9em; text-decoration: underline dotted; text-underline-offset: 3px; }
 #reset-app-foot, #reset-app-in, #foot .aux-link, #foot-in .aux-link { margin-right: 1rem; align-self: center; }
 @media (pointer: coarse), (max-width: 767px) { #reset-app, .aux-header { display: none; } }
+
+/* Alt-Reiter ausgeblendet (ersetzt durch „Spaces“); Code bleibt vorerst, siehe admin.js „ALT-REITER-ABLAUF“ */
+#tab-spaceapi, #tab-workshops, #tab-calendar, #tab-weekly { display: none !important; }
