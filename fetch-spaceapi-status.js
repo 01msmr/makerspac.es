@@ -94,7 +94,7 @@ async function fetchSpaceStatus(space) {
     const adapter = space.adapter && adapterFor(space.adapter);
     let isOpen, message = null, adapterError = null;
     if (adapter) {
-      const r = adapter(text, { maxAgeHours: space.maxAgeHours });
+      const r = adapter(text);   // Alter-Grenze: globale Konstante STATUS_MAX_AGE_HOURS (nicht je Space)
       isOpen = r.status;
       adapterError = r.reason || null;
     } else {
@@ -151,7 +151,7 @@ function loadSpaceAPIsFromLocations() {
       .map(loc => {
         const api = enrichment[String(loc.ID)]?.spaceapi;
         const endpoint = api?.endpoint || '';
-        return endpoint.trim() ? { name: loc.name, endpoint: endpoint.trim(), adapter: api.adapter, maxAgeHours: api.maxAgeHours } : null;
+        return endpoint.trim() ? { name: loc.name, endpoint: endpoint.trim(), adapter: api.adapter } : null;
       })
       .filter(Boolean);
 

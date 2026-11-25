@@ -54,10 +54,9 @@ export function validateEnrichment(enrichment, locationIds) {
       const s = entry.spaceapi;
       if (!s || typeof s !== 'object' || !isHttpUrl(s.endpoint)) errors.push(`${at}: "spaceapi.endpoint" ist keine gültige http(s)-URL`);
       else {
-        // optional: Status ohne SpaceAPI (tools/lib/status-adapters.js) — adapter + maxAgeHours
+        // optional: Status ohne SpaceAPI (tools/lib/status-adapters.js) — adapter
         if (s.adapter !== undefined && !STATUS_ADAPTERS.includes(s.adapter)) errors.push(`${at}: "spaceapi.adapter" unbekannt ("${s.adapter}"; erlaubt: ${STATUS_ADAPTERS.join(', ')})`);
-        if (s.maxAgeHours !== undefined && !(Number.isInteger(s.maxAgeHours) && s.maxAgeHours >= 1 && s.maxAgeHours <= 720)) errors.push(`${at}: "spaceapi.maxAgeHours" muss eine ganze Zahl 1–720 sein`);
-        const extra = Object.keys(s).filter(k => !['endpoint', 'adapter', 'maxAgeHours'].includes(k));
+        const extra = Object.keys(s).filter(k => !['endpoint', 'adapter'].includes(k));
         if (extra.length) errors.push(`${at}: "spaceapi" enthält unbekannte Felder: ${extra.join(', ')}`);
       }
     }

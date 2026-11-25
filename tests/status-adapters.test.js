@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseCssColor, classifyRedGreen, backgroundOf, parseChangeTime, bodyText, parseHtmlStyleStatus, adapterFor, DEFAULT_MAX_AGE_HOURS } from '../tools/lib/status-adapters.js';
+import { parseCssColor, classifyRedGreen, backgroundOf, parseChangeTime, bodyText, parseHtmlStyleStatus, adapterFor, STATUS_MAX_AGE_HOURS } from '../tools/lib/status-adapters.js';
 import { applyProposal } from '../tools/apply-spaceapi-issues.js';
 import { validateEnrichment } from './validate-enrichment.js';
 
@@ -35,8 +35,8 @@ test('3: andere Farben/Grau/Orange/unbekannt → unbekannt, kein Raten', () => {
   assert.equal(classifyRedGreen([200, 150, 0]), null);
 });
 
-test('4: Zeitpunkt zu alt → unbekannt (Standard 72 h, einstellbar); nur der aktuelle Stand zählt', () => {
-  assert.equal(DEFAULT_MAX_AGE_HOURS, 72);
+test('4: Zeitpunkt zu alt → unbekannt (globale Grenze); nur der aktuelle Stand zählt', () => {
+  assert.equal(STATUS_MAX_AGE_HOURS, 72);
   const old = parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z') });   // 5 Tage später
   assert.equal(old.status, null); assert.match(old.reason, /zu alt/);
   assert.equal(parseHtmlStyleStatus(PAGE, { now: Date.parse('2026-11-30T06:30:00Z'), maxAgeHours: 240 }).status, false);
@@ -62,17 +62,17 @@ test('7: adapterFor + Daten: Fabulous St. Pauli nutzt den Adapter, Validierung k
   assert.equal(adapterFor('html-style'), parseHtmlStyleStatus);
   assert.equal(adapterFor('unbekannt'), null);
   const enr = JSON.parse(readFileSync(new URL('../loc-enrichment.json', import.meta.url), 'utf8'));
-  assert.deepEqual(enr['43'].spaceapi, { endpoint: 'https://www.fablab-hamburg.org/sesame', adapter: 'html-style', maxAgeHours: 72 });
+  assert.deepEqual(enr['43'].spaceapi, { endpoint: 'https://www.fablab-hamburg.org/sesame', adapter: 'html-style' });
   const ids = new Set([43]);
-  assert.deepEqual(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', adapter: 'html-style', maxAgeHours: 48 } } }, ids), []);
+  assert.deepEqual(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', adapter: 'html-style' } } }, ids), []);
   assert.match(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', adapter: 'foo' } } }, ids)[0], /adapter/);
   assert.match(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', kind: 'presence' } } }, ids)[0], /unbekannte Felder/);   // keine eigene Anwesenheits-Semantik: nur offen/geschlossen
-  assert.match(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', maxAgeHours: 0 } } }, ids)[0], /maxAgeHours/);
+  assert.match(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', maxAgeHours: 48 } } }, ids)[0], /unbekannte Felder/);   // Alter-Grenze ist global, nicht je Space
   assert.match(validateEnrichment({ 43: { spaceapi: { endpoint: 'https://x.example/s', foo: 1 } } }, ids)[0], /unbekannte Felder/);
 });
 
 test('8: applyProposal — gleicher Endpoint behält den Adapter, neuer Endpoint (echte SpaceAPI) ersetzt ihn', () => {
-  const api = { endpoint: 'https://www.fablab-hamburg.org/sesame', adapter: 'html-style', maxAgeHours: 72 };
+  const api = { endpoint: 'https://www.fablab-hamburg.org/sesame', adapter: 'html-style' };
   const a = { 43: { spaceapi: { ...api } } }; applyProposal(a, 43, api.endpoint);
   assert.deepEqual(a[43].spaceapi, api);
   const b = { 43: { spaceapi: { ...api } } }; applyProposal(b, 43, 'https://spaceapi.example/s.json');

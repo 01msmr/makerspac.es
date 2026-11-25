@@ -6,7 +6,8 @@
 // Es zählt NUR der aktuelle Stand (keine Historie). Der Zeitpunkt dient allein dazu, zu alte Stände als „unbekannt“ zu werten.
 // Der Adapter rät nie: Nicht lesbar/zu alt/mehrdeutig → status null + reason.
 
-export const DEFAULT_MAX_AGE_HOURS = 72;
+/** Globale Grenze (nicht je Space): ein Stand, dessen Änderungszeitpunkt älter ist, gilt als nicht mehr gültig → unbekannt. Wert noch zu bestätigen. */
+export const STATUS_MAX_AGE_HOURS = 72;
 export const ADAPTERS = ['html-style'];
 
 // ─── Farbe ──────────────────────────────────────────────────────────────
@@ -101,7 +102,7 @@ export function bodyText(html) {
  * @param {{now?:number, maxAgeHours?:number}} [opts]
  * @returns {{status: boolean|null, reason?: string, ageHours?: number}}
  */
-export function parseHtmlStyleStatus(html, { now = Date.now(), maxAgeHours = DEFAULT_MAX_AGE_HOURS } = {}) {
+export function parseHtmlStyleStatus(html, { now = Date.now(), maxAgeHours = STATUS_MAX_AGE_HOURS } = {}) {
   const bg = backgroundOf(html);
   if (!bg) return { status: null, reason: 'kein background im Style-Attribut' };
   const rgb = parseCssColor(bg);
