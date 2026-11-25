@@ -10,7 +10,7 @@
 #sp-split .grip::after { content: ''; position: absolute; inset: 14px 3px; border-left: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); border-right: 2px dotted color-mix(in srgb, var(--text-color) 55%, var(--dropdown-bg)); }
 #sp-split:hover::before, #sp-split:focus-visible::before, #sp-layout.dragging #sp-split::before { background: color-mix(in srgb, var(--text-color) 80%, var(--dropdown-bg)); }   /* Hover/Ziehen: dunkelgrau statt blau */
 #sp-split:focus-visible { outline: 2px solid var(--focus-color); border-radius: 6px; }
-#sp-pane { flex: 0 0 var(--sp-pane-w, 45%); min-width: 0; position: sticky; top: 4.2rem; height: calc(100vh - 5rem); display: flex; flex-direction: column; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; overflow: hidden; }
+#sp-pane { flex: 0 0 var(--sp-pane-w, 45%); min-width: 0; position: sticky; top: var(--sp-top, 4.2rem); height: calc(100vh - var(--sp-top, 4.2rem) - .75rem); display: flex; flex-direction: column; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; overflow: hidden; }
 #sp-viewbar { display: flex; align-items: center; gap: .5rem; padding: .4rem .5rem; border-bottom: 1px solid var(--dropdown-border); }
 #sp-pane-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--hover-text-color); }
 #sp-frame { flex: 1; width: 100%; border: 0; background: var(--bg-color); }
@@ -33,10 +33,11 @@
 .sp-actions button[data-tone="neutral"] kbd { color: var(--hover-text-color); }
 #sp-done { margin: .75rem 0; padding: 1rem; background: var(--dropdown-bg); border: 1px solid var(--dropdown-border); border-radius: 8px; }
 #sp-mode { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .6rem; margin: 0; padding: .1rem .6rem .25rem; border: 1px solid var(--dropdown-border); border-radius: 8px; }
-#sp-modebar { margin: .5rem .75rem 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; }
+/* Bearbeiten-Auswahl + Zähler/Prüfer/Stand/↻ bleiben beim Scrollen unter der Kopfzeile stehen (Offsets per JS: --bar-h, --sp-top) */
+#sp-modebar { position: sticky; top: var(--bar-h, 3.4rem); z-index: 9; margin: 0; padding: .5rem .75rem .4rem; background: var(--dropdown-alt-bg); display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; }
 #sp-meta-slot { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; }
 @media (max-width: 767px) {
-  #sp-modebar { flex-direction: column; align-items: stretch; }   /* Phone: Bearbeiten-Auswahl, darunter Zähler/Prüfer/Stand */
+  #sp-modebar { position: static; flex-direction: column; align-items: stretch; }   /* Phone: scrollt mit (Kopfzeile ist dort auch nicht fixiert, sonst frisst die Leiste den Platz) */   /* Phone: Bearbeiten-Auswahl, darunter Zähler/Prüfer/Stand */
   #sp-meta-slot { margin-left: 0; }
   #sp-meta-slot #counter { display: inline; }   /* „1 / 104“ bleibt; Datenstand steht (wie bisher auf Phone) im Tooltip von ↻ */
 }

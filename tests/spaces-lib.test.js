@@ -318,4 +318,9 @@ test('24: Eigenschaftszeilen nur über tr[data-key] lesen (Beleg-Tabellen innerh
   const js = read('admin/spaces.js');
   assert.ok(!/\$\('sp-rows'\)\.querySelectorAll\('tr'\)/.test(js), 'Stale-Check/readRows dürfen keine verschachtelten <tr> der Beleg-Tabellen erfassen');
   assert.match(js, /querySelectorAll\('tr\[data-key\]'\)\]\.some\(tr => tr\.dataset\.number/);
+test('25: Bearbeiten-Leiste klebt unter der Kopfzeile; Seitenfenster klebt darunter (Offsets als CSS-Variablen)', () => {
+  const css = read('admin/spaces.css'), js = read('admin/spaces.js');
+  assert.match(css, /#sp-modebar \{ position: sticky; top: var\(--bar-h/);
+  assert.match(css, /#sp-pane \{[^}]*top: var\(--sp-top/);
+  assert.match(js, /setProperty\('--bar-h'/); assert.match(js, /setProperty\('--sp-top'/);
 });
