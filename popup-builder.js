@@ -39,7 +39,7 @@ export function buildPopupHTML(location, opts = {}) {
     nameClass = 'space-closed';
   } else if (location.spaceapi && location.spaceapi.endpoint) {
     statusColor = 'var(--space-unknown)';
-    const tipLabel = location.statusMessage || t('tooltips.spaceStatusLoading');
+    const tipLabel = location.statusMessage || t('tooltips.spaceUnknown');
     const tipPos   = location.statusMessage ? 'top-right' : 'bottom';
     statusIconHtml = `<span aria-label="${tipLabel}" role="tooltip" data-microtip-position="${tipPos}"><i class="fas fa-question-circle"></i></span> `;
     nameClass = 'space-unknown';

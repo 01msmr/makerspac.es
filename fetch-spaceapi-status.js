@@ -109,6 +109,7 @@ async function fetchSpaceStatus(space) {
       // Alters-Regel (ADR-010): „offen“ nur, wenn der Sende-/Zeitstempel < 24 h alt ist; „geschlossen“ bleibt; Gedächtnis nur wo unumgänglich
       const fresh = decideFreshness({ status: isOpen, text, lastModified: response.headers.get('last-modified') || '' }, MEMORY, space.endpoint);
       if (fresh.status !== isOpen) { isOpen = fresh.status; adapterError = fresh.reason || null; }
+      else if (fresh.rescuedBy) console.log(`   ℹ️ ${space.name}: „offen“ durch Sensor-Zeitstempel bestätigt (state.lastchange alt)`);
     }
 
     const statusEmoji = isOpen === true ? '🟢 OPEN' :
