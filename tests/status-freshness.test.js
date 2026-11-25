@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { extractSignalTime, applyOpenAgeRule, signatureOf, updateMemory, applyMemoryRule, decideFreshness } from '../tools/lib/status-freshness.js';
+import { extractSignalTime, extractSensorTime, applyOpenAgeRule, signatureOf, updateMemory, applyMemoryRule, decideFreshness } from '../tools/lib/status-freshness.js';
 
 const NOW = Date.parse('2026-11-25T12:00:00Z');
 const H = 3600e3;
@@ -77,4 +77,45 @@ test('6: Gedächtnis ist NICHT öffentlich — nie in status.json, nie hochgelad
   assert.match(wf, /actions\/cache\/save@v4[\s\S]*?status-memory\.json/);
   assert.ok(!/-T status-memory|status-memory\.json"/.test(wf.split('FTP')[1] ?? ''), 'Gedächtnis wird nicht per FTP hochgeladen');
   assert.match(readFileSync(new URL('../.gitignore', import.meta.url), 'utf8'), /^status-memory\.json$/m);
+});
+
+const apiS = (stateMs, sensors) => JSON.stringify({ api_compatibility: ['14'], space: 'X', state: { open: true, ...(stateMs !== undefined ? { lastchange: Math.floor(stateMs / 1000) } : {}) }, sensors });
+
+test('7: Sensor-Zeitstempel als Lebenszeichen — state.lastchange alt, Sensor < 24 h → „offen“ bleibt (rescuedBy: sensor)', () => {
+  const sensors = { temperature: [{ value: 21, unit: '°C', location: 'Raum', lastchange: Math.floor((NOW - 2 * H) / 1000) }], people_now_present: [{ value: 3, lastchange: Math.floor((NOW - 90 * H) / 1000) }] };
+  assert.equal(extractSensorTime(apiS(NOW - 90 * H, sensors), NOW), NOW - 2 * H);          // jüngster Sensor zählt
+  const mem = {};
+  const r = decideFreshness({ status: true, text: apiS(NOW - 90 * H, sensors) }, mem, 'k', NOW);
+  assert.deepEqual(r, { status: true, rescuedBy: 'sensor' });
+  assert.deepEqual(mem, {});                                                                  // ohne Gedächtnis
+});
+
+test('8: Sensor-Zeitstempel zählen nur, wenn eindeutig und frisch — sonst bleibt es bei unbekannt', () => {
+  const mem = {};
+  const oldSensors = { temperature: [{ value: 21, lastchange: Math.floor((NOW - 60 * H) / 1000) }] };
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, oldSensors) }, mem, 'k', NOW).status, null);   // Sensor ebenfalls alt
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { t: [{ value: 1 }] }) }, mem, 'k', NOW).status, null);   // Sensor ohne Zeitstempel
+  assert.equal(decideFreshness({ status: true, text: apiS(NOW - 90 * H, { t: [{ lastchange: 'gestern' }, { lastchange: 0 }, { lastchange: Math.floor((NOW + 5 * 24 * H) / 1000) }] }) }, mem, 'k', NOW).status, null);   // unplausibel
+  assert.equal(extractSensorTime(apiS(NOW, undefined), NOW), null);
+  assert.equal(extractSensorTime('1', NOW), null);
+});
+
+test('9: ohne state.lastchange: frischer Sensor genügt; alter Sensor allein → Gedächtnis-Pfad (kein Urteil nach Sensorzeit)', () => {
+  const mem = {};
+  const fresh = { t: [{ value: 1, lastchange: Math.floor((NOW - H) / 1000) }] };
+  assert.deepEqual(decideFreshness({ status: true, text: apiS(undefined, fresh) }, mem, 'a', NOW), { status: true, rescuedBy: 'sensor' });
+  const old = { t: [{ value: 1, lastchange: Math.floor((NOW - 80 * H) / 1000) }] };
+  assert.equal(decideFreshness({ status: true, text: apiS(undefined, old) }, mem, 'b', NOW).status, true);      // erste Sicht → Gedächtnis angelegt
+  assert.ok(mem.b);
+});
+
+test('10: Tooltip für unbekannten Status heißt „unknown“ (7 Sprachen), nie „wird geladen“', () => {
+  const lang = JSON.parse(readFileSync(new URL('../lang.json', import.meta.url), 'utf8'));
+  assert.equal(lang.tooltips.spaceStatusLoading, undefined);
+  for (const l of ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk']) {
+    const txt = lang.tooltips.spaceUnknown[l];
+    assert.ok(txt, `fehlt: ${l}`);
+    assert.ok(!/laden|loading|charg|caricamento|geladen|indlæs|завантаж/i.test(txt), `${l}: ${txt}`);
+  }
+  for (const f of ['listing-core.js', 'popup-builder.js']) assert.ok(!readFileSync(new URL(`../${f}`, import.meta.url), 'utf8').includes('spaceStatusLoading'), f);
 });

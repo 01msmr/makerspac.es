@@ -5,6 +5,8 @@
 // Der Cron prüft bei jedem Lauf neu: ist der Zeitstempel wieder jünger als 24 h, gilt „offen“ wieder.
 //
 // 1) Quelle liefert einen absoluten Zeitstempel (SpaceAPI state.lastchange, ThingSpeak created_at, Hamburg-Datum) → direkt prüfen, OHNE Gedächtnis.
+//    Lebenszeichen: ist `state.lastchange` alt, aber ein SpaceAPI-SENSOR (sensors.*[].lastchange, Unix-Sekunden) jünger als 24 h, lebt die Quelle
+//    → „offen“ bleibt gültig (so wird ein ehrlich durchgehend offener Space nicht fälschlich „unbekannt“). Kennzeichnung: rescuedBy: 'sensor'.
 // 2) Nur wo das unumgänglich ist (offen, aber KEIN Zeitstempel): Gedächtnis = die letzten ZWEI Signaturen mit Erstsehen-Zeitpunkt
 //    (Last-Modified-Header bzw. Prüfsumme des Inhalts). Unverändert seit > 24 h → unbekannt. Das Gedächtnis ist NICHT öffentlich
 //    (Actions-Cache, nie in status.json oder im Repo).
@@ -27,6 +29,28 @@ export function extractSignalTime(text, now = Date.now()) {
   else if (typeof data?.created_at === 'string') { const t = Date.parse(data.created_at); if (Number.isFinite(t)) ms = t; }
   if (ms === null || ms < Date.parse('2001-01-01T00:00:00Z') || ms > now + 24 * HOUR) return null;
   return ms;
+}
+
+/**
+ * Jüngster plausibler Sensor-Zeitstempel einer SpaceAPI-Antwort (sensors.<typ>[].lastchange, Unix-Sekunden) oder null.
+ * Nur eindeutige Werte zählen (Zahl, nach 2001, höchstens 1 Tag in der Zukunft).
+ */
+export function extractSensorTime(text, now = Date.now()) {
+  let data;
+  try { data = JSON.parse(String(text).trim()); } catch { return null; }
+  const sensors = data?.sensors;
+  if (!sensors || typeof sensors !== 'object') return null;
+  let best = null;
+  for (const group of Object.values(sensors)) {
+    for (const s of Array.isArray(group) ? group : [group]) {
+      const n = Number(s?.lastchange);
+      if (!Number.isFinite(n) || n <= 0) continue;
+      const ms = n > 1e12 ? n : n * 1000;
+      if (ms < Date.parse('2001-01-01T00:00:00Z') || ms > now + 24 * HOUR) continue;
+      if (best === null || ms > best) best = ms;
+    }
+  }
+  return best;
 }
 
 /** „Offen“ mit zu altem Zeitstempel → unbekannt; alles andere unverändert */
@@ -65,10 +89,14 @@ export function applyMemoryRule(status, entry, now = Date.now(), maxAgeHours = S
  * @param {Record<string, object>} memory  Gedächtnis aller Spaces (wird für `key` fortgeschrieben, nur wo unumgänglich)
  * @returns {{status:boolean|null, reason?:string}}
  */
-export function decideFreshness({ status, text, lastModified = '', signalMs = undefined }, memory, key, now = Date.now()) {
+export function decideFreshness({ status, text, lastModified = '', signalMs = undefined }, memory, key, now = Date.now(), maxAgeHours = STATUS_MAX_AGE_HOURS) {
   if (status !== true) { delete memory[key]; return { status }; }              // nur „offen“ wird geprüft; kein Gedächtnis nötig
-  const signal = signalMs !== undefined ? signalMs : extractSignalTime(text, now);
-  if (signal !== null) { delete memory[key]; return applyOpenAgeRule(status, signal, now); }   // absoluter Zeitstempel → ohne Gedächtnis
-  memory[key] = updateMemory(memory[key], signatureOf(text, lastModified), now);               // unumgänglich: Gedächtnis (2 Signaturen)
-  return applyMemoryRule(status, memory[key], now);
+  const stateMs = signalMs !== undefined ? signalMs : extractSignalTime(text, now);
+  const sensorMs = extractSensorTime(text, now);
+  const isFresh = ms => ms !== null && ms !== undefined && (now - ms) / HOUR <= maxAgeHours;
+  if (isFresh(stateMs)) { delete memory[key]; return applyOpenAgeRule(status, stateMs, now, maxAgeHours); }   // frisch, ohne Gedächtnis
+  if (isFresh(sensorMs)) { delete memory[key]; return { status, rescuedBy: 'sensor' }; }                      // Lebenszeichen: Sensor jünger als 24 h
+  if (stateMs !== null && stateMs !== undefined) { delete memory[key]; return applyOpenAgeRule(status, stateMs, now, maxAgeHours); }   // alt, kein Lebenszeichen → unbekannt
+  memory[key] = updateMemory(memory[key], signatureOf(text, lastModified), now);   // kein Zeitstempel: Gedächtnis (2 Signaturen)
+  return applyMemoryRule(status, memory[key], now, maxAgeHours);
 }

@@ -66,7 +66,7 @@ class ListingCore {
 
   /**
    * Gibt gecachte i18n-Strings zurück. Cache wird bei Sprachwechsel invalidiert.
-   * @returns {{ spaceOpen: string, spaceClosed: string, spaceStatusLoading: string, weeklyToday: string, weeklyTooltip: string, weeklyTimeSuffix: string, weeklyEventsCalendar: string }}
+   * @returns {{ spaceOpen: string, spaceClosed: string, spaceUnknown: string, weeklyToday: string, weeklyTooltip: string, weeklyTimeSuffix: string, weeklyEventsCalendar: string }}
    */
   _t() {
     if (!this._i18nCache || !window.i18n) {
@@ -74,7 +74,7 @@ class ListingCore {
       this._i18nCache = {
         spaceOpen:           t('tooltips.spaceOpen', ''),
         spaceClosed:         t('tooltips.spaceClosed', ''),
-        spaceStatusLoading:  t('tooltips.spaceStatusLoading', ''),
+        spaceUnknown:        t('tooltips.spaceUnknown', ''),
         weeklyToday:         t('weekly.today', 'heute'),
         weeklyTooltip:       t('weekly.tooltip', 'wöchentliches Treffen'),
         weeklyTimeSuffix:    t('weekly.timeSuffix', ' Uhr'),
@@ -245,7 +245,7 @@ class ListingCore {
     } else if (location.isOpen === false) {
       return `<span aria-label="${s.spaceClosed}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.closed} door-icon-closed"></i></span> `;
     } else {
-      return `<span aria-label="${s.spaceStatusLoading}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.unknown} door-icon-unknown"></i></span> `;
+      return `<span aria-label="${s.spaceUnknown}" role="tooltip" data-microtip-position="right"><i class="${AppConfig.icons.status.unknown} door-icon-unknown"></i></span> `;
     }
   }
 
