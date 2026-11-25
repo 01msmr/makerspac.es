@@ -433,6 +433,13 @@ function nextTabWithItems() {
   return null;
 }
 
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║ ALT-REITER-ABLAUF (SpaceAPI / Workshops / Kalender / Weekly) — AUSGEBLENDET   ║
+// ║ Löschkandidat: ersetzt durch den Reiter „Spaces“ (admin/spaces.js, ADR-009).  ║
+// ║ Reiter-Buttons sind per CSS versteckt (admin.css); Code bleibt vorerst.      ║
+// ║ Bereich: show() … undo/edit/scan-Hilfen bis „Übernehmen“. NICHT löschen:      ║
+// ║ Warteschlangen-Abgleich, Sperren/Audit, applyNow (gemeinsam genutzt).         ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
 async function show() {
   const k = cur();
   state.list = null;
@@ -998,6 +1005,8 @@ document.addEventListener('keydown', e => {
     case 'k': if (cur().urlOf) setView('endpoint'); break;
   }
 });
+
+// ══════════════════════ ENDE ALT-REITER-ABLAUF ══════════════════════════════
 
 // ─── Übernehmen ──────────────────────────────────────────────────────────
 /** Startet den gemeinsamen Apply-Workflow (alle Arten). @returns {Promise<{ok:boolean, link?:HTMLAnchorElement}>} */
