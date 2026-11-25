@@ -187,7 +187,7 @@ function buildInputs(key, value) {
     const line2 = document.createElement('div'); line2.className = 'line'; line2.append(lbl, init);   // „Gegründet“ beginnt in einer neuen Zeile
     wrap.append(line1, line2);
   } else {
-    const input = Object.assign(document.createElement('input'), { type: 'text', value, placeholder: key === 'spaceapi' ? 'https://… (SpaceAPI-Endpoint)' : 'https://… (Kalender-Link)' });
+    const input = Object.assign(document.createElement('input'), { type: 'text', value });
     input.inputMode = 'url'; input.autocomplete = 'off'; input.spellcheck = false;
     wrap.append(input);
   }
@@ -369,7 +369,6 @@ function buildFreeText(sp) {
   const label = document.createElement('label'); label.textContent = 'Freitext — hier Text oder URLs einfügen (wird sofort ausgewertet): Workshops, Treffen, Gründung, Kalender, SpaceAPI';
   const area = document.createElement('textarea');
   area.rows = 3; area.spellcheck = false; area.id = `ws-free-${sp.id}`; label.htmlFor = area.id;
-  area.placeholder = 'z. B. „Jeden Dienstag ab 19 Uhr offener Abend, Lasercutter, 3D-Drucker … gegründet 2015“ oder eine Kalender-/SpaceAPI-URL — oder eine Website-URL zum Auslesen per Server';
   const detected = document.createElement('p'); detected.className = 'ws-detected'; detected.dataset.state = 'idle'; detected.setAttribute('role', 'status');
   const row = document.createElement('div'); row.className = 'scan-row';
   const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Website auslesen (Server)';
