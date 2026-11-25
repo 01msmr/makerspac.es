@@ -58,6 +58,36 @@ export function proposalValue(key, p) {
   }
 }
 
+/**
+ * Formwert zur ANZEIGE eines Vorschlags. Beim Treffen enthält ein Vorschlag oft nur einen Teil (z. B. nur die Gründung):
+ * die fehlenden Teile werden mit dem aktuellen Wert vorbelegt, damit nichts wie „entfernen“ aussieht. Nur Anzeige — geschrieben wird
+ * ausschließlich, was der Vorschlag enthält oder was du änderst (siehe weeklyWriteValue).
+ */
+export function displayValue(key, p, current) {
+  const v = proposalValue(key, p);
+  if (key !== 'weekly') return v;
+  const hasWk = !!p.weekly, hasInit = p.init !== undefined;
+  return { day: hasWk ? v.day : current.day, time: hasWk ? v.time : current.time, init: hasInit ? v.init : current.init };
+}
+
+/**
+ * Welche Teile eines Treffen-Werts in das Issue geschrieben werden: nur die, die der Vorschlag schon enthält oder die du gegenüber
+ * dem aktuellen Stand geändert hast. Bestehende Daten werden nie mit identischen Werten neu geschrieben.
+ * @param {{day:string,time:string,init:string}} value @param {object|null} p Vorschlag (null = neues Issue) @param {{day:string,time:string,init:string}} current
+ */
+export function weeklyWriteValue(value, p, current) {
+  const hasWk = !!p?.weekly, hasInit = p?.init !== undefined;
+  const wk = hasWk || value.day !== current.day || value.time !== current.time;
+  const init = hasInit || value.init !== current.init;
+  return { day: wk ? value.day : '', time: wk ? value.time : '', init: init ? value.init : '' };
+}
+
+/** Würde der Wert einen vorhandenen Teil entfernen? (Treffen: Termin ODER Gründung geleert; sonst: Wert geleert) */
+export function removesExisting(key, value, current) {
+  if (key === 'weekly') return !!((current.day || current.time) && !value.day && !value.time) || !!(current.init && !value.init);
+  return !isEmptyValue(key, current) && isEmptyValue(key, value);
+}
+
 export const isEmptyValue = (key, v) => key === 'workshops' ? !v.length : key === 'weekly' ? !v.day && !v.time && !v.init : !v;
 
 export function sameValue(key, a, b) {
@@ -192,17 +222,18 @@ export function planDecision(space, rows, bodies = {}) {
       if (r.key === 'workshops' && !r.value.length && isEmptyValue('workshops', cur)) {   // kein Typ + nichts vorhanden → nichts zu übernehmen
         actions.push({ type: 'reject', key: r.key, number: p.number }); continue;
       }
-      const changed = !sameValue(r.key, r.value, proposalValue(r.key, p));
+      const changed = !sameValue(r.key, r.value, displayValue(r.key, p, cur));
       const replace = !isEmptyValue(r.key, cur);
       if (!changed) { actions.push({ type: 'ok', key: r.key, number: p.number }); continue; }
-      const body = editedBody(r.key, bodies[p.number] ?? '', r.value, replace);
+      if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
+      const body = editedBody(r.key, bodies[p.number] ?? '', r.key === 'weekly' ? weeklyWriteValue(r.value, p, cur) : r.value, replace);
       if (!body) { errors.push(`${f.label}: Eingabe konnte nicht in das Issue geschrieben werden`); continue; }
       actions.push({ type: 'ok', key: r.key, number: p.number, body, prevBody: bodies[p.number] ?? '' });
     } else if (r.include && !sameValue(r.key, r.value, cur)) {
       if (err) { errors.push(`${f.label}: ${err}`); continue; }
-      if (isEmptyValue(r.key, r.value) && r.key !== 'workshops' && r.key !== 'calendar') { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
+      if (r.key !== 'workshops' && r.key !== 'calendar' && removesExisting(r.key, r.value, cur)) { errors.push(`${f.label}: Entfernen nur bei Workshops/Kalender`); continue; }
       const replace = !isEmptyValue(r.key, cur);
-      const body = newIssueBody(r.key, space, r.value, replace);
+      const body = newIssueBody(r.key, space, r.key === 'weekly' ? weeklyWriteValue(r.value, null, cur) : r.value, replace);
       if (!body) { errors.push(`${f.label}: neues Issue konnte nicht erzeugt werden`); continue; }
       actions.push({ type: 'create', key: r.key, title: `${f.title} ${space.name}`, body, labels: [...f.labels, 'ok'] });
     }

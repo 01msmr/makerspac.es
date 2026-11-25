@@ -4,7 +4,7 @@
 import { REPO, formatEditDate, detectFromText, looksLikeUrl, parseScanComment } from './admin-lib.js';
 import { WORKSHOP_TYPES } from '../workshop-types.js';
 import {
-  FIELDS, currentValue, proposalValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
+  FIELDS, currentValue, proposalValue, displayValue, isEmptyValue, sameValue, isImportantEmpty, fillRates,
   groupBySpace, buildQueue, planDecision, lockedSpaces, spaceLock, analyzeFreeText, TIME_STEP_MINUTES,
 } from './spaces-lib.js';
 
@@ -207,13 +207,27 @@ function writeValue(tr, v) {
   else tr.querySelector('input[type="text"]').value = v;
 }
 
+/** Eindeutige Optik: genau die Eingaben, die vom aktuellen Stand abweichen, bekommen einen grünen Rahmen (Treffen: Tag/Uhrzeit/Gründung einzeln) */
+function markChanged(tr, sp) {
+  const key = tr.dataset.key, cur = sp.current[key], v = readValue(tr);
+  const mark = (el, diff) => el?.classList.toggle('chg', diff);
+  if (key === 'weekly') {
+    for (const f of ['day', 'time', 'init']) mark(tr.querySelector(`[data-f="${f}"]`), v[f] !== cur[f]);
+  } else if (key === 'workshops') {
+    tr.querySelectorAll('.ws-checks label').forEach(l => mark(l, l.querySelector('input').checked !== cur.includes(l.querySelector('input').value)));
+  } else {
+    mark(tr.querySelector('input[type="text"]'), v !== cur);
+  }
+}
+
 /** Zeile aktualisieren: geändert? Häkchen-Text, gelbe Lücke */
 function updateRow(tr, sp) {
   const key = tr.dataset.key, hasProposal = tr.dataset.proposal === '1';
   const value = readValue(tr), cb = tr.querySelector('.inc input'), label = tr.querySelector('.inc label'), txt = label.querySelector('span');
-  const base = hasProposal ? proposalValue(key, sp.proposals[key]) : sp.current[key];
+  const base = hasProposal ? displayValue(key, sp.proposals[key], sp.current[key]) : sp.current[key];
   const changed = !sameValue(key, value, base);
-  tr.classList.toggle('differs', changed || (hasProposal && !sameValue(key, proposalValue(key, sp.proposals[key]), sp.current[key])));
+  tr.classList.toggle('differs', changed || (hasProposal && !sameValue(key, displayValue(key, sp.proposals[key], sp.current[key]), sp.current[key])));
+  markChanged(tr, sp);
   if (hasProposal) {
     txt.textContent = cb.checked ? (key === 'workshops' && !value.length ? 'nichts übernehmen' : 'übernehmen') : 'verwerfen';
     label.classList.toggle('rej', !cb.checked);
@@ -238,7 +252,7 @@ function buildRow(f, sp, restore) {
   const ct = currentText(f.key, sp.current[f.key]);
   if (ct) cur.textContent = ct; else cur.append(Object.assign(document.createElement('span'), { className: 'none', textContent: '–' }));
   const inp = document.createElement('td'); inp.className = 'inp';
-  const initial = restore?.[f.key]?.value ?? (p ? proposalValue(f.key, p) : sp.current[f.key]);
+  const initial = restore?.[f.key]?.value ?? (p ? displayValue(f.key, p, sp.current[f.key]) : sp.current[f.key]);
   inp.append(buildInputs(f.key, initial));
   if (p) {
     const hint = document.createElement('small'); hint.className = 'row-hint';
