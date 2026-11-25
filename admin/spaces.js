@@ -354,7 +354,7 @@ function show(restore = null) {
   const id = state.current;
   $('sp-act-z').hidden = state.undo.length === 0;
   const pos = state.queue.indexOf(id);
-  $('counter').textContent = id == null ? '' : `${pos + 1} / ${state.queue.length}`;
+  $('counter').textContent = id == null ? '' : `${pos + 1} /${state.queue.length}`;
   if (id == null) {
     $('sp-card').hidden = true; $('sp-done').hidden = false;
     $('sp-done').textContent = state.mode === 'all' ? 'Alles geprüft — keine offenen Vorschläge.' : `Keine offenen Vorschläge für „${FIELDS.find(f => f.key === state.mode)?.label}“.`;
