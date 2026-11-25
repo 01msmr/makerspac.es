@@ -451,7 +451,7 @@ function checkTypes(types) {
 /** Erkanntes in die Zeilen schreiben. @returns {{label:string,text?:string,chips?:string[]}[]} je gesetzter Eigenschaft eine Zeile für das Auswertungsfeld */
 function applyAnalysis(a, { onlyEmpty = false } = {}) {
   const rows = [];
-  if (a.workshops.length && checkTypes(a.workshops)) rows.push({ label: 'Workshops', chips: a.workshops });   // jeder erkannte Workshop als eigene Pille
+  if (a.workshops.length && checkTypes(a.workshops)) rows.push({ label: 'Workshops übernommen', chips: a.workshops });   // jeder erkannte Workshop als eigene Pille
   const wk = rowEl('weekly');
   if (rowOn(wk) && a.weekly) {
     const day = wk.querySelector('[data-f="day"]'), time = wk.querySelector('[data-f="time"]');
