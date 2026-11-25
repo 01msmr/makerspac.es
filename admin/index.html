@@ -27,7 +27,7 @@
     <button id="refresh" hidden title="Aktuellen Stand neu von GitHub laden">↻</button>
     <span class="grow"></span>
     <button id="apply" hidden></button>
-    <a class="aux-link aux-header" href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link aux-header" href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a>
+    <a class="aux-link aux-header" href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link aux-header" href="/?overlay=changes" target="_blank" rel="noopener noreferrer" title="Letzte Änderungen an den Daten: Reiter „new“ im Overlay der Karte">Änderungen ↗</a>
     <a id="reset-app" href="reset.html?next=/admin/" title="Service Worker und Zwischenspeicher leeren, dann neu laden — Token bleibt erhalten">App zurücksetzen</a>
     <button id="logout" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button>
   </header>
@@ -76,7 +76,7 @@
       <p id="keys"><kbd>Esc</kbd> Änderungen verwerfen · <kbd>j</kbd> Website · <kbd>k</kbd> Endpoint/Kalender</p>
       <p id="status" role="status"></p>
       <div id="extra"></div>
-      <div id="foot-in"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-in" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout3" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></div>
+      <div id="foot-in"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="/?overlay=changes" target="_blank" rel="noopener noreferrer" title="Letzte Änderungen an den Daten: Reiter „new“ im Overlay der Karte">Änderungen ↗</a><a id="reset-app-in" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout3" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></div>
     </section>
     <section id="right">
       <div id="viewbar">
@@ -127,7 +127,7 @@
   <section id="inbox" hidden></section>
 
   <p id="done" hidden></p>
-  <footer id="foot"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="https://github.com/01msmr/makerspac.es/commits/main/loc-enrichment.json" target="_blank" rel="noopener noreferrer" title="Commits auf main, die Daten geändert haben (data: apply …)">Änderungen ↗</a><a id="reset-app-foot" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout2" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></footer>
+  <footer id="foot"><a class="aux-link " href="https://github.com/01msmr/makerspac.es/issues?q=is%3Aissue+is%3Aclosed+label%3Adata-update%2Cworkshop-data%2Cweekly-data" target="_blank" rel="noopener noreferrer" title="Geschlossene Vorschläge auf GitHub (übernommen = completed, abgelehnt = not planned)">Erledigt ↗</a><a class="aux-link " href="/?overlay=changes" target="_blank" rel="noopener noreferrer" title="Letzte Änderungen an den Daten: Reiter „new“ im Overlay der Karte">Änderungen ↗</a><a id="reset-app-foot" href="reset.html?next=/admin/">App zurücksetzen</a><button id="logout2" type="button" hidden title="Meldet dich ab und löscht den Token aus diesem Browser">abmelden</button></footer>
   <div id="toasts" aria-live="polite"></div>
   <script type="module" src="admin.js"></script>
 </body>

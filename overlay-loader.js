@@ -6,7 +6,7 @@
 let overlayModule = null;
 const loadOverlay = () => (overlayModule ??= import('./embed-overlay.js'));
 
-/** Öffnet das Overlay auf dem gewünschten Tab ('addspace' | 'embed' | 'about'); `editId`: Space direkt zum Bearbeiten wählen */
+/** Öffnet das Overlay auf dem gewünschten Tab ('addspace' | 'embed' | 'about' | 'changes'); `editId`: Space direkt zum Bearbeiten wählen */
 export async function openOverlayTab(tab, opts) {
   (await loadOverlay()).openOverlayTab(tab, opts);
 }
@@ -14,6 +14,13 @@ export async function openOverlayTab(tab, opts) {
 /** `/?edit=ID` (Link aus dem Admin, Reiter „Spaces“): Overlay direkt im Bearbeiten-Modus für diesen Space; Parameter wird entfernt */
 export async function openEditFromUrl() {
   const url = new URL(location.href);
+  // `/?overlay=changes` (Link „Änderungen“ aus dem Admin): Overlay direkt auf dem Reiter „new“; Parameter wird entfernt
+  if (url.searchParams.get('overlay') === 'changes') {
+    url.searchParams.delete('overlay');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+    openOverlayTab('changes');
+    return;
+  }
   const id = Number(url.searchParams.get('edit'));
   if (!url.searchParams.has('edit')) return;
   url.searchParams.delete('edit');
