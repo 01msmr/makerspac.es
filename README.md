@@ -12,7 +12,7 @@ Programmed and curated by Ulrich Maasmeier & AI.
 - **Live-Status** offen/geschlossen: SpaceAPI-Endpoints (Cron → `status.json`), dazu Adapter für Spaces ohne SpaceAPI; ein „offen“ gilt nur, wenn sein Zeitstempel jünger als 24 h ist (sonst „unbekannt“), „geschlossen“ bleibt — siehe [adr/010](adr/010-status-adapter-ohne-spaceapi.md)
 - **Bearbeiten** direkt im Popover (Stift → Edit-Overlay, vorbefüllt); mit Admin-Token wird das Korrektur-Issue direkt angelegt
 - **Reiter „new“**: letzte Änderungen nach Monaten (aus der Git-Historie, `data/changes.json`)
-- **Admin-Review** (`/admin/`, statisch, nur Fine-grained PAT): Reiter **Spaces** (ein Space = eine Karte mit allen Eigenschaften, Freitext-Erkennung, Rückgängig mit Formularzustand) plus Reiter je Art; mehrere Prüfer mit Rollen, Prüfpfad und „in Bearbeitung“ — [adr/006](adr/006-admin-review-ohne-backend.md), [adr/009](adr/009-admin-space-als-review-einheit.md)
+- **Admin-Review** (`/admin/`, statisch, nur Fine-grained PAT): **Spaces** (ein Space = eine Karte mit allen Eigenschaften, je Eigenschaft eigene Zeile samt Fundstellen, Freitext-Erkennung, „zurück“ mit Formularzustand; die früheren Reiter je Art sind ausgeblendet); mehrere Prüfer mit Rollen, Prüfpfad und „in Bearbeitung“ — [adr/006](adr/006-admin-review-ohne-backend.md), [adr/009](adr/009-admin-space-als-review-einheit.md)
 - **Daten-Pipeline** mit Crawlern (Workshops, Kalender, Weekly/Gründung, SpaceAPI-Directory) → Issues → Admin-Review → `apply-all-issues.yml` (1 Validierung, 1 Commit, 1 Deploy) — [adr/007](adr/007-bot-aenderungen-validieren-und-deployen.md)
 
 ---

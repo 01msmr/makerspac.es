@@ -127,6 +127,12 @@ Leerlaufzeit) werden per `import()` nachgeladen und stehen **nicht** in `modulep
 `container._tooltipScroll`). Sonst summieren sich Listener (war: 176 Scroll-Listener nach dem Laden, +1 je Render →
 ~43ms pro Scroll-Event, doppelte Eingabe-Latenz beim Löschen). Prüfen: Anzahl Aufrufe pro Event nach mehreren Renders.
 
+### Admin „Spaces“ — Stolperfallen
+- **Zeilen nie per DOM suchen:** `show()` merkt die Eigenschaftszeilen in `state.rows` (key → `{tr, number}`); `readRows`, `rowEl` und der Stale-Check nutzen nur diese Liste. Beleg-Tabellen liegen *innerhalb* der Zeilen und haben eigene `<tr>` (ein `querySelectorAll('tr')` löste „Vorschläge haben sich inzwischen geändert“ bei jeder Entscheidung aus).
+- **Scroll-Container ist `body`** (nicht `window`): Tests mit `document.body.scrollTop`; feste Leiste/Seitenfenster per `--bar-h`/`--sp-top` (`trackStickyOffsets`).
+- **Weekly und Gründung = zwei Eigenschaften, zwei Issues.** Alte kombinierte Issues nur gemeinsam/unverändert entscheiden (`planDecision`).
+- **Gestapelte PRs nie per Squash nacheinander mergen** (erzeugt Konflikte); vor jedem Merge `node --test 'tests/*.test.js'` UND CI-Check `validate` prüfen.
+
 ### Marker-Updates — Diff + Batch
 `updateMarkers()` in `search-filter.js`:
 - Diff-basiert: vergleicht `_visibleMarkerIds` (Set) mit neuen Locations → nur Deltas ändern
@@ -183,9 +189,11 @@ error-monitor.js    → Dev-Tool, Fehler-Overlay
 add-space-form.js   → Add-Space-Formular (GitHub-Issue-Submit, Geocoding)
 sw.js               → Service Worker (Cache-First / SWR; Daten-JSON Netz zuerst; `/admin/` ausgenommen)
 admin/              → Review-Seite für SpaceAPI-Issues (index.html, admin.js, admin-lib.js, admin.css; ADR-006)
-                       + Reiter „Spaces“ (Standard): spaces.js/css/spaces-lib.js, läuft in index.html (ein Space = eine Karte, alle Eigenschaften; ADR-009)
+                       + Reiter „Spaces“ (Standard): spaces.js/css/spaces-lib.js, läuft in index.html (ein Space = eine Karte, je Eigenschaft eine Zeile; ADR-009);
+                       Alt-Reiter (SpaceAPI/Workshops/Kalender/Weekly) per CSS ausgeblendet, Code in admin.js/admin-lib.js als „ALT-REITER“ markiert (Löschkandidat)
 tools/              → Crawler, Apply-Skripte (`apply-*-issues.js`, gemeinsamer Lauf `.github/workflows/apply-all-issues.yml`), Changelog-Bau;
-                       `tools/lib/status-adapters.js` + `status-freshness.js` = Status ohne SpaceAPI + Alters-Regel (ADR-010)
+                       `tools/lib/status-adapters.js` + `status-freshness.js` = Status ohne SpaceAPI + Alters-Regel (ADR-010);
+                       `tools/lib/crawl-original.js` = ursprünglicher Crawler-Fund eines im Admin geänderten Vorschlags (kein erneuter Vorschlag)
 docs/               → Vorlagen (z. B. `spaceapi-anfrage.md`: Mail an Spaces)
 generate-map-splits.js → Dev-Tool: erzeugt Karten-Splits (`npm run generate`)
 ```
