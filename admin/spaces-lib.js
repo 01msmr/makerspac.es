@@ -50,7 +50,7 @@ export function proposalValue(key, p) {
     case 'calendar': return p.events;
     case 'spaceapi': return p.endpoint;
     case 'weekly': return {
-      day: p.weekly === null ? 'none' : (p.weekly ? String(p.weekly.weekday) : ''),   // 'none' = „kein weekly mehr“
+      day: p.weekly === null ? 'none' : (p.weekly ? String(p.weekly.weekday) : ''),   // 'none' = „kein weekly“
       time: p.weekly?.time ? formatTime(p.weekly.time) : '',
       init: p.init !== undefined ? ymd(p.init) : '',
     };
@@ -101,7 +101,7 @@ export function validateValue(key, v, today = new Date().toISOString().slice(0, 
   if (key === 'workshops') return v.every(w => w in WORKSHOP_TYPES) ? null : 'Unbekannter Workshop-Typ';
   if (key === 'calendar' || key === 'spaceapi') return !v || (/^https?:\/\/\S+$/.test(v) && !v.includes('"')) ? null : 'Ungültige URL (http/https)';
   if (key === 'weekly') {
-    if (v.day === 'none') return v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today) ? 'Gründungsdatum ungültig' : null;   // „kein weekly mehr“: keine Uhrzeit nötig
+    if (v.day === 'none') return v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today) ? 'Gründungsdatum ungültig' : null;   // „kein weekly“: keine Uhrzeit nötig
     if (!!v.day !== !!v.time) return 'Wochentag und Uhrzeit nur zusammen';
     if (v.time && !/^\d{2}:(00|30)$/.test(v.time)) return 'Uhrzeit nur im 30-Minuten-Raster (:00 oder :30)';
     if (v.init && (!/^\d{4}-\d{2}-\d{2}$/.test(v.init) || v.init < '1900-01-01' || v.init > today)) return 'Gründungsdatum ungültig';
@@ -215,7 +215,7 @@ export function planDecision(space, rows, bodies = {}) {
   const actions = [], errors = [];
   for (let r of rows) {
     if (!r.enabled) continue;
-    // „kein weekly mehr“ ohne vorhandenes Treffen ist nichts zu tun
+    // „kein weekly“ ohne vorhandenes Treffen ist nichts zu tun
     if (r.key === 'weekly' && r.value.day === 'none' && !(space.current.weekly.day || space.current.weekly.time)) r = { ...r, value: { ...r.value, day: '', time: '' } };
     const f = FIELD[r.key], p = space.proposals[r.key], cur = space.current[r.key];
     const err = validateValue(r.key, r.value);

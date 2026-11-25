@@ -284,7 +284,7 @@ export function parseWeeklyIssue(issue) {
   if (!id || !js) return null;
   let v;
   try { v = JSON.parse(js[1]); } catch { return null; }
-  // `"weekly": null` = Treffen entfernen (vom Admin geschrieben: „kein weekly mehr“)
+  // `"weekly": null` = Treffen entfernen (vom Admin geschrieben: „kein weekly“)
   const weekly = v.weekly === null ? null : (v.weekly && Number.isInteger(v.weekly.weekday) ? { weekday: v.weekly.weekday, time: v.weekly.time } : undefined);
   const init = Number.isInteger(v['space.init']) ? v['space.init'] : undefined;
   if (weekly === undefined && init === undefined) return null;
@@ -314,7 +314,7 @@ export function parseWeeklyInput(text) {
   const out = {};
   for (const part of String(text).split(/[,;|]/).map(x => x.trim()).filter(Boolean)) {
     let m;
-    if (/^kein\s+weekly(?:\s+mehr)?$/i.test(part)) { out.weekly = null; continue; }   // Treffen entfernen
+    if (/^kein\s+weekly$/i.test(part)) { out.weekly = null; continue; }   // Treffen entfernen
     if ((m = part.match(/^([A-Za-zäöü]{2,10})\.?\s+(\d{1,2})[:.](\d{2})$/))) {
       const w = WEEKDAY_SHORT.findIndex(d => d.toLowerCase() === m[1].toLowerCase().slice(0, 2)) ;
       const long = WEEKDAY_NAMES.findIndex(d => d.toLowerCase() === m[1].toLowerCase());
