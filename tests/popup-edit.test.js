@@ -52,6 +52,12 @@ test('3b: CSS: gap links/rechts zurückgenommen (je 8 px), zum Lesezeichen genau
   assert.match(css, /\.popup-edit \+ \.popup-bookmark \{ margin-left: 1em; \}/);
 });
 
+test('3c: Touch-Trefferfläche des Stifts per Innenabstand, nicht per ::before/::after (die gehören der Microtip-Sprechblase)', () => {
+  const css = read('main-components.css');
+  assert.ok(!/\.popup-edit(?:\s*[+>~][^{]*)?::(?:before|after)/.test(css), '.popup-edit darf ::before/::after nicht überschreiben (Tooltip wurde auf Touch leer, 1 px breit)');
+  assert.match(css, /@media \(pointer: coarse\) \{[^}]*\.popup-edit \{[^}]*padding: 15px 16px 15px 0;[^}]*margin: -15px -24px -15px -8px;/);
+});
+
 test('4: Tooltip-Text in allen 7 Sprachen vorhanden', () => {
   const t = JSON.parse(read('lang.json')).tooltips.editSpace;
   for (const l of ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk']) assert.ok(t[l], `fehlt: ${l}`);
