@@ -16,15 +16,24 @@ let createLeafletIcon, AppConfig;
 before(async () => { const m = await import('../config.js'); createLeafletIcon = m.createLeafletIcon; AppConfig = m.default; });
 const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 
-test('1: Pin — Halo 150 px zentriert auf dem Pin-Körper, 1 px weißer Rand direkt im SVG, schwarzer Rand bleibt', () => {
+test('1: Pin — Halo 150 px (relativ zur Pin-Größe) zentriert auf dem Pin-Körper, 1 px weißer Rand direkt im SVG, schwarzer Rand bleibt', () => {
   const icon = createLeafletIcon('#0e9000');
   assert.match(icon.html, /<span class="pin-halo" style="width:150px;height:150px;left:-62.5px;top:-62.5px"><\/span>/);   // Mitte = (12,5 | 12,5)
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes
   assert.match(icon.html, /<path fill="#0e9000" stroke="#000" stroke-width="1"/);
   assert.ok(icon.html.indexOf('pin-halo') < icon.html.indexOf('<svg'), 'Halo liegt im DOM vor dem Pin');
   assert.deepEqual(icon.iconSize, [25, 41]);
-  const big = createLeafletIcon('#f00', 1.5);                                                                          // Hover-Icon: Halo bleibt auf dem Pin-Körper zentriert
-  assert.match(big.html, /left:-56.25px;top:-56.25px/);
+  // Halo relativ zur Pin-Größe: Durchmesser = 150 px × scale (Hover-Pin 1,5 → 225 px, Embed-Ziel 1,2 → 180 px), stets auf dem Pin-Körper zentriert
+  const big = createLeafletIcon('#f00', 1.5);
+  assert.match(big.html, /width:225px;height:225px;left:-93.75px;top:-93.75px/);
+  const target = createLeafletIcon('#f00', 1.2);
+  assert.match(target.html, /width:180px;height:180px;left:-75px;top:-75px/);
+  for (const sc of [1, 1.2, 1.5, 2]) {
+    const m = createLeafletIcon('#000', sc).html.match(/width:([\d.]+)px;height:\1px;left:(-?[\d.]+)px/);
+    const [w, left] = [Number(m[1]), Number(m[2])];
+    assert.ok(Math.abs(w / Math.round(25 * sc) - 6) < 0.15, `Halo/Pin-Breite ≈ 6 bei scale ${sc}`);
+    assert.ok(Math.abs(left + w / 2 - 12.5 * sc) < 0.01, `Halo-Mitte auf dem Pin-Körper bei scale ${sc}`);
+  }
 });
 
 test('2: CSS — Mitte 66 %, außen 0 %, linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {

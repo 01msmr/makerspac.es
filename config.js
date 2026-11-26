@@ -196,7 +196,7 @@ function escapeHtml(text) {
  * @param {number} [scale=1.0] - Skalierungsfaktor
  * @returns {L.DivIcon}
  */
-const HALO_SIZE = 150;   // Durchmesser des Pin-Halos in px (≈ 2,5× von 56)
+const HALO_SIZE = 150;   // Durchmesser des Pin-Halos in px für den Standard-Pin (scale 1,0 = 25 × 41 px); bei anderer Pin-Größe proportional (× scale)
 
 export function createLeafletIcon(color, scale = 1.0) {
   const w = Math.round(25 * scale);
@@ -210,7 +210,9 @@ export function createLeafletIcon(color, scale = 1.0) {
     `</svg>`;
   // Halo: 150-px-Kreis um den Pin-Körper, Mitte 66 % Deckung → außen 0 % (linearer Verlauf), siehe .pin-halo in main-layout.css;
   // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 0,8 s Einblenden
-  const halo = `<span class="pin-halo" style="width:${HALO_SIZE}px;height:${HALO_SIZE}px;left:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px;top:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px"></span>`;
+  const haloSize = +(HALO_SIZE * scale).toFixed(2);   // relativ zur Pin-Größe: Hover-Pin (1,5) → 225 px
+  const haloPos = +(12.5 * scale - haloSize / 2).toFixed(2);   // Mitte = Pin-Körper (12,5 | 12,5 im 25 × 41-Raster)
+  const halo = `<span class="pin-halo" style="width:${haloSize}px;height:${haloSize}px;left:${haloPos}px;top:${haloPos}px"></span>`;
   return L.divIcon({
     html: halo + svg,
     className: 'ms-marker-icon',
