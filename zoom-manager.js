@@ -1,6 +1,15 @@
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
-import { isMobileUI } from './layout-mode.js';
+import { isMobileUI, isTouch } from './layout-mode.js';
+
+/** Schlüssel im localStorage: Zoom-Anzeige bleibt über Neuladen hinaus an, bis sie entfernt wird */
+const ZOOM_INDICATOR_KEY = 'ms-zoom-indicator';
+
+/** „/zoom“ im Suchfeld schaltet die Zoom-Anzeige (pure) */
+export const isZoomCommand = value => /^\/zoom$/i.test(String(value ?? '').trim());
+
+/** Zoomstufe als Text: ganze Stufen ohne Nachkommastelle (Desktop), sonst eine Stelle (stufenloser Touch-Zoom) */
+export const formatZoom = z => (Number.isInteger(z) ? String(z) : (Math.round(z * 10) / 10).toString());
 
 // zoom-manager.js - Zentrale Zoom-Logik für die Karte
 // Enthält: Auto-Zoom, Three-Frame-Zoom, Zoom-Preview-Frames, Overlap-Detection
@@ -172,6 +181,9 @@ class ZoomManager {
     // Nutzer-Drag/-Zoom setzt _userMoved → Auto-Zoom pausiert bis Suchinteraktion
     map.on('dragstart', () => { this._userMoved = true; });
     map.on('zoomstart', () => { if (!this._isAutoZooming) this._userMoved = true; });
+
+    // Zoom-Anzeige war beim letzten Besuch an → wieder einschalten (Chip in der Suchleiste, s. SearchHeader.syncZoomChip)
+    try { if (localStorage.getItem(ZOOM_INDICATOR_KEY) === '1') this.activateZoomIndicator(); } catch { /* ohne Speicher: aus */ }
   }
 
   /** Setzt _userMoved zurück – aufgerufen wenn Searchbar fokussiert oder Text geändert */
@@ -667,12 +679,16 @@ class ZoomManager {
   activateZoomIndicator() {
     if (this.zoomIndicatorActive) return;
     this.zoomIndicatorActive = true;
-    this._createZoomIndicator();
-    this.zoomIndicator.style.display = 'block';
-    this.map.on('zoomend', this._updateZoomIndicator, this);
-    document.addEventListener('mousemove', this._moveZoomIndicator);
-    const nearbyHint = window.nearbySpacesManager?.hintElement;
-    if (nearbyHint) nearbyHint.style.display = 'none';
+    // Der Zeiger-Kreis folgt der Maus — auf Touch gibt es keinen Zeiger: dort zeigt nur der Chip (SearchHeader) die Stufe
+    if (!isTouch()) {
+      this._createZoomIndicator();
+      this.zoomIndicator.style.display = 'block';
+      this.map.on('zoomend', this._updateZoomIndicator, this);
+      document.addEventListener('mousemove', this._moveZoomIndicator);
+      const nearbyHint = window.nearbySpacesManager?.hintElement;
+      if (nearbyHint) nearbyHint.style.display = 'none';
+    }
+    this._announceZoomIndicator();
   }
 
   deactivateZoomIndicator() {
@@ -681,10 +697,17 @@ class ZoomManager {
     if (this.zoomIndicator) {
       this.zoomIndicator.style.display = 'none';
     }
-    this.map.off('zoomend', this._updateZoomIndicator, this);
-    document.removeEventListener('mousemove', this._moveZoomIndicator);
+    if (this._updateZoomIndicator) this.map.off('zoomend', this._updateZoomIndicator, this);   // ohne Handler würde Leaflet ALLE zoomend-Listener entfernen
+    if (this._moveZoomIndicator) document.removeEventListener('mousemove', this._moveZoomIndicator);
     const nearbyHint = window.nearbySpacesManager?.hintElement;
     if (nearbyHint) nearbyHint.style.display = '';
+    this._announceZoomIndicator();
+  }
+
+  /** Merkt den Zustand und meldet ihn (Chip „/zoom“ in der Suchleiste / Phone-Karte) */
+  _announceZoomIndicator() {
+    try { localStorage.setItem(ZOOM_INDICATOR_KEY, this.zoomIndicatorActive ? '1' : '0'); } catch { /* ohne Speicher: nur bis zum Neuladen */ }
+    document.dispatchEvent(new CustomEvent('zoomIndicatorChange', { detail: { active: this.zoomIndicatorActive } }));
   }
 
   _createZoomIndicator() {

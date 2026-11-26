@@ -12,6 +12,7 @@ import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
 import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
 import { isAdminCommand, openAdminTab } from './admin-shortcut.js';
+import { isZoomCommand, formatZoom } from './zoom-manager.js';
 
 const CONFIG = AppConfig;
 
@@ -75,6 +76,7 @@ class SearchHeader {
 
     this.initializeEventListeners();
     this.initializeAutocompleteAndPills();
+    this._bindZoomChip();
 
     this.searchFilter.onResultsChange((filtered, forZoom, idMatch) => {
       this.handleFilterResults(filtered, forZoom, idMatch);
@@ -122,6 +124,13 @@ class SearchHeader {
     this.searchBar.addEventListener('input', () => {
       // „/admin“: Admin-Review sofort in neuem Tab (wie „/demo“, ohne Enter). Geblockt → Text bleibt, Enter öffnet (s. u.)
       if (isAdminCommand(this.searchBar.value) && openAdminTab()) { this.clearSearch(); return; }
+      // „/zoom“: Zoom-Anzeige ein/aus (Chip „/zoom N“ in der Suchleiste bzw. in der Karte, bis er entfernt wird); Filter bleiben stehen
+      if (isZoomCommand(this.searchBar.value)) {
+        this.searchBar.value = '';
+        (this.zoomManager || window.zoomManager)?.toggleZoomIndicator();
+        this.handleSearchInput();
+        return;
+      }
       this.handleSearchInput();
     });
     this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
@@ -182,6 +191,35 @@ class SearchHeader {
         });
       });
     }
+  }
+
+  /** Chip „/zoom N“: Pseudo-Suchbegriff, solange die Zoom-Anzeige an ist (Suchleiste: Pill; Phone zusätzlich in der Karte) */
+  _bindZoomChip() {
+    document.addEventListener('zoomIndicatorChange', () => this.syncZoomChip());
+    this.map?.on('zoom zoomend', () => this.updateZoomChipText());
+    this.syncZoomChip();
+  }
+
+  /** @returns {string|null} Text des Chips oder null, wenn die Anzeige aus ist */
+  zoomChipText() {
+    const zm = this.zoomManager || window.zoomManager;
+    if (!zm?.zoomIndicatorActive || !this.map) return null;
+    return `/zoom ${formatZoom(this.map.getZoom())}`;
+  }
+
+  syncZoomChip() {
+    const zm = this.zoomManager || window.zoomManager;
+    const text = this.zoomChipText();
+    if (text) this.pillsManager?.setToolPill('tool-zoom', text, () => zm.deactivateZoomIndicator());
+    else this.pillsManager?.removeToolPill('tool-zoom');
+    this.renderMapTerms();
+  }
+
+  updateZoomChipText() {
+    const text = this.zoomChipText();
+    if (!text) return;
+    this.pillsManager?.updateToolPillText('tool-zoom', text);
+    this.mapTerms?.querySelectorAll('.map-term-tool').forEach(el => { el.textContent = text; });
   }
 
   /** Treffer-Zähler (Desktop/Tablet: Pille in der Zeile) und Karten-Status (Phone): Suchbegriffe löschen */
@@ -1116,6 +1154,19 @@ class SearchHeader {
       chip.textContent = text;
       return chip;
     }));
+    // Zoom-Anzeige an: Chip „/zoom N“ hinten; Tippen schaltet sie aus
+    const zoomText = this.zoomChipText();
+    if (zoomText) {
+      const chip = document.createElement('span');
+      chip.className = 'map-term map-term-tool';
+      chip.textContent = zoomText;
+      chip.setAttribute('role', 'button');
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        (this.zoomManager || window.zoomManager)?.deactivateZoomIndicator();
+      });
+      this.mapTerms.appendChild(chip);
+    }
   }
 
   updateSearchCounter(count) {

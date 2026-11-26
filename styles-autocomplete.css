@@ -179,6 +179,12 @@
   overflow: hidden; /* Verhindert, dass Text/X bei der Transformation überläuft */
 }
 
+/* Werkzeug-Pill „/zoom N“ (kein Filter): abgesetzt vom schwarzen Standard, Hover/Tippen entfernt sie wie jede Pill */
+.search-pill[data-type="tool"]:not(:hover) {
+  background: #1f4d7a;
+  font-family: monospace;
+}
+
 /* ✨ KORREKTUR: Roter Hover-Effekt (Löschen) */
 .search-pill:hover {
   background: #dd4444;

@@ -20,6 +20,8 @@ class SearchPillsManager {
     this.searchBar = searchBar;
     this.container = this.createContainer();
     this.pills = new Map();
+    /** Werkzeug-Pills (z. B. „/zoom“): sehen aus wie Pills, sind aber KEINE Filter — nicht in `pills`, lösen kein onChange aus, überleben clear() */
+    this.toolPills = new Map();
     this.onChangeCallback = null;
 
     this.initializeEventListeners();
@@ -109,8 +111,39 @@ class SearchPillsManager {
     }
   }
 
+  /**
+   * Zeigt eine Werkzeug-Pill (immer hinter den Filter-Pills). Klick entfernt sie über `onRemove`.
+   * @param {string} id
+   * @param {string} text
+   * @param {() => void} onRemove
+   */
+  setToolPill(id, text, onRemove) {
+    this.toolPills.set(id, { text, onRemove });
+    const el = this.container.querySelector(`[data-id="${id}"]`);
+    const label = el?.querySelector('.search-pill-text');
+    if (label) label.textContent = text;
+    this.render();
+    this.updateSearchBarPadding();
+  }
+
+  /** @param {string} id @param {string} text */
+  updateToolPillText(id, text) {
+    const tool = this.toolPills.get(id);
+    if (!tool || tool.text === text) return;
+    tool.text = text;
+    const label = this.container.querySelector(`[data-id="${id}"] .search-pill-text`);
+    if (label) label.textContent = text;
+  }
+
+  /** @param {string} id */
+  removeToolPill(id) {
+    if (!this.toolPills.delete(id)) return;
+    this.render();
+    this.updateSearchBarPadding();
+  }
+
   render() {
-    if (this.pills.size === 0) {
+    if (this.pills.size === 0 && this.toolPills.size === 0) {
       this.container.innerHTML = '';
       this.searchBar.classList.remove('has-pills');
       return;
@@ -120,7 +153,8 @@ class SearchPillsManager {
 
     // Remove DOM nodes for pills that no longer exist
     this.container.querySelectorAll('[data-id]').forEach(el => {
-      if (!this.pills.has(/** @type {HTMLElement} */ (el).dataset.id)) el.remove();
+      const elId = /** @type {HTMLElement} */ (el).dataset.id;
+      if (!this.pills.has(elId) && !this.toolPills.has(elId)) el.remove();
     });
 
     // Append only newly added pills (existing ones stay untouched)
@@ -151,10 +185,37 @@ class SearchPillsManager {
 
       this.container.appendChild(pillElement);
     });
+
+    // Werkzeug-Pills: anlegen, falls neu, und stets ans Ende rücken
+    this.toolPills.forEach((tool, id) => {
+      let el = /** @type {HTMLElement|null} */ (this.container.querySelector(`[data-id="${id}"]`));
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'search-pill';
+        el.dataset.id = id;
+        el.dataset.type = 'tool';
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', `Remove ${tool.text}`);
+        const textSpan = document.createElement('span');
+        textSpan.className = 'search-pill-text';
+        textSpan.textContent = tool.text;
+        const removeSpan = document.createElement('span');
+        removeSpan.className = 'search-pill-remove';
+        removeSpan.setAttribute('aria-hidden', 'true');
+        removeSpan.textContent = '×';
+        el.appendChild(textSpan);
+        el.appendChild(removeSpan);
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toolPills.get(id)?.onRemove();
+        });
+      }
+      this.container.appendChild(el);
+    });
   }
 
   updateSearchBarPadding() {
-    if (this.pills.size === 0) {
+    if (this.pills.size === 0 && this.toolPills.size === 0) {
       this.searchBar.style.removeProperty('--dynamic-pill-padding');
       this.searchBar.classList.remove('has-pills');
       return;
@@ -223,7 +284,7 @@ class SearchPillsManager {
     });
 
     const resizeObserver = new ResizeObserver(() => {
-      if (this.pills.size > 0) {
+      if (this.pills.size + this.toolPills.size > 0) {
         this.updateSearchBarPadding();
       }
     });

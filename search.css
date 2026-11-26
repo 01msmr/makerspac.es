@@ -1490,6 +1490,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Zoom-Chip „/zoom N“ (Werkzeug, kein Suchbegriff): antippbar, auch wenn .map-status sonst keine Klicks annimmt */
+  .map-term-tool { background: #1f4d7a; font-family: monospace; pointer-events: auto; cursor: pointer; }
+  .map-term-tool::after { content: ' ×'; opacity: .7; }
   .map-status:has(.map-counter.is-clearable) { pointer-events: auto; cursor: pointer; }
   .map-counter {
     display: flex;
