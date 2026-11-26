@@ -2112,12 +2112,14 @@ a#titleurl:hover h3.space-unknown .fas {
 
 #zoom-indicator {
   position: fixed;
-  width: 26px;
+  display: none;
+  min-width: 26px;
   height: 26px;
+  padding: 0 6px;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  border-radius: 50%;
-  display: flex;
+  border-radius: 13px;                 /* Kreis bei ganzen Stufen, Pille bei „14.6“ */
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -2125,10 +2127,14 @@ a#titleurl:hover h3.space-unknown .fas {
   font-weight: bold;
   pointer-events: none;
   z-index: 9999;
-  transform: translate(50%, 50%);
+  transform: translate(50%, 50%);      /* Maus: rechts unten vom Zeiger */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   font-family: monospace;
   user-select: none;
+}
+/* Touch: über dem letzten Berührpunkt, damit der Finger die Zahl nicht verdeckt */
+#zoom-indicator[data-pointer="touch"] {
+  transform: translate(-50%, calc(-100% - 36px));
 }
 
 

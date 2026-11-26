@@ -64,10 +64,21 @@ test('5: Werkzeug-Pills sind keine Filter: eigene Map, kein onChange, überstehe
   assert.ok(!clear.includes('toolPills'), 'clear() lässt Werkzeug-Pills stehen');
 });
 
-test('6: ZoomManager: Zeiger-Kreis nur ohne Touch, Event + Merken, off() nur mit Handler', () => {
+test('6: ZoomManager: Zahl am Mauszeiger (Desktop) bzw. letzten Berührpunkt (Touch), nur für die Sitzung', () => {
   const zm = read('zoom-manager.js');
-  assert.match(zm, /if \(!isTouch\(\)\) \{\s*this\._createZoomIndicator\(\)/);
+  assert.match(zm, /addEventListener\('mousemove', this\._moveZoomIndicator\)/);
+  assert.match(zm, /addEventListener\('touchstart', this\._touchZoomIndicator/);
+  assert.match(zm, /addEventListener\('touchmove', this\._touchZoomIndicator/);
+  assert.match(zm, /Date\.now\(\) - this\._lastTouchTime < 800/);   // Kompatibilitäts-Mausereignisse nach Touch ignorieren
   assert.match(zm, /new CustomEvent\('zoomIndicatorChange'/);
-  assert.match(zm, /ms-zoom-indicator/);
-  assert.match(zm, /if \(this\._updateZoomIndicator\) this\.map\.off\('zoomend'/);
+  assert.ok(!/localStorage/.test(zm), 'nicht gespeichert: gilt nur für die aktuelle Sitzung');
+  assert.match(zm, /if \(this\._updateZoomIndicator\) this\.map\.off\('zoom zoomend'/);   // off() nur mit Handler
+  assert.match(read('main-components.css'), /#zoom-indicator\[data-pointer="touch"\] \{\s*transform: translate\(-50%, calc\(-100% - 36px\)\)/);
+});
+
+test('7: Chip ist nur „/zoom“ (die Zahl steht am Zeiger), Suchzeile nicht nötig', () => {
+  const sh = read('search-header.js');
+  assert.match(sh, /setToolPill\('tool-zoom', '\/zoom'/);
+  assert.match(sh, /chip\.textContent = '\/zoom'/);
+  assert.ok(!sh.includes('updateZoomChipText'), 'kein Live-Text im Chip');
 });

@@ -2,9 +2,6 @@ import AppConfig from './config.js';
 import { appContext } from './app-context.js';
 import { isMobileUI, isTouch } from './layout-mode.js';
 
-/** Schlüssel im localStorage: Zoom-Anzeige bleibt über Neuladen hinaus an, bis sie entfernt wird */
-const ZOOM_INDICATOR_KEY = 'ms-zoom-indicator';
-
 /** „/zoom“ im Suchfeld schaltet die Zoom-Anzeige (pure) */
 export const isZoomCommand = value => /^\/zoom$/i.test(String(value ?? '').trim());
 
@@ -181,9 +178,6 @@ class ZoomManager {
     // Nutzer-Drag/-Zoom setzt _userMoved → Auto-Zoom pausiert bis Suchinteraktion
     map.on('dragstart', () => { this._userMoved = true; });
     map.on('zoomstart', () => { if (!this._isAutoZooming) this._userMoved = true; });
-
-    // Zoom-Anzeige war beim letzten Besuch an → wieder einschalten (Chip in der Suchleiste, s. SearchHeader.syncZoomChip)
-    try { if (localStorage.getItem(ZOOM_INDICATOR_KEY) === '1') this.activateZoomIndicator(); } catch { /* ohne Speicher: aus */ }
   }
 
   /** Setzt _userMoved zurück – aufgerufen wenn Searchbar fokussiert oder Text geändert */
@@ -679,15 +673,19 @@ class ZoomManager {
   activateZoomIndicator() {
     if (this.zoomIndicatorActive) return;
     this.zoomIndicatorActive = true;
-    // Der Zeiger-Kreis folgt der Maus — auf Touch gibt es keinen Zeiger: dort zeigt nur der Chip (SearchHeader) die Stufe
-    if (!isTouch()) {
-      this._createZoomIndicator();
-      this.zoomIndicator.style.display = 'block';
-      this.map.on('zoomend', this._updateZoomIndicator, this);
-      document.addEventListener('mousemove', this._moveZoomIndicator);
-      const nearbyHint = window.nearbySpacesManager?.hintElement;
-      if (nearbyHint) nearbyHint.style.display = 'none';
-    }
+    this._createZoomIndicator();
+    // Start in der Kartenmitte, bis die Maus bewegt bzw. die Karte berührt wird
+    const r = this.map.getContainer().getBoundingClientRect();
+    this._placeZoomIndicator(r.left + r.width / 2, r.top + r.height / 2, 'mouse');
+    this._updateZoomIndicator();
+    this.zoomIndicator.style.display = 'flex';
+    this.map.on('zoom zoomend', this._updateZoomIndicator, this);
+    document.addEventListener('mousemove', this._moveZoomIndicator);
+    const container = this.map.getContainer();
+    container.addEventListener('touchstart', this._touchZoomIndicator, { passive: true, capture: true });
+    container.addEventListener('touchmove', this._touchZoomIndicator, { passive: true, capture: true });
+    const nearbyHint = window.nearbySpacesManager?.hintElement;
+    if (nearbyHint) nearbyHint.style.display = 'none';
     this._announceZoomIndicator();
   }
 
@@ -697,34 +695,60 @@ class ZoomManager {
     if (this.zoomIndicator) {
       this.zoomIndicator.style.display = 'none';
     }
-    if (this._updateZoomIndicator) this.map.off('zoomend', this._updateZoomIndicator, this);   // ohne Handler würde Leaflet ALLE zoomend-Listener entfernen
+    if (this._updateZoomIndicator) this.map.off('zoom zoomend', this._updateZoomIndicator, this);   // ohne Handler würde Leaflet ALLE Listener dieser Events entfernen
     if (this._moveZoomIndicator) document.removeEventListener('mousemove', this._moveZoomIndicator);
+    if (this._touchZoomIndicator) {
+      const container = this.map.getContainer();
+      container.removeEventListener('touchstart', this._touchZoomIndicator, { capture: true });
+      container.removeEventListener('touchmove', this._touchZoomIndicator, { capture: true });
+    }
     const nearbyHint = window.nearbySpacesManager?.hintElement;
     if (nearbyHint) nearbyHint.style.display = '';
     this._announceZoomIndicator();
   }
 
-  /** Merkt den Zustand und meldet ihn (Chip „/zoom“ in der Suchleiste / Phone-Karte) */
+  /** Meldet den Zustand (Chip „/zoom“ in der Suchleiste / Phone-Karte). Bewusst nicht gespeichert: gilt nur für die aktuelle Sitzung. */
   _announceZoomIndicator() {
-    try { localStorage.setItem(ZOOM_INDICATOR_KEY, this.zoomIndicatorActive ? '1' : '0'); } catch { /* ohne Speicher: nur bis zum Neuladen */ }
     document.dispatchEvent(new CustomEvent('zoomIndicatorChange', { detail: { active: this.zoomIndicatorActive } }));
+  }
+
+  /**
+   * Setzt die Anzeige an einen Punkt (Viewport-Koordinaten). Maus: rechts unten vom Zeiger; Touch: über dem Berührpunkt,
+   * damit der Finger sie nicht verdeckt.
+   * @param {number} x @param {number} y @param {'mouse'|'touch'} pointer
+   */
+  _placeZoomIndicator(x, y, pointer) {
+    this.zoomIndicator.dataset.pointer = pointer;
+    this.zoomIndicator.style.left = x + 'px';
+    this.zoomIndicator.style.top = y + 'px';
   }
 
   _createZoomIndicator() {
     if (this.zoomIndicator) return;
     this.zoomIndicator = document.createElement('div');
     this.zoomIndicator.id = 'zoom-indicator';
-    this.zoomIndicator.textContent = Math.round(this.map.getZoom());
     document.body.appendChild(this.zoomIndicator);
 
+    // Desktop: dem Mauszeiger folgen. Nach einer Berührung feuern Browser Kompatibilitäts-Mausereignisse — kurz ignorieren
+    this._lastTouchTime = 0;
     this._moveZoomIndicator = (e) => {
-      const offset = -3;
-      this.zoomIndicator.style.left = (e.clientX + offset) + 'px';
-      this.zoomIndicator.style.top = (e.clientY + offset) + 'px';
+      if (Date.now() - this._lastTouchTime < 800) return;
+      this._placeZoomIndicator(e.clientX - 3, e.clientY - 3, 'mouse');
     };
 
+    // Touch: letzter Berührpunkt auf der Karte (bei zwei Fingern, z. B. Pinch-Zoom: deren Mitte)
+    this._touchZoomIndicator = (e) => {
+      const ts = e.touches;
+      if (!ts || ts.length === 0) return;
+      let x = 0, y = 0;
+      for (const t of ts) { x += t.clientX; y += t.clientY; }
+      this._lastTouchTime = Date.now();
+      this._placeZoomIndicator(x / ts.length, y / ts.length, 'touch');
+    };
+
+    // Desktop: ganze Stufen; stufenloser Touch-Zoom: eine Nachkommastelle
     this._updateZoomIndicator = () => {
-      this.zoomIndicator.textContent = Math.round(this.map.getZoom());
+      this.zoomIndicator.textContent = formatZoom(this.map.getZoom());
     };
   }
 
