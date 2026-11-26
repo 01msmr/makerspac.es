@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 80 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 220 px, 80 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,11 +16,11 @@ let createLeafletIcon, AppConfig;
 before(async () => { const m = await import('../config.js'); createLeafletIcon = m.createLeafletIcon; AppConfig = m.default; });
 const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 
-test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 165 px, zentriert auf dem Pin-Körper; 1 px weißer Rand, schwarzer Rand bleibt', () => {
+test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 220 px, zentriert auf dem Pin-Körper; 1 px weißer Rand, schwarzer Rand bleibt', () => {
   const icon = createLeafletIcon('#0e9000');
-  // Kreis + Verlauf: Radius 82,5 (= 165 px / 2 bei scale 1), Mitte (12,5 | 12,5), Verlauf in Nutzerkoordinaten, ohne Maus-Treffer
-  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="82.5"><stop class="pin-halo-in" offset="0"\/><stop class="pin-halo-out" offset="1"\/><\/radialGradient>/);
-  assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="82.5" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
+  // Kreis + Verlauf: Radius 110 (= 220 px / 2 bei scale 1), Mitte (12,5 | 12,5), Verlauf in Nutzerkoordinaten, ohne Maus-Treffer
+  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="110"><stop class="pin-halo-in" offset="0"\/><stop class="pin-halo-out" offset="1"\/><\/radialGradient>/);
+  assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="110" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
   assert.ok(!/<span/.test(icon.html), 'kein span mit z-index:-1 mehr (auf iOS-Safari nicht sichtbar)');
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes
   assert.match(icon.html, /<path fill="#0e9000" stroke="#000" stroke-width="1"/);
@@ -29,10 +29,10 @@ test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 165 px, zentriert
   // Verlauf-IDs eindeutig je Pin
   const ids = new Set([createLeafletIcon('#000'), createLeafletIcon('#000'), createLeafletIcon('#000')].map(i => i.html.match(/id="(pin-halo-g\d+)"/)[1]));
   assert.equal(ids.size, 3);
-  // Durchmesser fest 165 px, unabhängig von der Pin-Größe: Radius in Pin-Einheiten × scale = 82,5 px
+  // Durchmesser fest 220 px, unabhängig von der Pin-Größe: Radius in Pin-Einheiten × scale = 110 px
   for (const sc of [1, 1.2, 1.5, 2]) {
     const r = Number(createLeafletIcon('#000', sc).html.match(/<circle class="pin-halo" cx="12.5" cy="12.5" r="([\d.]+)"/)[1]);
-    assert.ok(Math.abs(r * sc - 82.5) < 0.01, `Halo-Durchmesser 165 px bei scale ${sc}`);
+    assert.ok(Math.abs(r * sc - 110) < 0.01, `Halo-Durchmesser 220 px bei scale ${sc}`);
   }
 });
 

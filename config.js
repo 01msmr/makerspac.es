@@ -198,7 +198,7 @@ function escapeHtml(text) {
  * @param {number} [pinOpacity=1] - Deckkraft des Pins (ohne Halo); App-Pins: AppConfig.settings.pinOpacity
  * @returns {L.DivIcon}
  */
-const HALO_SIZE = 165;   // Durchmesser des Pin-Halos in px — FEST, unabhängig von der Pin-Größe (auch am Hover-/Ziel-Pin)
+const HALO_SIZE = 220;   // Durchmesser des Pin-Halos in px — FEST, unabhängig von der Pin-Größe (auch am Hover-/Ziel-Pin)
 
 let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
 
