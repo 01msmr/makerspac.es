@@ -46,8 +46,10 @@ test('3: editable mit Weekly: Stift steht in der Titelzeile (vor der Weekly-Zell
   assert.ok(!html.includes('popup-meta-row'));
 });
 
-test('3b: CSS: ≥ 1 em Abstand zwischen Stift und Lesezeichen', () => {
-  assert.match(read('main-components.css'), /\.popup-edit \+ \.popup-bookmark \{ margin-left: 1em; \}/);
+test('3b: CSS: gap links/rechts zurückgenommen (je 8 px), zum Lesezeichen genau 1 em', () => {
+  const css = read('main-components.css');
+  assert.match(css, /\.popup-edit \{[^}]*margin: 0 -8px;/);
+  assert.match(css, /\.popup-edit \+ \.popup-bookmark \{ margin-left: 1em; \}/);
 });
 
 test('4: Tooltip-Text in allen 7 Sprachen vorhanden', () => {

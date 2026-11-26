@@ -678,11 +678,11 @@ a#titleurl:hover h3.space-unknown .fas {
   gap: 8px;
 }
 
-/* Stift „Eintrag bearbeiten“: 1. Zeile, direkt hinter dem Namen-Link. Zum Lesezeichen mindestens eine Geviertstrich-Länge (1 em) Abstand
-   (zusätzlich zum gap der Zeile; das Lesezeichen hat 16 px Schrift → 1 em = 16 px). */
+/* Stift „Eintrag bearbeiten“: 1. Zeile, direkt hinter dem Namen-Link. Links und rechts ist der gap der Zeile (8 px) zurückgenommen
+   (margin 0 -8px): der Stift sitzt am Namen; zum Lesezeichen bleibt genau eine Geviertstrich-Länge (1 em = 16 px, Schrift des Lesezeichens). */
 .popup-edit {
   flex: none;
-  margin: 0;
+  margin: 0 -8px;
   padding: 0;
   width: 16px;
   border: 0;
@@ -698,7 +698,7 @@ a#titleurl:hover h3.space-unknown .fas {
 .popup-edit + .popup-bookmark { margin-left: 1em; }
 @media (pointer: coarse) {
   .popup-edit { position: relative; }
-  .popup-edit::after { content: ''; position: absolute; inset: -15px -15px -15px -8px; }   /* Trefferfläche ≥ 44 px; links schmaler, um den Namen-Link nicht zu überdecken */
+  .popup-edit::after { content: ''; position: absolute; inset: -15px -15px -15px 0; }   /* Trefferfläche: oben/unten/rechts erweitert; links bündig, um den Namen-Link nicht zu überdecken */
 }
 
 .popup-weekly {
