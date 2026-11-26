@@ -74,7 +74,7 @@ body {
 }
 
 /* Pin-Halo: 150-px-Kreis hinter dem Pin, Mitte 75 % Deckung → außen 0 % (linear), hell im Light-, dunkel im Dark Mode.
-   Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 1,5 s ein, bei niedrigem Zoom zügig aus. */
+   Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 0,8 s ein, bei niedrigem Zoom zügig aus. */
 :root { --pin-halo-rgb: 191 191 191; }
 @media (prefers-color-scheme: dark) { :root { --pin-halo-rgb: 64 64 64; } }
 .ms-marker-icon .pin-halo {
@@ -90,7 +90,7 @@ body {
 .halo-on .ms-marker-icon .pin-halo {
   opacity: 1;
   visibility: visible;
-  transition: opacity 1.5s ease-out, visibility 0s;
+  transition: opacity .8s ease-out, visibility 0s;
 }
 @media (prefers-reduced-motion: reduce) {
   .ms-marker-icon .pin-halo, .halo-on .ms-marker-icon .pin-halo { transition: none; }
