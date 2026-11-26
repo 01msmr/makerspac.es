@@ -224,7 +224,7 @@ await appContext.waitFor('data');  // Blockiert bis locations.json geladen
 Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindungen bevorzugt über `appContext` oder direkte Instanz-Referenzen in `main.js`.
 
 ### Pin-Halo & Outline
-- `createLeafletIcon` (config.js) setzt vor das Pin-SVG ein `<span class="pin-halo">` (150 px für den Standard-Pin, **proportional zur Pin-Größe**: Durchmesser = 150 px × `scale`, Hover-Pin 1,5 → 225 px; zentriert auf dem Pin-Körper) und zeichnet im SVG eine 1 px weiße Kontur (3-px-Weiß-Unterlage unter dem 1-px-Schwarzstrich).
+- `createLeafletIcon` (config.js) setzt vor das Pin-SVG ein `<span class="pin-halo">` (165 px für den Standard-Pin, **proportional zur Pin-Größe**: Durchmesser = 165 px × `scale`, Hover-Pin 1,5 → 247,5 px; zentriert auf dem Pin-Körper) und zeichnet im SVG eine 1 px weiße Kontur (3-px-Weiß-Unterlage unter dem 1-px-Schwarzstrich).
 - CSS (`main-layout.css`): `radial-gradient` 66 % → 0 % in `--pin-halo-rgb` (hell `191 191 191` = 25 % Schwarz, dunkel `64 64 64` = 75 % Schwarz). Sichtbar nur mit Klasse `.halo-on` am Karten-Container; Einblenden 0,8 s, Ausblenden 0,4 s; `prefers-reduced-motion` ohne Übergang.
 - `marker-manager.js` (`initMarkerManager`) schaltet `.halo-on` bei `zoomend` anhand `AppConfig.settings.haloMinZoom` (13). Nur einzelne Pins haben einen Halo, Cluster (`marker-cluster`-Icons) nicht.
 
