@@ -5,6 +5,9 @@ import { isMobileUI, isTouch } from './layout-mode.js';
 /** „/zoom“ im Suchfeld schaltet die Zoom-Anzeige (pure) */
 export const isZoomCommand = value => /^\/zoom$/i.test(String(value ?? '').trim());
 
+/** Der Nutzer tippt „/zoom“ gerade (ab „/“): solange darf die Suche (und der Auto-Zoom) nicht anspringen */
+export const isZoomCommandPrefix = value => /^\/(z(o(o(m)?)?)?)?$/i.test(String(value ?? '').trim());
+
 /** Zoomstufe als Text: ganze Stufen ohne Nachkommastelle (Desktop), sonst eine Stelle (stufenloser Touch-Zoom) */
 export const formatZoom = z => (Number.isInteger(z) ? String(z) : (Math.round(z * 10) / 10).toString());
 

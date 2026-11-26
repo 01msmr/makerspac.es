@@ -12,7 +12,7 @@ import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
 import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
 import { isAdminCommand, openAdminTab } from './admin-shortcut.js';
-import { isZoomCommand } from './zoom-manager.js';
+import { isZoomCommand, isZoomCommandPrefix } from './zoom-manager.js';
 
 const CONFIG = AppConfig;
 
@@ -124,16 +124,21 @@ class SearchHeader {
     this.searchBar.addEventListener('input', () => {
       // „/admin“: Admin-Review sofort in neuem Tab (wie „/demo“, ohne Enter). Geblockt → Text bleibt, Enter öffnet (s. u.)
       if (isAdminCommand(this.searchBar.value) && openAdminTab()) { this.clearSearch(); return; }
-      // „/zoom“: Zoom-Anzeige ein/aus (Zahl am Mauszeiger/Berührpunkt, Chip „/zoom“ in Suchleiste bzw. Karte, bis er entfernt wird); Filter bleiben stehen
-      if (isZoomCommand(this.searchBar.value)) {
-        this.searchBar.value = '';
+      // „/zoom“: Zoom-Anzeige ein/aus (Zahl am Mauszeiger/Berührpunkt, Chip „zoom“ in Suchleiste bzw. Karte, bis er entfernt wird).
+      // Beim Tippen („/“, „/z“, …) und beim Absenden bleibt die Suche unberührt: kein Filter, kein Auto-Zoom (die Karte bleibt, wo sie ist).
+      const value = this.searchBar.value;
+      if (isZoomCommand(value)) {
+        this.searchBar.value = this._valueBeforeCommand ?? '';
         (this.zoomManager || window.zoomManager)?.toggleZoomIndicator();
-        this.handleSearchInput();
+        // Phone: das Filter-Pane deckt sonst die ganze Karte ab (Pins und Anzeige lägen dahinter)
+        if (isPhone()) window.mobileFilterUI?.close?.();
         return;
       }
+      if (isZoomCommandPrefix(value)) return;
+      this._valueBeforeCommand = value;
       this.handleSearchInput();
     });
-    this.searchBar.addEventListener('focus', () => this.handleSearchFocus());
+    this.searchBar.addEventListener('focus', () => { this._valueBeforeCommand = this.searchBar.value; this.handleSearchFocus(); });
     this.searchBar.addEventListener('blur', () => this.handleSearchBlur());
 
     // Filter-Button: Blur soll Bar nicht kollabieren
@@ -193,7 +198,7 @@ class SearchHeader {
     }
   }
 
-  /** Chip „/zoom“: Pseudo-Suchbegriff, solange die Zoom-Anzeige an ist (Suchleiste: Pill; Phone zusätzlich in der Karte).
+  /** Chip „zoom“: Pseudo-Suchbegriff, solange die Zoom-Anzeige an ist (Suchleiste: Pill; Phone zusätzlich in der Karte).
    *  Die Zahl selbst steht am Mauszeiger bzw. am letzten Berührpunkt (ZoomManager), nicht im Chip: die Suchzeile ist nicht immer sichtbar. */
   _bindZoomChip() {
     document.addEventListener('zoomIndicatorChange', () => this.syncZoomChip());
@@ -207,7 +212,7 @@ class SearchHeader {
 
   syncZoomChip() {
     const zm = this.zoomManager || window.zoomManager;
-    if (this.isZoomIndicatorActive()) this.pillsManager?.setToolPill('tool-zoom', '/zoom', () => zm.deactivateZoomIndicator());
+    if (this.isZoomIndicatorActive()) this.pillsManager?.setToolPill('tool-zoom', 'zoom', () => zm.deactivateZoomIndicator());
     else this.pillsManager?.removeToolPill('tool-zoom');
     this.renderMapTerms();
   }
@@ -1148,7 +1153,7 @@ class SearchHeader {
     if (this.isZoomIndicatorActive()) {
       const chip = document.createElement('span');
       chip.className = 'map-term map-term-tool';
-      chip.textContent = '/zoom';
+      chip.textContent = 'zoom';
       chip.setAttribute('role', 'button');
       chip.addEventListener('click', (e) => {
         e.stopPropagation();
