@@ -198,23 +198,30 @@ function escapeHtml(text) {
  */
 const HALO_SIZE = 165;   // Durchmesser des Pin-Halos in px — FEST, unabhängig von der Pin-Größe (auch am Hover-/Ziel-Pin)
 
+let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
+
 export function createLeafletIcon(color, scale = 1.0) {
   const w = Math.round(25 * scale);
   const h = Math.round(41 * scale);
   const PIN = 'M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z';
+  // Halo: fester Kreis (HALO_SIZE px, unabhängig von der Pin-Größe) um den Pin-Körper, Mitte 66 % Deckung → außen 0 % (linearer Verlauf,
+  // gleiche Farbe). Als Kreis mit Radialverlauf IM Pin-SVG (liegt vor dem Pin im Quelltext = dahinter): kein z-index:-1, keine CSS-Farb-
+  // Funktion im Verlauf, kein visibility-Übergang — das war auf iOS-Safari nicht zu sehen. Farbe/Deckkraft: .pin-halo-in/-out in main-layout.css;
+  // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 0,8 s Einblenden.
+  const haloR = +(HALO_SIZE / 2 / scale).toFixed(3);   // Radius in Pin-Einheiten (viewBox 25 × 41): × scale ergibt HALO_SIZE / 2 px
+  const gid = `pin-halo-g${haloSeq++}`;
+  const halo = `<defs><radialGradient id="${gid}" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="${haloR}">` +
+    `<stop class="pin-halo-in" offset="0"/><stop class="pin-halo-out" offset="1"/></radialGradient></defs>` +
+    `<circle class="pin-halo" cx="12.5" cy="12.5" r="${haloR}" fill="url(#${gid})" pointer-events="none"/>`;
   // Pin: 1 px weißer Rand (direkt im Symbol, außerhalb des schwarzen 1-px-Rands) → löst den Pin von dunklen/bunten Kartenflächen
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
+    halo +
     `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +
     `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
     `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
     `</svg>`;
-  // Halo: fester 165-px-Kreis um den Pin-Körper, Mitte 66 % Deckung → außen 0 % (linearer Verlauf), siehe .pin-halo in main-layout.css;
-  // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 0,8 s Einblenden
-  const haloSize = HALO_SIZE;   // fest: gleicher Durchmesser für jede Pin-Größe
-  const haloPos = +(12.5 * scale - haloSize / 2).toFixed(2);   // Mitte = Pin-Körper (12,5 | 12,5 im 25 × 41-Raster)
-  const halo = `<span class="pin-halo" style="width:${haloSize}px;height:${haloSize}px;left:${haloPos}px;top:${haloPos}px"></span>`;
   return L.divIcon({
-    html: halo + svg,
+    html: svg,
     className: 'ms-marker-icon',
     iconSize: [w, h],
     iconAnchor: [w / 2, h],

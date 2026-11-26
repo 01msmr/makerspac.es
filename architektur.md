@@ -224,8 +224,8 @@ await appContext.waitFor('data');  // Blockiert bis locations.json geladen
 Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindungen bevorzugt über `appContext` oder direkte Instanz-Referenzen in `main.js`.
 
 ### Pin-Halo & Outline
-- `createLeafletIcon` (config.js) setzt vor das Pin-SVG ein `<span class="pin-halo">` (**fest 165 px**, unabhängig von der Pin-Größe (`scale`: Standard 1,0 · Embed-Ziel 1,2 · Hover 1,5); zentriert auf dem Pin-Körper) und zeichnet im SVG eine 1 px weiße Kontur (3-px-Weiß-Unterlage unter dem 1-px-Schwarzstrich).
-- CSS (`main-layout.css`): `radial-gradient` 66 % → 0 % in `--pin-halo-rgb` (hell `191 191 191` = 25 % Schwarz, dunkel `64 64 64` = 75 % Schwarz). Sichtbar nur mit Klasse `.halo-on` am Karten-Container; Einblenden 0,8 s, Ausblenden 0,4 s; `prefers-reduced-motion` ohne Übergang.
+- `createLeafletIcon` (config.js) zeichnet im Pin-SVG **vor** dem Pin einen Kreis `<circle class="pin-halo">` mit `<radialGradient>` (**fest 165 px**, unabhängig von der Pin-Größe `scale`: Radius in Pin-Einheiten = 82,5 / scale; zentriert auf dem Pin-Körper; eindeutige Gradient-ID je Pin `pin-halo-gN`; `pointer-events="none"`) und eine 1 px weiße Kontur (3-px-Weiß-Unterlage unter dem 1-px-Schwarzstrich). **Warum SVG statt CSS-`span`:** der frühere `span` mit `z-index:-1`, `rgb(var(…) / .66)` im Verlauf und `visibility`-Übergang war auf iOS-Safari nicht zu sehen (Marker haben `will-change: transform`) — der SVG-Kreis braucht nichts davon.
+- CSS (`main-layout.css`): Stopp-Farben `.pin-halo-in` (Deckkraft 66 %) / `.pin-halo-out` (0 %) in `--pin-halo-color` (hell `rgb(191,191,191)` = 25 % Schwarz, dunkel `rgb(64,64,64)` = 25 % Weiß). Sichtbar nur mit Klasse `.halo-on` am Karten-Container (Opacity-Übergang); Einblenden 0,8 s, Ausblenden 0,4 s; `prefers-reduced-motion` ohne Übergang.
 - `marker-manager.js` (`initMarkerManager`) schaltet `.halo-on` bei `zoomend` anhand `AppConfig.settings.haloMinZoom` (13). Nur einzelne Pins haben einen Halo, Cluster (`marker-cluster`-Icons) nicht.
 
 ### Connection Line (Dropdown ↔ Marker)

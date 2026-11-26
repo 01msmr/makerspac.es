@@ -73,24 +73,21 @@ body {
   border: none !important;
 }
 
-/* Pin-Halo: fester 165-px-Kreis (unabhängig von der Pin-Größe) hinter dem Pin, Mitte 66 % Deckung → außen 0 % (linear), hell im Light-, dunkel im Dark Mode.
-   Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 0,8 s ein, bei niedrigem Zoom zügig aus. */
-:root { --pin-halo-rgb: 191 191 191; }
-@media (prefers-color-scheme: dark) { :root { --pin-halo-rgb: 64 64 64; } }
+/* Pin-Halo: Kreis mit Radialverlauf im Pin-SVG (config.js createLeafletIcon), fest 165 px, Mitte 66 % Deckung → außen 0 % in 25 % Grau
+   (hell im Light-, dunkel im Dark Mode). Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 0,8 s ein,
+   bei niedrigem Zoom zügig aus. */
+:root { --pin-halo-color: rgb(191, 191, 191); }
+@media (prefers-color-scheme: dark) { :root { --pin-halo-color: rgb(64, 64, 64); } }
+.pin-halo-in  { stop-color: var(--pin-halo-color); stop-opacity: .66; }
+.pin-halo-out { stop-color: var(--pin-halo-color); stop-opacity: 0; }
 .ms-marker-icon .pin-halo {
-  position: absolute;
-  z-index: -1;                      /* hinter dem Pin-SVG (Stacking-Context des Markers) */
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(circle closest-side, rgb(var(--pin-halo-rgb) / .66) 0%, rgb(var(--pin-halo-rgb) / 0) 100%);
   opacity: 0;
-  visibility: hidden;
-  transition: opacity .4s ease, visibility 0s .4s;
+  pointer-events: none;
+  transition: opacity .4s ease;
 }
 .halo-on .ms-marker-icon .pin-halo {
   opacity: 1;
-  visibility: visible;
-  transition: opacity .8s ease-out, visibility 0s;
+  transition: opacity .8s ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
   .ms-marker-icon .pin-halo, .halo-on .ms-marker-icon .pin-halo { transition: none; }

@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (165 px, 66 % → 0 %, ab Zoom 13, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 66 % → 0 %, ab Zoom 13, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,34 +16,36 @@ let createLeafletIcon, AppConfig;
 before(async () => { const m = await import('../config.js'); createLeafletIcon = m.createLeafletIcon; AppConfig = m.default; });
 const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 
-test('1: Pin — Halo fest 165 px zentriert auf dem Pin-Körper, 1 px weißer Rand direkt im SVG, schwarzer Rand bleibt', () => {
+test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 165 px, zentriert auf dem Pin-Körper; 1 px weißer Rand, schwarzer Rand bleibt', () => {
   const icon = createLeafletIcon('#0e9000');
-  assert.match(icon.html, /<span class="pin-halo" style="width:165px;height:165px;left:-70px;top:-70px"><\/span>/);   // Mitte = (12,5 | 12,5)
+  // Kreis + Verlauf: Radius 82,5 (= 165 px / 2 bei scale 1), Mitte (12,5 | 12,5), Verlauf in Nutzerkoordinaten, ohne Maus-Treffer
+  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="82.5"><stop class="pin-halo-in" offset="0"\/><stop class="pin-halo-out" offset="1"\/><\/radialGradient>/);
+  assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="82.5" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
+  assert.ok(!/<span/.test(icon.html), 'kein span mit z-index:-1 mehr (auf iOS-Safari nicht sichtbar)');
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes
   assert.match(icon.html, /<path fill="#0e9000" stroke="#000" stroke-width="1"/);
-  assert.ok(icon.html.indexOf('pin-halo') < icon.html.indexOf('<svg'), 'Halo liegt im DOM vor dem Pin');
+  assert.ok(icon.html.indexOf('class="pin-halo"') < icon.html.indexOf('<path fill="#fff"'), 'Halo liegt im Quelltext vor dem Pin (= dahinter)');
   assert.deepEqual(icon.iconSize, [25, 41]);
-  // Halo fest 165 px, unabhängig von der Pin-Größe (Hover-Pin 1,5; Embed-Ziel 1,2) — nur die Mitte folgt dem Pin-Körper
-  const big = createLeafletIcon('#f00', 1.5);
-  assert.match(big.html, /width:165px;height:165px;left:-63.75px;top:-63.75px/);
-  const target = createLeafletIcon('#f00', 1.2);
-  assert.match(target.html, /width:165px;height:165px;left:-67.5px;top:-67.5px/);
+  // Verlauf-IDs eindeutig je Pin
+  const ids = new Set([createLeafletIcon('#000'), createLeafletIcon('#000'), createLeafletIcon('#000')].map(i => i.html.match(/id="(pin-halo-g\d+)"/)[1]));
+  assert.equal(ids.size, 3);
+  // Durchmesser fest 165 px, unabhängig von der Pin-Größe: Radius in Pin-Einheiten × scale = 82,5 px
   for (const sc of [1, 1.2, 1.5, 2]) {
-    const m = createLeafletIcon('#000', sc).html.match(/width:([\d.]+)px;height:\1px;left:(-?[\d.]+)px/);
-    const [w, left] = [Number(m[1]), Number(m[2])];
-    assert.equal(w, 165, `Durchmesser fest bei scale ${sc}`);
-    assert.ok(Math.abs(left + w / 2 - 12.5 * sc) < 0.01, `Halo-Mitte auf dem Pin-Körper bei scale ${sc}`);
+    const r = Number(createLeafletIcon('#000', sc).html.match(/<circle class="pin-halo" cx="12.5" cy="12.5" r="([\d.]+)"/)[1]);
+    assert.ok(Math.abs(r * sc - 82.5) < 0.01, `Halo-Durchmesser 165 px bei scale ${sc}`);
   }
 });
 
-test('2: CSS — Mitte 66 %, außen 0 %, linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
+test('2: CSS — Mitte 66 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
-  assert.match(css, /radial-gradient\(circle closest-side, rgb\(var\(--pin-halo-rgb\) \/ \.66\) 0%, rgb\(var\(--pin-halo-rgb\) \/ 0\) 100%\)/);
-  assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;[^}]*visibility: hidden;/);
+  assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.66; \}/);
+  assert.match(css, /\.pin-halo-out \{ stop-color: var\(--pin-halo-color\); stop-opacity: 0; \}/);
+  assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;/);
   assert.match(css, /\.halo-on \.ms-marker-icon \.pin-halo \{[^}]*opacity: 1;[^}]*transition: opacity \.8s ease-out/);
-  assert.match(css, /:root \{ --pin-halo-rgb: 191 191 191; \}/);
-  assert.match(css, /prefers-color-scheme: dark\) \{ :root \{ --pin-halo-rgb: 64 64 64; \} \}/);
+  assert.match(css, /:root \{ --pin-halo-color: rgb\(191, 191, 191\); \}/);
+  assert.match(css, /prefers-color-scheme: dark\) \{ :root \{ --pin-halo-color: rgb\(64, 64, 64\); \} \}/);
   assert.match(css, /prefers-reduced-motion: reduce\) \{[^}]*transition: none/);
+  assert.ok(!/z-index:\s*-1/.test(css.slice(css.indexOf('Pin-Halo:'), css.indexOf('#map {'))), 'kein negativer z-index');
 });
 
 test('3: Zoom-Schwelle 13 — Klasse .halo-on wird im Marker-Manager am Karten-Container gesetzt', () => {
