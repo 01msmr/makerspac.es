@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (150 px, 75 % → 0 %, ab Zoom 13, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (150 px, 66 % → 0 %, ab Zoom 13, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,9 +27,9 @@ test('1: Pin — Halo 150 px zentriert auf dem Pin-Körper, 1 px weißer Rand di
   assert.match(big.html, /left:-56.25px;top:-56.25px/);
 });
 
-test('2: CSS — Mitte 75 %, außen 0 %, linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
+test('2: CSS — Mitte 66 %, außen 0 %, linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
-  assert.match(css, /radial-gradient\(circle closest-side, rgb\(var\(--pin-halo-rgb\) \/ \.75\) 0%, rgb\(var\(--pin-halo-rgb\) \/ 0\) 100%\)/);
+  assert.match(css, /radial-gradient\(circle closest-side, rgb\(var\(--pin-halo-rgb\) \/ \.66\) 0%, rgb\(var\(--pin-halo-rgb\) \/ 0\) 100%\)/);
   assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;[^}]*visibility: hidden;/);
   assert.match(css, /\.halo-on \.ms-marker-icon \.pin-halo \{[^}]*opacity: 1;[^}]*transition: opacity \.8s ease-out/);
   assert.match(css, /:root \{ --pin-halo-rgb: 191 191 191; \}/);
