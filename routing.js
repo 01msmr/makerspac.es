@@ -359,6 +359,7 @@ export class RoutingManager {
     // open/closed depend on runtime status — cannot be pre-cached
     if (style === 'open')   return this.json.filter(l => l.isOpen === true).length;
     if (style === 'closed') return this.json.filter(l => l.isOpen === false).length;
+    if (style === 'status-any') return this.json.filter(l => typeof l.isOpen === 'boolean').length;
     return this._styleCountMap?.get(style) ?? this.json.filter(l => l.style === style).length;
   }
 

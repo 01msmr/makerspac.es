@@ -131,6 +131,13 @@ test('workshop-keywords: jeder Typ aus workshop-types.js hat Stichwörter', () =
   assert.deepEqual(detectTypes('SIEBDRUCK'), ['screenprint']);
 });
 
+test('repair: Repair-Café/Reparatur-Treff erkannt, bloße Fahrrad-Reparatur bleibt bike', () => {
+  assert.deepEqual(detectTypes('Jeden 1. Samstag Repair Café'), ['repair']);
+  assert.deepEqual(detectTypes('Reparaturcafé und Reparatur-Treff'), ['repair']);
+  assert.deepEqual(detectTypes('Fahrrad Reparatur'), ['bike']);
+  assert.deepEqual(detectTypes('Lasercutter und Reparaturwerkstatt'), ['laser', 'repair']);
+});
+
 import { looksLikeUrl, buildScanComment, parseScanComment } from '../admin/admin-lib.js';
 import { summarize } from '../tools/scan-workshop-url.js';
 

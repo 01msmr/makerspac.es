@@ -7,6 +7,7 @@
 
 import AppConfig from './config.js';
 import { todayWeekday } from './date-utils.js';
+import { WEEKLY_ANY, STATUS_ANY } from './filter-config.js';
 import { SearchPillsManager } from './search-pills.js';
 import { AutocompleteManager } from './autocomplete-manager.js';
 import { isMobileUI, isPhone, isTouch } from './layout-mode.js';
@@ -437,7 +438,7 @@ class SearchHeader {
       weekly: {
         icon: CONFIG.icons.ui.calendarDay,
         label: window.i18n?.t('filter.weekly') || 'Meeting',
-        options: [...CONFIG.filterCategories.weekly.options, 'any']
+        options: [...CONFIG.filterCategories.weekly.options, WEEKLY_ANY]
       },
       workshops: {
         icon: CONFIG.icons.ui.workshops,
@@ -612,7 +613,7 @@ class SearchHeader {
     } else if (categoryKey === 'doorState') {
       return selectedStyles.find(s => CONFIG.filterCategories.doorState.options.includes(s)) || null;
     } else if (categoryKey === 'weekly') {
-      return selectedStyles.find(s => CONFIG.filterCategories.weekly.options.includes(s) || s === 'any') || null;
+      return selectedStyles.find(s => CONFIG.filterCategories.weekly.options.includes(s) || s === WEEKLY_ANY) || null;
     } else if (categoryKey === 'workshops') {
       return selectedStyles.find(s => CONFIG.filterCategories.workshops.options.includes(s)) || null;
     }
@@ -630,10 +631,10 @@ class SearchHeader {
       };
       return window.i18n?.t(styleMap[value] || value) || value;
     } else if (categoryKey === 'doorState') {
-      const doorMap = { 'open': 'doorState.open', 'closed': 'doorState.closed' };
+      const doorMap = { 'open': 'doorState.open', 'closed': 'doorState.closed', [STATUS_ANY]: 'doorState.any' };
       return window.i18n?.t(doorMap[value] || value) || value;
     } else if (categoryKey === 'weekly') {
-      if (value === 'any') return window.i18n?.t('weekdays.any') || 'any day';
+      if (value === WEEKLY_ANY) return window.i18n?.t('weekdays.any') || 'any day';
       return window.i18n?.t(`weekdays.${value}`) || value;
     } else if (categoryKey === 'country') {
       return window.i18n?.t(`countries.${value}`) || value;
@@ -646,6 +647,7 @@ class SearchHeader {
   getFilterIcon(categoryKey, value) {
     if (categoryKey === 'workshops') return CONFIG.getWorkshopIcon(value);
     if (categoryKey === 'style')     return CONFIG.getStyleIcon(value);
+    if (categoryKey === 'doorState' && value === STATUS_ANY) return 'fas fa-circle-half-stroke';   // „mit Status“ = offen und geschlossen
     return null;
   }
 
@@ -726,12 +728,12 @@ class SearchHeader {
       }
       optionItem.appendChild(document.createTextNode(this.translateFilterValue('style', option)));
     } else if (categoryKey === 'doorState') {
-      const statusIconClass = CONFIG.getStatusIcon(option === 'open' ? true : false);
+      const statusIconClass = option === STATUS_ANY ? this.getFilterIcon('doorState', option) : CONFIG.getStatusIcon(option === 'open' ? true : false);
       optionItem.innerHTML = `<i class="${statusIconClass}" style="margin-right: 8px; width: 20px; text-align: center;"></i>`;
       optionItem.appendChild(document.createTextNode(this.translateFilterValue('doorState', option)));
     } else if (categoryKey === 'weekly') {
       const label = this.translateFilterValue('weekly', option);
-      const todayMarker = (option !== 'any' && parseInt(option) === todayWeekday()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
+      const todayMarker = (option !== WEEKLY_ANY && parseInt(option) === todayWeekday()) ? ' <i class="fas fa-circle" style="font-size: 0.5em; vertical-align: middle;"></i>' : '';
       optionItem.innerHTML = `<i class="${CONFIG.icons.ui.calendarDay}" style="margin-right: 8px; width: 20px; text-align: center;"></i>${label}${todayMarker}`;
     } else if (categoryKey === 'workshops') {
       const workshopIcon = CONFIG.getWorkshopIcon(option);
@@ -794,7 +796,7 @@ class SearchHeader {
     } else if (categoryKey === 'weekly') {
       // Clear all weekday options + 'any'
       CONFIG.filterCategories.weekly.options.forEach(opt => this.searchFilter?.setStyleFilter(opt, false));
-      this.searchFilter?.setStyleFilter('any', false);
+      this.searchFilter?.setStyleFilter(WEEKLY_ANY, false);
       this.searchFilter?.setStyleFilter(option, true);
     } else {
       if (!this.isMultiSelect(categoryKey)) { // Einzelauswahl: übrige Optionen der Kategorie abwählen
@@ -823,7 +825,7 @@ class SearchHeader {
       this.searchFilter?.setStyleFilter(opt, false);
     });
     if (categoryKey === 'weekly') {
-      this.searchFilter?.setStyleFilter('any', false);
+      this.searchFilter?.setStyleFilter(WEEKLY_ANY, false);
     }
 
     this.searchFilter?.applyFilters();

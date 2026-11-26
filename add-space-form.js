@@ -7,7 +7,7 @@ const WORKSHOPS = [
   ['3D printing', '3d'],  ['Laser cutting', 'laser'], ['CNC', 'cnc'],
   ['Electronics', 'electronics'], ['Coding', 'coding'], ['VR', 'vr'],
   ['Music', 'music'],     ['Photography', 'photo'],
-  ['Woodworking', 'wood'], ['Metalworking', 'metal'], ['Bike repair', 'bike'],
+  ['Woodworking', 'wood'], ['Metalworking', 'metal'], ['Bike repair', 'bike'], ['Repair café', 'repair'],
   ['Textile', 'textile'], ['Screen printing', 'screenprint'], ['Ceramics', 'ceramics'],
 ];
 

@@ -6,6 +6,11 @@
 
 import { WORKSHOP_TYPES } from './workshop-types.js';
 
+/** Sonderwerte der Filter „irgendein Wochentag“ und „mit Status“ (SpaceAPI-Status vorhanden: offen ODER geschlossen).
+ *  Bewusst verschiedene Werte: Beide leben in derselben Auswahlliste (selectedStyles) — ein gemeinsames 'any' würde beide Pillen aktivieren. */
+export const WEEKLY_ANY = 'weekly-any';
+export const STATUS_ANY = 'status-any';
+
 /** @type {Record<string, { icon: string, options: string[], iconOnly?: boolean }>} */
 export const FILTER_CATEGORIES = {
   style: {
@@ -14,7 +19,7 @@ export const FILTER_CATEGORIES = {
   },
   doorState: {
     icon: 'fas fa-door-open',
-    options: ['open', 'closed'],
+    options: ['open', 'closed', STATUS_ANY],
   },
   weekly: {
     icon: 'fas fa-calendar-day',

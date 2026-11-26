@@ -88,6 +88,13 @@ export const WORKSHOP_KEYWORDS = {
     'velowerkstatt', 'velo werkstatt', 'fahrrad selbsthilfe',
     'bike repair', 'bike workshop', 'fahrrad selbst reparieren',
   ],
+  // Bewusst nur eindeutige Begriffe (Repair-Café/Reparatur-Treff/-Werkstatt), kein bloßes „Reparatur“ (Fahrrad-Reparatur gehört zu 'bike')
+  'repair': [
+    'repair café', 'repair cafe', 'repair-café', 'repair-cafe', 'repaircafé', 'repaircafe',
+    'reparaturcafé', 'reparaturcafe', 'reparatur-café', 'reparatur café', 'reparatur-cafe', 'reparatur cafe',
+    'reparaturtreff', 'reparatur-treff', 'reparatur treff', 'repair treff', 'repair-treff',
+    'reparaturwerkstatt', 'reparatur-werkstatt', 'reparatur werkstatt', 'repair workshop',
+  ],
 };
 
 /**
@@ -118,6 +125,7 @@ export const WORKSHOP_LOOSE_KEYWORDS = {
   'textile':     ['textil', 'nähen', 'naehen'],
   'screenprint': ['siebdruck'],
   'ceramics':    ['keramik', 'töpfer', 'toepfer'],
+  'repair':      ['repair', 'reparatur', 'reparier'],
 };
 
 /**

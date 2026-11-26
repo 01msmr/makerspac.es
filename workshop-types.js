@@ -17,6 +17,7 @@ export const WORKSHOP_TYPES = {
   'wood':        { icon: 'fas fa-hammer' },       // physical workshop
   'metal':       { icon: 'fas fa-gears' },        // physical workshop
   'bike':        { icon: 'fas fa-bicycle' },      // physical workshop
+  'repair':      { icon: 'fas fa-screwdriver-wrench' }, // physical workshop (Repair-Café, Reparatur-Treff)
   'textile':     { icon: 'fas fa-scissors' },    // craft
   'screenprint': { icon: 'fas fa-shirt' },       // craft
   'ceramics':    { icon: 'fas fa-jar' },          // craft

@@ -3,6 +3,7 @@ import AppConfig from './config.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { appContext } from './app-context.js';
 import { isPhone } from './layout-mode.js';
+import { WEEKLY_ANY, STATUS_ANY } from './filter-config.js';
 
 // search-filter.js - Zentrale Such- und Filter-Logik
 // Reine Geschäftslogik ohne UI-Komponenten
@@ -101,6 +102,7 @@ class SearchFilter {
 
     tempStats.set('open', openCount);
     tempStats.set('closed', closedCount);
+    tempStats.set(STATUS_ANY, openCount + closedCount);
 
     // Rebuild cached country set
     this._allCountries = new Set(countryStats.keys());
@@ -235,9 +237,9 @@ class SearchFilter {
     this.selectedStyles.forEach(style => {
       if (style === 'bookmarked') {
         bookmarkFilterActive = true;
-      } else if (style === 'any') {
+      } else if (style === WEEKLY_ANY) {
         weeklyAnyActive = true;
-      } else if (style === 'open' || style === 'closed') {
+      } else if (style === 'open' || style === 'closed' || style === STATUS_ANY) {
         selectedStateFilters.add(style);
       } else if (weeklyOptions.has(style)) {
         selectedWeekdays.add(parseInt(style));
@@ -269,6 +271,7 @@ class SearchFilter {
         stateMatch = false;
         if (selectedStateFilters.has('open') && location.isOpen === true) stateMatch = true;
         if (selectedStateFilters.has('closed') && location.isOpen === false) stateMatch = true;
+        if (selectedStateFilters.has(STATUS_ANY) && typeof location.isOpen === 'boolean') stateMatch = true;   // „mit Status“: offen ODER geschlossen
       }
 
       // Country-Match: _activeCountryFilter (routing) direkt lesen — nicht via preFilteredLocations.

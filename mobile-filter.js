@@ -1,6 +1,7 @@
 import AppConfig from './config.js';
 import { appContext } from './app-context.js';
 import { todayWeekday } from './date-utils.js';
+import { WEEKLY_ANY, STATUS_ANY } from './filter-config.js';
 import { isMobileUI, isTablet, isPhone, isTouch } from './layout-mode.js';
 import { DropdownPager } from './dropdown-pager.js';
 
@@ -74,7 +75,7 @@ class MobileFilterUI {
 
   getOptions(key) {
     const fc = AppConfig.filterCategories;
-    if (key === 'weekly')    return [...(fc?.weekly?.options || []), 'any'];
+    if (key === 'weekly')    return [...(fc?.weekly?.options || []), WEEKLY_ANY];
     if (key === 'country')   return appContext.searchFilter?.getUniqueCountries?.() || [];
     if (key === 'bookmarks') return ['bookmarked'];
     return fc?.[key]?.options || [];
@@ -376,7 +377,7 @@ class MobileFilterUI {
 
       // Door state icon
       if (key === 'doorState') {
-        const iconClass = isDoorOpen ? AppConfig.icons.status.open : AppConfig.icons.status.closed;
+        const iconClass = opt === STATUS_ANY ? appContext.searchHeader?.getFilterIcon('doorState', opt) : (isDoorOpen ? AppConfig.icons.status.open : AppConfig.icons.status.closed);
         const doorIcon = document.createElement('i');
         doorIcon.className = `${iconClass} mf-opt-door-icon`;
         item.appendChild(doorIcon);
@@ -395,7 +396,7 @@ class MobileFilterUI {
       item.appendChild(label);
 
       // Today marker for weekly filter
-      if (key === 'weekly' && opt !== 'any' && parseInt(opt) === todayWeekday()) {
+      if (key === 'weekly' && opt !== WEEKLY_ANY && parseInt(opt) === todayWeekday()) {
         const todayDot = document.createElement('i');
         todayDot.className = 'fas fa-circle mf-opt-today-dot';
         item.appendChild(todayDot);
