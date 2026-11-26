@@ -73,7 +73,7 @@ body {
   border: none !important;
 }
 
-/* Pin-Halo: 165-px-Kreis (Standard-Pin) hinter dem Pin, Mitte 66 % Deckung → außen 0 % (linear), hell im Light-, dunkel im Dark Mode.
+/* Pin-Halo: fester 165-px-Kreis (unabhängig von der Pin-Größe) hinter dem Pin, Mitte 66 % Deckung → außen 0 % (linear), hell im Light-, dunkel im Dark Mode.
    Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 0,8 s ein, bei niedrigem Zoom zügig aus. */
 :root { --pin-halo-rgb: 191 191 191; }
 @media (prefers-color-scheme: dark) { :root { --pin-halo-rgb: 64 64 64; } }
