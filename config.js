@@ -104,7 +104,7 @@ const SETTINGS = {
   popupDelayMs:           300,
   popupGraceMs:          1100,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
   pinOpacity:            0.66,   // leichte Transparenz der Pins; im SVG (nicht am Marker-Element), damit der Halo nicht mit abgedunkelt/abgeschnitten wird
-  haloMinZoom:           13,     // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte; nur einzelne Pins, Cluster haben keinen Halo), 0,8 s Einblenden (CSS)
+  haloMinZoom:           14,     // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte; nur einzelne Pins, Cluster haben keinen Halo), 0,8 s Einblenden (CSS)
   hintShrinkMs:           1350,
   hintFadeMs:             1200,
   inactivityMs:           3500,

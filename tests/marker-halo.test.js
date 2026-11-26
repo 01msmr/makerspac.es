@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 66 % → 0 %, ab Zoom 13, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 66 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -65,8 +65,8 @@ test('2: CSS — Mitte 66 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-
   assert.ok(!/z-index:\s*-1/.test(css.slice(css.indexOf('Pin-Halo:'), css.indexOf('#map {'))), 'kein negativer z-index');
 });
 
-test('3: Zoom-Schwelle 13 — Klasse .halo-on wird im Marker-Manager am Karten-Container gesetzt', () => {
-  assert.equal(AppConfig.settings.haloMinZoom, 13);
+test('3: Zoom-Schwelle 14 — Klasse .halo-on wird im Marker-Manager am Karten-Container gesetzt', () => {
+  assert.equal(AppConfig.settings.haloMinZoom, 14);
   const mm = read('marker-manager.js');
   assert.match(mm, /classList\.toggle\('halo-on', map\.getZoom\(\) >= AppConfig\.settings\.haloMinZoom\)/);
   assert.match(mm, /map\.on\('zoomend', syncHalo\)/);
