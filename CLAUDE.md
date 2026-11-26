@@ -217,6 +217,7 @@ npm run validate                 # locations.json + loc-enrichment.json prüfen
 
 - Push auf `main` → GitHub Actions → FTPS → Netcup
 - `status.json` wird per Cron aktualisiert, nicht per git
+- **Kleine Admin-Änderungen direkt auf `main`:** `git pull --rebase origin main`, `node --test 'tests/*.test.js'`, `git push origin main` (bei Ablehnung wiederholen). Keine Feature-Branches. Änderungen an Karte, `sw.js` und Ladepfad über Branch + `npm run validate:ci`.
 - Nächste freie Makerspace-ID: **279** (`max(IDs) + 1`)
 - **Bot-Änderungen (GITHUB_TOKEN) lösen weder CI noch Deploy aus.** Workflows, die nach `main` pushen/mergen, validieren vorher (`./.github/actions/validate-data`) und starten `deploy.yml` selbst (`gh workflow run deploy.yml`, `actions: write`). Apply-Skripte prüfen jeden Vorschlag vor dem Schreiben (`validateProposal`). Wächter: `tests/workflow-guards.test.js`
 - Übernahme der Vorschläge: `apply-all-issues.yml` (alle Arten, 1 Commit, Issues erst nach dem Push geschlossen; Admin „Übernehmen“/Cron).
