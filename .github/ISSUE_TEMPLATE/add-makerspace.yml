@@ -90,6 +90,7 @@ body:
     attributes:
       label: Workshop types (optional)
       options:
+        # BEGIN workshop-options (generiert aus workshop-types.js: npm run sync:forms — nicht von Hand ändern)
         - label: "3D printing"
         - label: "Laser cutting"
         - label: "CNC"
@@ -105,6 +106,7 @@ body:
         - label: "Textile"
         - label: "Screen printing"
         - label: "Ceramics"
+        # END workshop-options
   - type: input
     id: url
     attributes:

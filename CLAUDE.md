@@ -210,6 +210,7 @@ Vollständige Referenz: **`architektur.md`** · Designentscheidungen: **`adr/`**
 node --test 'tests/*.test.js'   # Unit-Tests (vor jedem Push)
 node tests/validate-locations.js # Locations-Validierung
 npm run generate                 # Karten-Splits neu erzeugen
+npm run sync:forms               # nach neuem/umbenanntem Workshop-Typ: workshop-labels.json + Issue-Vorlage erzeugen
 npm run validate                 # locations.json + loc-enrichment.json prüfen
 ```
 

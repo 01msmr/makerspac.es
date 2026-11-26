@@ -4,23 +4,26 @@
 
 /** @typedef {import('./types.js').WorkshopType} WorkshopType */
 
-/** @type {Record<string, { icon: string }>} */
+/** `label` = englischer Name in Add-/Update-Formular, GitHub-Issue-Vorlage und den PR-Workflows (Übersetzungen der Oberfläche: lang.json).
+ *  Aus dieser Liste werden `.github/workshop-labels.json` und die Checkboxen in `.github/ISSUE_TEMPLATE/add-makerspace.yml`
+ *  erzeugt: nach jeder Änderung `npm run sync:forms` (der Test tests/workshop-types-sync.test.js schlägt sonst an).
+ * @type {Record<string, { label: string, icon: string }>} */
 export const WORKSHOP_TYPES = {
-  '3d':          { icon: 'fas fa-cube' },        // digital fab
-  'laser':       { icon: 'fas fa-explosion' },   // digital fab
-  'cnc':         { icon: 'fas fa-gear' },         // digital fab
-  'electronics': { icon: 'fas fa-microchip' },   // tech
-  'coding':      { icon: 'fas fa-laptop-code' }, // tech
-  'vr':          { icon: 'fas fa-vr-cardboard' },// tech
-  'music':       { icon: 'fas fa-music' },        // creative studio
-  'photo':       { icon: 'fas fa-camera' },       // creative studio
-  'wood':        { icon: 'fas fa-hammer' },       // physical workshop
-  'metal':       { icon: 'fas fa-gears' },        // physical workshop
-  'bike':        { icon: 'fas fa-bicycle' },      // physical workshop
-  'repair':      { icon: 'fas fa-screwdriver-wrench' }, // physical workshop (Repair-Café, Reparatur-Treff)
-  'textile':     { icon: 'fas fa-scissors' },    // craft
-  'screenprint': { icon: 'fas fa-shirt' },       // craft
-  'ceramics':    { icon: 'fas fa-jar' },          // craft
+  '3d':          { label: '3D printing', icon: 'fas fa-cube' },        // digital fab
+  'laser':       { label: 'Laser cutting', icon: 'fas fa-explosion' },   // digital fab
+  'cnc':         { label: 'CNC', icon: 'fas fa-gear' },         // digital fab
+  'electronics': { label: 'Electronics', icon: 'fas fa-microchip' },   // tech
+  'coding':      { label: 'Coding', icon: 'fas fa-laptop-code' }, // tech
+  'vr':          { label: 'VR', icon: 'fas fa-vr-cardboard' },// tech
+  'music':       { label: 'Music', icon: 'fas fa-music' },        // creative studio
+  'photo':       { label: 'Photography', icon: 'fas fa-camera' },       // creative studio
+  'wood':        { label: 'Woodworking', icon: 'fas fa-hammer' },       // physical workshop
+  'metal':       { label: 'Metalworking', icon: 'fas fa-gears' },        // physical workshop
+  'bike':        { label: 'Bike repair', icon: 'fas fa-bicycle' },      // physical workshop
+  'repair':      { label: 'Repair café', icon: 'fas fa-screwdriver-wrench' }, // physical workshop (Repair-Café, Reparatur-Treff)
+  'textile':     { label: 'Textile', icon: 'fas fa-scissors' },    // craft
+  'screenprint': { label: 'Screen printing', icon: 'fas fa-shirt' },       // craft
+  'ceramics':    { label: 'Ceramics', icon: 'fas fa-jar' },          // craft
 };
 
 /**

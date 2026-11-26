@@ -1,15 +1,12 @@
 // @ts-check
 // add-space-form.js — Add-Space form: data fetching, geocoding, autocomplete, submit
 
+import { WORKSHOP_TYPES } from './workshop-types.js';
+
 const GITHUB_REPO = '01msmr/makerspac.es';
 
-const WORKSHOPS = [
-  ['3D printing', '3d'],  ['Laser cutting', 'laser'], ['CNC', 'cnc'],
-  ['Electronics', 'electronics'], ['Coding', 'coding'], ['VR', 'vr'],
-  ['Music', 'music'],     ['Photography', 'photo'],
-  ['Woodworking', 'wood'], ['Metalworking', 'metal'], ['Bike repair', 'bike'], ['Repair café', 'repair'],
-  ['Textile', 'textile'], ['Screen printing', 'screenprint'], ['Ceramics', 'ceramics'],
-];
+// [Label, Schlüssel] — aus workshop-types.js (SSOT), Reihenfolge wie dort
+const WORKSHOPS = Object.entries(WORKSHOP_TYPES).map(([key, { label }]) => [label, key]);
 
 // i18n shorthands
 const t  = (key, fb) => window.i18n?.t(`addMakerspace.${key}`) ?? fb;  // addMakerspace namespace
