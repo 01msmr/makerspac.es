@@ -678,17 +678,11 @@ a#titleurl:hover h3.space-unknown .fas {
   gap: 8px;
 }
 
-.popup-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-/* Stift „Eintrag bearbeiten“: rechtsbündig in der Weekly-Zeile, x-Achse des Lesezeichens */
+/* Stift „Eintrag bearbeiten“: 1. Zeile, direkt hinter dem Namen-Link. Zum Lesezeichen mindestens eine Geviertstrich-Länge (1 em) Abstand
+   (zusätzlich zum gap der Zeile; das Lesezeichen hat 16 px Schrift → 1 em = 16 px). */
 .popup-edit {
   flex: none;
-  margin: 8px 0 0 auto;            /* gleiche Oberkante wie .popup-weekly → gleiche Grundlinie */
+  margin: 0;
   padding: 0;
   width: 16px;
   border: 0;
@@ -701,9 +695,10 @@ a#titleurl:hover h3.space-unknown .fas {
   transition: transform 0.15s ease;
 }
 .popup-edit:hover { transform: scale(1.2); }
+.popup-edit + .popup-bookmark { margin-left: 1em; }
 @media (pointer: coarse) {
   .popup-edit { position: relative; }
-  .popup-edit::after { content: ''; position: absolute; inset: -15px; }   /* Trefferfläche ≥ 44 px */
+  .popup-edit::after { content: ''; position: absolute; inset: -15px -15px -15px -8px; }   /* Trefferfläche ≥ 44 px; links schmaler, um den Namen-Link nicht zu überdecken */
 }
 
 .popup-weekly {

@@ -99,7 +99,7 @@
 | `zoom-manager.js` | Map-Zoom-Steuerung, Auto-Zoom; Desktop-Fit als Polygon-Fit: alle Pins einzeln in der Freifläche (Viewport minus Logo minus Search/Dropdown) | `ZoomManager`, `window.zoomManager`, `computePolygonFit()`, `findFitTranslation()` |
 | `embed.js` | Embed-Karte (iframe-Standalone, lädt nur in embed.html) | `EmbedMapExtended`, `window.embedMap` |
 | `embed-overlay.js` | In-page Overlay für Embed-Anleitung (initiiert in map.js) | `initEmbedOverlay()` |
-| `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed); `editable: true` (nur Hauptkarte) rendert in der Weekly-Zeile (`.popup-meta-row`) den Stift `.popup-edit` | `buildPopupHTML()` |
+| `popup-builder.js` | Gemeinsamer Popup-HTML-Builder (main map + embed); `editable: true` (nur Hauptkarte) rendert in der Titelzeile (`.popup-title-row`, direkt hinter dem Namen-Link, vor dem Lesezeichen) den Stift `.popup-edit` | `buildPopupHTML()` |
 | `demo-mode.js` | Attract-/Kiosk-Demo (DemoMode, OpenDemoMode, TodayDemoMode) | `DemoMode`, `OpenDemoMode`, `TodayDemoMode` (export) |
 | `error-monitor.js` | Dev-Tool, Fehler-Overlay, globales Error-Logging | `errorMonitor` (export), `window.AppErrorMonitor` |
 | `spaceapi-static.js` | SpaceAPI-Status-Verarbeitung | `StaticSpaceAPI` (export) |
@@ -236,7 +236,7 @@ Module kommunizieren über `window.xxx` (Legacy-kompatibel). Neue Querverbindung
 
 ### Popup: Hover-Karenz und Bearbeiten-Stift
 - **Hover-Intent (Desktop):** Verlässt die Maus Listeneintrag (`listing-core.js` → `removeHoverEffects(location, { graceMs })`, `_schedulePopupGrace`/`_flushPopupGrace`) oder Pin (`marker-manager.js` mouseout, `graceMs`), bleibt ein offenes, nicht-stickies Popup `AppConfig.settings.popupGraceMs` (1100 ms) stehen; temporär entclusterte Marker werden erst danach entfernt. Betritt die Maus das Popup, macht `handlePopupEnter` es sticky und löscht `closeTimeout`. Ein Hover auf einen anderen Eintrag beendet die Karenz sofort.
-- **Stift `.popup-edit`** (`fa-pen-to-square`, im FA-Subset vorhanden; Tooltip `tooltips.editSpace`, 7 Sprachen): rechtsbündig in der Weekly-Zeile, in der x-Achse des Lesezeichens. Die Zeile wird bei `editable` immer gerendert. Klick (am Popup-Container delegiert, weil `popup.update()` den Inhalt neu aufbaut) → `openOverlayTab('addspace', { editId })` → Overlay im Bearbeiten-Modus, Space gewählt, Formular vorbelegt, kein Fokus im Suchfeld (keine Bildschirmtastatur). Touch: Trefferfläche ≥ 44 px (`pointer: coarse`). Embed (`embed.js`) bleibt ohne Stift.
+- **Stift `.popup-edit`** (`fa-pen-to-square`, im FA-Subset vorhanden; Tooltip `tooltips.editSpace`, 7 Sprachen): in der Titelzeile direkt hinter dem Namen-Link (1. Zeile), zum Lesezeichen mindestens 1 em Abstand (`.popup-edit + .popup-bookmark { margin-left: 1em }`, zusätzlich zum `gap`). Klick (am Popup-Container delegiert, weil `popup.update()` den Inhalt neu aufbaut) → `openOverlayTab('addspace', { editId })` → Overlay im Bearbeiten-Modus, Space gewählt, Formular vorbelegt, kein Fokus im Suchfeld (keine Bildschirmtastatur). Touch: Trefferfläche ≥ 44 px (`pointer: coarse`). Embed (`embed.js`) bleibt ohne Stift.
 
 ### Zwei-Phasen Marker-Loading — `createMarkerForLocation` + `loadAndMergeFullData`
 - **Stage 1**: `createMarkerForLocation()` fügt Marker ausschließlich in `allMarkers[]` ein — **nie direkt** in `clusterGroup`. Die clusterGroup wird allein durch `updateMarkers()` befüllt (nach `triggerFilterUpdate`).

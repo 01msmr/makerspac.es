@@ -31,15 +31,23 @@ test('1: ohne editable (Embed) kein Stift', () => {
   assert.ok(!buildPopupHTML(base).includes('popup-edit'));
 });
 
-test('2: editable: Stift in der Meta-Zeile, auch ohne Weekly/Events', () => {
-  const html = buildPopupHTML(base, { editable: true });
-  assert.match(html, /<div><\/div><div class="popup-meta-row"><button[^>]*class="popup-edit"[^>]*data-id="7"/);
+test('2: editable: Stift in der Titelzeile, direkt hinter dem Namen-Link und vor dem Lesezeichen', () => {
+  const bm = { createBookmarkIcon: () => '<i class="popup-bookmark"></i>' };
+  const html = buildPopupHTML(base, { editable: true, bookmarkManager: bm });
+  assert.match(html, /<\/a>\s*<button[^>]*class="popup-edit"[^>]*data-id="7"/);
+  assert.ok(html.indexOf('id="titleurl"') < html.indexOf('popup-edit'));
+  assert.ok(html.indexOf('popup-edit') < html.indexOf('popup-bookmark'));
+  assert.ok(html.indexOf('popup-edit') < html.indexOf('popup-street-line'));
 });
 
-test('3: editable mit Weekly: Weekly-Zelle bleibt vor dem Stift', () => {
+test('3: editable mit Weekly: Stift steht in der Titelzeile (vor der Weekly-Zelle), keine eigene Meta-Zeile mehr', () => {
   const html = buildPopupHTML({ ...base, weekly: { weekday: 2, time: 1700 } }, { editable: true });
-  assert.ok(html.indexOf('popup-weekly') < html.indexOf('popup-edit'));
-  assert.equal((html.match(/popup-meta-row/g) || []).length, 1);
+  assert.ok(html.indexOf('popup-edit') < html.indexOf('popup-weekly'));
+  assert.ok(!html.includes('popup-meta-row'));
+});
+
+test('3b: CSS: ≥ 1 em Abstand zwischen Stift und Lesezeichen', () => {
+  assert.match(read('main-components.css'), /\.popup-edit \+ \.popup-bookmark \{ margin-left: 1em; \}/);
 });
 
 test('4: Tooltip-Text in allen 7 Sprachen vorhanden', () => {

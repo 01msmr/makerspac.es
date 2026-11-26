@@ -18,7 +18,7 @@ const styleTranslationMap = {
  * Build the Leaflet popup HTML for a makerspace marker.
  * @param {MakerSpace} location
  * @param {{ bookmarkManager?: { createBookmarkIcon: (id: number, cls: string) => string } | null, editable?: boolean }} [opts]
- *   editable: Stift „Eintrag bearbeiten“ in der Weekly-Zeile (nur Hauptkarte; der Embed hat kein Overlay)
+ *   editable: Stift „Eintrag bearbeiten“ in der Titelzeile, hinter dem Namen (nur Hauptkarte; der Embed hat kein Overlay)
  * @returns {string}
  */
 export function buildPopupHTML(location, opts = {}) {
@@ -78,12 +78,10 @@ export function buildPopupHTML(location, opts = {}) {
     weeklyHtml = `<div></div><div class="popup-weekly"><a href="${location.events}" target="_blank" class="popup-events-line"><i class="fas fa-calendar-day"></i> ${_evLabel}</a></div>`;
   }
 
-  if (editable) {
-    // Zeile immer rendern (auch ohne Weekly/Events), damit der Stift erreichbar ist; Stift in der x-Achse des Lesezeichens
-    const editLabel = t('tooltips.editSpace');
-    const editBtn = `<button type="button" class="popup-edit" data-id="${location.ID}" aria-label="${editLabel}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-pen-to-square"></i></button>`;
-    weeklyHtml = `<div></div><div class="popup-meta-row">${weeklyHtml.replace(/^<div><\/div>/, '')}${editBtn}</div>`;
-  }
+  // Stift „Eintrag bearbeiten“ (nur Hauptkarte): 1. Zeile, direkt hinter dem Namen-Link, vor dem Lesezeichen
+  const editBtn = editable
+    ? `<button type="button" class="popup-edit" data-id="${location.ID}" aria-label="${t('tooltips.editSpace')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-pen-to-square"></i></button>`
+    : '';
 
   const streetName     = location.loc?.street?.name   || '';
   const streetNumber   = location.loc?.street?.number || '';
@@ -107,6 +105,7 @@ export function buildPopupHTML(location, opts = {}) {
               ${statusIconHtml}${location.name || 'Unnamed Space'}
             </h3>
           </a>
+          ${editBtn}
           ${bookmarkIcon}
         </div>
         ${weeklyHtml}
