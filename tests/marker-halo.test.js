@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (150 px, 50 % → 0 %, ab Zoom 15,5, 1,5 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (150 px, 75 % → 0 %, ab Zoom 13, 1,5 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,9 +27,9 @@ test('1: Pin — Halo 150 px zentriert auf dem Pin-Körper, 1 px weißer Rand di
   assert.match(big.html, /left:-56.25px;top:-56.25px/);
 });
 
-test('2: CSS — Mitte 50 %, außen 0 %, linear; erst mit .halo-on; Einblenden 1,5 s; Light hellgrau / Dark dunkel', () => {
+test('2: CSS — Mitte 75 %, außen 0 %, linear; erst mit .halo-on; Einblenden 1,5 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
-  assert.match(css, /radial-gradient\(circle closest-side, rgb\(var\(--pin-halo-rgb\) \/ \.5\) 0%, rgb\(var\(--pin-halo-rgb\) \/ 0\) 100%\)/);
+  assert.match(css, /radial-gradient\(circle closest-side, rgb\(var\(--pin-halo-rgb\) \/ \.75\) 0%, rgb\(var\(--pin-halo-rgb\) \/ 0\) 100%\)/);
   assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;[^}]*visibility: hidden;/);
   assert.match(css, /\.halo-on \.ms-marker-icon \.pin-halo \{[^}]*opacity: 1;[^}]*transition: opacity 1\.5s ease-out/);
   assert.match(css, /:root \{ --pin-halo-rgb: 191 191 191; \}/);
@@ -37,8 +37,8 @@ test('2: CSS — Mitte 50 %, außen 0 %, linear; erst mit .halo-on; Einblenden 1
   assert.match(css, /prefers-reduced-motion: reduce\) \{[^}]*transition: none/);
 });
 
-test('3: Zoom-Schwelle 15,5 — Klasse .halo-on wird im Marker-Manager am Karten-Container gesetzt', () => {
-  assert.equal(AppConfig.settings.haloMinZoom, 15.5);
+test('3: Zoom-Schwelle 13 — Klasse .halo-on wird im Marker-Manager am Karten-Container gesetzt', () => {
+  assert.equal(AppConfig.settings.haloMinZoom, 13);
   const mm = read('marker-manager.js');
   assert.match(mm, /classList\.toggle\('halo-on', map\.getZoom\(\) >= AppConfig\.settings\.haloMinZoom\)/);
   assert.match(mm, /map\.on\('zoomend', syncHalo\)/);

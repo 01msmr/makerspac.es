@@ -103,7 +103,7 @@ const SETTINGS = {
   zoomDebounceMs:         800,
   popupDelayMs:           300,
   popupGraceMs:          1100,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
-  haloMinZoom:           15.5,   // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte), 1,5 s Einblenden (CSS)
+  haloMinZoom:           13,     // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte; nur einzelne Pins, Cluster haben keinen Halo), 1,5 s Einblenden (CSS)
   hintShrinkMs:           1350,
   hintFadeMs:             1200,
   inactivityMs:           3500,
@@ -208,7 +208,7 @@ export function createLeafletIcon(color, scale = 1.0) {
     `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
     `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
     `</svg>`;
-  // Halo: 150-px-Kreis um den Pin-Körper, Mitte 50 % Deckung → außen 0 % (linearer Verlauf), siehe .pin-halo in main-layout.css;
+  // Halo: 150-px-Kreis um den Pin-Körper, Mitte 75 % Deckung → außen 0 % (linearer Verlauf), siehe .pin-halo in main-layout.css;
   // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 1,5 s Einblenden
   const halo = `<span class="pin-halo" style="width:${HALO_SIZE}px;height:${HALO_SIZE}px;left:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px;top:${+(12.5 * scale - HALO_SIZE / 2).toFixed(2)}px"></span>`;
   return L.divIcon({
