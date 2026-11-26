@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 66 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 165 px, 80 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,9 +53,9 @@ test('1b: Pin-Transparenz als <g opacity> im SVG, der Halo liegt außerhalb der 
   assert.match(read('listing-core.js'), /createHoverIcon\(color\) \{[^}]*AppConfig\.createLeafletIcon\(color, 1\.5, AppConfig\.settings\.pinOpacity\)/);
 });
 
-test('2: CSS — Mitte 66 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
+test('2: CSS — Mitte 80 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
-  assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.66; \}/);
+  assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.8; \}/);
   assert.match(css, /\.pin-halo-out \{ stop-color: var\(--pin-halo-color\); stop-opacity: 0; \}/);
   assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;/);
   assert.match(css, /\.halo-on \.ms-marker-icon \.pin-halo \{[^}]*opacity: 1;[^}]*transition: opacity \.8s ease-out/);

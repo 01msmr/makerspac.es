@@ -206,7 +206,7 @@ export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
   const w = Math.round(25 * scale);
   const h = Math.round(41 * scale);
   const PIN = 'M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z';
-  // Halo: fester Kreis (HALO_SIZE px, unabhängig von der Pin-Größe) um den Pin-Körper, Mitte 66 % Deckung → außen 0 % (linearer Verlauf,
+  // Halo: fester Kreis (HALO_SIZE px, unabhängig von der Pin-Größe) um den Pin-Körper, Mitte 80 % Deckung → außen 0 % (linearer Verlauf,
   // gleiche Farbe). Als Kreis mit Radialverlauf IM Pin-SVG (liegt vor dem Pin im Quelltext = dahinter): kein z-index:-1, keine CSS-Farb-
   // Funktion im Verlauf, kein visibility-Übergang — das war auf iOS-Safari nicht zu sehen. Farbe/Deckkraft: .pin-halo-in/-out in main-layout.css;
   // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 0,8 s Einblenden.
@@ -219,7 +219,7 @@ export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
     halo +
     // Pin-Deckkraft als Gruppe im SVG: Weiß-Unterlage, Füllung, Rand und Punkt blenden gemeinsam durch (wie die frühere Marker-Opacity),
-    // der Halo davor bleibt davon unberührt (volle 66 % in der Mitte)
+    // der Halo davor bleibt davon unberührt (volle 80 % in der Mitte)
     (pinOpacity < 1 ? `<g opacity="${pinOpacity}">` : '') +
     `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +
     `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
