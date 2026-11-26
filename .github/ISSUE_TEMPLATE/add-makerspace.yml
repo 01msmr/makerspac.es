@@ -92,20 +92,20 @@ body:
       options:
         # BEGIN workshop-options (generiert aus workshop-types.js: npm run sync:forms — nicht von Hand ändern)
         - label: "3D printing"
-        - label: "Laser cutting"
+        - label: "laser cutting"
         - label: "CNC"
-        - label: "Electronics"
-        - label: "Coding"
+        - label: "electronics"
+        - label: "coding"
         - label: "VR"
-        - label: "Music"
-        - label: "Photography"
-        - label: "Woodworking"
-        - label: "Metalworking"
-        - label: "Bike repair"
-        - label: "Repair café"
-        - label: "Textile"
-        - label: "Screen printing"
-        - label: "Ceramics"
+        - label: "music"
+        - label: "photography"
+        - label: "woodworking"
+        - label: "metalworking"
+        - label: "bike repair"
+        - label: "repair café"
+        - label: "textile"
+        - label: "screen printing"
+        - label: "ceramics"
         # END workshop-options
   - type: input
     id: url

@@ -157,7 +157,7 @@ jobs:
               const workshopLabelMap = JSON.parse(fs.readFileSync('.github/workshop-labels.json', 'utf8'));
               const workshops = [];
               for (const [label, key] of Object.entries(workshopLabelMap)) {
-                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
+                if (workshopsRaw.toLowerCase().includes(`[x] ${label.toLowerCase()}`)) {   // ohne Groß-/Kleinschreibung: ältere Issues mit „Bike repair“ werden weiter erkannt
                   workshops.push(key);
                 }
               }

@@ -187,7 +187,7 @@ jobs:
             const workshops = [];
             if (workshopsRaw) {
               for (const [label, key] of Object.entries(workshopLabelMap)) {
-                if (workshopsRaw.includes(`[X] ${label}`) || workshopsRaw.includes(`[x] ${label}`)) {
+                if (workshopsRaw.toLowerCase().includes(`[x] ${label.toLowerCase()}`)) {   // ohne Groß-/Kleinschreibung: ältere Issues mit „Bike repair“ werden weiter erkannt
                   workshops.push(key);
                 }
               }

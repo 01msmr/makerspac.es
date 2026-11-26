@@ -14,7 +14,7 @@ export const TEMPLATE_FILE = '.github/ISSUE_TEMPLATE/add-makerspace.yml';
 export const BEGIN = '        # BEGIN workshop-options (generiert aus workshop-types.js: npm run sync:forms — nicht von Hand ändern)';
 export const END = '        # END workshop-options';
 
-/** Inhalt von workshop-labels.json: { "Bike repair": "bike", … } in Reihenfolge von WORKSHOP_TYPES */
+/** Inhalt von workshop-labels.json: { "bike repair": "bike", … } in Reihenfolge von WORKSHOP_TYPES */
 export function renderLabelsJson(types = WORKSHOP_TYPES) {
   return JSON.stringify(Object.fromEntries(Object.entries(types).map(([key, { label }]) => [label, key])), null, 2) + '\n';
 }

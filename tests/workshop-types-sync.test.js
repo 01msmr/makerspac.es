@@ -30,7 +30,7 @@ test('workshop-keywords.js und types.js kennen jeden Typ', () => {
 test('jeder Typ hat ein eindeutiges englisches Formular-Label', () => {
   const labels = Object.values(WORKSHOP_TYPES).map(t => t.label);
   for (const [k, t] of Object.entries(WORKSHOP_TYPES)) assert.ok(t.label?.trim(), `label für ${k}`);
-  assert.equal(new Set(labels).size, labels.length, 'Labels doppelt');
+  assert.equal(new Set(labels.map(l => l.toLowerCase())).size, labels.length, 'Labels doppelt (Groß-/Kleinschreibung egal)');
   // „[X] Label“ wird per Teilstring gesucht: ein Label darf nicht Präfix eines anderen sein
   for (const a of labels) for (const b of labels) if (a !== b) assert.ok(!b.startsWith(a), `"${a}" ist Präfix von "${b}"`);
 });
@@ -45,6 +45,7 @@ test('Workflows und Formular lesen die Typen aus der gemeinsamen Quelle (keine e
     const text = read(f);
     assert.match(text, /JSON\.parse\(fs\.readFileSync\('\.github\/workshop-labels\.json'/, `${f} liest workshop-labels.json`);
     assert.ok(!/"Screen printing"\s*:/.test(text), `${f}: keine eingebaute Label-Liste mehr`);
+    assert.ok(text.includes('workshopsRaw.toLowerCase()'), `${f}: Label-Vergleich ohne Groß-/Kleinschreibung (ältere Issues)`);
   }
   assert.match(read('add-space-form.js'), /Object\.entries\(WORKSHOP_TYPES\)/, 'add-space-form.js leitet die Liste aus WORKSHOP_TYPES ab');
 });

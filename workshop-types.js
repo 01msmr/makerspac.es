@@ -10,20 +10,20 @@
  * @type {Record<string, { label: string, icon: string }>} */
 export const WORKSHOP_TYPES = {
   '3d':          { label: '3D printing', icon: 'fas fa-cube' },        // digital fab
-  'laser':       { label: 'Laser cutting', icon: 'fas fa-explosion' },   // digital fab
+  'laser':       { label: 'laser cutting', icon: 'fas fa-explosion' },   // digital fab
   'cnc':         { label: 'CNC', icon: 'fas fa-gear' },         // digital fab
-  'electronics': { label: 'Electronics', icon: 'fas fa-microchip' },   // tech
-  'coding':      { label: 'Coding', icon: 'fas fa-laptop-code' }, // tech
+  'electronics': { label: 'electronics', icon: 'fas fa-microchip' },   // tech
+  'coding':      { label: 'coding', icon: 'fas fa-laptop-code' }, // tech
   'vr':          { label: 'VR', icon: 'fas fa-vr-cardboard' },// tech
-  'music':       { label: 'Music', icon: 'fas fa-music' },        // creative studio
-  'photo':       { label: 'Photography', icon: 'fas fa-camera' },       // creative studio
-  'wood':        { label: 'Woodworking', icon: 'fas fa-hammer' },       // physical workshop
-  'metal':       { label: 'Metalworking', icon: 'fas fa-gears' },        // physical workshop
-  'bike':        { label: 'Bike repair', icon: 'fas fa-bicycle' },      // physical workshop
-  'repair':      { label: 'Repair café', icon: 'fas fa-screwdriver-wrench' }, // physical workshop (Repair-Café, Reparatur-Treff)
-  'textile':     { label: 'Textile', icon: 'fas fa-scissors' },    // craft
-  'screenprint': { label: 'Screen printing', icon: 'fas fa-shirt' },       // craft
-  'ceramics':    { label: 'Ceramics', icon: 'fas fa-jar' },          // craft
+  'music':       { label: 'music', icon: 'fas fa-music' },        // creative studio
+  'photo':       { label: 'photography', icon: 'fas fa-camera' },       // creative studio
+  'wood':        { label: 'woodworking', icon: 'fas fa-hammer' },       // physical workshop
+  'metal':       { label: 'metalworking', icon: 'fas fa-gears' },        // physical workshop
+  'bike':        { label: 'bike repair', icon: 'fas fa-bicycle' },      // physical workshop
+  'repair':      { label: 'repair café', icon: 'fas fa-screwdriver-wrench' }, // physical workshop (Repair-Café, Reparatur-Treff)
+  'textile':     { label: 'textile', icon: 'fas fa-scissors' },    // craft
+  'screenprint': { label: 'screen printing', icon: 'fas fa-shirt' },       // craft
+  'ceramics':    { label: 'ceramics', icon: 'fas fa-jar' },          // craft
 };
 
 /**
