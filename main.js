@@ -38,20 +38,21 @@ const CONFIG = AppConfig;
       return LeafletIcons;
     }
 
+    const PO = CONFIG.settings.pinOpacity;   // Pin-Transparenz im SVG (nicht am Marker)
     LeafletIcons = {
       // Standard Icon (Dark Mode aware)
-      defaultIcon: createLeafletIcon(CONFIG.getDefaultIconColor()),
+      defaultIcon: createLeafletIcon(CONFIG.getDefaultIconColor(), 1, PO),
 
       // Highlight Icon
-      highlightIcon: createLeafletIcon(CONFIG.getDefaultIconColor()),
+      highlightIcon: createLeafletIcon(CONFIG.getDefaultIconColor(), 1, PO),
 
       // Hover Icon (vergrößert)
-      hoverIcon: createLeafletIcon(CONFIG.getHoverColor(), 1.5),
+      hoverIcon: createLeafletIcon(CONFIG.getHoverColor(), 1.5, PO),
 
       // Status Icons
-      greenIcon: createLeafletIcon(CONFIG.colours.open),
-      redIcon: createLeafletIcon(CONFIG.colours.closed),
-      unknownStatusIcon: createLeafletIcon(CONFIG.colours.unknown)
+      greenIcon: createLeafletIcon(CONFIG.colours.open, 1, PO),
+      redIcon: createLeafletIcon(CONFIG.colours.closed, 1, PO),
+      unknownStatusIcon: createLeafletIcon(CONFIG.colours.unknown, 1, PO)
     };
 
     return LeafletIcons;

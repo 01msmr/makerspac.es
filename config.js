@@ -103,6 +103,7 @@ const SETTINGS = {
   zoomDebounceMs:         800,
   popupDelayMs:           300,
   popupGraceMs:          1100,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
+  pinOpacity:            0.66,   // leichte Transparenz der Pins; im SVG (nicht am Marker-Element), damit der Halo nicht mit abgedunkelt/abgeschnitten wird
   haloMinZoom:           13,     // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte; nur einzelne Pins, Cluster haben keinen Halo), 0,8 s Einblenden (CSS)
   hintShrinkMs:           1350,
   hintFadeMs:             1200,
@@ -194,13 +195,14 @@ function escapeHtml(text) {
  * Benötigt Leaflet (L) zur Laufzeit.
  * @param {string} color - Fill-Farbe (CSS-Farbwert)
  * @param {number} [scale=1.0] - Skalierungsfaktor
+ * @param {number} [pinOpacity=1] - Deckkraft des Pins (ohne Halo); App-Pins: AppConfig.settings.pinOpacity
  * @returns {L.DivIcon}
  */
 const HALO_SIZE = 165;   // Durchmesser des Pin-Halos in px — FEST, unabhängig von der Pin-Größe (auch am Hover-/Ziel-Pin)
 
 let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
 
-export function createLeafletIcon(color, scale = 1.0) {
+export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
   const w = Math.round(25 * scale);
   const h = Math.round(41 * scale);
   const PIN = 'M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z';
@@ -216,9 +218,13 @@ export function createLeafletIcon(color, scale = 1.0) {
   // Pin: 1 px weißer Rand (direkt im Symbol, außerhalb des schwarzen 1-px-Rands) → löst den Pin von dunklen/bunten Kartenflächen
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
     halo +
+    // Pin-Deckkraft als Gruppe im SVG: Weiß-Unterlage, Füllung, Rand und Punkt blenden gemeinsam durch (wie die frühere Marker-Opacity),
+    // der Halo davor bleibt davon unberührt (volle 66 % in der Mitte)
+    (pinOpacity < 1 ? `<g opacity="${pinOpacity}">` : '') +
     `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +
     `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
     `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
+    (pinOpacity < 1 ? '</g>' : '') +
     `</svg>`;
   return L.divIcon({
     html: svg,

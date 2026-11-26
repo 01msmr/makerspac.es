@@ -767,18 +767,8 @@ class ListingCore {
    * @returns {LeafletDivIcon}
    */
   createHoverIcon(color) {
-    const w = 37.5, h = 61.5;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
-      `<path fill="${color}" stroke="#000" stroke-width="1" d="M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z"/>` +
-      `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
-      `</svg>`;
-    return L.divIcon({
-      html: svg,
-      className: 'ms-marker-icon',
-      iconSize: [w, h],
-      iconAnchor: [w / 2, h],
-      popupAnchor: [1.5, -51],
-    });
+    // Wie der Standard-Pin, 1,5-fach (mit Halo und weißer Kontur, Pin-Transparenz wie überall)
+    return AppConfig.createLeafletIcon(color, 1.5, AppConfig.settings.pinOpacity);
   }
 
   /**

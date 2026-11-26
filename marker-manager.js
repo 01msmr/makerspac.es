@@ -458,7 +458,8 @@ export function createMarkerForLocation(location) {
     return null;
   }
 
-  const marker = L.marker([lat, lng], { icon: icons.defaultIcon, opacity: 0.66 });
+  // Pin-Transparenz (settings.pinOpacity) steckt im SVG der Icons, nicht am Marker-Element: sonst würde der Halo mit abgedunkelt
+  const marker = L.marker([lat, lng], { icon: icons.defaultIcon });
   // Do NOT add to clusterGroup here — updateMarkers() controls visibility based on active filters.
   // Adding directly would bypass country/style filters that may already be active (e.g. Stage 2 enrichment).
   marker.locationId = location.ID;

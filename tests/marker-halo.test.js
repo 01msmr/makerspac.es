@@ -36,6 +36,23 @@ test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 165 px, zentriert
   }
 });
 
+test('1b: Pin-Transparenz als <g opacity> im SVG, der Halo liegt außerhalb der Deckkraft-Gruppe; Marker selbst bleibt deckend', () => {
+  const po = AppConfig.settings.pinOpacity;
+  assert.equal(po, 0.66);
+  const html = createLeafletIcon('#f00', 1, po).html;
+  const g = html.indexOf('<g opacity="0.66">');
+  assert.ok(g > html.indexOf('class="pin-halo"'), 'Halo steht vor der Gruppe (nicht darin)');
+  assert.ok(g > -1 && html.indexOf('</g>') > g && html.indexOf('</g>') < html.indexOf('</svg>'));
+  assert.ok(!createLeafletIcon('#f00').html.includes('<g opacity'), 'ohne pinOpacity (Embed) keine Gruppe');
+  // Marker-Element ohne opacity-Option (sonst würde der Halo mit abgedunkelt und von iOS-WebKit ggf. abgeschnitten)
+  assert.match(read('marker-manager.js'), /L\.marker\(\[lat, lng\], \{ icon: icons\.defaultIcon \}\)/);
+  assert.ok(!/L\.marker\(\[lat, lng\][^)]*opacity/.test(read('marker-manager.js')));
+  // App-Icons und Hover-Pin tragen Pin-Transparenz UND Halo
+  assert.match(read('main.js'), /createLeafletIcon\(CONFIG\.colours\.closed, 1, PO\)/);
+  assert.match(read('main.js'), /hoverIcon: createLeafletIcon\(CONFIG\.getHoverColor\(\), 1\.5, PO\)/);
+  assert.match(read('listing-core.js'), /createHoverIcon\(color\) \{[^}]*AppConfig\.createLeafletIcon\(color, 1\.5, AppConfig\.settings\.pinOpacity\)/);
+});
+
 test('2: CSS — Mitte 66 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
   assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.66; \}/);
