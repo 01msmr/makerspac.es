@@ -21,7 +21,17 @@
     }
   },
   "2": {
-    "events": "https://www.slub-dresden.de/besuchen/veranstaltungen/kurse-workshops"
+    "events": "https://www.slub-dresden.de/besuchen/veranstaltungen/kurse-workshops",
+    "workshops": [
+      "3d",
+      "laser",
+      "electronics",
+      "vr",
+      "music",
+      "photo",
+      "wood",
+      "textile"
+    ]
   },
   "3": {
     "spaceapi": {
@@ -1872,7 +1882,18 @@
     }
   },
   "243": {
-    "events": "https://otelo.or.at/kalender/?filter_location=305"
+    "events": "https://otelo.or.at/kalender/?filter_location=305",
+    "workshops": [
+      "3d",
+      "electronics",
+      "vr",
+      "repair",
+      "textile"
+    ],
+    "weekly": {
+      "weekday": 6,
+      "time": 1400
+    }
   },
   "244": {
     "events": "https://cccsbg.at/events.ics",
