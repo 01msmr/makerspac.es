@@ -812,7 +812,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex-shrink: 0;
-    height: 32px;
+    height: 21px;   /* −33 % (vorher 32 px): Filter-Pane soll möglichst komplett aufs Gerät passen */
     box-sizing: border-box;
     width: 100%;
     background: #777;
