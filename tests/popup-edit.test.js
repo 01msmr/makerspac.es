@@ -58,6 +58,19 @@ test('3c: Touch-Trefferfläche des Stifts per Innenabstand, nicht per ::before/:
   assert.match(css, /@media \(pointer: coarse\) \{[^}]*\.popup-edit \{[^}]*padding: 15px 16px 15px 0;[^}]*margin: -15px -24px -15px -8px;/);
 });
 
+test('3d: Navigations-Symbol vor der Adresse: data-service ab Aufbau (OSM-Standard, gewählte Karten-App), Standard-Glyph ist das Karten-Symbol', () => {
+  const html = (svc) => { window.consent = svc === undefined ? undefined : { get: () => svc }; return buildPopupHTML(base, {}); };
+  assert.match(html(undefined), /class="popup-street-line navigation-icon" data-service="osm"/);
+  assert.match(html('google'), /navigation-icon" data-service="google"/);
+  assert.match(html('apple'), /navigation-icon" data-service="apple"/);
+  assert.match(html('evil"><x'), /navigation-icon" data-service="osm"/);   // nur bekannte Werte
+  window.consent = undefined;
+  const css = read('main-components.css');
+  assert.match(css, /\.navigation-icon i::before \{\s*content: "\\f279";/);   // Standard = Karte (OSM), im Font-Subset vorhanden
+  assert.ok(!/content:\s*"\\f5eb"/.test(css), '\\f5eb fehlt im Font-Subset (zeigte ein leeres Kästchen mit X) — nicht als content verwenden');
+  assert.match(read('libs/fontawesome/css/subset.min.css'), /\.fa-map\{--fa:"\\f279"\}/);
+});
+
 test('4: Tooltip-Text in allen 7 Sprachen vorhanden', () => {
   const t = JSON.parse(read('lang.json')).tooltips.editSpace;
   for (const l of ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk']) assert.ok(t[l], `fehlt: ${l}`);

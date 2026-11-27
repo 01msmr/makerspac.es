@@ -818,15 +818,10 @@ a#titleurl:hover h3.space-unknown .fas {
   font-family: "Font Awesome 5 Brands";
 }
 
-.navigation-icon[data-service="osm"] i::before {
+/* Standard (OSM, „default“, kein/unbekannter Dienst): Karten-Symbol. \f279 ist im Font-Subset vorhanden — das frühere \f5eb für „default“
+   fehlte im Subset und zeigte ein leeres Kästchen mit X, sobald das Popup ohne data-service neu aufgebaut wurde (z. B. Antippen in der Liste). */
+.navigation-icon i::before {
   content: "\f279";
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-}
-
-.navigation-icon[data-service="default"] i::before,
-.navigation-icon:not([data-service]) i::before {
-  content: "\f5eb";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
 }

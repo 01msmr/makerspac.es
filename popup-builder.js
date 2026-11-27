@@ -90,6 +90,10 @@ export function buildPopupHTML(location, opts = {}) {
   const linkText       = location.link?.text || linkUrl;
   const countryName    = location.loc?.country || '';
   const translatedCtry = t(`countries.${countryName}`);
+  // Gewählte Karten-App schon beim Aufbau mitgeben: Leaflet baut den Popup-Inhalt bei popup.update() neu auf, der popupopen-Handler
+  // (updateNavigationIconAppearance) setzt data-service sonst nur beim Öffnen. Ohne Wert gilt OSM (Karten-Symbol).
+  const savedService   = window.consent?.get?.('mapService');
+  const navService     = ['google', 'apple', 'osm'].includes(savedService) ? savedService : 'osm';
   const bookmarkIcon   = bookmarkManager
     ? bookmarkManager.createBookmarkIcon(location.ID, 'popup-bookmark')
     : '';
@@ -110,7 +114,7 @@ export function buildPopupHTML(location, opts = {}) {
         </div>
         ${weeklyHtml}
       </div>
-      <a href="#" class="popup-street-line navigation-icon" aria-label="Route zu ${location.name || ''}" role="tooltip" data-microtip-position="bottom">
+      <a href="#" class="popup-street-line navigation-icon" data-service="${navService}" aria-label="Route zu ${location.name || ''}" role="tooltip" data-microtip-position="bottom">
         <i></i>
         <div class="popup-address-lines">
           <div>${streetName} ${streetNumber}<span class="streetext">${streetExt}</span></div>
