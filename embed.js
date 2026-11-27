@@ -1,7 +1,7 @@
 // embed.js - Präzise Zentrierung mit Sidebar-Offset
 
 import { I18n } from './i18n.js';
-import AppConfig, { createLeafletIcon } from './config.js';
+import AppConfig, { createLeafletIcon, POPUP_OFFSET } from './config.js';
 import { buildPopupHTML } from './popup-builder.js';
 import { getTileMode, loadMaplibreIfNeeded, loadTrimmedStyle, MAPLIBRE_STYLE_URL } from './tile-loader.js';
 import { isWeeklyToday } from './date-utils.js';
@@ -148,7 +148,7 @@ class EmbedMapExtended {
     const marker = L.marker([space.loc.lat, space.loc.long], {
       icon, riseOnHover: true, interactive: false
     });
-    marker.bindPopup(() => buildPopupHTML(space), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
+    marker.bindPopup(() => buildPopupHTML(space), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false, offset: POPUP_OFFSET });
     marker.on('popupopen', () => this.handlePopupOpen(marker, space));
     marker.addTo(this.map);
     this.markers.set(space.ID, marker);

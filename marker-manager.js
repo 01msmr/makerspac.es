@@ -14,7 +14,7 @@
 /** @typedef {import('./types.js').MakerSpace} MakerSpace */
 /** @typedef {import('leaflet').Marker} LeafletMarker */
 
-import AppConfig from './config.js';
+import AppConfig, { popupFlipGap, POPUP_OFFSET } from './config.js';
 import { appContext } from './app-context.js';
 import { bookmarkManager } from './bookmark-manager.js';
 import { consent } from './datasync.js';
@@ -350,9 +350,6 @@ export function zfill(plz, country) {
 //   maxShift = wrapperBreite/2 − borderRadius (Pfeil bleibt auf der flachen Kante)
 // - Vertikal: spiegelt das Popup unter den Marker wenn es oben aus dem Screen ragt
 //   Nutzt CSS `translate`-Property (unabhängig von Leaflet's `transform`) + CSS-Variable
-/** Abstand Popup-Oberkante (gespiegelt) ↔ Marker-Punkt in px; so liegt die Pfeilspitze genau an der Pin-Spitze (vorher 15 → 1,6 px Lücke) */
-const FLIP_GAP = 13.4;
-
 function adjustPopupPosition(popup, map) {
   const el = popup._container;
   if (!el) return;
@@ -364,6 +361,10 @@ function adjustPopupPosition(popup, map) {
   wrapper.style.transform = '';
   el.classList.remove('popup-flipped');
   el.style.removeProperty('--flip-dy');
+
+  // Gespiegeltes Popup: Abstand zum Marker-Punkt aus der Pin-Größe hergeleitet (Pfeilspitze genau an der Pin-Spitze), s. config.js popupFlipGap
+  const pinHeight = popup._source?.options?.icon?.options?.iconSize?.[1] ?? 41;
+  const FLIP_GAP = popupFlipGap(pinHeight / 41);
 
   const mapRect = map.getContainer().getBoundingClientRect();
   const popupRect = el.getBoundingClientRect();
@@ -469,7 +470,7 @@ export function createMarkerForLocation(location) {
   window.markerById.set(location.ID, marker);
 
   _applyMarkerClickHandler(marker);
-  marker.bindPopup(() => buildPopupHTML(location, { bookmarkManager, editable: true }), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false });
+  marker.bindPopup(() => buildPopupHTML(location, { bookmarkManager, editable: true }), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false, offset: POPUP_OFFSET });
   _applyPopupOpenHandler(marker, location);
   _applyPopupCloseHandler(marker);
   _applyMarkerHoverHandlers(marker, location);

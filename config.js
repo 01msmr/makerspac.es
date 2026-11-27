@@ -200,6 +200,52 @@ function escapeHtml(text) {
  */
 const HALO_SIZE = 220;   // Durchmesser des Pin-Halos in px — FEST, unabhängig von der Pin-Größe (auch am Hover-/Ziel-Pin)
 
+// ─── Geometrie des Popup-Pfeils: im Stamm festgelegt, aus dem Aufbau hergeleitet (nicht gemessen) ───────────────────────
+// Prinzip: Die Pfeilspitze liegt von Haus aus EXAKT auf dem Anker des Popups (Leaflets eigenes `offset`, hier hergeleitet).
+// Der Anker (popupAnchor) ist dann nur noch Pin-Geometrie: Pin-Oberkante (Popup über dem Pin) bzw. Pin-Spitze (gespiegelt).
+// Quellen: Leaflet 1.9.4 (Popup._updatePosition: container.style.bottom = −offset.y; translate auf Marker + popupAnchor),
+//          leaflet.css (Popup-/Pfeil-Maße), main-components.css (.popup-flipped). Alle Maße in px.
+export const POPUP_GEOMETRY = Object.freeze({
+  MARGIN_BOTTOM: 20,               // .leaflet-popup { margin-bottom: 20px }
+  TIP_CONTAINER_H: 20,             // .leaflet-popup-tip-container { height: 20px }
+  TIP_CONTAINER_MARGIN_TOP: -1,    // … { margin-top: -1px } (position: absolute, hängt direkt unter dem Inhalt)
+  TIP_MARGIN_TOP: -10,             // .leaflet-popup-tip { margin: -10px auto 0 }
+  TIP_BOX: 19,                     // … { width/height: 17px; padding: 1px } → 19 × 19, um 45° gedreht
+  FLIPPED_WRAPPER_MARGIN_TOP: 20,  // .popup-flipped .leaflet-popup-content-wrapper { margin-top: 20px } (Platz für den Pfeil oben)
+});
+const G = POPUP_GEOMETRY;
+// Spitze des gedrehten Quadrats unter der Oberkante des Pfeil-Containers: Quadrat-Oberkante + halbe Kante (= Mitte) + halbe Diagonale
+const TIP_VERTEX_BELOW_TOP = G.TIP_MARGIN_TOP + G.TIP_BOX / 2 + (G.TIP_BOX / 2) * Math.SQRT2;   // 12,935
+/** Wie weit die sichtbare Pin-Kontur über/unter der SVG-Kante liegt: Pfad y = 1 … 39 im 25 × 41-Raster, Außenkontur 1,5 → 0,5 je Seite */
+const pinEdgeOverhang = scale => 0.5 * scale;
+
+/**
+ * Leaflet-`offset` des Popups (an JEDEM bindPopup mit diesen Pins mitgeben): Die Spitze des Pfeils (Popup über dem Pin) liegt bei
+ * Anker + offset.y − MARGIN_BOTTOM + TIP_CONTAINER_MARGIN_TOP + TIP_VERTEX_BELOW_TOP; = 0 gesetzt, fällt sie auf den Anker.
+ * Auf ganze Pixel gerundet (halbe Pixel würden die Popup-Schrift verwischen): Rest 0,065 px.
+ */
+export const POPUP_OFFSET = Object.freeze([0, Math.round(G.MARGIN_BOTTOM - G.TIP_CONTAINER_MARGIN_TOP - TIP_VERTEX_BELOW_TOP)]);   // [0, 8]
+
+/**
+ * popupAnchor.y: der Anker liegt an der sichtbaren Pin-Oberkante → Pfeilspitze (Popup über dem Pin) berührt den Pin, ohne hineinzuragen.
+ * @param {number} h Icon-Höhe in px (41 × scale, gerundet)  @param {number} scale
+ */
+export function popupAnchorY(h, scale) {
+  return Math.round(-(h + pinEdgeOverhang(scale)));
+}
+
+/**
+ * Abstand Popup-Oberkante ↔ Marker-Punkt beim gespiegelten Popup (UNTER dem Pin), bei dem die Pfeilspitze genau die Pin-Spitze berührt.
+ * Container oben (top: 0, 180° gedreht): Spitze liegt TIP_CONTAINER_MARGIN_TOP + (TIP_CONTAINER_H − 12,935) unter der Popup-Oberkante;
+ * der zusätzliche margin-top des Inhalts schiebt die Oberkante um FLIPPED_WRAPPER_MARGIN_TOP nach oben. (Unabhängig vom Popup-`offset`:
+ * flipDy wird relativ zur ungespiegelten Position gemessen.)
+ * @param {number} scale Pin-Skalierung (Hover-Pin 1,5)
+ */
+export function popupFlipGap(scale = 1) {
+  const tipBelowPopupTop = G.TIP_CONTAINER_MARGIN_TOP + (G.TIP_CONTAINER_H - TIP_VERTEX_BELOW_TOP);   // 6,065
+  return G.FLIPPED_WRAPPER_MARGIN_TOP - tipBelowPopupTop - pinEdgeOverhang(scale);                       // 13,435 bei scale 1
+}
+
 let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
 
 export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
@@ -231,9 +277,8 @@ export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
     className: 'ms-marker-icon',
     iconSize: [w, h],
     iconAnchor: [w / 2, h],
-    // Popup-Pfeil: waagerecht exakt auf der Pin-Mitte (vorher +1 px), senkrecht Spitze an die Pin-Oberkante (vorher 6,4 px im Pin).
-    // Die sichtbare Pfeilspitze liegt 1,1 px über dem Anker; Pin-Oberkante = SVG-Oberkante − 0,5 × scale (1,5-px-Kontur).
-    popupAnchor: [0, Math.round(-(h + 0.5 * scale - 1.1))],
+    // Popup-Anker = Pin-Oberkante, waagerecht Pin-Mitte (mit POPUP_OFFSET fällt die Pfeilspitze darauf; s. POPUP_GEOMETRY)
+    popupAnchor: [0, popupAnchorY(h, scale)],
   });
 }
 
