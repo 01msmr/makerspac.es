@@ -23,7 +23,8 @@ test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 220 px, zentriert
   assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="110" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
   assert.ok(!/<span/.test(icon.html), 'kein span mit z-index:-1 mehr (auf iOS-Safari nicht sichtbar)');
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes
-  assert.match(icon.html, /<path fill="#0e9000" stroke="#000" stroke-width="1"/);
+  assert.match(icon.html, /<path class="pin-fill" fill="#0e9000" stroke="#000" stroke-width="1"/);
+  assert.match(icon.html, /<g class="pin-body">/);   // Gruppe für die Hover-/Popup-Vergrößerung (CSS .pin-big); Halo davor, ausserhalb
   assert.ok(icon.html.indexOf('class="pin-halo"') < icon.html.indexOf('<path fill="#fff"'), 'Halo liegt im Quelltext vor dem Pin (= dahinter)');
   assert.deepEqual(icon.iconSize, [25, 41]);
   // Verlauf-IDs eindeutig je Pin
@@ -40,40 +41,37 @@ test('1b: Pin-Transparenz als <g opacity> im SVG, der Halo liegt außerhalb der 
   const po = AppConfig.settings.pinOpacity;
   assert.equal(po, 0.66);
   const html = createLeafletIcon('#f00', 1, po).html;
-  const g = html.indexOf('<g opacity="0.66">');
+  const g = html.indexOf('<g class="pin-body" opacity="0.66">');
   assert.ok(g > html.indexOf('class="pin-halo"'), 'Halo steht vor der Gruppe (nicht darin)');
   assert.ok(g > -1 && html.indexOf('</g>') > g && html.indexOf('</g>') < html.indexOf('</svg>'));
-  assert.ok(!createLeafletIcon('#f00').html.includes('<g opacity'), 'ohne pinOpacity (Embed) keine Gruppe');
+  assert.ok(!/<g class="pin-body" opacity/.test(createLeafletIcon('#f00').html), 'ohne pinOpacity (Embed) keine Deckkraft an der Gruppe');
   // Marker-Element ohne opacity-Option (sonst würde der Halo mit abgedunkelt und von iOS-WebKit ggf. abgeschnitten)
   assert.match(read('marker-manager.js'), /L\.marker\(\[lat, lng\], \{ icon: icons\.defaultIcon \}\)/);
   assert.ok(!/L\.marker\(\[lat, lng\][^)]*opacity/.test(read('marker-manager.js')));
-  // App-Icons und Hover-Pin tragen Pin-Transparenz UND Halo
+  // App-Icons tragen Pin-Transparenz UND Halo; ein Hover-Icon gibt es nicht mehr (Pin vergrößert sich per Klasse, s. tests/pin-big.test.js)
   assert.match(read('main.js'), /createLeafletIcon\(CONFIG\.colours\.closed, 1, PO\)/);
-  assert.match(read('main.js'), /hoverIcon: createLeafletIcon\(CONFIG\.getHoverColor\(\), 1\.5, PO\)/);
-  assert.match(read('listing-core.js'), /createHoverIcon\(color\) \{[^}]*AppConfig\.createLeafletIcon\(color, 1\.5, AppConfig\.settings\.pinOpacity\)/);
 });
 
-test('1c: Popup-Pfeil im Stamm hergeleitet: Spitze fällt auf den Anker, Anker = Pin-Oberkante, gespiegelt = Pin-Spitze', () => {
-  const { POPUP_GEOMETRY, POPUP_OFFSET, popupAnchorY, popupFlipGap } = cfg;
-  // Herleitung aus Leaflet 1.9.4 + CSS: Spitze (gedrehtes 19-px-Quadrat) liegt 12,935 px unter der Oberkante des Pfeil-Containers
+test('1c: Popup-Pfeil im Stamm hergeleitet: Spitze fällt auf den Anker, Anker = Oberkante des GROSSEN Pins, gespiegelt = Spitze des großen Pins', () => {
+  const { POPUP_GEOMETRY, POPUP_OFFSET, PIN_GEOMETRY, PIN_BIG_SCALE, popupAnchorY, popupFlipGap } = cfg;
   const vertex = POPUP_GEOMETRY.TIP_MARGIN_TOP + POPUP_GEOMETRY.TIP_BOX / 2 * (1 + Math.SQRT2);
   assert.ok(Math.abs(vertex - 12.935) < 0.001);
-  // popup offset.y so, dass Spitze = Anker (Rest nur die Pixel-Rundung): offset + (−20 −1 + 12,935) ≈ 0
   assert.deepEqual([...POPUP_OFFSET], [0, 8]);
   const rest = POPUP_OFFSET[1] - POPUP_GEOMETRY.MARGIN_BOTTOM + POPUP_GEOMETRY.TIP_CONTAINER_MARGIN_TOP + vertex;
   assert.ok(Math.abs(rest) < 0.1, `Spitze − Anker = ${rest}`);
-  // Anker = sichtbare Pin-Oberkante (SVG-Oberkante − 0,5 × scale); waagerecht Pin-Mitte
-  assert.deepEqual(createLeafletIcon('#000').popupAnchor, [0, -41]);        // −41,5 gerundet
-  assert.deepEqual(createLeafletIcon('#000', 1.5).popupAnchor, [0, -63]);   // −(62 + 0,75)
+  // großer Pin: Skalierung um die Spitze → Oberkante = Spitze − (Spitze − Pfadoben) × 1,5 − Kontur × 1,5 = −20,25 (ab SVG-Oberkante)
+  assert.equal(PIN_BIG_SCALE, 1.5);
+  const bigTop = PIN_GEOMETRY.TIP_Y - (PIN_GEOMETRY.TIP_Y - PIN_GEOMETRY.TOP_Y) * PIN_BIG_SCALE - PIN_GEOMETRY.OUTLINE * PIN_BIG_SCALE;
+  assert.equal(bigTop, -20.25);
+  assert.deepEqual(createLeafletIcon('#000').popupAnchor, [0, -61]);        // −(41 + 20,25) = −61,25
   for (const sc of [1, 1.2, 1.5, 2]) {
     const pa = createLeafletIcon('#000', sc).popupAnchor;
     assert.equal(pa[0], 0, `x bei scale ${sc}`);
-    assert.equal(pa[1], popupAnchorY(Math.round(41 * sc), sc));
+    assert.equal(pa[1], popupAnchorY(sc));
   }
-  // Gespiegelt: Abstand aus 20 (margin-top des Inhalts) − 6,065 (Spitze unter der Popup-Oberkante) − 0,5 × scale (Pin-Kontur)
-  assert.ok(Math.abs(popupFlipGap(1) - 13.435) < 0.001);
-  assert.ok(Math.abs(popupFlipGap(1.5) - 13.185) < 0.001);
-  // Offset an JEDEM Popup dieser Pins (Hauptkarte und Embed), Abstand aus der Pin-Größe statt fester Zahl
+  // Gespiegelt: 20 (margin-top) − 6,065 (Spitze unter der Popup-Oberkante) + 0,25 × scale (großer Pin ragt unter den Marker-Punkt)
+  assert.ok(Math.abs(popupFlipGap(1) - 14.185) < 0.001);
+  assert.ok(Math.abs(popupFlipGap(1.5) - 14.31) < 0.001);
   assert.match(read('marker-manager.js'), /closeButton: false, offset: POPUP_OFFSET \}\);/);
   assert.match(read('embed.js'), /closeButton: false, offset: POPUP_OFFSET \}\);/);
   assert.match(read('marker-manager.js'), /const FLIP_GAP = popupFlipGap\(pinHeight \/ 41\);/);

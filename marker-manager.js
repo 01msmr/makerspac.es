@@ -106,14 +106,7 @@ function openMap(service, lat, long) {
 
 // DROPDOWN HOVER MANAGEMENT
 function setMarkerDropdownHover(marker, isHovering) {
-  const state = window.markerStateManager.getState(marker.locationId);
-  window.markerStateManager.setState(marker.locationId, { isDropdownHovering: isHovering });
-
-  if (isHovering) {
-    applyMarkerScale(marker, 1.15);
-  } else if (!state.isHovering) {
-    applyMarkerScale(marker, 1);
-  }
+  window.markerStateManager.setState(marker.locationId, { isDropdownHovering: isHovering });   // → syncPinBig via onChange
 }
 
 function clearMarkerDropdownHover(marker) {
@@ -255,81 +248,39 @@ function createConnectionLine(suggestionItem, targetMarker, color = null, weight
   return connectionLine;
 }
 
-// ZENTRALISIERTE MARKER SKALIERUNG mit Animation
-function applyMarkerScale(marker, targetScale) {
-  const state = window.markerStateManager.getState(marker.locationId);
-
-  if (state.currentScale === targetScale || state.isScaling) return;
-
-  window.markerStateManager.setState(marker.locationId, {
-    isScaling: true,
-    currentScale: targetScale
-  });
-
-  if (marker._icon) {
-    marker._icon.style.zIndex = targetScale > 1 ? '1000' : '';
-
-    setTimeout(() => {
-      window.markerStateManager.setState(marker.locationId, { isScaling: false });
-    }, 200);
+// PIN-GRÖSSE: ein Pin, Zustand als Klasse (kein Icon-Tausch, daher animierbar). Groß, solange die Maus auf dem Pin ODER auf dem
+// Listeneintrag ist ODER das Popup offen ist (auch per Tap auf Touch). Einziger Ort, der das entscheidet; aufgerufen bei jeder
+// Zustandsänderung (markerStateManager.onChange), bei popupopen/popupclose, beim Hinzufügen zur Karte und nach jedem setIcon.
+function syncPinBig(marker) {
+  const el = marker?._icon;
+  if (!el) return;
+  const st = window.markerStateManager.getState(marker.locationId);
+  const big = !!(st.isHovering || st.isDropdownHovering || marker._popupShown);
+  // Neues Element (z. B. Marker aus dem Cluster geholt): erst den Ausgangszustand „klein“ rendern, sonst springt der Pin ohne Animation
+  if (!el._pinReady) { el._pinReady = true; if (big) el.querySelector('.pin-body')?.getBoundingClientRect(); }
+  el.classList.toggle('pin-big', big);
+  const loc = appContext.locationById?.get(marker.locationId);
+  el.classList.toggle('pin-nostatus', !loc?.spaceapi?.endpoint);   // ohne SpaceAPI: Hover-Farbe (blau) statt Statusfarbe
+  if (marker._pinBig !== big) {
+    marker._pinBig = big;
+    marker.setZIndexOffset(big ? 1000 : 0);   // vergrößerter Pin über den Nachbarn
   }
 }
 
-// Helper function zum konsistenten Icon-Update
+// Icon passend zu Status, Suche/Filter und Sticky-Zustand setzen (respektiert Hover: dort ändert sich nichts)
 function updateMarkerIcon(marker, location) {
-  const state = window.markerStateManager.getState(marker.locationId);
+  if (window.markerStateManager.isAnyHoverActive(marker.locationId)) return;
 
-  if (state.isHovering || state.isDropdownHovering) {
+  const statusIcon = icons[AppConfig.statusIconKey(location)];
+  if (currentStickyMarker === marker && isPopupSticky) {   // geöffneter (sticky) Pin bleibt farbig, auch wenn er nicht zum Filter passt
+    marker.setIcon(statusIcon);
     return;
   }
 
-  if (currentStickyMarker === marker && isPopupSticky) {
-    if (window.spaceAPI) {
-      const statusIcon = window.spaceAPI.getStatusIcon(location, icons);
-      marker.setIcon(statusIcon);
-    } else {
-      marker.setIcon(icons.highlightIcon);
-    }
-    return;
-  }
-
-  const searchQuery = document.querySelector('#search-bar').value.trim().toLowerCase();
-
-  const hasActiveFilters = window.styleFilterManager &&
-    window.styleFilterManager.hasActiveFilters();
-
-  if (searchQuery.length > 0 || hasActiveFilters) {
-    const ids = appContext.searchFilter?.lastFilteredIds;
-    const isMatch = ids ? ids.has(location.ID) : true;
-
-    if (isMatch) {
-      let iconToSet;
-
-      if (location.isOpen === true) {
-        iconToSet = icons.greenIcon;
-      } else if (location.isOpen === false) {
-        iconToSet = icons.redIcon;
-      } else if (location.spaceapi && location.spaceapi.endpoint) {
-        iconToSet = icons.unknownStatusIcon;
-      } else {
-        iconToSet = icons.highlightIcon;
-      }
-
-      marker.setIcon(iconToSet);
-    } else {
-      marker.setIcon(icons.defaultIcon);
-    }
-  } else {
-    if (location.isOpen === true) {
-      marker.setIcon(icons.greenIcon);
-    } else if (location.isOpen === false) {
-      marker.setIcon(icons.redIcon);
-    } else if (location.spaceapi && location.spaceapi.endpoint) {
-      marker.setIcon(icons.unknownStatusIcon);
-    } else {
-      marker.setIcon(icons.defaultIcon);
-    }
-  }
+  // Bei aktiver Suche/aktivem Filter: nicht passende Pins grau (Standard-Icon), passende in Statusfarbe
+  const filtered = document.querySelector('#search-bar').value.trim() || window.styleFilterManager?.hasActiveFilters();
+  const isMatch = appContext.searchFilter?.lastFilteredIds?.has(location.ID) ?? true;
+  marker.setIcon(filtered && !isMatch ? icons.defaultIcon : statusIcon);
 }
 
 /**
@@ -464,6 +415,15 @@ export function createMarkerForLocation(location) {
 
   // Pin-Transparenz (settings.pinOpacity) steckt im SVG der Icons, nicht am Marker-Element: sonst würde der Halo mit abgedunkelt
   const marker = L.marker([lat, lng], { icon: icons.defaultIcon });
+  // setIcon: gleiches Icon → nichts tun (kein Neuaufbau des Elements, laufende Animation bleibt); sonst danach Pin-Größe neu ableiten
+  const rawSetIcon = marker.setIcon.bind(marker);
+  marker.setIcon = (icon) => {
+    if (marker.options.icon === icon && marker._icon) return marker;
+    const r = rawSetIcon(icon);
+    syncPinBig(marker);
+    return r;
+  };
+  marker.on('add', () => syncPinBig(marker));
   // Do NOT add to clusterGroup here — updateMarkers() controls visibility based on active filters.
   // Adding directly would bypass country/style filters that may already be active (e.g. Stage 2 enrichment).
   marker.locationId = location.ID;
@@ -528,6 +488,8 @@ function _applyMarkerClickHandler(marker) {
 function _applyPopupOpenHandler(marker, location) {
   marker.on('popupopen', (e) => {
     openPopupMarkers.add(marker);
+    marker._popupShown = true;
+    syncPinBig(marker);
     const wasOpenedByHover = marker._openedByHover;
 
     if (!wasOpenedByHover) {
@@ -657,12 +619,15 @@ function _applyPopupOpenHandler(marker, location) {
 function _applyPopupCloseHandler(marker) {
   marker.on('popupclose', () => {
     openPopupMarkers.delete(marker);
-    // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle)
+    // Touch-Geräte: Popup sofort wieder öffnen wenn Re-Tap (kein Toggle) — Pin bleibt dabei groß (kein Schrumpfen/Wachsen)
     if (marker._retainPopup) {
       marker._retainPopup = false;
       requestAnimationFrame(() => marker.openPopup());
       return;
     }
+
+    marker._popupShown = false;
+    syncPinBig(marker);
 
     document.querySelector('.title').classList.remove('popup-active');
 
@@ -713,8 +678,7 @@ function _applyMarkerHoverHandlers(marker, location) {
     }
     openPopupMarkers.forEach(m => { if (m !== marker && m.isPopupOpen()) m.closePopup(); });
 
-    window.markerStateManager.setState(marker.locationId, { isHovering: true });
-    applyMarkerScale(marker, 1.15);
+    window.markerStateManager.setState(marker.locationId, { isHovering: true });   // → syncPinBig via onChange
 
     const hoverTimeout = setTimeout(() => {
       const currentState = window.markerStateManager.getState(marker.locationId);
@@ -722,7 +686,7 @@ function _applyMarkerHoverHandlers(marker, location) {
         marker._openedByHover = true;
         marker.openPopup();
       }
-    }, 400);
+    }, AppConfig.settings.popupDelayMs);   // wie beim Listeneintrag: Popup ohne Verzögerung
 
     const stickyTimeout = setTimeout(() => {
       const currentState = window.markerStateManager.getState(marker.locationId);
@@ -743,7 +707,6 @@ function _applyMarkerHoverHandlers(marker, location) {
     window.markerStateManager.setState(marker.locationId, { isHovering: false });
     window.markerStateManager.clearTimeouts(marker.locationId);
 
-    if (!state.isDropdownHovering) applyMarkerScale(marker, 1);
 
     // Hover-Intent: offenes, nicht-stickies Popup bleibt kurz stehen, damit die Maus es erreichen kann
     // (popupElement mouseenter → handlePopupEnter löscht closeTimeout und macht es sticky).
@@ -780,21 +743,8 @@ export function updateMarkerIconForLocation(location) {
   const marker = getMarkerByLocationId(location.ID);
   if (!marker) return;
 
-  const state = window.markerStateManager.getState(marker.locationId);
-  if (state.isHovering || state.isDropdownHovering) {
-    return;
-  }
-  let newIcon;
-  if (location.isOpen === true) {
-    newIcon = icons.greenIcon;
-  } else if (location.isOpen === false) {
-    newIcon = icons.redIcon;
-  } else if (location.spaceapi && location.spaceapi.endpoint) {
-    newIcon = icons.unknownStatusIcon;
-  } else {
-    newIcon = icons.highlightIcon;
-  }
-  marker.setIcon(newIcon);
+  if (window.markerStateManager.isAnyHoverActive(marker.locationId)) return;
+  marker.setIcon(icons[AppConfig.statusIconKey(location)]);
   if (marker.isPopupOpen()) {
     marker.closePopup();
     marker.openPopup();
@@ -835,6 +785,9 @@ export function initMarkerManager({ map: mapInstance, icons: iconsRef }) {
   const syncHalo = () => map.getContainer().classList.toggle('halo-on', map.getZoom() >= AppConfig.settings.haloMinZoom);
   map.on('zoomend', syncHalo);
   syncHalo();
+
+  // Pin-Größe aus dem Marker-Zustand ableiten (siehe syncPinBig)
+  window.markerStateManager.onChange = (id) => syncPinBig(getMarkerByLocationId(id));
 
   // window-Bridge (routing.js nutzt window.zfill)
   window.zfill = zfill;

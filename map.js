@@ -92,14 +92,13 @@ appContext.markerStateManager = {
 
   setState(locationId, state) {
     this.states.set(locationId, { ...this.getState(locationId), ...state });
+    this.onChange?.(locationId);   // marker-manager.js: Pin-Größe (pin-big) aus dem Zustand ableiten
   },
 
   getState(locationId) {
     return this.states.get(locationId) || {
       isHovering: false,
       isDropdownHovering: false,
-      isScaling: false,
-      currentScale: 1,
       hoverTimeout: null,
       stickyTimeout: null,
       closeTimeout: null,
@@ -139,7 +138,6 @@ window.markerStateManager = appContext.markerStateManager; // backward compat
 const icons = {
   get defaultIcon() { return window.MapIcons.icons.defaultIcon; },
   get highlightIcon() { return window.MapIcons.icons.highlightIcon; },
-  get hoverIcon() { return window.MapIcons.icons.hoverIcon; },
   get redIcon() { return window.MapIcons.icons.redIcon; },
   get greenIcon() { return window.MapIcons.icons.greenIcon; },
   get unknownStatusIcon() { return window.MapIcons.icons.unknownStatusIcon; }

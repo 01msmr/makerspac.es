@@ -57,6 +57,19 @@ export function getDynamicSpaceColor(location) {
   return getHoverColor();
 }
 
+/**
+ * Status → Icon-Schlüssel im icons-Namespace (main.js). Einzige Stelle dieser Auswahl (früher 4 Kopien):
+ * offen grün · geschlossen rot · SpaceAPI ohne Antwort orange · sonst Standard (dunkelgrau).
+ * @param {Pick<MakerSpace, 'spaceapi'|'isOpen'>|undefined} location
+ * @returns {'greenIcon'|'redIcon'|'unknownStatusIcon'|'defaultIcon'}
+ */
+export function statusIconKey(location) {
+  if (location?.isOpen === true)    return 'greenIcon';
+  if (location?.isOpen === false)   return 'redIcon';
+  if (location?.spaceapi?.endpoint) return 'unknownStatusIcon';
+  return 'defaultIcon';
+}
+
 /** Setzt CSS-Variablen aus COLOURS (Single Source of Truth). */
 export function applyCssColours() {
   const root = document.documentElement;

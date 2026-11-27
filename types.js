@@ -66,8 +66,6 @@ export {};
  * @typedef {Object} MarkerState
  * @property {boolean}          isHovering
  * @property {boolean}          isDropdownHovering
- * @property {boolean}          isScaling
- * @property {number}           currentScale
  * @property {number|null}      hoverTimeout
  * @property {number|null}      stickyTimeout
  * @property {number|null}      closeTimeout

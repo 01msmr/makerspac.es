@@ -93,6 +93,17 @@ body {
   .ms-marker-icon .pin-halo, .halo-on .ms-marker-icon .pin-halo { transition: none; }
 }
 
+/* Pin vergrößert sich bei Hover (Pin oder Listeneintrag) und bei offenem Popup: Klasse .pin-big am Marker (marker-manager.js syncPinBig).
+   Skalierung um die Pin-SPITZE (bleibt am Ort), nur der Pin-Körper — der Halo davor bleibt fest. Faktor = PIN_BIG_SCALE (config.js), muss zum
+   Popup-Anker passen. Spaces ohne SpaceAPI (.pin-nostatus) färben sich dabei in die Hover-Farbe, mit derselben schnellen Animation. */
+.ms-marker-icon .pin-body { transform-box: view-box; transform-origin: 12.5px 39px; transition: transform .15s ease-out; }
+.ms-marker-icon.pin-big .pin-body { transform: scale(1.5); }
+.ms-marker-icon .pin-fill { transition: fill .15s ease-out; }
+.ms-marker-icon.pin-big.pin-nostatus .pin-fill { fill: var(--space-hover); }
+@media (prefers-reduced-motion: reduce) {
+  .ms-marker-icon .pin-body, .ms-marker-icon .pin-fill { transition: none; }
+}
+
 #map {
   position: absolute;
   inset: 0;

@@ -20,7 +20,6 @@ const CONFIG = AppConfig;
    * @typedef {Object} LeafletIconSet
    * @property {L.Icon} defaultIcon
    * @property {L.Icon} highlightIcon
-   * @property {L.Icon} hoverIcon
    * @property {L.Icon} greenIcon
    * @property {L.Icon} redIcon
    * @property {L.Icon} unknownStatusIcon
@@ -43,11 +42,8 @@ const CONFIG = AppConfig;
       // Standard Icon (Dark Mode aware)
       defaultIcon: createLeafletIcon(CONFIG.getDefaultIconColor(), 1, PO),
 
-      // Highlight Icon
-      highlightIcon: createLeafletIcon(CONFIG.getDefaultIconColor(), 1, PO),
-
-      // Hover Icon (vergrößert)
-      hoverIcon: createLeafletIcon(CONFIG.getHoverColor(), 1.5, PO),
+      // Highlight Icon: gleiche Farbe wie das Standard-Icon → dasselbe Objekt (setIcon erkennt „unverändert“, kein Neuaufbau)
+      get highlightIcon() { return this.defaultIcon; },
 
       // Status Icons
       greenIcon: createLeafletIcon(CONFIG.colours.open, 1, PO),

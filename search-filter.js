@@ -550,10 +550,7 @@ class SearchFilter {
    * @param {import('./types.js').MakerSpace|undefined} location
    */
   _iconForLocation(location) {
-    if (location?.isOpen === true)            return this.icons.greenIcon;
-    if (location?.isOpen === false)           return this.icons.redIcon;
-    if (location?.spaceapi?.endpoint)         return this.icons.unknownStatusIcon;
-    return this.icons.highlightIcon;
+    return this.icons[AppConfig.statusIconKey(location)];
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

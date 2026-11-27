@@ -481,8 +481,7 @@ class ListingCore {
         appContext.mapUtils.setMarkerDropdownHover(targetMarker, true);
       }
 
-      // Hover-Icon setzen
-      targetMarker.setIcon(this.createHoverIcon(hoverColor));
+      // Pin vergrößert sich über den Marker-Zustand (isDropdownHovering → syncPinBig), kein Icon-Tausch
 
       // Connection Line erstellen
       this.createConnectionLine(item, targetMarker, hoverColor);
@@ -602,10 +601,7 @@ class ListingCore {
       targetMarker.closePopup();
     }
 
-    // Original-Icon wiederherstellen
-    if (appContext.mapUtils?.updateMarkerIcon) {
-      appContext.mapUtils.updateMarkerIcon(targetMarker, location);
-    }
+    // Kein Icon-Rücktausch nötig: der Pin schrumpft über den Marker-Zustand (syncPinBig) animiert zurück
   }
 
   /**
@@ -759,16 +755,6 @@ class ListingCore {
    */
   isStickyMarker(marker) {
     return appContext.mapUtils?.isStickyMarker?.(marker) ?? false;
-  }
-
-  /**
-   * Erstellt ein vergrößertes Leaflet-Hover-DivIcon mit inline-SVG.
-   * @param {string} color - Hex-Farbcode
-   * @returns {LeafletDivIcon}
-   */
-  createHoverIcon(color) {
-    // Wie der Standard-Pin, 1,5-fach (mit Halo und weißer Kontur, Pin-Transparenz wie überall)
-    return AppConfig.createLeafletIcon(color, 1.5, AppConfig.settings.pinOpacity);
   }
 
   /**

@@ -149,7 +149,8 @@ class EmbedMapExtended {
       icon, riseOnHover: true, interactive: false
     });
     marker.bindPopup(() => buildPopupHTML(space), { maxWidth: 440, minWidth: 160, autoPan: false, closeButton: false, offset: POPUP_OFFSET });
-    marker.on('popupopen', () => this.handlePopupOpen(marker, space));
+    marker.on('popupopen', () => { marker._icon?.classList.add('pin-big'); this.handlePopupOpen(marker, space); });
+    marker.on('popupclose', () => marker._icon?.classList.remove('pin-big'));   // Pin groß, solange das Popup offen ist (Popup-Anker gilt für den großen Pin)
     marker.addTo(this.map);
     this.markers.set(space.ID, marker);
   }

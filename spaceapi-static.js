@@ -65,29 +65,4 @@ export class StaticSpaceAPI {
       return locations;
     }
   }
-
-  // Status-Icon basierend auf isOpen-Wert
-  getStatusIcon(location, icons) {
-    if (!icons) {
-      console.error("⚠️ Icons object is undefined!");
-      return null;
-    }
-
-    const isOpen = location.isOpen;
-
-    if (isOpen === true) {
-      // Space ist OFFEN
-      return icons.greenIcon || icons.defaultIcon;
-    } else if (isOpen === false) {
-      // Space ist GESCHLOSSEN
-      return icons.redIcon || icons.defaultIcon;
-    } else if (location.spaceapi && location.spaceapi.endpoint) {
-      // Hat SpaceAPI aber Status unbekannt - ORANGE
-      return icons.unknownStatusIcon || icons.defaultIcon;
-    } else {
-      // Hat KEINE SpaceAPI - SCHWARZ/GRAU
-      return icons.highlightIcon || icons.defaultIcon;
-    }
-  }
-
 }

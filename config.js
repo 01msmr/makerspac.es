@@ -13,6 +13,7 @@ import {
   getDefaultIconColor,
   getHoverColor,
   getDynamicSpaceColor,
+  statusIconKey,
   applyCssColours,
 } from './colours.js';
 
@@ -101,8 +102,8 @@ const SETTINGS = {
   itemHeight:             70,
   debounceMs:             150,
   zoomDebounceMs:         800,
-  popupDelayMs:           300,
-  popupGraceMs:          1100,   // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
+  popupDelayMs:           0,      // Popup öffnet sofort (Listen-Hover und Pin-Hover gleich)
+  popupGraceMs:          300,    // Karenz nach Verlassen von Listeneintrag/Pin, damit die Maus das Popup erreicht (→ sticky)
   pinOpacity:            0.66,   // leichte Transparenz der Pins; im SVG (nicht am Marker-Element), damit der Halo nicht mit abgedunkelt/abgeschnitten wird
   haloMinZoom:           14,     // Pin-Halo erst ab diesem Zoom (dichte Stadtkarte; nur einzelne Pins, Cluster haben keinen Halo), 0,8 s Einblenden (CSS)
   hintShrinkMs:           1350,
@@ -216,8 +217,15 @@ export const POPUP_GEOMETRY = Object.freeze({
 const G = POPUP_GEOMETRY;
 // Spitze des gedrehten Quadrats unter der Oberkante des Pfeil-Containers: Quadrat-Oberkante + halbe Kante (= Mitte) + halbe Diagonale
 const TIP_VERTEX_BELOW_TOP = G.TIP_MARGIN_TOP + G.TIP_BOX / 2 + (G.TIP_BOX / 2) * Math.SQRT2;   // 12,935
-/** Wie weit die sichtbare Pin-Kontur über/unter der SVG-Kante liegt: Pfad y = 1 … 39 im 25 × 41-Raster, Außenkontur 1,5 → 0,5 je Seite */
-const pinEdgeOverhang = scale => 0.5 * scale;
+/** Pin im 25 × 41-Raster (createLeafletIcon): Pfad y = 1 … 39 (Spitze bei 39), Außenkontur 1,5 (3-px-Weiß-Unterlage). */
+export const PIN_GEOMETRY = Object.freeze({ VIEW_H: 41, TOP_Y: 1, TIP_Y: 39, OUTLINE: 1.5, TIP_X: 12.5 });
+/** Hover-/Popup-Vergrößerung des Pins (CSS `.pin-big .pin-body`, um die Pin-Spitze); Pin und Popup-Anker müssen dazu passen */
+export const PIN_BIG_SCALE = 1.5;
+const P = PIN_GEOMETRY;
+/** Sichtbare Oberkante des GROSSEN Pins, in Raster-Einheiten ab SVG-Oberkante (Skalierung um die Spitze: Spitze bleibt, Kopf wächst nach oben) */
+const bigTopEdge = P.TIP_Y - (P.TIP_Y - P.TOP_Y) * PIN_BIG_SCALE - P.OUTLINE * PIN_BIG_SCALE;      // −20,25
+/** Sichtbare Spitze des GROSSEN Pins (Kontur mitskaliert), ab SVG-Oberkante */
+const bigTipEdge = P.TIP_Y + P.OUTLINE * PIN_BIG_SCALE;                                              // 41,25
 
 /**
  * Leaflet-`offset` des Popups (an JEDEM bindPopup mit diesen Pins mitgeben): Die Spitze des Pfeils (Popup über dem Pin) liegt bei
@@ -227,23 +235,24 @@ const pinEdgeOverhang = scale => 0.5 * scale;
 export const POPUP_OFFSET = Object.freeze([0, Math.round(G.MARGIN_BOTTOM - G.TIP_CONTAINER_MARGIN_TOP - TIP_VERTEX_BELOW_TOP)]);   // [0, 8]
 
 /**
- * popupAnchor.y: der Anker liegt an der sichtbaren Pin-Oberkante → Pfeilspitze (Popup über dem Pin) berührt den Pin, ohne hineinzuragen.
- * @param {number} h Icon-Höhe in px (41 × scale, gerundet)  @param {number} scale
+ * popupAnchor.y: der Anker liegt an der sichtbaren Oberkante des GROSSEN Pins (bei offenem Popup ist der Pin immer groß, auch
+ * während der Animation) → die Pfeilspitze (Popup über dem Pin) berührt den vergrößerten Pin, ohne hineinzuragen.
+ * @param {number} scale Icon-Skalierung (Standard 1, Embed-Ziel 1,2)
  */
-export function popupAnchorY(h, scale) {
-  return Math.round(-(h + pinEdgeOverhang(scale)));
+export function popupAnchorY(scale = 1) {
+  return Math.round(-(P.VIEW_H - bigTopEdge) * scale);                  // −61 bei scale 1
 }
 
 /**
- * Abstand Popup-Oberkante ↔ Marker-Punkt beim gespiegelten Popup (UNTER dem Pin), bei dem die Pfeilspitze genau die Pin-Spitze berührt.
- * Container oben (top: 0, 180° gedreht): Spitze liegt TIP_CONTAINER_MARGIN_TOP + (TIP_CONTAINER_H − 12,935) unter der Popup-Oberkante;
- * der zusätzliche margin-top des Inhalts schiebt die Oberkante um FLIPPED_WRAPPER_MARGIN_TOP nach oben. (Unabhängig vom Popup-`offset`:
- * flipDy wird relativ zur ungespiegelten Position gemessen.)
- * @param {number} scale Pin-Skalierung (Hover-Pin 1,5)
+ * Abstand Popup-Oberkante ↔ Marker-Punkt beim gespiegelten Popup (UNTER dem Pin), bei dem die Pfeilspitze genau die Spitze des
+ * großen Pins berührt. Container oben (top: 0, 180° gedreht): Spitze liegt TIP_CONTAINER_MARGIN_TOP + (TIP_CONTAINER_H − 12,935) unter
+ * der Popup-Oberkante; der zusätzliche margin-top des Inhalts schiebt die Oberkante um FLIPPED_WRAPPER_MARGIN_TOP nach oben.
+ * Der große Pin ragt (um die Spitze skaliert) 0,25 × scale unter den Marker-Punkt. Unabhängig vom Popup-`offset`.
+ * @param {number} scale Icon-Skalierung
  */
 export function popupFlipGap(scale = 1) {
   const tipBelowPopupTop = G.TIP_CONTAINER_MARGIN_TOP + (G.TIP_CONTAINER_H - TIP_VERTEX_BELOW_TOP);   // 6,065
-  return G.FLIPPED_WRAPPER_MARGIN_TOP - tipBelowPopupTop - pinEdgeOverhang(scale);                       // 13,435 bei scale 1
+  return G.FLIPPED_WRAPPER_MARGIN_TOP - tipBelowPopupTop + (bigTipEdge - P.VIEW_H) * scale;              // 14,185 bei scale 1
 }
 
 let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
@@ -266,19 +275,19 @@ export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
     halo +
     // Pin-Deckkraft als Gruppe im SVG: Weiß-Unterlage, Füllung, Rand und Punkt blenden gemeinsam durch (wie die frühere Marker-Opacity),
     // der Halo davor bleibt davon unberührt (volle 80 % in der Mitte)
-    (pinOpacity < 1 ? `<g opacity="${pinOpacity}">` : '') +
+    // Gruppe `pin-body`: wird bei Hover/offenem Popup um die Spitze vergrößert (CSS .pin-big, main-layout.css); der Halo davor bleibt fest
+    `<g class="pin-body"${pinOpacity < 1 ? ` opacity="${pinOpacity}"` : ''}>` +
     `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +
-    `<path fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
+    `<path class="pin-fill" fill="${color}" stroke="#000" stroke-width="1" d="${PIN}"/>` +
     `<circle fill="#fff" cx="12.5" cy="12.5" r="3"/>` +
-    (pinOpacity < 1 ? '</g>' : '') +
-    `</svg>`;
+    `</g></svg>`;
   return L.divIcon({
     html: svg,
     className: 'ms-marker-icon',
     iconSize: [w, h],
     iconAnchor: [w / 2, h],
-    // Popup-Anker = Pin-Oberkante, waagerecht Pin-Mitte (mit POPUP_OFFSET fällt die Pfeilspitze darauf; s. POPUP_GEOMETRY)
-    popupAnchor: [0, popupAnchorY(h, scale)],
+    // Popup-Anker = Oberkante des GROSSEN Pins, waagerecht Pin-Mitte (mit POPUP_OFFSET fällt die Pfeilspitze darauf; s. POPUP_GEOMETRY)
+    popupAnchor: [0, popupAnchorY(scale)],
   });
 }
 
@@ -359,6 +368,7 @@ const AppConfig = {
   getDefaultIconColor,
   getHoverColor,
   getDynamicSpaceColor,
+  statusIconKey,
   calculateDistance,
   escapeHtml,
 
