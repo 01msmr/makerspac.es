@@ -73,11 +73,11 @@ export function markSent(sent, due, keepDates) {
   return next;
 }
 
-// Meldungstext je Sprache: „Mittwochs 19:00 Uhr, also heute hat <Space> sein Wochenmeeting.⏎Kommst Du auch?“
+// Meldungstext je Sprache: „Mittwochs 19:00 Uhr, also heute, hat <Space> sein Wochenmeeting.⏎Kommst Du auch?“
 // days = Wochentage ab Sonntag (Date.getDay()) in der Wendung „immer an diesem Tag“, am Satzanfang großgeschrieben.
 const TEXT = {
   de: { days: ['Sonntags', 'Montags', 'Dienstags', 'Mittwochs', 'Donnerstags', 'Freitags', 'Samstags'],
-        body: (t, d, n) => `${d} ${t} Uhr, also heute hat ${n} sein Wochenmeeting.\nKommst Du auch?` },
+        body: (t, d, n) => `${d} ${t} Uhr, also heute, hat ${n} sein Wochenmeeting.\nKommst Du auch?` },
   en: { days: ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'],
         body: (t, d, n) => `${d} at ${t}, so today, ${n} has its weekly meeting.\nAre you coming too?` },
   fr: { days: ['Le dimanche', 'Le lundi', 'Le mardi', 'Le mercredi', 'Le jeudi', 'Le vendredi', 'Le samedi'],

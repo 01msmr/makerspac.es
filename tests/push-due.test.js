@@ -75,12 +75,12 @@ test('markSent: schreibt heutige Meldungen, entfernt alte Tage', () => {
   assert.deepEqual(next, { 8: '2026-07-01', 1: '2026-07-01' });
 });
 
-test('buildPayload: „Mittwochs 19:00 Uhr, also heute hat <Space> sein Wochenmeeting.⏎Kommst Du auch?“ — je Sprache, Fallback en', () => {
+test('buildPayload: „Mittwochs 19:00 Uhr, also heute, hat <Space> sein Wochenmeeting.⏎Kommst Du auch?“ — je Sprache, Fallback en', () => {
   const due = { id: 1, name: 'Abendlab', weekday: 3, startMinutes: 1140, inMinutes: 120, date: 'x' };
-  assert.deepEqual(buildPayload(due, 'de'), { title: 'makerspac.es', body: 'Mittwochs 19:00 Uhr, also heute hat Abendlab sein Wochenmeeting.\nKommst Du auch?', tag: 'space-1', url: '/#/1' });
+  assert.deepEqual(buildPayload(due, 'de'), { title: 'makerspac.es', body: 'Mittwochs 19:00 Uhr, also heute, hat Abendlab sein Wochenmeeting.\nKommst Du auch?', tag: 'space-1', url: '/#/1' });
   assert.equal(buildPayload(due, 'en').body, 'Wednesdays at 19:00, so today, Abendlab has its weekly meeting.\nAre you coming too?');
   assert.equal(buildPayload(due, 'xx').body, buildPayload(due, 'en').body);
-  assert.equal(buildPayload({ ...due, weekday: 0, startMinutes: 485 }, 'de').body, 'Sonntags 08:05 Uhr, also heute hat Abendlab sein Wochenmeeting.\nKommst Du auch?');
+  assert.equal(buildPayload({ ...due, weekday: 0, startMinutes: 485 }, 'de').body, 'Sonntags 08:05 Uhr, also heute, hat Abendlab sein Wochenmeeting.\nKommst Du auch?');
   for (const l of ['fr', 'it', 'nl', 'da', 'uk']) {
     const b = buildPayload(due, l).body;
     assert.ok(b.includes('19:00') && b.includes('Abendlab') && b.includes('\n'), `${l}: Uhrzeit, Name, Zeilenumbruch vor der Frage`);
