@@ -53,17 +53,42 @@
     "events": "https://c3d2.de/calendar.html",
     "spaceapi": {
       "endpoint": "https://www.c3d2.de/spaceapi.json"
-    }
+    },
+    "workshops": [
+      "3d",
+      "electronics",
+      "textile"
+    ]
   },
   "5": {
-    "events": "https://konglomerat.org/kalender"
+    "events": "https://konglomerat.org/kalender",
+    "workshops": [
+      "3d",
+      "laser",
+      "cnc",
+      "electronics",
+      "photo",
+      "wood",
+      "metal",
+      "textile",
+      "screenprint",
+      "ceramics"
+    ]
   },
   "6": {
     "events": "https://makerspace.loebaulebt.de/events/",
     "weekly": {
       "weekday": 3,
       "time": 1330
-    }
+    },
+    "workshops": [
+      "3d",
+      "laser",
+      "coding",
+      "vr",
+      "wood",
+      "textile"
+    ]
   },
   "7": {
     "events": "https://oberlausitz.vonunten.org/@werkraum_zittau/events",
@@ -72,10 +97,30 @@
     }
   },
   "8": {
-    "events": "https://www.makerspace-leipzig.de/veranstaltungen/aktuelle-termine"
+    "events": "https://www.makerspace-leipzig.de/veranstaltungen/aktuelle-termine",
+    "workshops": [
+      "3d",
+      "photo",
+      "wood",
+      "metal",
+      "bike",
+      "textile",
+      "screenprint",
+      "ceramics"
+    ]
   },
   "9": {
-    "events": "https://offene-werkstaetten.org/werkstatt/makerspace-gruenau"
+    "events": "https://offene-werkstaetten.org/werkstatt/makerspace-gruenau",
+    "workshops": [
+      "3d",
+      "electronics",
+      "wood",
+      "repair"
+    ],
+    "weekly": {
+      "weekday": 3,
+      "time": 1000
+    }
   },
   "10": {
     "events": "https://www.meetup.com/dezentrale/",
@@ -85,7 +130,12 @@
     "weekly": {
       "weekday": 5,
       "time": 1900
-    }
+    },
+    "workshops": [
+      "3d",
+      "cnc",
+      "electronics"
+    ]
   },
   "12": {
     "events": "https://eigenbaukombinat.de/unsere-veranstaltungen/",
