@@ -138,8 +138,10 @@ class MobileFilterUI {
 
     // Orientierungswechsel (Breite ändert sich) → schließen. Höhenänderungen (Tastatur) schließen NICHT.
     const openWidth = window.innerWidth;
-    this._resizeHandler = () => { if (window.innerWidth !== openWidth) this.close(); };
+    this._resizeHandler = () => { if (window.innerWidth !== openWidth) this.close(); else this._fitRows(); };
     window.addEventListener('resize', this._resizeHandler);
+    // Real verfügbare Höhe (Safari-Leisten, Tastatur): visualViewport meldet jede Änderung, window.resize nicht immer
+    window.visualViewport?.addEventListener('resize', this._resizeHandler);
 
     document.querySelector('#filter-toggle-btn i')?.setAttribute('class', 'fas fa-angle-down');
     document.querySelector('#search-open-btn i')?.setAttribute('class', 'fas fa-angle-down');
@@ -157,6 +159,7 @@ class MobileFilterUI {
     this._clearClosingTip();
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);
+      window.visualViewport?.removeEventListener('resize', this._resizeHandler);
       this._resizeHandler = null;
     }
     document.removeEventListener('pointerdown', this._outsideHandler);
@@ -210,7 +213,7 @@ class MobileFilterUI {
 
   /**
    * Zeilenhöhe so klein wie nötig (höchstens 32 px), damit ALLE Zeilen ins Pane passen — nur so viel kürzen, wie fehlt.
-   * Verfügbar = Fensterhöhe − Abstand der Pane-Unterkante − Eingabezeile (Phone: im Pane) ; Titel behalten ihre Höhe (CSS), Gitterlinien 1 px.
+   * Verfügbar = sichtbare Höhe (visualViewport; läuft bei Größenänderung neu) − Abstand der Pane-Unterkante − Eingabezeile (Phone: im Pane) ; Titel behalten ihre Höhe (CSS), Gitterlinien 1 px.
    * Ergebnis als --mf-row-h am Track (CSS .mf-opt-item, Ghost-Zellen). Untergrenze 20 px: darunter scrollt der Track statt zu schrumpfen.
    */
   _fitRows() {
@@ -227,7 +230,8 @@ class MobileFilterUI {
     if (!items) return;
     const titleH = track.querySelector('.mf-section-title')?.offsetHeight || 21;
     const inputH = isPhone() && this._inputRow ? this._inputRow.offsetHeight : 0;
-    const avail = window.innerHeight - (parseFloat(overlay.style.bottom) || 0) - inputH;
+    const viewH = window.visualViewport?.height ?? window.innerHeight;   // sichtbare Höhe, nicht Layout-Höhe
+    const avail = viewH - (parseFloat(overlay.style.bottom) || 0) - inputH;
     const fixed = 2 + (rows.size - 1) + titleRows.size * titleH;   // Track-Padding + Gitterlinien + Titelzeilen
     const h = Math.max(MIN, Math.min(MAX, Math.floor((avail - fixed) / items)));
     if (h < MAX) track.style.setProperty('--mf-row-h', h + 'px');
