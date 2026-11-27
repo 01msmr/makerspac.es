@@ -113,6 +113,7 @@ class MobileFilterUI {
     this.sheet.style.left  = '0';
     this.sheet.style.right = '0';
     this._positionSheet();
+    this._fitRows();
 
     // Slide-in Animation
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -205,6 +206,31 @@ class MobileFilterUI {
     if (isPhone()) { this.sheet.style.bottom = '0'; return; }
     const rect = document.querySelector('.search-input-row')?.getBoundingClientRect();
     this.sheet.style.bottom = (rect ? window.innerHeight - rect.top : 44) + 'px';
+  }
+
+  /**
+   * Zeilenhöhe so klein wie nötig (höchstens 32 px), damit ALLE Zeilen ins Pane passen — nur so viel kürzen, wie fehlt.
+   * Verfügbar = Fensterhöhe − Abstand der Pane-Unterkante − Eingabezeile (Phone: im Pane) ; Titel behalten ihre Höhe (CSS), Gitterlinien 1 px.
+   * Ergebnis als --mf-row-h am Track (CSS .mf-opt-item, Ghost-Zellen). Untergrenze 20 px: darunter scrollt der Track statt zu schrumpfen.
+   */
+  _fitRows() {
+    const track = this._track, overlay = this.sheet;
+    if (!track || !overlay) return;
+    const MAX = 32, MIN = 20;
+    track.style.removeProperty('--mf-row-h');
+    const rows = new Set(), titleRows = new Set();
+    track.querySelectorAll('.mf-section-title, .mf-opt-item, .mf-ghost-cell').forEach(el => {
+      const r = el.style.gridRow; rows.add(r);
+      if (el.classList.contains('mf-section-title')) titleRows.add(r);
+    });
+    const items = rows.size - titleRows.size;
+    if (!items) return;
+    const titleH = track.querySelector('.mf-section-title')?.offsetHeight || 21;
+    const inputH = isPhone() && this._inputRow ? this._inputRow.offsetHeight : 0;
+    const avail = window.innerHeight - (parseFloat(overlay.style.bottom) || 0) - inputH;
+    const fixed = 2 + (rows.size - 1) + titleRows.size * titleH;   // Track-Padding + Gitterlinien + Titelzeilen
+    const h = Math.max(MIN, Math.min(MAX, Math.floor((avail - fixed) / items)));
+    if (h < MAX) track.style.setProperty('--mf-row-h', h + 'px');
   }
 
   _setupDragToClose(panel) {
@@ -550,7 +576,7 @@ class MobileFilterUI {
         ghost.style.gridColumn = String(colIdx + 1);
         ghost.style.gridRow    = String(rowBase + r + 1);
         ghost.style.background = 'var(--dropdown-bg)';
-        ghost.style.height     = '32px';
+        ghost.style.height     = 'var(--mf-row-h, 32px)';
         ghost.style.boxSizing  = 'border-box';
         track.appendChild(ghost);
       }

@@ -355,3 +355,5 @@ git push main
 
 ---
 *Aktualisieren bei: neuen Dateien, Umbenennung von Klassen/Methoden, neuen globalen Variablen, CSS-Breakpoint-Änderungen, Lifecycle-Änderungen.*
+
+- Mobile Filter-Pane: Überschriften 21 px; Zeilenhöhe `--mf-row-h` setzt `MobileFilterUI._fitRows()` beim Öffnen so klein wie nötig (max. 32, min. 20 px), damit alle Zeilen ohne Scrollen ins Pane passen.
