@@ -19,7 +19,7 @@ const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 220 px, zentriert auf dem Pin-Körper; 1 px weißer Rand, schwarzer Rand bleibt', () => {
   const icon = createLeafletIcon('#0e9000');
   // Kreis + Verlauf: Radius 110 (= 220 px / 2 bei scale 1), Mitte (12,5 | 12,5), Verlauf in Nutzerkoordinaten, ohne Maus-Treffer
-  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="110">(?:<stop class="pin-halo-s" offset="[\d.]+" stop-opacity="[\d.]+"\/>){17}<\/radialGradient>/);
+  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="110">(?:<stop class="pin-halo-s" offset="[\d.]+" stop-opacity="[\d.]+"\/>){5}<\/radialGradient>/);
   assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="110" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
   assert.ok(!/<span/.test(icon.html), 'kein span mit z-index:-1 mehr (auf iOS-Safari nicht sichtbar)');
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes

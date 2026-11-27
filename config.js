@@ -261,7 +261,7 @@ export function popupFlipGap(scale = 1) {
  * Stützstellen zusammengesetzt (gleiche Farbe, nur stop-opacity; Farbe: .pin-halo-s in main-layout.css).
  */
 export const HALO_PEAK = 0.7;      // Deckkraft in der Mitte (Pin-Mittelpunkt)
-const HALO_STEPS = 16;
+const HALO_STEPS = 4;   // 5 Stützstellen
 export const haloOpacity = t => HALO_PEAK * (1 - t * t * (3 - 2 * t));
 const HALO_STOPS = Array.from({ length: HALO_STEPS + 1 }, (_, i) => {
   const t = i / HALO_STEPS;
