@@ -1,4 +1,4 @@
-// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 220 px, 80 % → 0 %, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
+// tests/marker-halo.test.js — Pin-Halo (SVG-Kreis mit Radialverlauf, fest 220 px, 70 % → 0 % nichtlinear ohne Knick, ab Zoom 14, 0,8 s Einblenden) und 1-px-Außenrand am Pin
 // Läuft mit: node --test tests/marker-halo.test.js
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,7 +19,7 @@ const read = f => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 test('1: Pin — Halo als Kreis mit Radialverlauf IM SVG, fest 220 px, zentriert auf dem Pin-Körper; 1 px weißer Rand, schwarzer Rand bleibt', () => {
   const icon = createLeafletIcon('#0e9000');
   // Kreis + Verlauf: Radius 110 (= 220 px / 2 bei scale 1), Mitte (12,5 | 12,5), Verlauf in Nutzerkoordinaten, ohne Maus-Treffer
-  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="110"><stop class="pin-halo-in" offset="0"\/><stop class="pin-halo-out" offset="1"\/><\/radialGradient>/);
+  assert.match(icon.html, /<radialGradient id="(pin-halo-g\d+)" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="110">(?:<stop class="pin-halo-s" offset="[\d.]+" stop-opacity="[\d.]+"\/>){17}<\/radialGradient>/);
   assert.match(icon.html, /<circle class="pin-halo" cx="12.5" cy="12.5" r="110" fill="url\(#pin-halo-g\d+\)" pointer-events="none"\/>/);
   assert.ok(!/<span/.test(icon.html), 'kein span mit z-index:-1 mehr (auf iOS-Safari nicht sichtbar)');
   assert.match(icon.html, /<path fill="#fff" stroke="#fff" stroke-width="3"/);                                       // 1 px außerhalb des 1-px-Randes
@@ -80,8 +80,7 @@ test('1c: Popup-Pfeil im Stamm hergeleitet: Spitze fällt auf den Anker, Anker =
 
 test('2: CSS — Mitte 80 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
-  assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.8; \}/);
-  assert.match(css, /\.pin-halo-out \{ stop-color: var\(--pin-halo-color\); stop-opacity: 0; \}/);
+  assert.match(css, /\.pin-halo-s \{ stop-color: var\(--pin-halo-color\); \}/);
   assert.match(css, /\.ms-marker-icon \.pin-halo \{[^}]*opacity: 0;/);
   assert.match(css, /\.halo-on \.ms-marker-icon \.pin-halo \{[^}]*opacity: 1;[^}]*transition: opacity \.8s ease-out/);
   assert.match(css, /:root \{ --pin-halo-color: rgb\(191, 191, 191\); \}/);
@@ -95,4 +94,14 @@ test('3: Zoom-Schwelle 14 — Klasse .halo-on wird im Marker-Manager am Karten-C
   const mm = read('marker-manager.js');
   assert.match(mm, /classList\.toggle\('halo-on', map\.getZoom\(\) >= AppConfig\.settings\.haloMinZoom\)/);
   assert.match(mm, /map\.on\('zoomend', syncHalo\)/);
+});
+
+test('Halo-Verlauf: Mitte 0,7, Rand 0, Steigung 0 an beiden Enden (kein Knick), monoton fallend', () => {
+  const f = cfg.haloOpacity, e = 1e-4;
+  assert.equal(cfg.HALO_PEAK, 0.7);
+  assert.equal(f(0), 0.7); assert.ok(Math.abs(f(1)) < 1e-12);
+  assert.ok(Math.abs((f(e) - f(0)) / e) < 1e-3, 'Steigung in der Mitte ≈ 0');
+  assert.ok(Math.abs((f(1) - f(1 - e)) / e) < 1e-3, 'Steigung am Rand ≈ 0');
+  for (let i = 1; i <= 100; i++) assert.ok(f(i / 100) < f((i - 1) / 100));
+  assert.ok(Math.abs(f(0.5) - 0.35) < 1e-12);
 });

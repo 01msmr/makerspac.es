@@ -255,26 +255,38 @@ export function popupFlipGap(scale = 1) {
   return G.FLIPPED_WRAPPER_MARGIN_TOP - tipBelowPopupTop + (bigTipEdge - P.VIEW_H) * scale;              // 14,185 bei scale 1
 }
 
+/**
+ * Deckkraft des Halos über den Radius t = 0 … 1 (Mitte → Rand): Smoothstep 1 − (3t² − 2t³) — Steigung 0 an BEIDEN Enden, also kein
+ * Knick im Verlauf (weder in der Mitte noch am Rand), Wendepunkt bei t = 0,5. SVG-Verläufe sind stückweise linear → aus HALO_STEPS
+ * Stützstellen zusammengesetzt (gleiche Farbe, nur stop-opacity; Farbe: .pin-halo-s in main-layout.css).
+ */
+export const HALO_PEAK = 0.7;      // Deckkraft in der Mitte (Pin-Mittelpunkt)
+const HALO_STEPS = 16;
+export const haloOpacity = t => HALO_PEAK * (1 - t * t * (3 - 2 * t));
+const HALO_STOPS = Array.from({ length: HALO_STEPS + 1 }, (_, i) => {
+  const t = i / HALO_STEPS;
+  return `<stop class="pin-halo-s" offset="${+t.toFixed(4)}" stop-opacity="${+haloOpacity(t).toFixed(4)}"/>`;
+}).join('');
+
 let haloSeq = 0;   // eindeutige Gradient-IDs je Pin (mehrere Pins im selben Dokument)
 
 export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
   const w = Math.round(25 * scale);
   const h = Math.round(41 * scale);
   const PIN = 'M12.5,1 C6.16,1 1,6.16 1,12.5 C1,20.88 12.5,39 12.5,39 C12.5,39 24,20.88 24,12.5 C24,6.16 18.84,1 12.5,1 Z';
-  // Halo: fester Kreis (HALO_SIZE px, unabhängig von der Pin-Größe) um den Pin-Körper, Mitte 80 % Deckung → außen 0 % (linearer Verlauf,
-  // gleiche Farbe). Als Kreis mit Radialverlauf IM Pin-SVG (liegt vor dem Pin im Quelltext = dahinter): kein z-index:-1, keine CSS-Farb-
+  // Halo: fester Kreis (HALO_SIZE px, unabhängig von der Pin-Größe) um den Pin-Körper, Mitte 70 % Deckung → außen 0 % (nichtlinear, ohne Knick:
+  // Smoothstep, siehe haloOpacity; gleiche Farbe). Als Kreis mit Radialverlauf IM Pin-SVG (liegt vor dem Pin im Quelltext = dahinter): kein z-index:-1, keine CSS-Farb-
   // Funktion im Verlauf, kein visibility-Übergang — das war auf iOS-Safari nicht zu sehen. Farbe/Deckkraft: .pin-halo-in/-out in main-layout.css;
   // sichtbar erst ab Zoom AppConfig.settings.haloMinZoom (Klasse .halo-on am Karten-Container, marker-manager), 0,8 s Einblenden.
   const haloR = +(HALO_SIZE / 2 / scale).toFixed(3);   // Radius in Pin-Einheiten (viewBox 25 × 41): × scale ergibt HALO_SIZE / 2 px
   const gid = `pin-halo-g${haloSeq++}`;
-  const halo = `<defs><radialGradient id="${gid}" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="${haloR}">` +
-    `<stop class="pin-halo-in" offset="0"/><stop class="pin-halo-out" offset="1"/></radialGradient></defs>` +
+  const halo = `<defs><radialGradient id="${gid}" gradientUnits="userSpaceOnUse" cx="12.5" cy="12.5" r="${haloR}">${HALO_STOPS}</radialGradient></defs>` +
     `<circle class="pin-halo" cx="12.5" cy="12.5" r="${haloR}" fill="url(#${gid})" pointer-events="none"/>`;
   // Pin: 1 px weißer Rand (direkt im Symbol, außerhalb des schwarzen 1-px-Rands) → löst den Pin von dunklen/bunten Kartenflächen
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="${w}" height="${h}" style="overflow:visible;display:block">` +
     halo +
     // Pin-Deckkraft als Gruppe im SVG: Weiß-Unterlage, Füllung, Rand und Punkt blenden gemeinsam durch (wie die frühere Marker-Opacity),
-    // der Halo davor bleibt davon unberührt (volle 80 % in der Mitte)
+    // der Halo davor bleibt davon unberührt (volle 70 % in der Mitte)
     // Gruppe `pin-body`: wird bei Hover/offenem Popup um die Spitze vergrößert (CSS .pin-big, main-layout.css); der Halo davor bleibt fest
     `<g class="pin-body"${pinOpacity < 1 ? ` opacity="${pinOpacity}"` : ''}>` +
     `<path fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round" d="${PIN}"/>` +

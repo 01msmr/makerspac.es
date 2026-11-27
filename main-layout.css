@@ -73,13 +73,12 @@ body {
   border: none !important;
 }
 
-/* Pin-Halo: Kreis mit Radialverlauf im Pin-SVG (config.js createLeafletIcon), fest 220 px, Mitte 80 % Deckung → außen 0 % in 25 % Grau
+/* Pin-Halo: Kreis mit Radialverlauf im Pin-SVG (config.js createLeafletIcon), fest 220 px, Mitte 70 % Deckung → außen 0 % (Smoothstep, ohne Knick) in 25 % Grau
    (hell im Light-, dunkel im Dark Mode). Nur bei hohem Zoom (.halo-on am Karten-Container, marker-manager.js): dort blendet er über 0,8 s ein,
    bei niedrigem Zoom zügig aus. */
 :root { --pin-halo-color: rgb(191, 191, 191); }
 @media (prefers-color-scheme: dark) { :root { --pin-halo-color: rgb(64, 64, 64); } }
-.pin-halo-in  { stop-color: var(--pin-halo-color); stop-opacity: .8; }
-.pin-halo-out { stop-color: var(--pin-halo-color); stop-opacity: 0; }
+.pin-halo-s { stop-color: var(--pin-halo-color); }   /* Deckkraft je Stützstelle als stop-opacity-Attribut (config.js haloOpacity) */
 .ms-marker-icon .pin-halo {
   opacity: 0;
   pointer-events: none;
