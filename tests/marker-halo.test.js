@@ -53,6 +53,16 @@ test('1b: Pin-Transparenz als <g opacity> im SVG, der Halo liegt außerhalb der 
   assert.match(read('listing-core.js'), /createHoverIcon\(color\) \{[^}]*AppConfig\.createLeafletIcon\(color, 1\.5, AppConfig\.settings\.pinOpacity\)/);
 });
 
+test('1c: Popup-Pfeil mittig auf dem Pin und mit der Spitze an der Pin-Kante (kein +1 px, nicht im Pin)', () => {
+  // popupAnchor: x = 0 (Pfeil exakt auf der Pin-Mitte); y = −(Höhe + 0,5 × scale − 1,1), gerundet → Spitze an der Pin-Oberkante
+  assert.deepEqual(createLeafletIcon('#000').popupAnchor, [0, -40]);
+  assert.deepEqual(createLeafletIcon('#000', 1.5).popupAnchor, [0, -62]);
+  for (const sc of [1, 1.2, 1.5, 2]) assert.equal(createLeafletIcon('#000', sc).popupAnchor[0], 0, `x bei scale ${sc}`);
+  // Gespiegeltes Popup: feste Lücke zum Marker-Punkt, damit die Spitze genau an der Pin-Spitze liegt
+  assert.match(read('marker-manager.js'), /const FLIP_GAP = 13\.4;/);
+  assert.match(read('marker-manager.js'), /flipDy = markerScreenY - popupRect\.top \+ FLIP_GAP;/);
+});
+
 test('2: CSS — Mitte 80 %, außen 0 % (gleiche Farbe), linear; erst mit .halo-on; Einblenden 0,8 s; Light hellgrau / Dark dunkel', () => {
   const css = read('main-layout.css');
   assert.match(css, /\.pin-halo-in\s+\{ stop-color: var\(--pin-halo-color\); stop-opacity: \.8; \}/);

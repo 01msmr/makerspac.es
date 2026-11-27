@@ -231,7 +231,9 @@ export function createLeafletIcon(color, scale = 1.0, pinOpacity = 1) {
     className: 'ms-marker-icon',
     iconSize: [w, h],
     iconAnchor: [w / 2, h],
-    popupAnchor: [Math.round(scale), Math.round(-34 * scale)],
+    // Popup-Pfeil: waagerecht exakt auf der Pin-Mitte (vorher +1 px), senkrecht Spitze an die Pin-Oberkante (vorher 6,4 px im Pin).
+    // Die sichtbare Pfeilspitze liegt 1,1 px über dem Anker; Pin-Oberkante = SVG-Oberkante − 0,5 × scale (1,5-px-Kontur).
+    popupAnchor: [0, Math.round(-(h + 0.5 * scale - 1.1))],
   });
 }
 

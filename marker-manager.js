@@ -350,6 +350,9 @@ export function zfill(plz, country) {
 //   maxShift = wrapperBreite/2 − borderRadius (Pfeil bleibt auf der flachen Kante)
 // - Vertikal: spiegelt das Popup unter den Marker wenn es oben aus dem Screen ragt
 //   Nutzt CSS `translate`-Property (unabhängig von Leaflet's `transform`) + CSS-Variable
+/** Abstand Popup-Oberkante (gespiegelt) ↔ Marker-Punkt in px; so liegt die Pfeilspitze genau an der Pin-Spitze (vorher 15 → 1,6 px Lücke) */
+const FLIP_GAP = 13.4;
+
 function adjustPopupPosition(popup, map) {
   const el = popup._container;
   if (!el) return;
@@ -402,9 +405,9 @@ function adjustPopupPosition(popup, map) {
     if (!latlng) return;
     const markerContainerPt = map.latLngToContainerPoint(latlng);
     const markerScreenY = mapRect.top + markerContainerPt.y;
-    const flippedBottom = markerScreenY + 15 + popupRect.height;
+    const flippedBottom = markerScreenY + FLIP_GAP + popupRect.height;
     if (flippedBottom <= bottomBoundary) {
-      flipDy = markerScreenY - popupRect.top + 15;
+      flipDy = markerScreenY - popupRect.top + FLIP_GAP;
       el.style.setProperty('--flip-dy', `${flipDy}px`);
       el.classList.add('popup-flipped');
     }
