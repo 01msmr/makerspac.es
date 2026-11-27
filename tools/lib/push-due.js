@@ -73,23 +73,23 @@ export function markSent(sent, due, keepDates) {
   return next;
 }
 
-// Meldungstext je Sprache: „Heute 19:00 Uhr, wie jeden Mittwoch, hat <Space> sein Wochenmeeting. Kommst Du auch?“
-// days = Wochentage ab Sonntag (Date.getDay()), bereits mit „jeden/every/…“-Wendung, damit Grammatik je Sprache stimmt.
+// Meldungstext je Sprache: „Mittwochs 19:00 Uhr, also heute hat <Space> sein Wochenmeeting.⏎Kommst Du auch?“
+// days = Wochentage ab Sonntag (Date.getDay()) in der Wendung „immer an diesem Tag“, am Satzanfang großgeschrieben.
 const TEXT = {
-  de: { days: ['jeden Sonntag', 'jeden Montag', 'jeden Dienstag', 'jeden Mittwoch', 'jeden Donnerstag', 'jeden Freitag', 'jeden Samstag'],
-        body: (t, d, n) => `Heute ${t} Uhr, wie ${d}, hat ${n} sein Wochenmeeting. Kommst Du auch?` },
-  en: { days: ['every Sunday', 'every Monday', 'every Tuesday', 'every Wednesday', 'every Thursday', 'every Friday', 'every Saturday'],
-        body: (t, d, n) => `Today at ${t}, as ${d}, ${n} has its weekly meeting. Are you coming too?` },
-  fr: { days: ['chaque dimanche', 'chaque lundi', 'chaque mardi', 'chaque mercredi', 'chaque jeudi', 'chaque vendredi', 'chaque samedi'],
-        body: (t, d, n) => `Aujourd'hui à ${t}, comme ${d}, ${n} tient sa réunion hebdomadaire. Tu viens aussi ?` },
-  it: { days: ['ogni domenica', 'ogni lunedì', 'ogni martedì', 'ogni mercoledì', 'ogni giovedì', 'ogni venerdì', 'ogni sabato'],
-        body: (t, d, n) => `Oggi alle ${t}, come ${d}, ${n} ha il suo incontro settimanale. Vieni anche tu?` },
-  nl: { days: ['elke zondag', 'elke maandag', 'elke dinsdag', 'elke woensdag', 'elke donderdag', 'elke vrijdag', 'elke zaterdag'],
-        body: (t, d, n) => `Vandaag om ${t} uur, zoals ${d}, heeft ${n} zijn wekelijkse bijeenkomst. Kom je ook?` },
-  da: { days: ['hver søndag', 'hver mandag', 'hver tirsdag', 'hver onsdag', 'hver torsdag', 'hver fredag', 'hver lørdag'],
-        body: (t, d, n) => `I dag kl. ${t}, som ${d}, har ${n} sit ugentlige møde. Kommer du også?` },
-  uk: { days: ['щонеділі', 'щопонеділка', 'щовівторка', 'щосереди', 'щочетверга', 'щоп’ятниці', 'щосуботи'],
-        body: (t, d, n) => `Сьогодні о ${t}, як ${d}, у ${n} щотижнева зустріч. Прийдеш теж?` },
+  de: { days: ['Sonntags', 'Montags', 'Dienstags', 'Mittwochs', 'Donnerstags', 'Freitags', 'Samstags'],
+        body: (t, d, n) => `${d} ${t} Uhr, also heute hat ${n} sein Wochenmeeting.\nKommst Du auch?` },
+  en: { days: ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'],
+        body: (t, d, n) => `${d} at ${t}, so today, ${n} has its weekly meeting.\nAre you coming too?` },
+  fr: { days: ['Le dimanche', 'Le lundi', 'Le mardi', 'Le mercredi', 'Le jeudi', 'Le vendredi', 'Le samedi'],
+        body: (t, d, n) => `${d} à ${t}, donc aujourd'hui, ${n} tient sa réunion hebdomadaire.\nTu viens aussi ?` },
+  it: { days: ['La domenica', 'Il lunedì', 'Il martedì', 'Il mercoledì', 'Il giovedì', 'Il venerdì', 'Il sabato'],
+        body: (t, d, n) => `${d} alle ${t}, quindi oggi, ${n} ha il suo incontro settimanale.\nVieni anche tu?` },
+  nl: { days: ['Zondags', 'Maandags', 'Dinsdags', 'Woensdags', 'Donderdags', 'Vrijdags', 'Zaterdags'],
+        body: (t, d, n) => `${d} om ${t} uur, dus vandaag, heeft ${n} zijn wekelijkse bijeenkomst.\nKom je ook?` },
+  da: { days: ['Om søndagen', 'Om mandagen', 'Om tirsdagen', 'Om onsdagen', 'Om torsdagen', 'Om fredagen', 'Om lørdagen'],
+        body: (t, d, n) => `${d} kl. ${t}, altså i dag, har ${n} sit ugentlige møde.\nKommer du også?` },
+  uk: { days: ['Щонеділі', 'Щопонеділка', 'Щовівторка', 'Щосереди', 'Щочетверга', 'Щоп’ятниці', 'Щосуботи'],
+        body: (t, d, n) => `${d} о ${t}, тобто сьогодні, у ${n} щотижнева зустріч.\nПрийдеш теж?` },
 };
 
 /** Meldung: Titel „makerspac.es“, Text s. o. (Sprache des Abos, Fallback en), Tag je Space, Link auf den Space */
