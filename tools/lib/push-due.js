@@ -36,7 +36,7 @@ export function weeklyStartMinutes(time) {
 
 /**
  * @typedef {{ID: number, name: string, loc?: {country?: string}, weekly?: {weekday?: number, time?: number}}} PushSpace
- * @typedef {{id: number, name: string, startMinutes: number, inMinutes: number, date: string}} DueSpace
+ * @typedef {{id: number, name: string, weekday: number, startMinutes: number, inMinutes: number, date: string}} DueSpace
  */
 
 /**
@@ -60,7 +60,7 @@ export function dueSpaces(favorites, spacesById, sent, now) {
     const inMinutes = start - t.minutes;
     if (inMinutes < 0 || inMinutes > LEAD_MINUTES) continue;
     if (sent?.[id] === t.date) continue;
-    out.push({ id, name: s.name, startMinutes: start, inMinutes, date: t.date });
+    out.push({ id, name: s.name, weekday: w.weekday, startMinutes: start, inMinutes, date: t.date });
   }
   return out.sort((a, b) => a.inMinutes - b.inMinutes);
 }
@@ -73,21 +73,29 @@ export function markSent(sent, due, keepDates) {
   return next;
 }
 
+// Meldungstext je Sprache: „Heute 19:00 Uhr, wie jeden Mittwoch, hat <Space> sein Wochenmeeting. Kommst Du auch?“
+// days = Wochentage ab Sonntag (Date.getDay()), bereits mit „jeden/every/…“-Wendung, damit Grammatik je Sprache stimmt.
 const TEXT = {
-  de: { today: 'Heute', in: 'in', min: 'Min.', h: 'Std.' },
-  en: { today: 'Today', in: 'in', min: 'min', h: 'h' },
-  fr: { today: "Aujourd'hui", in: 'dans', min: 'min', h: 'h' },
-  it: { today: 'Oggi', in: 'tra', min: 'min', h: 'h' },
-  nl: { today: 'Vandaag', in: 'over', min: 'min', h: 'u' },
-  da: { today: 'I dag', in: 'om', min: 'min', h: 't' },
-  uk: { today: 'Сьогодні', in: 'через', min: 'хв', h: 'год' },
+  de: { days: ['jeden Sonntag', 'jeden Montag', 'jeden Dienstag', 'jeden Mittwoch', 'jeden Donnerstag', 'jeden Freitag', 'jeden Samstag'],
+        body: (t, d, n) => `Heute ${t} Uhr, wie ${d}, hat ${n} sein Wochenmeeting. Kommst Du auch?` },
+  en: { days: ['every Sunday', 'every Monday', 'every Tuesday', 'every Wednesday', 'every Thursday', 'every Friday', 'every Saturday'],
+        body: (t, d, n) => `Today at ${t}, as ${d}, ${n} has its weekly meeting. Are you coming too?` },
+  fr: { days: ['chaque dimanche', 'chaque lundi', 'chaque mardi', 'chaque mercredi', 'chaque jeudi', 'chaque vendredi', 'chaque samedi'],
+        body: (t, d, n) => `Aujourd'hui à ${t}, comme ${d}, ${n} tient sa réunion hebdomadaire. Tu viens aussi ?` },
+  it: { days: ['ogni domenica', 'ogni lunedì', 'ogni martedì', 'ogni mercoledì', 'ogni giovedì', 'ogni venerdì', 'ogni sabato'],
+        body: (t, d, n) => `Oggi alle ${t}, come ${d}, ${n} ha il suo incontro settimanale. Vieni anche tu?` },
+  nl: { days: ['elke zondag', 'elke maandag', 'elke dinsdag', 'elke woensdag', 'elke donderdag', 'elke vrijdag', 'elke zaterdag'],
+        body: (t, d, n) => `Vandaag om ${t} uur, zoals ${d}, heeft ${n} zijn wekelijkse bijeenkomst. Kom je ook?` },
+  da: { days: ['hver søndag', 'hver mandag', 'hver tirsdag', 'hver onsdag', 'hver torsdag', 'hver fredag', 'hver lørdag'],
+        body: (t, d, n) => `I dag kl. ${t}, som ${d}, har ${n} sit ugentlige møde. Kommer du også?` },
+  uk: { days: ['щонеділі', 'щопонеділка', 'щовівторка', 'щосереди', 'щочетверга', 'щоп’ятниці', 'щосуботи'],
+        body: (t, d, n) => `Сьогодні о ${t}, як ${d}, у ${n} щотижнева зустріч. Прийдеш теж?` },
 };
 
-/** Text der Meldung: Titel = Space-Name, Text „Heute 19:00 · in 2 Std.“ (Sprache des Abos, Fallback en) */
+/** Meldung: Titel „makerspac.es“, Text s. o. (Sprache des Abos, Fallback en), Tag je Space, Link auf den Space */
 export function buildPayload(due, lang) {
   const t = TEXT[lang] || TEXT.en;
   const hh = String(Math.floor(due.startMinutes / 60)).padStart(2, '0');
   const mm = String(due.startMinutes % 60).padStart(2, '0');
-  const rest = due.inMinutes < 60 ? `${Math.max(due.inMinutes, 1)} ${t.min}` : `${Math.round(due.inMinutes / 60)} ${t.h}`;
-  return { title: due.name, body: `${t.today} ${hh}:${mm} · ${t.in} ${rest}`, tag: `space-${due.id}`, url: `/#/${due.id}` };
+  return { title: 'makerspac.es', body: t.body(`${hh}:${mm}`, t.days[due.weekday], due.name), tag: `space-${due.id}`, url: `/#/${due.id}` };
 }

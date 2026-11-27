@@ -75,13 +75,25 @@ test('markSent: schreibt heutige Meldungen, entfernt alte Tage', () => {
   assert.deepEqual(next, { 8: '2026-07-01', 1: '2026-07-01' });
 });
 
-test('buildPayload: Titel = Name; Text „Heute 19:00 · in 2 Std.“ je Sprache; Fallback en; Link auf den Space', () => {
-  const due = { id: 1, name: 'Abendlab', startMinutes: 1140, inMinutes: 120, date: 'x' };
-  assert.deepEqual(buildPayload(due, 'de'), { title: 'Abendlab', body: 'Heute 19:00 · in 2 Std.', tag: 'space-1', url: '/#/1' });
-  assert.equal(buildPayload(due, 'en').body, 'Today 19:00 · in 2 h');
-  assert.equal(buildPayload(due, 'xx').body, 'Today 19:00 · in 2 h');
-  assert.equal(buildPayload({ ...due, inMinutes: 20 }, 'de').body, 'Heute 19:00 · in 20 Min.');
-  assert.equal(buildPayload({ ...due, inMinutes: 0 }, 'de').body, 'Heute 19:00 · in 1 Min.');
+test('buildPayload: „Heute 19:00 Uhr, wie jeden Mittwoch, hat <Space> sein Wochenmeeting. Kommst Du auch?“ — je Sprache, Fallback en', () => {
+  const due = { id: 1, name: 'Abendlab', weekday: 3, startMinutes: 1140, inMinutes: 120, date: 'x' };
+  assert.deepEqual(buildPayload(due, 'de'), { title: 'makerspac.es', body: 'Heute 19:00 Uhr, wie jeden Mittwoch, hat Abendlab sein Wochenmeeting. Kommst Du auch?', tag: 'space-1', url: '/#/1' });
+  assert.equal(buildPayload(due, 'en').body, 'Today at 19:00, as every Wednesday, Abendlab has its weekly meeting. Are you coming too?');
+  assert.equal(buildPayload(due, 'xx').body, buildPayload(due, 'en').body);
+  assert.equal(buildPayload({ ...due, weekday: 0, startMinutes: 485 }, 'de').body, 'Heute 08:05 Uhr, wie jeden Sonntag, hat Abendlab sein Wochenmeeting. Kommst Du auch?');
+  for (const l of ['fr', 'it', 'nl', 'da', 'uk']) {
+    const b = buildPayload(due, l).body;
+    assert.ok(b.includes('19:00') && b.includes('Abendlab'), `${l}: Uhrzeit + Name`);
+  }
+  assert.ok(buildPayload(due, 'uk').body.includes('щосереди'));
+  assert.ok(buildPayload(due, 'fr').body.includes('chaque mercredi'));
+});
+
+test('buildPayload: jeder der 7 Wochentage hat in jeder Sprache einen eigenen Text', () => {
+  for (const l of ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk']) {
+    const bodies = new Set([0, 1, 2, 3, 4, 5, 6].map(weekday => buildPayload({ id: 1, name: 'X', weekday, startMinutes: 60, inMinutes: 5, date: 'd' }, l).body));
+    assert.equal(bodies.size, 7, l);
+  }
 });
 
 test('send-push run(): sendet fällige Meldungen, schreibt .sent.json + changed.txt, meldet 410 in gone.txt, sendet nicht doppelt', async () => {
@@ -98,7 +110,7 @@ test('send-push run(): sendet fällige Meldungen, schreibt .sent.json + changed.
   const r = await run({ dir, spacesFile, webpush, now });
   assert.deepEqual(r, { sent: 1, changed: 1, gone: 1 });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0][1].title, 'Abendlab');
+  assert.match(calls[0][1].body, /Abendlab/);
   assert.equal(readFileSync(join(dir, 'changed.txt'), 'utf8'), 'aaa.sent.json\n');
   assert.equal(readFileSync(join(dir, 'gone.txt'), 'utf8'), 'bbb\n');
   assert.deepEqual(JSON.parse(readFileSync(join(dir, 'aaa.sent.json'), 'utf8')), { 1: '2026-07-01' });
