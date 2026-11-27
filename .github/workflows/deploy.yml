@@ -73,11 +73,14 @@ jobs:
               --silent --show-error
           done
 
-      - name: SW-Version aktualisieren (max 1x täglich)
+      - name: SW-Version erhöhen (bei jedem Deploy mit geänderten App-Dateien)
         run: |
-          LAST=$(git log -1 --format="%as" -- sw.js 2>/dev/null || echo "1970-01-01")
-          TODAY=$(date +%Y-%m-%d)
-          if [ "$LAST" != "$TODAY" ]; then
+          # Jedes neue sw.js (Byte-Unterschied) löst auf den Geräten Install + Precache + „Veraltet“-Hinweis aus (Standard-SW-Update).
+          # Nur wenn sich Dateien änderten, die der Service Worker ausliefert — reine Daten-/Doku-/Tool-/Admin-Änderungen brauchen keinen neuen SW.
+          APP=$(git diff --name-only ${{ steps.base.outputs.sha }} HEAD -- . \
+            | grep -vE '^(\.github/|_OLD/|data/|tools/|tests/|docs/|admin/|adr/|AI logs/)' \
+            | grep -vE '\.(md|py|afdesign)$|^(sw\.js|sitemap\.xml|locations\.json|loc-enrichment\.json|enrichment\.json|status\.json|package(-lock)?\.json)$' || true)
+          if [ -n "$APP" ]; then
             CURRENT=$(sed -n "s/const VERSION = 'v\([0-9]*\)'.*/\1/p" sw.js)
             NEW=$((CURRENT + 1))
             sed -i "s/const VERSION = 'v${CURRENT}'/const VERSION = 'v${NEW}'/" sw.js
@@ -88,7 +91,7 @@ jobs:
             git push
             echo "✅ SW version bumped: v${CURRENT} → v${NEW}"
           else
-            echo "ℹ️ SW version bereits heute aktualisiert (letzter Stand: $LAST)"
+            echo "ℹ️ Keine App-Dateien geändert — SW-Version bleibt"
           fi
 
       - name: Geänderte Dateien ermitteln

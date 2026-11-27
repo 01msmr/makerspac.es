@@ -55,8 +55,8 @@ export function initUpdateNotice(reg) {
     const lang = window.i18n?.currentLang || (navigator.language || 'en').slice(0, 2);
     const tx = updateText(lang);
     showToast(`<strong>${tx.outdated}</strong><span>${toastSubtitle(Date.now() - openedAt, lang)}</span>`, {
-      center: true, sticky: true, // „Neu laden“ über die Reset-Seite: meldet Service Worker ab und leert die Caches (nichts Altes bleibt hängen), dann zurück
-      action: { label: tx.reload, icon: 'fas fa-rotate', onClick: () => location.assign('/admin/reset.html') },
+      center: true, sticky: true, // Der neue Service Worker ist installiert und aktiv (skipWaiting) → ein normales Neuladen liefert den neuen Stand; Reset nur noch als Notausgang (Admin)
+      action: { label: tx.reload, icon: 'fas fa-rotate', onClick: () => location.reload() },
     });
   };
 
