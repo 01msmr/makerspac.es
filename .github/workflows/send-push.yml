@@ -1,0 +1,71 @@
+name: "🔔 Push-Meldungen (Favoriten öffnen bald)"
+
+# Alle 15 Min.: Abos vom Webspace holen (FTPS, push/data/), fällige Meldungen senden (tools/send-push.js, 3 Std. vor dem Wochentermin),
+# „schon gemeldet“-Listen zurückschreiben, abgelaufene Abos löschen. Braucht die Secrets VAPID_PRIVATE_KEY (+ die FTP-Secrets des Deploys);
+# ohne VAPID_PRIVATE_KEY macht der Lauf nichts. Schreibt NICHT ins Repo (kein Deploy nötig).
+# Hinweis: GitHub führt geplante Läufe nur auf dem Standard-Branch (main) aus und kann sie bei Last um Minuten verzögern.
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: send-push
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+      FTP_HOST: ${{ secrets.NETCUP_FTP_HOST }}
+      FTP_USER: ${{ secrets.NETCUP_FTP_USER }}
+      FTP_PASS: ${{ secrets.NETCUP_FTP_PASSWORD }}
+    steps:
+      - name: Konfiguriert?
+        id: cfg
+        run: |
+          if [ -n "$VAPID_PRIVATE_KEY" ] && [ -n "$FTP_HOST" ]; then echo "on=true" >> "$GITHUB_OUTPUT"; else echo "ℹ️ VAPID_PRIVATE_KEY/FTP-Secrets fehlen — nichts zu tun"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.on == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.on == 'true'
+        with:
+          node-version: '20'
+
+      - name: Abos holen
+        if: steps.cfg.outputs.on == 'true'
+        id: fetch
+        run: |
+          mkdir -p push-work
+          FTP="curl --ipv4 -u $FTP_USER:$FTP_PASS --ssl --insecure --ftp-pasv --silent --show-error"
+          $FTP --list-only "ftp://$FTP_HOST/push/data/" 2>/dev/null | tr -d '\r' | grep -E '^[0-9a-f]{64}(\.sent)?\.json$' > push-work/names.txt || true
+          echo "Dateien: $(wc -l < push-work/names.txt)"
+          while IFS= read -r n; do $FTP -o "push-work/$n" "ftp://$FTP_HOST/push/data/$n"; done < push-work/names.txt
+          echo "subs=$(grep -vc '\.sent\.json$' push-work/names.txt || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Meldungen senden
+        if: steps.cfg.outputs.on == 'true' && steps.fetch.outputs.subs != '0'
+        run: |
+          node generate-map-splits.js > /dev/null
+          npm install --no-save --no-package-lock --no-audit --no-fund web-push@3.6.7
+          node tools/send-push.js --dir push-work --spaces data/spaces-all.json
+
+      - name: Merklisten zurückschreiben, abgelaufene Abos löschen
+        if: steps.cfg.outputs.on == 'true' && steps.fetch.outputs.subs != '0'
+        run: |
+          FTP="curl --ipv4 -u $FTP_USER:$FTP_PASS --ssl --insecure --ftp-pasv --silent --show-error"
+          while IFS= read -r n; do [ -z "$n" ] && continue; $FTP -T "push-work/$n" "ftp://$FTP_HOST/push/data/$n"; done < push-work/changed.txt
+          while IFS= read -r id; do [ -z "$id" ] && continue
+            for n in "$id.json" "$id.sent.json"; do $FTP -o /dev/null "ftp://$FTP_HOST/push/data/" -Q "-DELE /push/data/$n" || true; done
+          done < push-work/gone.txt

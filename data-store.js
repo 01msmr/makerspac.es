@@ -25,6 +25,8 @@ class DataStore {
     if (!noUI) this.createSettingsPopover();
     this.loadLanguagePreference();
     this.loadColorScheme();
+    // Aktive Push-Meldungen: Favoriten-Änderungen nachmelden (Modul nur laden, wenn es das Abo gibt)
+    try { if (localStorage.getItem('pushEnabled') === '1') import('./push-notify.js').then(m => m.initSync()).catch(() => {}); } catch { /* kein localStorage */ }
   }
 
   // ✅ Hole Übersetzungen aus i18n (lang.json)
@@ -257,6 +259,9 @@ class DataStore {
 
     this.settingsPopover.appendChild(navServiceHeader);
 
+    // 4b. BENACHRICHTIGUNGEN (Web Push: Favoriten, die in 3 Std. öffnen) — nur sichtbar, wenn der Browser es kann (push-notify.js)
+    this.createNotificationsSection();
+
     // 5. SAVED SETTINGS SECTION
     const settingsSection = document.createElement('div');
     settingsSection.className = 'settings-header';
@@ -346,6 +351,51 @@ class DataStore {
     // Führe die Übersetzung und Zustands-Aktualisierung beim Erstellen aus
     this.updateSettingsLabels();
     this.updateClusteringToggleUI();
+  }
+
+  /** Einstellungs-Zeile „Meldungen: Favoriten“ (Glocke ein / durchgestrichen aus); Zustand kommt asynchron aus push-notify.js */
+  createNotificationsSection() {
+    const row = document.createElement('div');
+    row.className = 'settings-header settings-header-notify is-hidden';
+    row.innerHTML = `
+      <div class="settings-header-content">
+        <i class="fas fa-bell"></i>
+        <span>${this.t('notifications')}</span>
+      </div>
+      <div class="settings-header-icons">
+        <span class="settings-icon-btn" data-push="on" aria-label="${this.t('notificationsOn')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-bell"></i></span>
+        <span class="settings-icon-btn" data-push="off" aria-label="${this.t('notificationsOff')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-bell-slash"></i></span>
+      </div>
+      <p class="settings-hint" hidden></p>
+    `;
+    const hint = row.querySelector('.settings-hint');
+    const btnOn = row.querySelector('[data-push="on"]');
+    const btnOff = row.querySelector('[data-push="off"]');
+    /** @type {typeof import('./push-notify.js') | null} */
+    let push = null;
+    const refresh = async () => {
+      push ||= await import('./push-notify.js');
+      const st = await push.pushState();
+      row.classList.toggle('is-hidden', st === 'unsupported');
+      btnOn.classList.toggle('active', st === 'on');
+      btnOff.classList.toggle('active', st !== 'on');
+      const msg = st === 'needs-install' ? this.t('notificationsInstall') : st === 'denied' ? this.t('notificationsDenied') : '';
+      hint.textContent = msg;
+      hint.hidden = !msg;
+    };
+    btnOn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try { push ||= await import('./push-notify.js'); if (await push.enable()) push.initSync(); } catch (err) { console.warn('Push:', err); }
+      refresh().catch(() => {});
+    });
+    btnOff.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try { push ||= await import('./push-notify.js'); await push.disable(); } catch (err) { console.warn('Push:', err); }
+      refresh().catch(() => {});
+    });
+    this.settingsPopover.appendChild(row);
+    this._refreshNotifications = refresh;
+    refresh().catch(() => {});
   }
 
   toggleSettingsPopover() {
@@ -591,14 +641,18 @@ class DataStore {
     if (!this.settingsPopover) return;
 
     const headers = this.settingsPopover.querySelectorAll('.settings-header-content span');
-    if (headers.length >= 6) {
+    if (headers.length >= 7) {
       headers[0].textContent = this.t('title');
       headers[1].textContent = this.t('language');
       headers[2].textContent = this.t('colorScheme');
       headers[3].textContent = this.t('clustering');
       headers[4].textContent = this.t('mapService');
-      headers[5].textContent = this.t('savedSettings');
+      headers[5].textContent = this.t('notifications');
+      headers[6].textContent = this.t('savedSettings');
     }
+    this.settingsPopover.querySelector('[data-push="on"]')?.setAttribute('aria-label', this.t('notificationsOn'));
+    this.settingsPopover.querySelector('[data-push="off"]')?.setAttribute('aria-label', this.t('notificationsOff'));
+    this._refreshNotifications?.();   // Hinweistext in der neuen Sprache
 
     const currentService = consent.get('mapService') || 'osm';
     this.settingsPopover.querySelectorAll('[data-nav]').forEach(b => {

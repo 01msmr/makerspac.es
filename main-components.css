@@ -181,6 +181,10 @@
   position: relative;
 }
 
+/* Zeile „Meldungen“: Hinweistext (iOS ohne Installation / blockiert) unter der Zeile */
+.settings-header-notify { flex-wrap: wrap; }
+.settings-hint { flex-basis: 100%; margin: 6px 0 0; font-size: 0.8em; opacity: 0.75; }
+
 /* Hovered Tooltip-Section über Nachbar-Sections heben */
 .settings-header:has([role~="tooltip"]:hover) {
   z-index: 2;

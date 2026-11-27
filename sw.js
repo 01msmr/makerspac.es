@@ -78,6 +78,7 @@ const STATIC_ASSETS = [
   '/marker-manager.js',
   '/routing.js',
   '/demo-mode.js',
+  '/push-notify.js',   // lazy (Einstellungen → Benachrichtigungen)
   // Fonts
   '/fonts/Roboto-SemiBold.woff2',
   // FA Fonts
@@ -241,3 +242,28 @@ async function staleWhileRevalidate(request, cacheName) {
 
   return cached ?? await fetchPromise;
 }
+
+// ─── Web Push: Favoriten, die bald öffnen (Versand: tools/send-push.js; Payload { title, body, tag, url }) ─────────
+self.addEventListener('push', event => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch { d = { body: event.data ? event.data.text() : '' }; }
+  event.waitUntil(self.registration.showNotification(d.title || 'makerspac.es', {
+    body: d.body || '',
+    tag: d.tag,                                   // gleicher Space = ersetzt statt zu stapeln
+    icon: '/icons/android-chrome-192x192.png',
+    badge: '/icons/favicon-32x32.png',
+    data: { url: d.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  // Nur eigene Adressen öffnen (Payload kommt zwar von uns, aber nie blind navigieren)
+  const target = new URL(event.notification.data?.url || '/', self.location.origin);
+  const url = target.origin === self.location.origin ? target.href : self.location.origin + '/';
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const open = list.find(c => c.url.startsWith(self.location.origin));
+    if (open) { open.navigate(url).catch(() => {}); return open.focus(); }
+    return self.clients.openWindow(url);
+  }));
+});

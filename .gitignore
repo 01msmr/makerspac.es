@@ -22,3 +22,6 @@ package-lock.json
 
 # AI / Internal
 .claude/
+# Laufzeitdaten der Push-Abos (nie committen); .htaccess bleibt
+push/data/*.json
+push/data/*.tmp*
