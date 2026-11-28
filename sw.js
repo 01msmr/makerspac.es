@@ -131,6 +131,9 @@ self.addEventListener('activate', event => {
 // ─── Fetch: Strategie je nach URL ─────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const { request } = event;
+  // Nur GET behandeln: POST & Co. (z. B. push/subscribe.php) gehen unverändert ans Netz. Ohne diese Zeile lief jede POST-Antwort in
+  // cacheFirst() in cache.put(POST) → TypeError → Netzwerkfehler, obwohl der Server geantwortet hatte (Meldungs-Schalter blieb auf „aus“).
+  if (request.method !== 'GET') return;
   const url = new URL(request.url);
   const path = url.pathname;
 

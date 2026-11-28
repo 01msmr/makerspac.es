@@ -44,47 +44,60 @@ function validKey(mixed $k, int $min, int $max): bool {
     return is_string($k) && strlen($k) >= $min && strlen($k) <= $max && preg_match('/^[A-Za-z0-9_-]+$/', $k) === 1;
 }
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') reply(405, ['error' => 'POST only']);
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if ($origin !== '' && !in_array($origin, ALLOWED_ORIGINS, true)) reply(403, ['error' => 'origin']);
+// Jeder PHP-Fehler/jede Warnung (z. B. Ordner nicht beschreibbar) wird zu einer Ausnahme und als JSON gemeldet — statt einer leeren
+// 500-Seite (display_errors ist auf dem Webspace aus). Pfade werden aus der Meldung entfernt.
+set_error_handler(function (int $no, string $msg, string $file, int $line): bool { throw new ErrorException($msg, 0, $no, $file, $line); });
 
-$raw = file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
-if ($raw === false || strlen($raw) > MAX_BODY) reply(413, ['error' => 'too large']);
-$in = json_decode($raw, true);
-if (!is_array($in) || !isset($in['endpoint']) || !is_string($in['endpoint']) || !validEndpoint($in['endpoint'])) reply(400, ['error' => 'endpoint']);
+function handle(): void {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') reply(405, ['error' => 'POST only']);
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin !== '' && !in_array($origin, ALLOWED_ORIGINS, true)) reply(403, ['error' => 'origin']);
 
-$id   = hash('sha256', $in['endpoint']);
-$file = DATA_DIR . "/$id.json";
+    $raw = file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
+    if ($raw === false || strlen($raw) > MAX_BODY) reply(413, ['error' => 'too large']);
+    $in = json_decode($raw, true);
+    if (!is_array($in) || !isset($in['endpoint']) || !is_string($in['endpoint']) || !validEndpoint($in['endpoint'])) reply(400, ['error' => 'endpoint']);
 
-if (!is_dir(DATA_DIR) && !mkdir(DATA_DIR, 0750, true)) reply(500, ['error' => 'storage']);
+    $id   = hash('sha256', $in['endpoint']);
+    $file = DATA_DIR . "/$id.json";
 
-if (!empty($in['unsubscribe'])) {
-    foreach ([$file, DATA_DIR . "/$id.sent.json"] as $f) if (is_file($f)) unlink($f);
-    reply(200, ['ok' => true, 'subscribed' => false]);
+    if (!is_dir(DATA_DIR) && !mkdir(DATA_DIR, 0750, true)) reply(500, ['error' => 'storage']);
+
+    if (!empty($in['unsubscribe'])) {
+        foreach ([$file, DATA_DIR . "/$id.sent.json"] as $f) if (is_file($f)) unlink($f);
+        reply(200, ['ok' => true, 'subscribed' => false]);
+    }
+
+    $keys = $in['keys'] ?? null;
+    if (!is_array($keys) || !validKey($keys['p256dh'] ?? null, 80, 100) || !validKey($keys['auth'] ?? null, 20, 30)) reply(400, ['error' => 'keys']);
+
+    $favs = [];
+    foreach (is_array($in['favorites'] ?? null) ? $in['favorites'] : [] as $v) {
+        if (is_int($v) && $v > 0 && $v < 1000000) $favs[$v] = $v;
+        if (count($favs) >= MAX_FAVS) break;
+    }
+    $lang = in_array($in['lang'] ?? '', LANGS, true) ? $in['lang'] : 'en';
+
+    $isNew = !is_file($file);
+    if ($isNew && count(glob(DATA_DIR . '/*.json') ?: []) >= MAX_SUBS * 2) reply(503, ['error' => 'full']);   // *.json zählt auch *.sent.json
+
+    $old = $isNew ? [] : (json_decode((string)file_get_contents($file), true) ?: []);
+    $record = [
+        'endpoint'  => $in['endpoint'],
+        'keys'      => ['p256dh' => $keys['p256dh'], 'auth' => $keys['auth']],
+        'favorites' => array_values($favs),
+        'lang'      => $lang,
+        'created'   => $old['created'] ?? gmdate('c'),
+        'updated'   => gmdate('c'),
+    ];
+    $tmp = "$file.tmp" . bin2hex(random_bytes(4));
+    if (file_put_contents($tmp, json_encode($record), LOCK_EX) === false || !rename($tmp, $file)) reply(500, ['error' => 'write']);
+    reply(200, ['ok' => true, 'subscribed' => true, 'favorites' => count($favs)]);
 }
 
-$keys = $in['keys'] ?? null;
-if (!is_array($keys) || !validKey($keys['p256dh'] ?? null, 80, 100) || !validKey($keys['auth'] ?? null, 20, 30)) reply(400, ['error' => 'keys']);
-
-$favs = [];
-foreach (is_array($in['favorites'] ?? null) ? $in['favorites'] : [] as $v) {
-    if (is_int($v) && $v > 0 && $v < 1000000) $favs[$v] = $v;
-    if (count($favs) >= MAX_FAVS) break;
+try {
+    handle();
+} catch (Throwable $e) {
+    error_log('push/subscribe.php: ' . $e);
+    reply(500, ['error' => 'internal', 'detail' => get_class($e) . ': ' . str_replace(__DIR__, '.', $e->getMessage())]);
 }
-$lang = in_array($in['lang'] ?? '', LANGS, true) ? $in['lang'] : 'en';
-
-$isNew = !is_file($file);
-if ($isNew && count(glob(DATA_DIR . '/*.json') ?: []) >= MAX_SUBS * 2) reply(503, ['error' => 'full']);   // *.json zählt auch *.sent.json
-
-$old = $isNew ? [] : (json_decode((string)file_get_contents($file), true) ?: []);
-$record = [
-    'endpoint'  => $in['endpoint'],
-    'keys'      => ['p256dh' => $keys['p256dh'], 'auth' => $keys['auth']],
-    'favorites' => array_values($favs),
-    'lang'      => $lang,
-    'created'   => $old['created'] ?? gmdate('c'),
-    'updated'   => gmdate('c'),
-];
-$tmp = "$file.tmp" . bin2hex(random_bytes(4));
-if (file_put_contents($tmp, json_encode($record), LOCK_EX) === false || !rename($tmp, $file)) reply(500, ['error' => 'write']);
-reply(200, ['ok' => true, 'subscribed' => true, 'favorites' => count($favs)]);

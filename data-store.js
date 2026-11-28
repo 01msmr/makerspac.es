@@ -363,8 +363,8 @@ class DataStore {
         <span>${this.t('notifications')}</span>
       </div>
       <div class="settings-header-icons">
-        <span class="settings-icon-btn" data-push="on" aria-label="${this.t('notificationsOn')}" role="tooltip" data-microtip-position="bottom"><i class="fas fa-bell"></i></span>
-        <span class="settings-icon-btn" data-push="off" aria-label="${this.t('notificationsOff')}" role="tooltip" data-microtip-position="bottom-left"><i class="fas fa-bell-slash"></i></span>
+        <span class="settings-icon-btn" data-push="on" aria-label="${this.t('notificationsOn')}" role="tooltip" data-microtip-position="bottom-left" data-microtip-size="large"><i class="fas fa-bell"></i></span>
+        <span class="settings-icon-btn" data-push="off" aria-label="${this.t('notificationsOff')}" role="tooltip" data-microtip-position="bottom-left" data-microtip-size="large"><i class="fas fa-bell-slash"></i></span>
       </div>
       <p class="settings-hint" hidden></p>
     `;
@@ -385,8 +385,10 @@ class DataStore {
     };
     btnOn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      try { push ||= await import('./push-notify.js'); if (await push.enable()) push.initSync(); } catch (err) { console.warn('Push:', err); }
-      refresh().catch(() => {});
+      let failure = '';
+      try { push ||= await import('./push-notify.js'); if (await push.enable()) push.initSync(); } catch (err) { console.warn('Push:', err); failure = `${this.t('notificationsError')}: ${err?.message || err}`; }
+      await refresh().catch(() => {});
+      if (failure) { hint.textContent = failure; hint.hidden = false; }   // Grund sichtbar (sonst bliebe der Schalter ohne Erklärung auf „aus“)
     });
     btnOff.addEventListener('click', async (e) => {
       e.stopPropagation();

@@ -67,3 +67,32 @@ test('privater VAPID-Schlüssel steht nirgends im Repo (nur der öffentliche in 
   const files = ['push-notify.js', 'sw.js', 'data-store.js', 'tools/send-push.js', 'tools/push-keygen.js', 'push/subscribe.php', '.github/workflows/send-push.yml'];
   for (const f of files) assert.ok(!/\bd["']?\s*[:=]\s*["'][A-Za-z0-9_-]{43}["']/.test(read(f)), f);
 });
+
+test('sw.js: nur GET wird abgefangen — ein POST (push/subscribe.php) wird nie in den Cache geschrieben (Regression: Schalter blieb auf „aus“)', async () => {
+  const { default: vm } = await import('node:vm');
+  const listeners = {}, puts = [];
+  const ctx = {
+    self: { addEventListener: (t, f) => { listeners[t] = f; }, location: { origin: 'https://x' } },
+    caches: { open: async () => ({ put: (...a) => puts.push(a), match: async () => undefined }), match: async () => undefined },
+    fetch: async () => ({ ok: true, clone() { return this; } }), URL, Promise, Request: class {},
+  };
+  vm.createContext(ctx);
+  vm.runInContext(read('sw.js'), ctx);
+  const run = (method, url, accept = '*/*') => {
+    let handled = false;
+    listeners.fetch({ request: { method, url, headers: { get: () => accept } }, respondWith: () => { handled = true; } });
+    return handled;
+  };
+  assert.equal(run('POST', 'https://x/push/subscribe.php'), false, 'POST wird nicht abgefangen');
+  assert.equal(run('PUT', 'https://x/anything'), false);
+  assert.equal(run('GET', 'https://x/main-layout.css'), true, 'GET (statische Assets) bleibt im Cache-Pfad');
+  assert.equal(puts.length, 0);
+});
+
+test('Einstellungen: Glocken-Tooltips gehen nach links und umbrechen (am rechten Rand nicht abgeschnitten); Fehlergrund wird angezeigt', () => {
+  const s = read('data-store.js');
+  assert.match(s, /data-push="on"[^`]*data-microtip-position="bottom-left" data-microtip-size="large"/);
+  assert.match(s, /data-push="off"[^`]*data-microtip-position="bottom-left" data-microtip-size="large"/);
+  assert.match(s, /this\.t\('notificationsError'\)/);
+  for (const l of ['de', 'en', 'fr', 'it', 'nl', 'da', 'uk']) assert.ok(JSON.parse(read('lang.json')).settings.notificationsError[l], l);
+});
