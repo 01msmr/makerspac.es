@@ -63,7 +63,7 @@ test('Fetch-Handler: Daten-URL als Navigation (Accept text/html) → networkFirs
   vm.runInContext(readFileSync(new URL('../sw.js', import.meta.url), 'utf8'), ctx);
   const respond = async url => {
     let result;
-    handler({ request: { url, headers: { get: () => 'text/html,application/xhtml+xml,*/*' } }, respondWith: p => { result = p; } });
+    handler({ request: { method: 'GET', url, headers: { get: () => 'text/html,application/xhtml+xml,*/*' } }, respondWith: p => { result = p; } });
     return result;
   };
   for (const path of ['/data/spaces-all.json', '/data/markers.json', '/data/splits-manifest.json', '/locations.json']) {

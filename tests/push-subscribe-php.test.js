@@ -77,3 +77,16 @@ test('Repo: Abo-Ordner per .htaccess gesperrt, Abo-Dateien nicht im Git (.gitign
   assert.match(ht, /Deny from all/);
   assert.match(readFileSync(new URL('../.gitignore', import.meta.url), 'utf8'), /push\/data\/\*\.json/);
 });
+
+test('PHP: Laufzeitfehler (z. B. Ziel nicht schreibbar) → JSON {error:"internal", detail} ohne Pfade, nie eine leere 500-Seite', { skip: !hasPhp }, async () => {
+  const ep = 'https://fcm.googleapis.com/fcm/send/kaputt';
+  mkdirSync(join(dir, 'data', `${idOf(ep)}.json`));   // Ziel ist ein Ordner → rename() schlägt fehl
+  const r = await post({ endpoint: ep, keys: KEYS, favorites: [1], lang: 'de' });
+  assert.equal(r.status, 500);
+  const j = await r.json();
+  assert.equal(j.error, 'internal');
+  assert.match(j.detail, /ErrorException/);
+  assert.ok(!j.detail.includes(dir), 'keine Server-Pfade in der Antwort');
+  rmSync(join(dir, 'data', `${idOf(ep)}.json`), { recursive: true });
+  for (const f of readdirSync(join(dir, 'data'))) if (f.includes('.tmp')) rmSync(join(dir, 'data', f));
+});
