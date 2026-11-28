@@ -5,7 +5,7 @@
 //   Network-First → HTML (immer aktuelle Version)
 
 // Strategie-Update: status.json → Network-First (immer aktuell); Rest s.o.
-const VERSION = 'v138'; // Deploy-Bot erhöht sie bei JEDEM Deploy mit geänderten App-Dateien → neues sw.js → Geräte installieren neu + „Veraltet“-Hinweis
+const VERSION = 'v139'; // Deploy-Bot erhöht sie bei JEDEM Deploy mit geänderten App-Dateien → neues sw.js → Geräte installieren neu + „Veraltet“-Hinweis
 const TILES_VERSION = 'v1'; // Kartenkacheln unabhängig von VERSION: ein Deploy löscht sie NICHT (nur bei geänderter Kachel-Strategie von Hand erhöhen)
 const CACHE_STATIC = `ms-static-${VERSION}`;
 const CACHE_DATA = `ms-data-${VERSION}`;
